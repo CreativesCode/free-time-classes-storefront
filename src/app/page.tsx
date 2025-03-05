@@ -1,18 +1,8 @@
 "use client";
-import { gql, useQuery } from "@apollo/client";
-
-const GET_USER = gql`
-  query {
-    me {
-      id
-      username
-      email
-    }
-  }
-`;
+import { useAppData } from "../context/AppContext";
 
 export default function Home() {
-  const { data, loading, error } = useQuery(GET_USER);
+  const { data: user, loading, error } = useAppData("user");
 
   if (loading) return <p className="text-center text-gray-500">Loading...</p>;
   if (error)
@@ -21,9 +11,9 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
       <h1 className="text-3xl font-bold text-gray-800">
-        Welcome, {data.me.username}!
+        Welcome, {user?.username}!
       </h1>
-      <p className="text-gray-600">Email: {data.me.email}</p>
+      <p className="text-gray-600">Email: {user?.email}</p>
     </div>
   );
 }

@@ -1,25 +1,18 @@
 "use client";
-import { gql, useMutation } from "@apollo/client";
+import { LOGIN_MUTATION } from "@/graphql/auth";
+import { useMutation } from "@apollo/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-const LOGIN_MUTATION = gql`
-  mutation TokenAuth($username: String!, $password: String!) {
-    tokenAuth(username: $username, password: $password) {
-      token
-    }
-  }
-`;
-
 export default function LoginPage() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [login, { loading, error }] = useMutation(LOGIN_MUTATION);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { data } = await login({ variables: { username, password } });
+    const { data } = await login({ variables: { email, password } });
 
     if (data?.tokenAuth?.token) {
       localStorage.setItem("token", data.tokenAuth.token);
@@ -37,16 +30,16 @@ export default function LoginPage() {
           <input
             type="text"
             placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded text-secondary-500"
           />
           <input
             type="password"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded"
+            className="w-full p-2 border border-gray-300 rounded text-secondary-500"
           />
           <button
             type="submit"
