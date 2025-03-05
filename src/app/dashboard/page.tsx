@@ -1,6 +1,15 @@
 "use client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useAppData } from "@/context/AppContext";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -26,15 +35,21 @@ export default function Dashboard() {
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <p className="text-red-500 mb-4">Error: {error.message}</p>
-          <button
-            onClick={() => router.push("/login")}
-            className="bg-primary-500 text-white px-4 py-2 rounded hover:bg-primary-600"
-          >
-            Volver al login
-          </button>
-        </div>
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-center text-destructive">
+              Error
+            </CardTitle>
+            <CardDescription className="text-center">
+              {error.message}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <Button onClick={() => router.push("/login")}>
+              Volver al login
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -46,40 +61,52 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
-      <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
-        <h1 className="text-3xl font-bold text-primary-500 mb-4">
-          Welcome, {user.username}!
-        </h1>
-        <div className="space-y-2">
-          <p className="text-gray-600">Email: {user.email}</p>
-          {user.profilePicture && (
-            <Image
-              src={user.profilePicture}
-              alt="Profile"
-              className="w-24 h-24 rounded-full mx-auto"
-              width={96}
-              height={96}
-            />
-          )}
-          <div className="flex gap-4 justify-center mt-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-3xl text-center text-primary-500">
+            Welcome, {user.username}!
+          </CardTitle>
+          <CardDescription className="text-center">
+            Your account information
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex flex-col items-center space-y-4">
+            {user.profilePicture ? (
+              <Avatar className="h-24 w-24">
+                <AvatarImage src={user.profilePicture} alt="Profile" />
+                <AvatarFallback>
+                  {user.username[0].toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            ) : (
+              <Avatar className="h-24 w-24">
+                <AvatarFallback>
+                  {user.username[0].toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            )}
+            <p className="text-gray-600">Email: {user.email}</p>
+          </div>
+          <div className="flex flex-wrap gap-2 justify-center">
             {user.isStudent && (
-              <span className="px-3 py-1 bg-accent-100 text-accent-700 rounded-full text-sm">
+              <Badge variant="secondary" className="text-sm">
                 Student
-              </span>
+              </Badge>
             )}
             {user.isTutor && (
-              <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm">
+              <Badge variant="default" className="text-sm">
                 Tutor
-              </span>
+              </Badge>
             )}
             {user.isStaff && (
-              <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm">
+              <Badge variant="outline" className="text-sm">
                 Staff
-              </span>
+              </Badge>
             )}
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

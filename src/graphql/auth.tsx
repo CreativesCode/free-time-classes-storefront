@@ -17,8 +17,20 @@ export const LOGOUT_MUTATION = gql`
 `;
 
 export const REGISTER_MUTATION = gql`
-  mutation CreateUser($input: CreateUserInput!) {
-    createUser(input: $input) {
+  mutation CreateUser(
+    $email: String!
+    $password: String!
+    $isStudent: Boolean!
+    $isTutor: Boolean!
+  ) {
+    createUser(
+      input: {
+        email: $email
+        password: $password
+        isStudent: $isStudent
+        isTutor: $isTutor
+      }
+    ) {
       user {
         username
         isStudent

@@ -11,19 +11,23 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LOGIN_MUTATION } from "@/graphql/auth";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { REGISTER_MUTATION } from "@/graphql/auth";
 import { useMutation } from "@apollo/client";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useState } from "react";
 
-export default function LoginPage() {
+type AccountType = "student" | "tutor";
+
+export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isStudent, setIsStudent] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState("");
-  const [login, { loading, error }] = useMutation(LOGIN_MUTATION);
+  const [register, { loading, error }] = useMutation(REGISTER_MUTATION);
   const router = useRouter();
 
   const validateEmail = (email: string) => {
@@ -47,11 +51,17 @@ export default function LoginPage() {
       setEmailError("Please enter a valid email address");
       return;
     }
-    const { data } = await login({ variables: { email, password } });
+    const { data } = await register({
+      variables: {
+        email,
+        password,
+        isStudent,
+        isTutor: !isStudent,
+      },
+    });
 
-    if (data?.tokenAuth?.token) {
-      localStorage.setItem("token", data.tokenAuth.token);
-      router.push("/dashboard");
+    if (data?.createUser?.user) {
+      router.push("/login");
     }
   };
 
@@ -63,15 +73,15 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl text-center text-secondary-500">
-            Login
+            Register
           </CardTitle>
           <CardDescription className="text-center">
-            Enter your credentials to access your account
+            Create your account to get started
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1">
+            <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
@@ -86,7 +96,7 @@ export default function LoginPage() {
                 <p className="text-sm text-red-500">{emailError}</p>
               )}
             </div>
-            <div className="space-y-1">
+            <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Input
@@ -97,27 +107,42 @@ export default function LoginPage() {
                   onChange={handlePasswordChange}
                   required
                 />
-                <Button
+                <button
                   type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-500" />
+                    <EyeOff className="h-4 w-4" />
                   ) : (
-                    <Eye className="h-4 w-4 text-gray-500" />
+                    <Eye className="h-4 w-4" />
                   )}
-                </Button>
+                </button>
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Account Type</Label>
+              <RadioGroup
+                value={isStudent ? "student" : "tutor"}
+                onValueChange={(value: AccountType) =>
+                  setIsStudent(value === "student")
+                }
+                className="flex space-x-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="student" id="student" />
+                  <Label htmlFor="student">Student</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="tutor" id="tutor" />
+                  <Label htmlFor="tutor">Tutor</Label>
+                </div>
+              </RadioGroup>
             </div>
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>
-                  {error.message === "Please enter valid credentials"
-                    ? "Invalid email or password"
-                    : "An error occurred. Please try again."}
+                  Registration failed. Please try again.
                 </AlertDescription>
               </Alert>
             )}
@@ -126,18 +151,18 @@ export default function LoginPage() {
               className="w-full btn-primary"
               disabled={loading}
             >
-              {loading ? "Logging in..." : "Login"}
+              {loading ? "Registering..." : "Register"}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-sm text-secondary-500">
-            Don&apos;t have an account?{" "}
+            Already have an account?{" "}
             <Link
-              href="/register"
+              href="/login"
               className="text-primary-600 hover:text-primary-700 font-medium"
             >
-              Register here
+              Login here
             </Link>
           </p>
         </CardFooter>
