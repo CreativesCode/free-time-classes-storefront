@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAppData } from "@/context/AppContext";
 import { LOGIN_MUTATION } from "@/graphql/auth";
 import { useMutation } from "@apollo/client";
 import { Eye, EyeOff } from "lucide-react";
@@ -25,6 +26,7 @@ export default function LoginPage() {
   const [emailError, setEmailError] = useState("");
   const [login, { loading, error }] = useMutation(LOGIN_MUTATION);
   const router = useRouter();
+  const { setData: setUserData } = useAppData("user");
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -51,7 +53,14 @@ export default function LoginPage() {
 
     if (data?.tokenAuth?.token) {
       localStorage.setItem("token", data.tokenAuth.token);
-      router.push("/dashboard");
+      setUserData(data.tokenAuth.user);
+      if (data.tokenAuth.user.isTutor) {
+        router.push("/teacher-profile");
+      } else if (data.tokenAuth.user.isStudent) {
+        router.push("/student-profile");
+      } else {
+        router.push("/dashboard");
+      }
     }
   };
 

@@ -1,0 +1,41 @@
+{
+  "navigation": {
+    "home": "Inicio",
+    "about": "Sobre Nosotros",
+    "contact": "Contacto",
+    "login": "Iniciar Sesión",
+    "register": "Registrarse"
+  },
+  "common": {
+    "welcome": "Bienvenido a Free Time Classes",
+    "description": "Descubre y reserva clases increíbles para tu tiempo libre",
+    "search": "Buscar clases...",
+    "categories": "Categorías",
+    "popular": "Clases Populares",
+    "featured": "Clases Destacadas",
+    "viewAll": "Ver Todo",
+    "bookNow": "Reservar Ahora",
+    "price": "Precio",
+    "duration": "Duración",
+    "level": "Nivel",
+    "language": "Idioma"
+  },
+  "auth": {
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "dontHaveAccount": "¿No tienes una cuenta?",
+    "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+    "signIn": "Iniciar Sesión",
+    "signUp": "Registrarse",
+    "logout": "Cerrar Sesión"
+  },
+  "footer": {
+    "aboutUs": "Sobre Nosotros",
+    "contactUs": "Contáctanos",
+    "terms": "Términos y Condiciones",
+    "privacy": "Política de Privacidad",
+    "followUs": "Síguenos",
+    "newsletter": "Suscríbete a nuestro boletín"
+  }
+}

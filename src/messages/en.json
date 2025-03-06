@@ -1,0 +1,41 @@
+{
+  "navigation": {
+    "home": "Home",
+    "about": "About",
+    "contact": "Contact",
+    "login": "Login",
+    "register": "Register"
+  },
+  "common": {
+    "welcome": "Welcome to Free Time Classes",
+    "description": "Discover and book amazing classes for your free time",
+    "search": "Search classes...",
+    "categories": "Categories",
+    "popular": "Popular Classes",
+    "featured": "Featured Classes",
+    "viewAll": "View All",
+    "bookNow": "Book Now",
+    "price": "Price",
+    "duration": "Duration",
+    "level": "Level",
+    "language": "Language"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?",
+    "dontHaveAccount": "Don't have an account?",
+    "alreadyHaveAccount": "Already have an account?",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "logout": "Logout"
+  },
+  "footer": {
+    "aboutUs": "About Us",
+    "contactUs": "Contact Us",
+    "terms": "Terms & Conditions",
+    "privacy": "Privacy Policy",
+    "followUs": "Follow Us",
+    "newsletter": "Subscribe to our newsletter"
+  }
+}
