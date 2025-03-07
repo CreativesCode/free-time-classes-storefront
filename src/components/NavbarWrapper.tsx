@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/context/UserContext";
 import { User } from "lucide-react";
+import { useLocale } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -21,6 +22,7 @@ export default function NavbarWrapper({
 }: {
   children: React.ReactNode;
 }) {
+  const locale = useLocale();
   const { user, logout } = useAuth();
   const pathname = usePathname();
 
@@ -36,7 +38,7 @@ export default function NavbarWrapper({
             {/* Left side */}
             <div className="flex items-center space-x-8">
               {/* Logo */}
-              <Link href="/" className="flex items-center">
+              <Link href={`/${locale}/`} className="flex items-center">
                 <Image
                   src="/images/logo.png"
                   alt="Free Time Classes Logo"
@@ -49,19 +51,19 @@ export default function NavbarWrapper({
               {/* Primary Navigation */}
               <div className="hidden md:flex items-center space-x-1">
                 <Link
-                  href="/courses"
+                  href={`/${locale}/courses`}
                   className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
                 >
                   Courses
                 </Link>
                 <Link
-                  href="/about"
+                  href={`/${locale}/about`}
                   className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
                 >
                   About
                 </Link>
                 <Link
-                  href="/contact"
+                  href={`/${locale}/contact`}
                   className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
                 >
                   Contact
@@ -99,19 +101,29 @@ export default function NavbarWrapper({
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link href="/profile">Profile</Link>
+                      <Link
+                        href={`/${locale}/${
+                          user.isStudent ? "student" : "teacher"
+                        }-profile`}
+                      >
+                        Profile
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href="/settings">Settings</Link>
+                      <Link href={`/${locale}/settings`}>Settings</Link>
                     </DropdownMenuItem>
                     {user.isTutor && (
                       <DropdownMenuItem asChild>
-                        <Link href="/tutor/dashboard">Tutor Dashboard</Link>
+                        <Link href={`/${locale}/tutor/dashboard`}>
+                          Tutor Dashboard
+                        </Link>
                       </DropdownMenuItem>
                     )}
                     {user.isStaff && (
                       <DropdownMenuItem asChild>
-                        <Link href="/admin/dashboard">Admin Dashboard</Link>
+                        <Link href={`/${locale}/admin/dashboard`}>
+                          Admin Dashboard
+                        </Link>
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
@@ -122,10 +134,10 @@ export default function NavbarWrapper({
                 </DropdownMenu>
               ) : (
                 <div className="flex items-center space-x-4">
-                  <Link href="/login">
+                  <Link href={`/${locale}/login`}>
                     <Button variant="ghost">Log in</Button>
                   </Link>
-                  <Link href="/register">
+                  <Link href={`/${locale}/register`}>
                     <Button>Sign up</Button>
                   </Link>
                 </div>

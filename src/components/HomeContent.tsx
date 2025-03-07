@@ -10,9 +10,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Facebook, Instagram, Link, Twitter, Youtube } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
-import { usePathname, useRouter } from "next/navigation";
+
+import { useTranslations } from "next-intl";
+import Image from "next/image";
+import Link from "next/link";
 
 // Función auxiliar para generar colores de avatar
 function getAvatarColor(letter: string) {
@@ -32,16 +33,6 @@ function getAvatarColor(letter: string) {
 
 export default function HomeContent() {
   const t = useTranslations("home");
-  const pathname = usePathname();
-  const router = useRouter();
-  const locale = useLocale();
-
-  // Function to handle language change
-  const handleLanguageChange = (newLocale: string) => {
-    const currentPath = pathname;
-    const newPath = currentPath.replace(`/${locale}`, `/${newLocale}`);
-    router.push(newPath);
-  };
 
   // Mock data using translations
   const featuredTeachers = [
@@ -100,34 +91,6 @@ export default function HomeContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Language Switcher */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-          <div className="flex justify-end space-x-4">
-            <button
-              onClick={() => handleLanguageChange("en")}
-              className={`px-3 py-1 rounded ${
-                locale === "en"
-                  ? "bg-primary text-white"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              English
-            </button>
-            <button
-              onClick={() => handleLanguageChange("es")}
-              className={`px-3 py-1 rounded ${
-                locale === "es"
-                  ? "bg-primary text-white"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Español
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Hero Section */}
       <section className="bg-gray-100 bg-[url('/images/bg.webp')] bg-cover bg-center bg-no-repeat text-white">
         <div className="px-4 sm:px-6 lg:px-8 h-full bg-black/15 rounded-lg py-20">
@@ -369,25 +332,49 @@ export default function HomeContent() {
                   href="https://facebook.com"
                   className="text-gray-400 hover:text-white transition-colors"
                 >
-                  <Facebook className="h-6 w-6" />
+                  <Image
+                    src="/images/icons/facebook.svg"
+                    alt="Facebook"
+                    className="h-6 w-6"
+                    width={24}
+                    height={24}
+                  />
                 </Link>
                 <Link
                   href="https://instagram.com"
                   className="text-gray-400 hover:text-white transition-colors"
                 >
-                  <Instagram className="h-6 w-6" />
+                  <Image
+                    src="/images/icons/instagram.svg"
+                    alt="Instagram"
+                    className="h-6 w-6"
+                    width={24}
+                    height={24}
+                  />
                 </Link>
                 <Link
                   href="https://twitter.com"
                   className="text-gray-400 hover:text-white transition-colors"
                 >
-                  <Twitter className="h-6 w-6" />
+                  <Image
+                    src="/images/icons/x.svg"
+                    alt="Twitter"
+                    className="h-6 w-6"
+                    width={24}
+                    height={24}
+                  />
                 </Link>
                 <Link
                   href="https://youtube.com"
                   className="text-gray-400 hover:text-white transition-colors"
                 >
-                  <Youtube className="h-6 w-6" />
+                  <Image
+                    src="/images/icons/youtube.svg"
+                    alt="Youtube"
+                    className="h-6 w-6"
+                    width={24}
+                    height={24}
+                  />
                 </Link>
               </div>
             </div>
