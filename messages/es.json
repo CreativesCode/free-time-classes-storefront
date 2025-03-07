@@ -1,0 +1,80 @@
+{
+  "navigation": {
+    "home": "Inicio",
+    "about": "Sobre Nosotros",
+    "contact": "Contacto",
+    "login": "Iniciar Sesión",
+    "register": "Registrarse"
+  },
+  "languageSwitcher": {
+    "switchLanguage": "Cambiar idioma",
+    "english": "Inglés",
+    "spanish": "Español"
+  },
+  "common": {
+    "welcome": "Bienvenido a Free Time Classes",
+    "description": "Descubre y reserva clases increíbles para tu tiempo libre",
+    "search": "Buscar clases...",
+    "categories": "Categorías",
+    "popular": "Clases Populares",
+    "featured": "Clases Destacadas",
+    "viewAll": "Ver Todo",
+    "bookNow": "Reservar Ahora",
+    "price": "Precio",
+    "duration": "Duración",
+    "level": "Nivel",
+    "language": "Idioma"
+  },
+  "auth": {
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "dontHaveAccount": "¿No tienes una cuenta?",
+    "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+    "signIn": "Iniciar Sesión",
+    "signUp": "Registrarse",
+    "logout": "Cerrar Sesión"
+  },
+  "footer": {
+    "aboutUs": "Sobre Nosotros",
+    "contactUs": "Contáctanos",
+    "terms": "Términos y Condiciones",
+    "privacy": "Política de Privacidad",
+    "followUs": "Síguenos",
+    "newsletter": "Suscríbete a nuestro boletín"
+  },
+  "home": {
+    "heroTitle": "Aprende con los Mejores Profesores",
+    "heroDescription": "Conecta con expertos y mejora tus habilidades con clases personalizadas",
+    "startNow": "Comienza Ahora",
+    "findTutors": "Encuentra Profesores",
+    "featuredTeachersTitle": "Profesores Destacados",
+    "courses": "cursos",
+    "popularCoursesTitle": "Cursos Populares",
+    "teacher": "Profesor",
+    "students": "estudiantes",
+    "whyChooseUsTitle": "¿Por qué elegirnos?",
+    "expertTeachers": "Profesores Expertos",
+    "expertTeachersDescription": "Conecta con profesores altamente calificados y con experiencia",
+    "customClasses": "Clases Personalizadas",
+    "customClassesDescription": "Aprende a tu propio ritmo con clases adaptadas a tus necesidades",
+    "totalFlexibility": "Flexibilidad Total",
+    "totalFlexibilityDescription": "Elige tus horarios y estudia desde cualquier lugar",
+    "ready": "¿Listo para comenzar tu viaje de aprendizaje?",
+    "joinCommunity": "Únete a nuestra comunidad y comienza a aprender con los mejores profesores",
+    "registerNow": "Regístrate Ahora",
+    "companyDescription": "Conectando estudiantes con los mejores profesores para un aprendizaje personalizado y efectivo",
+    "quickLinks": "Enlaces Rápidos",
+    "findTutors": "Encuentra Profesores",
+    "availableCourses": "Cursos Disponibles",
+    "becomeTutor": "Conviértete en Profesor",
+    "aboutUs": "Sobre Nosotros",
+    "contact": "Contacto",
+    "email": "Email: info@freetimeclasses.com",
+    "phone": "Teléfono: +34 123 456 789",
+    "address": "Dirección: Madrid, España",
+    "schedule": "Horario: Lun-Vie 9:00-18:00",
+    "followUs": "Síguenos",
+    "allRightsReserved": "Todos los derechos reservados"
+  }
+}

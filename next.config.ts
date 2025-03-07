@@ -1,7 +1,11 @@
+import { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
+
+const withNextIntl = createNextIntlPlugin();
+
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+const nextConfig: NextConfig = {
   reactStrictMode: true,
-  output: "export" as const,
   images: {
     unoptimized: true,
     remotePatterns: [
@@ -12,6 +16,13 @@ const nextConfig = {
     ],
   },
   trailingSlash: true,
+  webpack(config) {
+    config.module.rules.push({
+      test: /\.svg$/,
+      use: ["@svgr/webpack"],
+    });
+    return config;
+  },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

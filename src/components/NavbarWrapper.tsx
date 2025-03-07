@@ -10,10 +10,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/context/UserContext";
-import { Menu, User } from "lucide-react";
+import { User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 export default function NavbarWrapper({
   children,
@@ -21,7 +22,6 @@ export default function NavbarWrapper({
   children: React.ReactNode;
 }) {
   const { user, logout } = useAuth();
-  console.log("user", user);
   const pathname = usePathname();
 
   if (["/login/", "/register/"].includes(pathname)) {
@@ -49,40 +49,44 @@ export default function NavbarWrapper({
               {/* Primary Navigation */}
               <div className="hidden md:flex items-center space-x-1">
                 <Link
-                  href="/tutors"
-                  className="px-3 py-2 text-[15px] text-gray-700 hover:text-gray-900"
-                >
-                  Find tutors
-                </Link>
-                <Link
                   href="/courses"
-                  className="px-3 py-2 text-[15px] text-gray-700 hover:text-gray-900"
+                  className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
                 >
                   Courses
                 </Link>
                 <Link
                   href="/about"
-                  className="px-3 py-2 text-[15px] text-gray-700 hover:text-gray-900"
+                  className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
                 >
-                  About us
+                  About
+                </Link>
+                <Link
+                  href="/contact"
+                  className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                >
+                  Contact
                 </Link>
               </div>
             </div>
 
             {/* Right side */}
             <div className="flex items-center space-x-4">
+              {/* Language Switcher */}
+              <LanguageSwitcher />
+
+              {/* User Menu */}
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
-                      className="relative rounded-full bg-primary-200 hover:bg-primary-300"
+                      className="relative h-8 rounded-full border border-gray-300 bg-primary-100"
                     >
                       {user.username}
-                      <User className="h-12 w-12" />
+                      <User className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">
@@ -95,95 +99,41 @@ export default function NavbarWrapper({
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link
-                        href={
-                          user.isStaff
-                            ? "/admin-profile"
-                            : user.isTutor
-                            ? "/teacher-profile"
-                            : "/student-profile"
-                        }
-                        className="w-full"
-                      >
-                        Mi Perfil
-                      </Link>
+                      <Link href="/profile">Profile</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href="/my-courses" className="w-full">
-                        Mis Cursos
-                      </Link>
+                      <Link href="/settings">Settings</Link>
                     </DropdownMenuItem>
                     {user.isTutor && (
                       <DropdownMenuItem asChild>
-                        <Link href="/tutor/dashboard" className="w-full">
-                          Panel de Profesor
-                        </Link>
+                        <Link href="/tutor/dashboard">Tutor Dashboard</Link>
                       </DropdownMenuItem>
                     )}
                     {user.isStaff && (
                       <DropdownMenuItem asChild>
-                        <Link href="/admin/dashboard" className="w-full">
-                          Panel de Admin
-                        </Link>
+                        <Link href="/admin/dashboard">Admin Dashboard</Link>
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={logout}>
-                      Cerrar Sesión
+                      Log out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <>
+                <div className="flex items-center space-x-4">
                   <Link href="/login">
-                    <Button
-                      variant="ghost"
-                      className="text-[15px] text-primary-800 font-semibold"
-                    >
-                      Log in
-                    </Button>
+                    <Button variant="ghost">Log in</Button>
                   </Link>
                   <Link href="/register">
-                    <Button className="text-[15px] bg-primary-700 hover:bg-primary-800 text-white">
-                      Sign up
-                    </Button>
+                    <Button>Sign up</Button>
                   </Link>
-                </>
+                </div>
               )}
-            </div>
-
-            {/* Mobile menu button */}
-            <div className="flex md:hidden">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <Menu className="h-6 w-6" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem asChild>
-                    <Link href="/tutors" className="w-full">
-                      Find tutors
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/courses" className="w-full">
-                      Courses
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/about" className="w-full">
-                      About us
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
           </div>
         </div>
       </nav>
-
-      {/* Main Content */}
       <main>{children}</main>
     </div>
   );

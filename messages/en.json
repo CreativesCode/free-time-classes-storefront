@@ -1,0 +1,80 @@
+{
+  "navigation": {
+    "home": "Home",
+    "about": "About",
+    "contact": "Contact",
+    "login": "Login",
+    "register": "Register"
+  },
+  "languageSwitcher": {
+    "switchLanguage": "Switch language",
+    "english": "English",
+    "spanish": "Spanish"
+  },
+  "common": {
+    "welcome": "Welcome to Free Time Classes",
+    "description": "Discover and book amazing classes for your free time",
+    "search": "Search classes...",
+    "categories": "Categories",
+    "popular": "Popular Classes",
+    "featured": "Featured Classes",
+    "viewAll": "View All",
+    "bookNow": "Book Now",
+    "price": "Price",
+    "duration": "Duration",
+    "level": "Level",
+    "language": "Language"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?",
+    "dontHaveAccount": "Don't have an account?",
+    "alreadyHaveAccount": "Already have an account?",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "logout": "Logout"
+  },
+  "footer": {
+    "aboutUs": "About Us",
+    "contactUs": "Contact Us",
+    "terms": "Terms & Conditions",
+    "privacy": "Privacy Policy",
+    "followUs": "Follow Us",
+    "newsletter": "Subscribe to our newsletter"
+  },
+  "home": {
+    "heroTitle": "Learn with the Best Teachers",
+    "heroDescription": "Connect with experts and improve your skills with personalized classes",
+    "startNow": "Start Now",
+    "findTutors": "Find Tutors",
+    "featuredTeachersTitle": "Featured Teachers",
+    "courses": "courses",
+    "popularCoursesTitle": "Popular Courses",
+    "teacher": "Teacher",
+    "students": "students",
+    "whyChooseUsTitle": "Why Choose Us?",
+    "expertTeachers": "Expert Teachers",
+    "expertTeachersDescription": "Connect with highly qualified and experienced teachers",
+    "customClasses": "Custom Classes",
+    "customClassesDescription": "Learn at your own pace with classes tailored to your needs",
+    "totalFlexibility": "Total Flexibility",
+    "totalFlexibilityDescription": "Choose your schedule and study from anywhere",
+    "ready": "Ready to start your learning journey?",
+    "joinCommunity": "Join our community and start learning with the best teachers",
+    "registerNow": "Register Now",
+    "companyDescription": "Connecting students with the best teachers for personalized and effective learning",
+    "quickLinks": "Quick Links",
+    "findTutors": "Find Tutors",
+    "availableCourses": "Available Courses",
+    "becomeTutor": "Become a Tutor",
+    "aboutUs": "About Us",
+    "contact": "Contact",
+    "email": "Email: info@freetimeclasses.com",
+    "phone": "Phone: +34 123 456 789",
+    "address": "Address: Madrid, Spain",
+    "schedule": "Hours: Mon-Fri 9:00-18:00",
+    "followUs": "Follow Us",
+    "allRightsReserved": "All rights reserved"
+  }
+}

@@ -17,6 +17,8 @@ interface User {
   isStudent: boolean;
   isTutor: boolean;
   isStaff: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface UserContextType {
@@ -45,26 +47,25 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [logoutMutation] = useMutation(LOGOUT_MUTATION);
 
   // Query for current user
-  const { data: userData } = useQuery(GET_USER, {
+  const { data: userData, error: userQueryError } = useQuery(GET_USER, {
     skip: typeof window === "undefined" || !localStorage.getItem("token"),
-    onCompleted: (data) => {
-      if (data?.me) {
-        setUser(data.me);
-        setIsLoading(false);
-      }
-    },
-    onError: (error) => {
-      setError(error);
-      setIsLoading(false);
-    },
   });
 
+  // Manejar la actualización del usuario
   useEffect(() => {
     if (userData?.me) {
       setUser(userData.me);
       setIsLoading(false);
     }
   }, [userData]);
+
+  // Manejar errores
+  useEffect(() => {
+    if (userQueryError) {
+      setError(userQueryError);
+      setIsLoading(false);
+    }
+  }, [userQueryError]);
 
   const login = async (email: string, password: string) => {
     try {

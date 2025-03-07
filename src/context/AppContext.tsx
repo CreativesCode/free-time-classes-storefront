@@ -5,6 +5,7 @@ import { ApolloError, useQuery } from "@apollo/client";
 import {
   createContext,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -42,6 +43,10 @@ export interface Course {
   // Add more course properties as needed
 }
 
+interface UserQueryData {
+  me: User;
+}
+
 const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
@@ -55,20 +60,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [coursesLoading, setCoursesLoading] = useState(true);
   const [coursesError, setCoursesError] = useState<ApolloError | null>(null);
 
+  // Handle user data update
+  const handleUserData = useCallback((data: UserQueryData) => {
+    // No hacemos nada aquí, la actualización se maneja en useEffect
+  }, []);
+
+  // Handle user error
+  const handleUserError = useCallback((error: ApolloError) => {
+    // No hacemos nada aquí, la actualización se maneja en useEffect
+  }, []);
+
   // Fetch user data when token exists
-  const { data: userQueryData } = useQuery(GET_USER, {
-    skip: typeof window === "undefined" || !localStorage.getItem("token"),
-    onCompleted: (data) => {
-      if (data?.me) {
-        setUserData(data.me);
-        setUserLoading(false);
-      }
-    },
-    onError: (error) => {
-      setUserError(error);
-      setUserLoading(false);
-    },
-  });
+  const { data: userQueryData, error: userQueryError } =
+    useQuery<UserQueryData>(GET_USER, {
+      skip: typeof window === "undefined" || !localStorage.getItem("token"),
+      onCompleted: handleUserData,
+      onError: handleUserError,
+    });
 
   // Update user state when query data changes
   useEffect(() => {
@@ -77,6 +85,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setUserLoading(false);
     }
   }, [userQueryData]);
+
+  // Handle errors in useEffect
+  useEffect(() => {
+    if (userQueryError) {
+      setUserError(userQueryError);
+      setUserLoading(false);
+    }
+  }, [userQueryError]);
 
   const value = {
     user: {
