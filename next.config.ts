@@ -23,6 +23,15 @@ const nextConfig: NextConfig = {
     });
     return config;
   },
+  pageExtensions: ["js", "jsx", "ts", "tsx"],
+  async rewrites() {
+    return [
+      {
+        source: "/favicon.ico",
+        destination: "/public/favicon.ico",
+      },
+    ];
+  },
 };
 
 export default withNextIntl(nextConfig);

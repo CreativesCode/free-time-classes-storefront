@@ -2,6 +2,17 @@ import createMiddleware from "next-intl/middleware";
 import { NextRequest, NextResponse } from "next/server";
 import { routing } from "./src/i18n/routing";
 
+// List of paths that should not be processed by the middleware
+const PUBLIC_PATHS = [
+  "/_next",
+  "/api",
+  "/static",
+  "/favicon.ico",
+  "/robots.txt",
+  "/sitemap.xml",
+  "/manifest.json",
+];
+
 // Create the next-intl middleware
 const intlMiddleware = createMiddleware({
   // A list of all locales that are supported
@@ -18,14 +29,22 @@ const intlMiddleware = createMiddleware({
 
 // Create our custom middleware that combines both functionalities
 export default function middleware(req: NextRequest) {
+  // Check if the path should be excluded from middleware processing
+  const pathname = req.nextUrl.pathname;
+  if (
+    PUBLIC_PATHS.some((path) => pathname.startsWith(path)) ||
+    pathname.includes(".")
+  ) {
+    return NextResponse.next();
+  }
+
   // First handle authentication
   const token = req.cookies.get("token")?.value;
   const isAuthPage =
-    req.nextUrl.pathname.includes("/login") ||
-    req.nextUrl.pathname.includes("/register");
+    pathname.includes("/login") || pathname.includes("/register");
 
   // Redirect to login if accessing protected routes without token
-  if (!token && req.nextUrl.pathname.includes("/dashboard")) {
+  if (!token && pathname.includes("/dashboard")) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
@@ -35,7 +54,7 @@ export default function middleware(req: NextRequest) {
   }
 
   // Handle root path - redirect to default locale
-  if (req.nextUrl.pathname === "/") {
+  if (pathname === "/") {
     return NextResponse.redirect(new URL(`/${routing.defaultLocale}`, req.url));
   }
 
@@ -45,13 +64,8 @@ export default function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    // Match all pathnames except for
-    // - api (API routes)
-    // - _next/static (static files)
-    // - _next/image (image optimization files)
-    // - favicon.ico (favicon file)
-    // - public folder
-    "/((?!api|_next/static|_next/image|favicon.ico|public).*)",
+    // Match all pathnames except static files and API routes
+    "/((?!api|_next|static|favicon.ico|robots.txt|sitemap.xml|manifest.json|.*\\..*).*)",
     // Match internationalized pathnames
     "/(en|es)/:path*",
     // Match dashboard routes
