@@ -47,9 +47,8 @@
     "heroTitle": "Learn with the Best Teachers",
     "heroDescription": "Connect with experts and improve your skills with personalized classes",
     "startNow": "Start Now",
-    "findTutors": "Find Tutors",
     "featuredTeachersTitle": "Featured Teachers",
-    "courses": "courses",
+    "coursesText": "courses",
     "popularCoursesTitle": "Popular Courses",
     "teacher": "Teacher",
     "students": "students",
@@ -75,6 +74,48 @@
     "address": "Address: Madrid, Spain",
     "schedule": "Hours: Mon-Fri 9:00-18:00",
     "followUs": "Follow Us",
-    "allRightsReserved": "All rights reserved"
+    "allRightsReserved": "All rights reserved",
+    "title": "Learn with the Best Teachers",
+    "description": "Connecting students with the best teachers for personalized and effective learning",
+    "teachers": {
+      "math": {
+        "name": "Dr. Maria Garcia",
+        "specialty": "Mathematics",
+        "experience": "8 years",
+        "courses": "15"
+      },
+      "physics": {
+        "name": "Prof. Juan Martinez",
+        "specialty": "Physics",
+        "experience": "6 years",
+        "courses": "12"
+      },
+      "chemistry": {
+        "name": "Dr. Ana Lopez",
+        "specialty": "Chemistry",
+        "experience": "10 years",
+        "courses": "18"
+      }
+    },
+    "courses": {
+      "calculus": {
+        "title": "Advanced Calculus",
+        "description": "Learn differential and integral calculus in a practical way",
+        "level": "Advanced"
+      },
+      "quantum": {
+        "title": "Quantum Physics",
+        "description": "Introduction to fundamental concepts of quantum physics",
+        "level": "Intermediate"
+      },
+      "organic": {
+        "title": "Organic Chemistry",
+        "description": "Organic compounds and their reactions",
+        "level": "Advanced"
+      }
+    },
+    "years": "years",
+    "advanced": "Advanced",
+    "intermediate": "Intermediate"
   }
 }

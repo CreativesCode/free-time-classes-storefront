@@ -72,7 +72,7 @@ export default function TeacherProfile() {
             <div className="flex items-center space-x-6">
               <Avatar className="h-24 w-24">
                 <AvatarImage
-                  src={user.profilePicture || "/placeholder-avatar.jpg"}
+                  src={user.profilePicture || "/images/default-avatar.png"}
                   alt="Foto de perfil"
                 />
                 <AvatarFallback

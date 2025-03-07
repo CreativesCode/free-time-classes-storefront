@@ -10,9 +10,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Facebook, Instagram, Twitter, Youtube } from "lucide-react";
-import { useTranslations } from "next-intl";
-import Link from "next/link";
+import { Facebook, Instagram, Link, Twitter, Youtube } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
+import { usePathname, useRouter } from "next/navigation";
 
 // Función auxiliar para generar colores de avatar
 function getAvatarColor(letter: string) {
@@ -32,65 +32,102 @@ function getAvatarColor(letter: string) {
 
 export default function HomeContent() {
   const t = useTranslations("home");
+  const pathname = usePathname();
+  const router = useRouter();
+  const locale = useLocale();
 
-  // Mock data for featured teachers and courses
+  // Function to handle language change
+  const handleLanguageChange = (newLocale: string) => {
+    const currentPath = pathname;
+    const newPath = currentPath.replace(`/${locale}`, `/${newLocale}`);
+    router.push(newPath);
+  };
+
+  // Mock data using translations
   const featuredTeachers = [
     {
       id: 1,
-      name: "Dr. María García",
-      specialty: "Matemáticas",
-      experience: "8 años",
-      courses: 15,
-      profilePicture: "/placeholder-avatar.jpg",
+      name: t("teachers.math.name"),
+      specialty: t("teachers.math.specialty"),
+      experience: t("teachers.math.experience"),
+      courses: t("teachers.math.courses"),
+      profilePicture: "/images/default-avatar.png",
     },
     {
       id: 2,
-      name: "Prof. Juan Martínez",
-      specialty: "Física",
-      experience: "6 años",
-      courses: 12,
-      profilePicture: "/placeholder-avatar.jpg",
+      name: t("teachers.physics.name"),
+      specialty: t("teachers.physics.specialty"),
+      experience: t("teachers.physics.experience"),
+      courses: t("teachers.physics.courses"),
+      profilePicture: "/images/default-avatar.png",
     },
     {
       id: 3,
-      name: "Dra. Ana López",
-      specialty: "Química",
-      experience: "10 años",
-      courses: 18,
-      profilePicture: "/placeholder-avatar.jpg",
+      name: t("teachers.chemistry.name"),
+      specialty: t("teachers.chemistry.specialty"),
+      experience: t("teachers.chemistry.experience"),
+      courses: t("teachers.chemistry.courses"),
+      profilePicture: "/images/default-avatar.png",
     },
   ];
 
   const popularCourses = [
     {
       id: 1,
-      title: "Cálculo Avanzado",
-      description: "Aprende cálculo diferencial e integral de manera práctica",
-      teacher: "Dr. María García",
+      title: t("courses.calculus.title"),
+      description: t("courses.calculus.description"),
+      teacher: t("teachers.math.name"),
       students: 45,
-      level: "Avanzado",
+      level: t("courses.calculus.level"),
     },
     {
       id: 2,
-      title: "Física Cuántica",
-      description:
-        "Introducción a los conceptos fundamentales de la física cuántica",
-      teacher: "Prof. Juan Martínez",
+      title: t("courses.quantum.title"),
+      description: t("courses.quantum.description"),
+      teacher: t("teachers.physics.name"),
       students: 38,
-      level: "Intermedio",
+      level: t("courses.quantum.level"),
     },
     {
       id: 3,
-      title: "Química Orgánica",
-      description: "Compuestos orgánicos y sus reacciones",
-      teacher: "Dra. Ana López",
+      title: t("courses.organic.title"),
+      description: t("courses.organic.description"),
+      teacher: t("teachers.chemistry.name"),
       students: 42,
-      level: "Avanzado",
+      level: t("courses.organic.level"),
     },
   ];
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Language Switcher */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+          <div className="flex justify-end space-x-4">
+            <button
+              onClick={() => handleLanguageChange("en")}
+              className={`px-3 py-1 rounded ${
+                locale === "en"
+                  ? "bg-primary text-white"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              English
+            </button>
+            <button
+              onClick={() => handleLanguageChange("es")}
+              className={`px-3 py-1 rounded ${
+                locale === "es"
+                  ? "bg-primary text-white"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Español
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Hero Section */}
       <section className="bg-gray-100 bg-[url('/images/bg.webp')] bg-cover bg-center bg-no-repeat text-white">
         <div className="px-4 sm:px-6 lg:px-8 h-full bg-black/15 rounded-lg py-20">
@@ -161,7 +198,7 @@ export default function HomeContent() {
                   <div className="mt-4 flex gap-2">
                     <Badge variant="secondary">{teacher.experience}</Badge>
                     <Badge variant="secondary">
-                      {teacher.courses} {t("courses")}
+                      {teacher.courses} {t("coursesText")}
                     </Badge>
                   </div>
                 </CardContent>

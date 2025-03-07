@@ -47,9 +47,25 @@
     "heroTitle": "Aprende con los Mejores Profesores",
     "heroDescription": "Conecta con expertos y mejora tus habilidades con clases personalizadas",
     "startNow": "Comienza Ahora",
-    "findTutors": "Encuentra Profesores",
     "featuredTeachersTitle": "Profesores Destacados",
-    "courses": "cursos",
+    "coursesText": "cursos",
+    "courses": {
+      "calculus": {
+        "title": "Cálculo Avanzado",
+        "description": "Aprende cálculo diferencial e integral de manera práctica",
+        "level": "Avanzado"
+      },
+      "quantum": {
+        "title": "Física Cuántica",
+        "description": "Introducción a los conceptos fundamentales de la física cuántica",
+        "level": "Intermedio"
+      },
+      "organic": {
+        "title": "Química Orgánica",
+        "description": "Compuestos orgánicos y sus reacciones",
+        "level": "Avanzado"
+      }
+    },
     "popularCoursesTitle": "Cursos Populares",
     "teacher": "Profesor",
     "students": "estudiantes",
@@ -75,6 +91,31 @@
     "address": "Dirección: Madrid, España",
     "schedule": "Horario: Lun-Vie 9:00-18:00",
     "followUs": "Síguenos",
-    "allRightsReserved": "Todos los derechos reservados"
+    "allRightsReserved": "Todos los derechos reservados",
+    "title": "Aprende con los Mejores Profesores",
+    "description": "Conecta con expertos y mejora tus habilidades con clases personalizadas",
+    "teachers": {
+      "math": {
+        "name": "Dra. María García",
+        "specialty": "Matemáticas",
+        "experience": "8 años",
+        "courses": "15"
+      },
+      "physics": {
+        "name": "Prof. Juan Martínez",
+        "specialty": "Física",
+        "experience": "6 años",
+        "courses": "12"
+      },
+      "chemistry": {
+        "name": "Dra. Ana López",
+        "specialty": "Química",
+        "experience": "10 años",
+        "courses": "18"
+      }
+    },
+    "years": "años",
+    "advanced": "Avanzado",
+    "intermediate": "Intermedio"
   }
 }
