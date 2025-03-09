@@ -1,4 +1,68 @@
 {
+  "login": {
+    "title": "Iniciar Sesión",
+    "description": "Ingresa tus credenciales para acceder a tu cuenta",
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "input": {
+      "email": "Ingresa tu correo electrónico",
+      "password": "Ingresa tu contraseña"
+    },
+    "login": "Iniciar Sesión",
+    "register": "Registrarse",
+    "dontHaveAccount": "¿No tienes una cuenta?",
+    "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+    "loading": "Iniciando sesión..."
+  },
+  "register": {
+    "title": "Registrarse",
+    "description": "Crea tu cuenta para comenzar",
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "input": {
+      "email": "Ingresa tu correo electrónico",
+      "password": "Ingresa tu contraseña"
+    },
+    "accountType": "Tipo de Cuenta",
+    "student": "Estudiante",
+    "tutor": "Profesor",
+    "registrationFailed": "Registro fallido. Por favor, inténtalo de nuevo.",
+    "loading": "Registrando...",
+    "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+    "login": "Inicia sesión aquí",
+    "register": "Regístrate aquí"
+  },
+  "navbar": {
+    "profile": "Perfil",
+    "settings": "Configuración",
+    "tutorDashboard": "Panel de Profesores",
+    "adminDashboard": "Panel de Administración",
+    "logout": "Cerrar Sesión",
+    "courses": "Cursos",
+    "about": "Sobre Nosotros",
+    "contact": "Contacto",
+    "login": "Iniciar Sesión",
+    "register": "Registrarse"
+  },
+  "studentProfile": {
+    "profile": "Perfil",
+    "courses": "Cursos",
+    "settings": "Configuración",
+    "personalInformation": "Información Personal",
+    "name": "Nombre",
+    "email": "Correo Electrónico",
+    "registrationDate": "Fecha de Registro",
+    "lastUpdate": "Última Actualización",
+    "editProfile": "Editar Perfil",
+    "enrolledCourses": "Cursos Inscritos",
+    "noCoursesEnrolled": "No hay cursos inscritos aún",
+    "accountSettings": "Configuración de la Cuenta",
+    "language": "Idioma",
+    "configureNotifications": "Configurar Notificaciones",
+    "changePassword": "Cambiar Contraseña",
+    "updatePassword": "Actualizar Contraseña",
+    "deleteAccount": "Eliminar Cuenta"
+  },
   "navigation": {
     "home": "Inicio",
     "about": "Sobre Nosotros",
@@ -117,5 +181,35 @@
     "years": "años",
     "advanced": "Avanzado",
     "intermediate": "Intermedio"
+  },
+  "aboutUs": {
+    "title": "Sobre Free Time Classes",
+    "mission": {
+      "title": "Nuestra Misión",
+      "description": "En Free Time Classes, nos dedicamos a revolucionar la forma en que las personas aprenden y enseñan. Nuestra plataforma conecta a profesores apasionados con estudiantes entusiastas, creando una comunidad vibrante donde el conocimiento fluye libremente y el aprendizaje ocurre en tu horario."
+    },
+    "vision": {
+      "title": "Nuestra Visión",
+      "description": "Visualizamos un mundo donde la educación de calidad sea accesible para todos, en todas partes. Al romper las barreras tradicionales del aprendizaje, estamos creando oportunidades para que los estudiantes crezcan y los profesores compartan su experiencia de una manera flexible y moderna."
+    },
+    "values": {
+      "flexibility": {
+        "title": "Flexibilidad",
+        "description": "Aprende y enseña en tu propio horario, desde cualquier lugar del mundo."
+      },
+      "community": {
+        "title": "Comunidad",
+        "description": "Únete a una red de apoyo de estudiantes y educadores apasionados por compartir conocimiento."
+      },
+      "quality": {
+        "title": "Educación de Calidad",
+        "description": "Accede a instrucción de alta calidad de profesores verificados y experimentados."
+      }
+    },
+    "joinUs": {
+      "title": "Únete a Nuestra Comunidad",
+      "description": "Ya sea que estés aquí para aprender o enseñar, hay un lugar para ti en nuestra creciente comunidad.",
+      "cta": "Comienza Hoy"
+    }
   }
 }

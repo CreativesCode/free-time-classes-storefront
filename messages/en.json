@@ -1,4 +1,68 @@
 {
+  "login": {
+    "title": "Login",
+    "description": "Enter your credentials to access your account",
+    "email": "Email",
+    "password": "Password",
+    "input": {
+      "email": "Enter your email",
+      "password": "Enter your password"
+    },
+    "login": "Login",
+    "register": "Register",
+    "dontHaveAccount": "Don't have an account?",
+    "alreadyHaveAccount": "Already have an account?",
+    "loading": "Logging in..."
+  },
+  "register": {
+    "title": "Register",
+    "description": "Create your account to get started",
+    "email": "Email",
+    "password": "Password",
+    "input": {
+      "email": "Enter your email",
+      "password": "Enter your password"
+    },
+    "accountType": "Account Type",
+    "student": "Student",
+    "tutor": "Tutor",
+    "registrationFailed": "Registration failed. Please try again.",
+    "loading": "Registering...",
+    "alreadyHaveAccount": "Already have an account?",
+    "login": "Login here"
+  },
+  "navbar": {
+    "profile": "Profile",
+    "settings": "Settings",
+    "tutorDashboard": "Tutor Dashboard",
+    "adminDashboard": "Admin Dashboard",
+    "logout": "Logout",
+    "courses": "Courses",
+    "about": "About",
+    "contact": "Contact",
+    "login": "Login",
+    "register": "Register"
+  },
+  "studentProfile": {
+    "profile": "Profile",
+    "courses": "Courses",
+    "settings": "Settings",
+    "personalInformation": "Personal Information",
+    "name": "Name",
+    "email": "Email",
+    "registrationDate": "Registration Date",
+    "lastUpdate": "Last Update",
+    "editProfile": "Edit Profile",
+    "enrolledCourses": "Enrolled Courses",
+    "noCoursesEnrolled": "No courses enrolled yet",
+    "accountSettings": "Account Settings",
+    "language": "Language",
+    "configureNotifications": "Configure Notifications",
+    "changePassword": "Change Password",
+    "updatePassword": "Update Password",
+    "deleteAccount": "Delete Account"
+  },
+
   "navigation": {
     "home": "Home",
     "about": "About",
@@ -117,5 +181,35 @@
     "years": "years",
     "advanced": "Advanced",
     "intermediate": "Intermediate"
+  },
+  "aboutUs": {
+    "title": "About Free Time Classes",
+    "mission": {
+      "title": "Our Mission",
+      "description": "At Free Time Classes, we're dedicated to revolutionizing the way people learn and teach. Our platform connects passionate teachers with eager students, creating a vibrant community where knowledge flows freely and learning happens on your schedule."
+    },
+    "vision": {
+      "title": "Our Vision",
+      "description": "We envision a world where quality education is accessible to everyone, everywhere. By breaking down traditional barriers to learning, we're creating opportunities for both students to grow and teachers to share their expertise in a flexible, modern way."
+    },
+    "values": {
+      "flexibility": {
+        "title": "Flexibility",
+        "description": "Learn and teach on your own schedule, from anywhere in the world."
+      },
+      "community": {
+        "title": "Community",
+        "description": "Join a supportive network of learners and educators passionate about sharing knowledge."
+      },
+      "quality": {
+        "title": "Quality Education",
+        "description": "Access high-quality instruction from verified and experienced teachers."
+      }
+    },
+    "joinUs": {
+      "title": "Join Our Community",
+      "description": "Whether you're here to learn or to teach, there's a place for you in our growing community.",
+      "cta": "Get Started Today"
+    }
   }
 }

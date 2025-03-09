@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/context/UserContext";
 import { User } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -25,15 +25,17 @@ export default function NavbarWrapper({
   const locale = useLocale();
   const { user, logout } = useAuth();
   const pathname = usePathname();
+  const t = useTranslations("navbar");
 
-  if (["/login/", "/register/"].includes(pathname)) {
+  // Check if the current path is for authentication pages
+  if (pathname.includes("/login") || pathname.includes("/register")) {
     return <>{children}</>;
   }
 
   return (
     <div className="min-h-screen bg-white">
       <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6">
           <div className="flex justify-between items-center h-[72px]">
             {/* Left side */}
             <div className="flex items-center space-x-8">
@@ -54,19 +56,19 @@ export default function NavbarWrapper({
                   href={`/${locale}/courses`}
                   className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
                 >
-                  Courses
+                  {t("courses")}
                 </Link>
                 <Link
                   href={`/${locale}/about`}
                   className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
                 >
-                  About
+                  {t("about")}
                 </Link>
                 <Link
                   href={`/${locale}/contact`}
                   className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
                 >
-                  Contact
+                  {t("contact")}
                 </Link>
               </div>
             </div>
@@ -106,39 +108,39 @@ export default function NavbarWrapper({
                           user.isStudent ? "student" : "teacher"
                         }-profile`}
                       >
-                        Profile
+                        {t("profile")}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href={`/${locale}/settings`}>Settings</Link>
+                      <Link href={`/${locale}/settings`}>{t("settings")}</Link>
                     </DropdownMenuItem>
                     {user.isTutor && (
                       <DropdownMenuItem asChild>
                         <Link href={`/${locale}/tutor/dashboard`}>
-                          Tutor Dashboard
+                          {t("tutorDashboard")}
                         </Link>
                       </DropdownMenuItem>
                     )}
                     {user.isStaff && (
                       <DropdownMenuItem asChild>
                         <Link href={`/${locale}/admin/dashboard`}>
-                          Admin Dashboard
+                          {t("adminDashboard")}
                         </Link>
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={logout}>
-                      Log out
+                      {t("logout")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
                 <div className="flex items-center space-x-4">
                   <Link href={`/${locale}/login`}>
-                    <Button variant="ghost">Log in</Button>
+                    <Button variant="ghost">{t("login")}</Button>
                   </Link>
                   <Link href={`/${locale}/register`}>
-                    <Button>Sign up</Button>
+                    <Button>{t("register")}</Button>
                   </Link>
                 </div>
               )}

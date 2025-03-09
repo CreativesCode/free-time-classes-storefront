@@ -59,7 +59,7 @@ export default function TeacherProfile() {
   }
 
   return (
-    <div className="max-w-screen-xl mx-auto py-8">
+    <div className="max-w-screen-2xl mx-auto py-8">
       <div className="grid gap-6">
         {/* Profile Header */}
         <Card>

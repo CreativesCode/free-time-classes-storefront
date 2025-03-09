@@ -1,3 +1,4 @@
+import FooterWrapper from "@/components/FooterWrapper";
 import LocaleLayoutWrapper from "@/components/LocaleLayoutWrapper";
 import { routing } from "@/i18n/routing";
 import { NextIntlClientProvider } from "next-intl";
@@ -40,6 +41,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           <LocaleLayoutWrapper messages={messages} locale={locale}>
             {children}
+            <FooterWrapper />
           </LocaleLayoutWrapper>
         </NextIntlClientProvider>
       </body>

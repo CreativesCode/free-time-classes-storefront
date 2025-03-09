@@ -15,6 +15,7 @@ import { useAppData } from "@/context/AppContext";
 import { LOGIN_MUTATION } from "@/graphql/auth";
 import { useMutation } from "@apollo/client";
 import { Eye, EyeOff } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useState } from "react";
@@ -27,6 +28,8 @@ export default function LoginPage() {
   const [login, { loading, error }] = useMutation(LOGIN_MUTATION);
   const router = useRouter();
   const { setData: setUserData } = useAppData("user");
+  const locale = useLocale();
+  const t = useTranslations("login");
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -55,11 +58,11 @@ export default function LoginPage() {
       localStorage.setItem("token", data.tokenAuth.token);
       setUserData(data.tokenAuth.user);
       if (data.tokenAuth.user.isTutor) {
-        router.push("/teacher-profile");
+        router.push(`/${locale}/teacher-profile`);
       } else if (data.tokenAuth.user.isStudent) {
-        router.push("/student-profile");
+        router.push(`/${locale}/student-profile`);
       } else {
-        router.push("/dashboard");
+        router.push(`/${locale}/dashboard`);
       }
     }
   };
@@ -72,20 +75,20 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl text-center text-secondary-500">
-            Login
+            {t("title")}
           </CardTitle>
           <CardDescription className="text-center">
-            Enter your credentials to access your account
+            {t("description")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("email")}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="Enter your email"
+                placeholder={t("input.email")}
                 value={email}
                 onChange={handleEmailChange}
                 required
@@ -96,12 +99,12 @@ export default function LoginPage() {
               )}
             </div>
             <div className="space-y-1">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("password")}</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
+                  placeholder={t("input.password")}
                   value={password}
                   onChange={handlePasswordChange}
                   required
@@ -135,18 +138,18 @@ export default function LoginPage() {
               className="w-full btn-primary"
               disabled={loading}
             >
-              {loading ? "Logging in..." : "Login"}
+              {loading ? t("loading") : t("login")}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-sm text-secondary-500">
-            Don&apos;t have an account?{" "}
+            {t("dontHaveAccount")}{" "}
             <Link
-              href="/register"
+              href={`/${locale}/register`}
               className="text-primary-600 hover:text-primary-700 font-medium"
             >
-              Register here
+              {t("register")}
             </Link>
           </p>
         </CardFooter>

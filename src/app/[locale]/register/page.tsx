@@ -15,6 +15,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { REGISTER_MUTATION } from "@/graphql/auth";
 import { useMutation } from "@apollo/client";
 import { Eye, EyeOff } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useState } from "react";
@@ -29,6 +30,8 @@ export default function RegisterPage() {
   const [emailError, setEmailError] = useState("");
   const [register, { loading, error }] = useMutation(REGISTER_MUTATION);
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations("register");
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -73,20 +76,20 @@ export default function RegisterPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl text-center text-secondary-500">
-            Register
+            {t("title")}
           </CardTitle>
           <CardDescription className="text-center">
-            Create your account to get started
+            {t("description")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("email")}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="Enter your email"
+                placeholder={t("input.email")}
                 value={email}
                 onChange={handleEmailChange}
                 required
@@ -97,12 +100,12 @@ export default function RegisterPage() {
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("password")}</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
+                  placeholder={t("input.password")}
                   value={password}
                   onChange={handlePasswordChange}
                   required
@@ -121,7 +124,7 @@ export default function RegisterPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Account Type</Label>
+              <Label>{t("accountType")}</Label>
               <RadioGroup
                 value={isStudent ? "student" : "tutor"}
                 onValueChange={(value: AccountType) =>
@@ -131,19 +134,17 @@ export default function RegisterPage() {
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="student" id="student" />
-                  <Label htmlFor="student">Student</Label>
+                  <Label htmlFor="student">{t("student")}</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="tutor" id="tutor" />
-                  <Label htmlFor="tutor">Tutor</Label>
+                  <Label htmlFor="tutor">{t("tutor")}</Label>
                 </div>
               </RadioGroup>
             </div>
             {error && (
               <Alert variant="destructive">
-                <AlertDescription>
-                  Registration failed. Please try again.
-                </AlertDescription>
+                <AlertDescription>{t("registrationFailed")}</AlertDescription>
               </Alert>
             )}
             <Button
@@ -151,18 +152,18 @@ export default function RegisterPage() {
               className="w-full btn-primary"
               disabled={loading}
             >
-              {loading ? "Registering..." : "Register"}
+              {loading ? t("loading") : t("register")}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-sm text-secondary-500">
-            Already have an account?{" "}
+            {t("alreadyHaveAccount")}{" "}
             <Link
-              href="/login"
+              href={`/${locale}/login`}
               className="text-primary-600 hover:text-primary-700 font-medium"
             >
-              Login here
+              {t("login")}
             </Link>
           </p>
         </CardFooter>
