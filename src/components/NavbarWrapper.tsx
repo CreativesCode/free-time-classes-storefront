@@ -42,7 +42,7 @@ export default function NavbarWrapper({
               {/* Logo */}
               <Link href={`/${locale}/`} className="flex items-center">
                 <Image
-                  src="/images/logo.png"
+                  src="/images/isotipo.svg"
                   alt="Free Time Classes Logo"
                   className="h-16 w-auto"
                   width={50}

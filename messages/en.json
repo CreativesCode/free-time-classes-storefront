@@ -29,7 +29,8 @@
     "registrationFailed": "Registration failed. Please try again.",
     "loading": "Registering...",
     "alreadyHaveAccount": "Already have an account?",
-    "login": "Login here"
+    "login": "Login here",
+    "register": "Register here"
   },
   "navbar": {
     "profile": "Profile",
