@@ -83,10 +83,23 @@
   }
 }
 
-.btn-primary {
-  @apply bg-primary-500 hover:bg-primary-600 !important;
+.btn-primary,
+.fc-button-primary {
+  @apply bg-primary-500 hover:bg-primary-600 text-white !important;
 }
 
 .btn-secondary {
-  @apply bg-secondary-500 hover:bg-secondary-600;
+  @apply bg-secondary-500 hover:bg-secondary-600 text-white;
+}
+
+.fc-toolbar-title {
+  @apply text-lg font-bold text-primary-700;
+}
+
+.fc-col-header-cell-cushion {
+  @apply text-primary-800;
+}
+
+.fc-timegrid-slot-label-frame {
+  @apply text-primary-600;
 }

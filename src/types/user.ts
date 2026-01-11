@@ -4,7 +4,15 @@ export interface User {
   email: string;
   isTutor: boolean;
   isStaff: boolean;
-  profileImage?: string;
+  profilePicture?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  dateOfBirth?: string;
+  country?: string;
+  bio?: string;
+  specialties?: string;
+  experience?: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { GET_USER } from "@/graphql/auth";
+import { ALL_LESSONS_QUERY, LESSON_STATUS_CHOICES } from "@/graphql/lessons";
 import { ApolloError, useQuery } from "@apollo/client";
 import {
   createContext,
@@ -11,6 +12,15 @@ import {
   useState,
 } from "react";
 
+interface LessonStatusChoice {
+  value: string;
+  displayName: string;
+}
+
+interface LessonStatusData {
+  lessonStatusChoices: LessonStatusChoice[];
+}
+
 interface BaseContextType<T> {
   data: T | null;
   loading: boolean;
@@ -18,12 +28,45 @@ interface BaseContextType<T> {
   setData: (data: T | null) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: ApolloError | null) => void;
+  refetch?: () => Promise<{ data: T | null }>;
+}
+
+interface LessonNode {
+  id: string;
+  subject: {
+    name: string;
+    language: {
+      name: string;
+      level: string;
+    };
+    description: string;
+    icon: string;
+  };
+  scheduledDateTime: string;
+  durationMinutes: number;
+  priceAmount: number;
+  priceCurrency: string;
+  status: string;
+  createdAt: string;
+}
+
+interface LessonsData {
+  allLessons: {
+    edges: Array<{
+      node: LessonNode;
+    }>;
+  };
 }
 
 interface AppContextType {
   user: BaseContextType<User>;
   courses: BaseContextType<Course[]>;
-  // Add more contexts as needed
+  lessons: BaseContextType<LessonNode[]>;
+  lessonStatusChoices: LessonStatusChoice[];
+  refreshLessons: (
+    dateRange: { start: Date; end: Date },
+    status?: string
+  ) => void;
 }
 
 export interface User {
@@ -34,13 +77,17 @@ export interface User {
   isStudent?: boolean;
   isTutor?: boolean;
   isStaff?: boolean;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  dateOfBirth?: string;
+  country?: string;
 }
 
 export interface Course {
   id: string;
   title: string;
   description: string;
-  // Add more course properties as needed
 }
 
 interface UserQueryData {
@@ -60,23 +107,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [coursesLoading, setCoursesLoading] = useState(true);
   const [coursesError, setCoursesError] = useState<ApolloError | null>(null);
 
-  // Handle user data update
-  const handleUserData = useCallback((data: UserQueryData) => {
-    // No hacemos nada aquí, la actualización se maneja en useEffect
-  }, []);
+  // Lessons context state
+  const [lessonsData, setLessonsData] = useState<LessonNode[] | null>(null);
+  const [lessonsLoading, setLessonsLoading] = useState(true);
+  const [lessonsError, setLessonsError] = useState<ApolloError | null>(null);
+  const [lessonStatusChoices, setLessonStatusChoices] = useState<
+    LessonStatusChoice[]
+  >([]);
+  const [lessonsVariables, setLessonsVariables] = useState<{
+    status?: string;
+    scheduledDateTimeGte?: string;
+    scheduledDateTimeLte?: string;
+  }>({});
 
-  // Handle user error
-  const handleUserError = useCallback((error: ApolloError) => {
-    // No hacemos nada aquí, la actualización se maneja en useEffect
-  }, []);
-
-  // Fetch user data when token exists
   const { data: userQueryData, error: userQueryError } =
     useQuery<UserQueryData>(GET_USER, {
       skip: typeof window === "undefined" || !localStorage.getItem("token"),
-      onCompleted: handleUserData,
-      onError: handleUserError,
     });
+
+  const { data: statusData } = useQuery<LessonStatusData>(
+    LESSON_STATUS_CHOICES
+  );
+
+  const { data: lessonsQueryData, error: lessonsQueryError } =
+    useQuery<LessonsData>(ALL_LESSONS_QUERY, {
+      variables: lessonsVariables,
+      skip:
+        !lessonsVariables.scheduledDateTimeGte ||
+        !lessonsVariables.scheduledDateTimeLte,
+    });
+
+  // Update lesson status choices when query data changes
+  useEffect(() => {
+    if (statusData?.lessonStatusChoices) {
+      setLessonStatusChoices(statusData.lessonStatusChoices);
+    }
+  }, [statusData]);
 
   // Update user state when query data changes
   useEffect(() => {
@@ -86,13 +152,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [userQueryData]);
 
-  // Handle errors in useEffect
+  // Handle user errors
   useEffect(() => {
     if (userQueryError) {
       setUserError(userQueryError);
       setUserLoading(false);
     }
   }, [userQueryError]);
+
+  // Update lessons state when query data changes
+  useEffect(() => {
+    if (lessonsQueryData?.allLessons?.edges) {
+      setLessonsData(lessonsQueryData.allLessons.edges.map(({ node }) => node));
+      setLessonsLoading(false);
+    }
+  }, [lessonsQueryData]);
+
+  // Handle lessons errors
+  useEffect(() => {
+    if (lessonsQueryError) {
+      setLessonsError(lessonsQueryError);
+      setLessonsLoading(false);
+    }
+  }, [lessonsQueryError]);
+
+  const refreshLessons = useCallback(
+    (dateRange: { start: Date; end: Date }, status?: string) => {
+      setLessonsLoading(true);
+      setLessonsError(null);
+      setLessonsVariables({
+        status: status || "available",
+        scheduledDateTimeGte: dateRange.start.toISOString(),
+        scheduledDateTimeLte: dateRange.end.toISOString(),
+      });
+    },
+    []
+  );
 
   const value = {
     user: {
@@ -102,6 +197,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setData: setUserData,
       setLoading: setUserLoading,
       setError: setUserError,
+      refetch: () =>
+        userQueryData?.me
+          ? Promise.resolve({ data: userQueryData.me })
+          : Promise.resolve({ data: null }),
     },
     courses: {
       data: coursesData,
@@ -111,6 +210,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setLoading: setCoursesLoading,
       setError: setCoursesError,
     },
+    lessons: {
+      data: lessonsData,
+      loading: lessonsLoading,
+      error: lessonsError,
+      setData: setLessonsData,
+      setLoading: setLessonsLoading,
+      setError: setLessonsError,
+    },
+    lessonStatusChoices,
+    refreshLessons,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

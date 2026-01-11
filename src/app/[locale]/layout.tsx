@@ -1,5 +1,6 @@
 import FooterWrapper from "@/components/FooterWrapper";
 import LocaleLayoutWrapper from "@/components/LocaleLayoutWrapper";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { routing } from "@/i18n/routing";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, unstable_setRequestLocale } from "next-intl/server";
@@ -39,10 +40,12 @@ export default async function LocaleLayout({
     <html lang={locale}>
       <body className={poppins.className}>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <LocaleLayoutWrapper messages={messages} locale={locale}>
-            {children}
-            <FooterWrapper />
-          </LocaleLayoutWrapper>
+          <TooltipProvider>
+            <LocaleLayoutWrapper messages={messages} locale={locale}>
+              {children}
+              <FooterWrapper />
+            </LocaleLayoutWrapper>
+          </TooltipProvider>
         </NextIntlClientProvider>
       </body>
     </html>

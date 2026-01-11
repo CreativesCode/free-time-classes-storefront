@@ -12,6 +12,11 @@ export const LOGIN_MUTATION = gql`
         isStudent
         isTutor
         isStaff
+        firstName
+        lastName
+        phone
+        dateOfBirth
+        country
       }
     }
   }
@@ -41,11 +46,18 @@ export const REGISTER_MUTATION = gql`
       }
     ) {
       user {
+        id
         username
-        isStudent
-        isTutor
         email
         profilePicture
+        isStudent
+        isTutor
+        isStaff
+        firstName
+        lastName
+        phone
+        dateOfBirth
+        country
       }
     }
   }
@@ -54,12 +66,57 @@ export const REGISTER_MUTATION = gql`
 export const GET_USER = gql`
   query {
     me {
+      id
       username
       email
       profilePicture
       isStudent
       isTutor
       isStaff
+      firstName
+      lastName
+      phone
+      dateOfBirth
+      country
+    }
+  }
+`;
+
+export const UPDATE_USER_MUTATION = gql`
+  mutation UpdateUser(
+    $id: ID!
+    $firstName: String
+    $lastName: String
+    $phone: String
+    $profilePicture: String
+    $dateOfBirth: Date
+    $country: String
+  ) {
+    updateUser(
+      input: {
+        id: $id
+        firstName: $firstName
+        lastName: $lastName
+        phone: $phone
+        profilePicture: $profilePicture
+        dateOfBirth: $dateOfBirth
+        country: $country
+      }
+    ) {
+      user {
+        id
+        username
+        email
+        profilePicture
+        isStudent
+        isTutor
+        isStaff
+        firstName
+        lastName
+        phone
+        dateOfBirth
+        country
+      }
     }
   }
 `;
