@@ -1,3 +1,4 @@
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import createMiddleware from "next-intl/middleware";
 import { NextRequest, NextResponse } from "next/server";
 import { routing } from "./src/i18n/routing";
@@ -11,6 +12,15 @@ const PUBLIC_PATHS = [
   "/robots.txt",
   "/sitemap.xml",
   "/manifest.json",
+];
+
+// Protected routes that require authentication
+const PROTECTED_ROUTES = [
+  "/dashboard",
+  "/student-profile",
+  "/teacher-profile",
+  "/settings",
+  "/tutor/dashboard",
 ];
 
 // Create the next-intl middleware
@@ -28,7 +38,7 @@ const intlMiddleware = createMiddleware({
 });
 
 // Create our custom middleware that combines both functionalities
-export default function middleware(req: NextRequest) {
+export default async function middleware(req: NextRequest) {
   // Check if the path should be excluded from middleware processing
   const pathname = req.nextUrl.pathname;
   if (
@@ -38,6 +48,11 @@ export default function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Handle root path - redirect to default locale
+  if (pathname === "/") {
+    return NextResponse.redirect(new URL(`/${routing.defaultLocale}`, req.url));
+  }
+
   // Extract locale from pathname
   const pathnameParts = pathname.split("/");
   const locale =
@@ -45,24 +60,82 @@ export default function middleware(req: NextRequest) {
       ? pathnameParts[1]
       : routing.defaultLocale;
 
-  // First handle authentication
-  const token = req.cookies.get("token")?.value;
+  // Create Supabase client for middleware
+  let response = NextResponse.next({
+    request: {
+      headers: req.headers,
+    },
+  });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return req.cookies.get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          req.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+          response = NextResponse.next({
+            request: {
+              headers: req.headers,
+            },
+          });
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+        },
+        remove(name: string, options: CookieOptions) {
+          req.cookies.set({
+            name,
+            value: "",
+            ...options,
+          });
+          response = NextResponse.next({
+            request: {
+              headers: req.headers,
+            },
+          });
+          response.cookies.set({
+            name,
+            value: "",
+            ...options,
+          });
+        },
+      },
+    }
+  );
+
+  // Get session using Supabase
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
   const isAuthPage =
     pathname.includes("/login") || pathname.includes("/register");
 
-  // Redirect to login if accessing protected routes without token
-  if (!token && pathname.includes("/dashboard")) {
-    return NextResponse.redirect(new URL(`/${locale}/login`, req.url));
+  // Check if the current path is a protected route
+  const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
+    pathname.includes(route)
+  );
+
+  // Redirect to login if accessing protected routes without session
+  if (!session && isProtectedRoute) {
+    const redirectUrl = new URL(`/${locale}/login`, req.url);
+    redirectUrl.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(redirectUrl);
   }
 
-  // Redirect to dashboard if accessing auth pages with token
-  if (token && isAuthPage) {
+  // Redirect to dashboard if accessing auth pages with active session
+  if (session && isAuthPage) {
     return NextResponse.redirect(new URL(`/${locale}/dashboard`, req.url));
-  }
-
-  // Handle root path - redirect to default locale
-  if (pathname === "/") {
-    return NextResponse.redirect(new URL(`/${routing.defaultLocale}`, req.url));
   }
 
   // Then handle internationalization

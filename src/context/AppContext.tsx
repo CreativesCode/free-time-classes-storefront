@@ -1,15 +1,20 @@
 "use client";
 
 import {
-  getLessonsWithRelations,
+  getCoursesWithRelations,
+  type CourseFilters,
+} from "@/lib/supabase/queries/courses";
+import {
   LESSON_STATUS_CHOICES,
+  getLessonsWithRelations,
   type LessonFilters,
 } from "@/lib/supabase/queries/lessons";
+import type { CourseWithRelations } from "@/types/course";
 import type { LessonWithRelations } from "@/types/lesson";
 import type { User } from "@/types/user";
 import {
-  createContext,
   ReactNode,
+  createContext,
   useCallback,
   useContext,
   useEffect,
@@ -32,21 +37,16 @@ interface BaseContextType<T> {
   refetch?: () => Promise<{ data: T | null }>;
 }
 
-export interface Course {
-  id: string;
-  title: string;
-  description: string;
-}
-
 interface AppContextType {
   user: BaseContextType<User>;
-  courses: BaseContextType<Course[]>;
+  courses: BaseContextType<CourseWithRelations[]>;
   lessons: BaseContextType<LessonWithRelations[]>;
   lessonStatusChoices: LessonStatusChoice[];
   refreshLessons: (
     dateRange: { start: Date; end: Date },
     status?: string
   ) => void;
+  refreshCourses: (filters?: CourseFilters) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -61,9 +61,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [userError, setUserError] = useState<Error | null>(null);
 
   // Courses context state
-  const [coursesData, setCoursesData] = useState<Course[] | null>(null);
-  const [coursesLoading, setCoursesLoading] = useState(true);
+  const [coursesData, setCoursesData] = useState<CourseWithRelations[] | null>(
+    null
+  );
+  const [coursesLoading, setCoursesLoading] = useState(false);
   const [coursesError, setCoursesError] = useState<Error | null>(null);
+  const [coursesFilters, setCoursesFilters] = useState<CourseFilters | null>(
+    null
+  );
 
   // Lessons context state
   const [lessonsData, setLessonsData] = useState<LessonWithRelations[] | null>(
@@ -80,6 +85,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setUserData(userFromAuth || null);
     setUserLoading(userLoadingFromAuth);
   }, [userFromAuth, userLoadingFromAuth]);
+
+  // Fetch courses when filters change
+  useEffect(() => {
+    async function fetchCourses() {
+      if (!coursesFilters) {
+        setCoursesLoading(false);
+        return;
+      }
+
+      try {
+        setCoursesLoading(true);
+        setCoursesError(null);
+        const data = await getCoursesWithRelations(coursesFilters);
+        setCoursesData(data);
+      } catch (error) {
+        setCoursesError(error as Error);
+        setCoursesData(null);
+      } finally {
+        setCoursesLoading(false);
+      }
+    }
+
+    fetchCourses();
+  }, [coursesFilters]);
 
   // Fetch lessons when filters change
   useEffect(() => {
@@ -116,6 +145,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const refreshCourses = useCallback((filters?: CourseFilters) => {
+    setCoursesFilters(filters || {});
+  }, []);
+
   const value = {
     user: {
       data: userData,
@@ -136,6 +169,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setData: setCoursesData,
       setLoading: setCoursesLoading,
       setError: setCoursesError,
+      refetch: async () => {
+        if (!coursesFilters) {
+          return { data: null };
+        }
+        try {
+          const data = await getCoursesWithRelations(coursesFilters);
+          setCoursesData(data);
+          return { data };
+        } catch (error) {
+          setCoursesError(error as Error);
+          return { data: null };
+        }
+      },
     },
     lessons: {
       data: lessonsData,
@@ -160,6 +206,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     },
     lessonStatusChoices: LESSON_STATUS_CHOICES,
     refreshLessons,
+    refreshCourses,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
