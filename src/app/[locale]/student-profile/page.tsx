@@ -4,29 +4,56 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/UserContext";
+import { getPublicUrl } from "@/lib/supabase/storage";
 import { BookOpen, Settings, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 
 export default function StudentProfile() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const t = useTranslations("studentProfile");
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // Middleware or UserContext will handle redirect
+  }
+
+  // Get profile picture URL - if it's a path, construct the full URL, otherwise use as-is
+  const profilePictureUrl =
+    user.profile_picture && typeof user.profile_picture === "string"
+      ? user.profile_picture.startsWith("http")
+        ? user.profile_picture
+        : getPublicUrl("avatars", user.profile_picture)
+      : null;
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-screen-2xl">
       {/* Profile Header */}
       <div className="flex items-center space-x-6 mb-8">
         <div className="relative h-24 w-24 rounded-full overflow-hidden bg-gray-100">
-          <Image
-            src={user?.profilePicture || "/images/default-avatar.png"}
-            alt="Profile"
-            fill
-            className="object-cover"
-          />
+          {profilePictureUrl ? (
+            <Image
+              src={profilePictureUrl}
+              alt="Profile"
+              fill
+              className="object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-primary-200 text-primary-800 text-3xl font-semibold">
+              {user.username?.[0]?.toUpperCase() || "U"}
+            </div>
+          )}
         </div>
         <div>
-          <h1 className="text-2xl font-bold">{user?.username}</h1>
-          <p className="text-gray-600">{user?.email}</p>
+          <h1 className="text-2xl font-bold">{user.username}</h1>
+          <p className="text-gray-600">{user.email}</p>
         </div>
       </div>
 
@@ -59,20 +86,22 @@ export default function StudentProfile() {
                   <label className="text-sm font-medium text-gray-700">
                     {t("name")}
                   </label>
-                  <p className="mt-1">{user?.username}</p>
+                  <p className="mt-1">{user.username}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-700">
                     {t("email")}
                   </label>
-                  <p className="mt-1">{user?.email}</p>
+                  <p className="mt-1">{user.email}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-700">
                     {t("registrationDate")}
                   </label>
                   <p className="mt-1">
-                    {new Date(user?.createdAt || "").toLocaleDateString()}
+                    {user.created_at
+                      ? new Date(user.created_at).toLocaleDateString()
+                      : "-"}
                   </p>
                 </div>
                 <div>
@@ -80,7 +109,9 @@ export default function StudentProfile() {
                     {t("lastUpdate")}
                   </label>
                   <p className="mt-1">
-                    {new Date(user?.updatedAt || "").toLocaleDateString()}
+                    {user.updated_at
+                      ? new Date(user.updated_at).toLocaleDateString()
+                      : "-"}
                   </p>
                 </div>
               </div>

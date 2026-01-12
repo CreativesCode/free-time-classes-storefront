@@ -1,25 +1,9 @@
 "use client";
 
-import {
-  GET_USER,
-  LOGIN_MUTATION,
-  LOGOUT_MUTATION,
-  REGISTER_MUTATION,
-} from "@/graphql/auth";
-import { useMutation, useQuery } from "@apollo/client";
+import { createClient } from "@/lib/supabase/client";
+import { getCurrentUser } from "@/lib/supabase/queries/users";
+import type { User } from "@/types/user";
 import { createContext, useContext, useEffect, useState } from "react";
-
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  profilePicture?: string;
-  isStudent: boolean;
-  isTutor: boolean;
-  isStaff: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
 
 interface UserContextType {
   user: User | null;
@@ -30,6 +14,7 @@ interface UserContextType {
     isStudent: boolean
   ) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
   isLoading: boolean;
   error: Error | null;
 }
@@ -40,49 +25,84 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const supabase = createClient();
 
-  // GraphQL mutations
-  const [loginMutation] = useMutation(LOGIN_MUTATION);
-  const [registerMutation] = useMutation(REGISTER_MUTATION);
-  const [logoutMutation] = useMutation(LOGOUT_MUTATION);
-
-  // Query for current user
-  const { data: userData, error: userQueryError } = useQuery(GET_USER, {
-    skip: typeof window === "undefined" || !localStorage.getItem("token"),
-  });
-
-  // Manejar la actualización del usuario
+  // Initialize: Check for existing session
   useEffect(() => {
-    if (userData?.me) {
-      setUser(userData.me);
-      setIsLoading(false);
-    }
-  }, [userData]);
+    async function initializeUser() {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
 
-  // Manejar errores
-  useEffect(() => {
-    if (userQueryError) {
-      setError(userQueryError);
-      setIsLoading(false);
+        if (session?.user) {
+          const userData = await getCurrentUser();
+          setUser(userData);
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        setError(err as Error);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
     }
-  }, [userQueryError]);
+
+    initializeUser();
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      try {
+        if (session?.user) {
+          const userData = await getCurrentUser();
+          setUser(userData);
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        setError(err as Error);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase.auth]);
 
   const login = async (email: string, password: string) => {
     try {
       setError(null);
-      const { data } = await loginMutation({
-        variables: { email, password },
-      });
+      setIsLoading(true);
 
-      if (data?.tokenAuth?.token) {
-        localStorage.setItem("token", data.tokenAuth.token);
-        setUser(data.tokenAuth.user);
+      const { data, error: authError } = await supabase.auth.signInWithPassword(
+        {
+          email,
+          password,
+        }
+      );
+
+      if (authError) {
+        throw authError;
+      }
+
+      if (data?.user) {
+        // Get user data from public.users table
+        const userData = await getCurrentUser();
+        setUser(userData);
       } else {
-        throw new Error("Login failed");
+        throw new Error("Login failed: No user data returned");
       }
     } catch (error) {
       setError(error as Error);
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -93,48 +113,90 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   ) => {
     try {
       setError(null);
-      const { data } = await registerMutation({
-        variables: {
-          email,
-          password,
-          isStudent,
-          isTutor: !isStudent,
-        },
+      setIsLoading(true);
+
+      // Sign up with Supabase Auth
+      const { data, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
       });
 
-      if (data?.createUser?.user) {
-        // After successful registration, log the user in
-        await login(email, password);
-      } else {
-        throw new Error("Registration failed");
+      if (authError) {
+        throw authError;
       }
+
+      if (!data.user) {
+        throw new Error("Registration failed: No user data returned");
+      }
+
+      // The trigger handle_new_user() should create the user in public.users
+      // But we need to update it with is_student/is_tutor flags
+      // Wait a bit for the trigger to complete
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Update user record with is_student/is_tutor
+      const { error: updateError } = await supabase
+        .from("users")
+        .update({
+          is_student: isStudent,
+          is_tutor: !isStudent,
+        })
+        .eq("id", data.user.id);
+
+      if (updateError) {
+        console.error("Error updating user flags:", updateError);
+        // Continue anyway, the user is created
+      }
+
+      // Get the updated user data
+      const userData = await getCurrentUser();
+      setUser(userData);
     } catch (error) {
       setError(error as Error);
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const logout = async () => {
     try {
       setError(null);
-      const refreshToken = localStorage.getItem("refreshToken");
-      if (refreshToken) {
-        await logoutMutation({
-          variables: { refreshToken },
-        });
+      setIsLoading(true);
+
+      // Sign out from Supabase - this will clear the session and cookies
+      // The onAuthStateChange listener will automatically set user to null
+      const { error: authError } = await supabase.auth.signOut();
+
+      if (authError) {
+        throw authError;
       }
-      localStorage.removeItem("token");
-      localStorage.removeItem("refreshToken");
+
+      // Clear user state immediately as a fallback
+      // The listener should also handle this, but we do it here for immediate feedback
       setUser(null);
     } catch (error) {
       setError(error as Error);
+      // Even if there's an error, clear the user state
+      setUser(null);
       throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const refreshUser = async () => {
+    try {
+      const userData = await getCurrentUser();
+      setUser(userData);
+    } catch (error) {
+      setError(error as Error);
     }
   };
 
   return (
     <UserContext.Provider
-      value={{ user, login, register, logout, isLoading, error }}
+      value={{ user, login, register, logout, refreshUser, isLoading, error }}
     >
       {children}
     </UserContext.Provider>

@@ -11,9 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAppData } from "@/context/AppContext";
-import { LOGIN_MUTATION } from "@/graphql/auth";
-import { useMutation } from "@apollo/client";
+import { useAuth } from "@/context/UserContext";
 import { Eye, EyeOff } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
@@ -25,9 +23,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState("");
-  const [login, { loading, error }] = useMutation(LOGIN_MUTATION);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const { login, isLoading } = useAuth();
   const router = useRouter();
-  const { setData: setUserData } = useAppData("user");
   const locale = useLocale();
   const t = useTranslations("login");
 
@@ -48,22 +46,30 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoginError(null);
+
     if (!validateEmail(email)) {
       setEmailError("Please enter a valid email address");
       return;
     }
-    const { data } = await login({ variables: { email, password } });
 
-    if (data?.tokenAuth?.token) {
-      localStorage.setItem("token", data.tokenAuth.token);
-      setUserData(data.tokenAuth.user);
-      if (data.tokenAuth.user.isTutor) {
-        router.push(`/${locale}/teacher-profile`);
-      } else if (data.tokenAuth.user.isStudent) {
-        router.push(`/${locale}/student-profile`);
-      } else {
+    try {
+      await login(email, password);
+
+      // Get user from auth context to determine redirect
+      // We need to wait a bit for the user state to update
+      setTimeout(() => {
+        // This will be handled by the auth state change in UserContext
+        // For now, redirect to dashboard - the navbar will handle proper redirects
         router.push(`/${locale}/dashboard`);
-      }
+      }, 100);
+    } catch (error: any) {
+      setLoginError(
+        error.message === "Invalid login credentials" ||
+          error.message?.includes("Invalid")
+          ? "Invalid email or password"
+          : "An error occurred. Please try again."
+      );
     }
   };
 
@@ -124,21 +130,17 @@ export default function LoginPage() {
                 </Button>
               </div>
             </div>
-            {error && (
+            {loginError && (
               <Alert variant="destructive">
-                <AlertDescription>
-                  {error.message === "Please enter valid credentials"
-                    ? "Invalid email or password"
-                    : "An error occurred. Please try again."}
-                </AlertDescription>
+                <AlertDescription>{loginError}</AlertDescription>
               </Alert>
             )}
             <Button
               type="submit"
               className="w-full btn-primary"
-              disabled={loading}
+              disabled={isLoading}
             >
-              {loading ? t("loading") : t("login")}
+              {isLoading ? t("loading") : t("login")}
             </Button>
           </form>
         </CardContent>

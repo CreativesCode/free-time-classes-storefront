@@ -2,7 +2,6 @@
 
 import { AppProvider } from "@/context/AppContext";
 import { UserProvider } from "@/context/UserContext";
-import ApolloClientProvider from "@/lib/ApolloProvider";
 import { AbstractIntlMessages, IntlProvider } from "next-intl";
 import { ReactNode } from "react";
 import NavbarWrapper from "./NavbarWrapper";
@@ -19,19 +18,17 @@ export default function LocaleLayoutWrapper({
   locale,
 }: LocaleLayoutWrapperProps) {
   return (
-    <ApolloClientProvider>
+    <UserProvider>
       <AppProvider>
-        <UserProvider>
-          <IntlProvider
-            messages={messages}
-            locale={locale}
-            timeZone="Europe/Madrid"
-            now={new Date()}
-          >
-            <NavbarWrapper>{children}</NavbarWrapper>
-          </IntlProvider>
-        </UserProvider>
+        <IntlProvider
+          messages={messages}
+          locale={locale}
+          timeZone="Europe/Madrid"
+          now={new Date()}
+        >
+          <NavbarWrapper>{children}</NavbarWrapper>
+        </IntlProvider>
       </AppProvider>
-    </ApolloClientProvider>
+    </UserProvider>
   );
 }

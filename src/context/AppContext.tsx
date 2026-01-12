@@ -1,8 +1,12 @@
 "use client";
 
-import { GET_USER } from "@/graphql/auth";
-import { ALL_LESSONS_QUERY, LESSON_STATUS_CHOICES } from "@/graphql/lessons";
-import { ApolloError, useQuery } from "@apollo/client";
+import {
+  getLessonsWithRelations,
+  LESSON_STATUS_CHOICES,
+  type LessonFilters,
+} from "@/lib/supabase/queries/lessons";
+import type { LessonWithRelations } from "@/types/lesson";
+import type { User } from "@/types/user";
 import {
   createContext,
   ReactNode,
@@ -11,77 +15,21 @@ import {
   useEffect,
   useState,
 } from "react";
+import { useAuth } from "./UserContext";
 
 interface LessonStatusChoice {
   value: string;
   displayName: string;
 }
 
-interface LessonStatusData {
-  lessonStatusChoices: LessonStatusChoice[];
-}
-
 interface BaseContextType<T> {
   data: T | null;
   loading: boolean;
-  error: ApolloError | null;
+  error: Error | null;
   setData: (data: T | null) => void;
   setLoading: (loading: boolean) => void;
-  setError: (error: ApolloError | null) => void;
+  setError: (error: Error | null) => void;
   refetch?: () => Promise<{ data: T | null }>;
-}
-
-interface LessonNode {
-  id: string;
-  subject: {
-    name: string;
-    language: {
-      name: string;
-      level: string;
-    };
-    description: string;
-    icon: string;
-  };
-  scheduledDateTime: string;
-  durationMinutes: number;
-  priceAmount: number;
-  priceCurrency: string;
-  status: string;
-  createdAt: string;
-}
-
-interface LessonsData {
-  allLessons: {
-    edges: Array<{
-      node: LessonNode;
-    }>;
-  };
-}
-
-interface AppContextType {
-  user: BaseContextType<User>;
-  courses: BaseContextType<Course[]>;
-  lessons: BaseContextType<LessonNode[]>;
-  lessonStatusChoices: LessonStatusChoice[];
-  refreshLessons: (
-    dateRange: { start: Date; end: Date },
-    status?: string
-  ) => void;
-}
-
-export interface User {
-  id: string;
-  username: string;
-  email: string;
-  profilePicture?: string;
-  isStudent?: boolean;
-  isTutor?: boolean;
-  isStaff?: boolean;
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  dateOfBirth?: string;
-  country?: string;
 }
 
 export interface Course {
@@ -90,100 +38,79 @@ export interface Course {
   description: string;
 }
 
-interface UserQueryData {
-  me: User;
+interface AppContextType {
+  user: BaseContextType<User>;
+  courses: BaseContextType<Course[]>;
+  lessons: BaseContextType<LessonWithRelations[]>;
+  lessonStatusChoices: LessonStatusChoice[];
+  refreshLessons: (
+    dateRange: { start: Date; end: Date },
+    status?: string
+  ) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  // User context state
+  // Use UserContext for user data
+  const { user: userFromAuth, isLoading: userLoadingFromAuth } = useAuth();
+
+  // User context state (synced with UserContext)
   const [userData, setUserData] = useState<User | null>(null);
   const [userLoading, setUserLoading] = useState(true);
-  const [userError, setUserError] = useState<ApolloError | null>(null);
+  const [userError, setUserError] = useState<Error | null>(null);
 
   // Courses context state
   const [coursesData, setCoursesData] = useState<Course[] | null>(null);
   const [coursesLoading, setCoursesLoading] = useState(true);
-  const [coursesError, setCoursesError] = useState<ApolloError | null>(null);
+  const [coursesError, setCoursesError] = useState<Error | null>(null);
 
   // Lessons context state
-  const [lessonsData, setLessonsData] = useState<LessonNode[] | null>(null);
+  const [lessonsData, setLessonsData] = useState<LessonWithRelations[] | null>(
+    null
+  );
   const [lessonsLoading, setLessonsLoading] = useState(true);
-  const [lessonsError, setLessonsError] = useState<ApolloError | null>(null);
-  const [lessonStatusChoices, setLessonStatusChoices] = useState<
-    LessonStatusChoice[]
-  >([]);
-  const [lessonsVariables, setLessonsVariables] = useState<{
-    status?: string;
-    scheduledDateTimeGte?: string;
-    scheduledDateTimeLte?: string;
-  }>({});
-
-  const { data: userQueryData, error: userQueryError } =
-    useQuery<UserQueryData>(GET_USER, {
-      skip: typeof window === "undefined" || !localStorage.getItem("token"),
-    });
-
-  const { data: statusData } = useQuery<LessonStatusData>(
-    LESSON_STATUS_CHOICES
+  const [lessonsError, setLessonsError] = useState<Error | null>(null);
+  const [lessonsFilters, setLessonsFilters] = useState<LessonFilters | null>(
+    null
   );
 
-  const { data: lessonsQueryData, error: lessonsQueryError } =
-    useQuery<LessonsData>(ALL_LESSONS_QUERY, {
-      variables: lessonsVariables,
-      skip:
-        !lessonsVariables.scheduledDateTimeGte ||
-        !lessonsVariables.scheduledDateTimeLte,
-    });
-
-  // Update lesson status choices when query data changes
+  // Sync user data from UserContext
   useEffect(() => {
-    if (statusData?.lessonStatusChoices) {
-      setLessonStatusChoices(statusData.lessonStatusChoices);
-    }
-  }, [statusData]);
+    setUserData(userFromAuth || null);
+    setUserLoading(userLoadingFromAuth);
+  }, [userFromAuth, userLoadingFromAuth]);
 
-  // Update user state when query data changes
+  // Fetch lessons when filters change
   useEffect(() => {
-    if (userQueryData?.me) {
-      setUserData(userQueryData.me);
-      setUserLoading(false);
-    }
-  }, [userQueryData]);
+    async function fetchLessons() {
+      if (!lessonsFilters) {
+        setLessonsLoading(false);
+        return;
+      }
 
-  // Handle user errors
-  useEffect(() => {
-    if (userQueryError) {
-      setUserError(userQueryError);
-      setUserLoading(false);
+      try {
+        setLessonsLoading(true);
+        setLessonsError(null);
+        const data = await getLessonsWithRelations(lessonsFilters);
+        setLessonsData(data);
+      } catch (error) {
+        setLessonsError(error as Error);
+        setLessonsData(null);
+      } finally {
+        setLessonsLoading(false);
+      }
     }
-  }, [userQueryError]);
 
-  // Update lessons state when query data changes
-  useEffect(() => {
-    if (lessonsQueryData?.allLessons?.edges) {
-      setLessonsData(lessonsQueryData.allLessons.edges.map(({ node }) => node));
-      setLessonsLoading(false);
-    }
-  }, [lessonsQueryData]);
-
-  // Handle lessons errors
-  useEffect(() => {
-    if (lessonsQueryError) {
-      setLessonsError(lessonsQueryError);
-      setLessonsLoading(false);
-    }
-  }, [lessonsQueryError]);
+    fetchLessons();
+  }, [lessonsFilters]);
 
   const refreshLessons = useCallback(
     (dateRange: { start: Date; end: Date }, status?: string) => {
-      setLessonsLoading(true);
-      setLessonsError(null);
-      setLessonsVariables({
-        status: status || "available",
-        scheduledDateTimeGte: dateRange.start.toISOString(),
-        scheduledDateTimeLte: dateRange.end.toISOString(),
+      setLessonsFilters({
+        scheduled_date_time_gte: dateRange.start.toISOString(),
+        scheduled_date_time_lte: dateRange.end.toISOString(),
+        status: status as any,
       });
     },
     []
@@ -197,10 +124,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setData: setUserData,
       setLoading: setUserLoading,
       setError: setUserError,
-      refetch: () =>
-        userQueryData?.me
-          ? Promise.resolve({ data: userQueryData.me })
-          : Promise.resolve({ data: null }),
+      refetch: async () => {
+        // Refetch is handled by UserContext
+        return { data: userData };
+      },
     },
     courses: {
       data: coursesData,
@@ -217,8 +144,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setData: setLessonsData,
       setLoading: setLessonsLoading,
       setError: setLessonsError,
+      refetch: async () => {
+        if (!lessonsFilters) {
+          return { data: null };
+        }
+        try {
+          const data = await getLessonsWithRelations(lessonsFilters);
+          setLessonsData(data);
+          return { data };
+        } catch (error) {
+          setLessonsError(error as Error);
+          return { data: null };
+        }
+      },
     },
-    lessonStatusChoices,
+    lessonStatusChoices: LESSON_STATUS_CHOICES,
     refreshLessons,
   };
 

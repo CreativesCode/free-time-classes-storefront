@@ -38,6 +38,13 @@ export default function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Extract locale from pathname
+  const pathnameParts = pathname.split("/");
+  const locale =
+    pathnameParts[1] && routing.locales.includes(pathnameParts[1])
+      ? pathnameParts[1]
+      : routing.defaultLocale;
+
   // First handle authentication
   const token = req.cookies.get("token")?.value;
   const isAuthPage =
@@ -45,12 +52,12 @@ export default function middleware(req: NextRequest) {
 
   // Redirect to login if accessing protected routes without token
   if (!token && pathname.includes("/dashboard")) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.redirect(new URL(`/${locale}/login`, req.url));
   }
 
   // Redirect to dashboard if accessing auth pages with token
   if (token && isAuthPage) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+    return NextResponse.redirect(new URL(`/${locale}/dashboard`, req.url));
   }
 
   // Handle root path - redirect to default locale
@@ -64,16 +71,12 @@ export default function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    // Match all pathnames except static files and API routes
-    "/((?!api|_next|static|favicon.ico|robots.txt|sitemap.xml|manifest.json|.*\\..*).*)",
-    // Match internationalized pathnames
-    "/(en|es)/:path*",
-    // Match dashboard routes
-    "/dashboard/:path*",
-    // Match auth routes
-    "/login",
-    "/register",
-    // Match root path
-    "/",
+    // Match all pathnames except for:
+    // - API routes
+    // - _next (Next.js internals)
+    // - _static (inside /public)
+    // - _vercel (Vercel internals)
+    // - Static files (images, fonts, etc.)
+    "/((?!api|_next/static|_next/image|_vercel|.*\\..*|favicon.ico).*)",
   ],
 };

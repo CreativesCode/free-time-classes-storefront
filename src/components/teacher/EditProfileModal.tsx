@@ -10,11 +10,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 // import { Textarea } from "@/components/ui/textarea";
-import { useAppData } from "@/context/AppContext";
-import { UPDATE_USER_MUTATION } from "@/graphql/auth";
+import { useAuth } from "@/context/UserContext";
 import { useTranslations } from "@/i18n/translations";
-import { useMutation } from "@apollo/client";
-import { useState } from "react";
+import { updateUser } from "@/lib/supabase/queries/users";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface EditProfileModalProps {
@@ -23,56 +22,66 @@ interface EditProfileModalProps {
 }
 
 interface FormData {
-  firstName: string;
-  lastName: string;
+  username: string;
   phone: string;
-  profilePicture: string;
-  dateOfBirth: string;
+  profile_picture: string;
+  date_of_birth: string;
   country: string;
-  // bio: string;
-  // specialties: string;
-  // experience: string;
 }
 
 export default function EditProfileModal({
   isOpen,
   onClose,
 }: EditProfileModalProps) {
-  const { data: user, refetch } = useAppData("user");
+  const { user, refreshUser } = useAuth();
   const t = useTranslations("teacherProfile");
   const [formData, setFormData] = useState<FormData>({
-    firstName: user?.firstName || "",
-    lastName: user?.lastName || "",
+    username: user?.username || "",
     phone: user?.phone || "",
-    profilePicture: user?.profilePicture || "",
-    dateOfBirth: user?.dateOfBirth || "",
+    profile_picture: user?.profile_picture || "",
+    date_of_birth: user?.date_of_birth || "",
     country: user?.country || "",
   });
 
-  const [updateUser, { loading }] = useMutation(UPDATE_USER_MUTATION);
+  const [loading, setLoading] = useState(false);
+
+  // Update form data when user data changes
+  useEffect(() => {
+    setFormData({
+      username: user?.username || "",
+      phone: user?.phone || "",
+      profile_picture: user?.profile_picture || "",
+      date_of_birth: user?.date_of_birth || "",
+      country: user?.country || "",
+    });
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?.id) return;
 
-    // eliminamos de from data los q no tenga dato
-    const formDataToUpdate = Object.fromEntries(
-      Object.entries(formData).filter(([_, value]) => value !== "")
-    );
+    setLoading(true);
+
+    // Filter out empty values and prepare update object
+    const formDataToUpdate: Partial<FormData> = {};
+    if (formData.username) formDataToUpdate.username = formData.username;
+    if (formData.phone) formDataToUpdate.phone = formData.phone;
+    if (formData.profile_picture)
+      formDataToUpdate.profile_picture = formData.profile_picture;
+    if (formData.date_of_birth)
+      formDataToUpdate.date_of_birth = formData.date_of_birth;
+    if (formData.country) formDataToUpdate.country = formData.country;
 
     try {
-      await updateUser({
-        variables: {
-          id: user.id,
-          ...formDataToUpdate,
-        },
-      });
-      await refetch?.();
+      await updateUser(user.id, formDataToUpdate);
+      await refreshUser();
       toast.success(t("profileUpdated"));
       onClose();
     } catch (err) {
       console.error("Error updating profile:", err);
       toast.error(t("updateError"));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -91,25 +100,15 @@ export default function EditProfileModal({
           <DialogDescription>{t("editProfileDescription")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">{t("firstName")}</Label>
-              <Input
-                id="firstName"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="lastName">{t("lastName")}</Label>
-              <Input
-                id="lastName"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleChange}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="username">{t("name")}</Label>
+            <Input
+              id="username"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              placeholder={t("namePlaceholder") || "Nombre completo"}
+            />
           </div>
 
           <div className="space-y-2">
@@ -117,29 +116,32 @@ export default function EditProfileModal({
             <Input
               id="phone"
               name="phone"
+              type="tel"
               value={formData.phone}
               onChange={handleChange}
+              placeholder="+34 123 456 789"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="profilePicture">{t("profilePicture")}</Label>
+            <Label htmlFor="profile_picture">{t("profilePicture")}</Label>
             <Input
-              id="profilePicture"
-              name="profilePicture"
-              value={formData.profilePicture}
+              id="profile_picture"
+              name="profile_picture"
+              value={formData.profile_picture}
               onChange={handleChange}
+              placeholder="URL de la imagen"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="dateOfBirth">{t("dateOfBirth")}</Label>
+              <Label htmlFor="date_of_birth">{t("dateOfBirth")}</Label>
               <Input
-                id="dateOfBirth"
-                name="dateOfBirth"
+                id="date_of_birth"
+                name="date_of_birth"
                 type="date"
-                value={formData.dateOfBirth}
+                value={formData.date_of_birth}
                 onChange={handleChange}
               />
             </div>
@@ -150,6 +152,7 @@ export default function EditProfileModal({
                 name="country"
                 value={formData.country}
                 onChange={handleChange}
+                placeholder="España"
               />
             </div>
           </div>

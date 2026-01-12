@@ -12,8 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { REGISTER_MUTATION } from "@/graphql/auth";
-import { useMutation } from "@apollo/client";
+import { useAuth } from "@/context/UserContext";
 import { Eye, EyeOff } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
@@ -28,7 +27,8 @@ export default function RegisterPage() {
   const [isStudent, setIsStudent] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState("");
-  const [register, { loading, error }] = useMutation(REGISTER_MUTATION);
+  const [registerError, setRegisterError] = useState<string | null>(null);
+  const { register, isLoading } = useAuth();
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("register");
@@ -50,21 +50,18 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setRegisterError(null);
+
     if (!validateEmail(email)) {
       setEmailError("Please enter a valid email address");
       return;
     }
-    const { data } = await register({
-      variables: {
-        email,
-        password,
-        isStudent,
-        isTutor: !isStudent,
-      },
-    });
 
-    if (data?.createUser?.user) {
-      router.push("/login");
+    try {
+      await register(email, password, isStudent);
+      router.push(`/${locale}/login`);
+    } catch (error: any) {
+      setRegisterError(error.message || t("registrationFailed"));
     }
   };
 
@@ -142,17 +139,17 @@ export default function RegisterPage() {
                 </div>
               </RadioGroup>
             </div>
-            {error && (
+            {registerError && (
               <Alert variant="destructive">
-                <AlertDescription>{t("registrationFailed")}</AlertDescription>
+                <AlertDescription>{registerError}</AlertDescription>
               </Alert>
             )}
             <Button
               type="submit"
               className="w-full btn-primary"
-              disabled={loading}
+              disabled={isLoading}
             >
-              {loading ? t("loading") : t("register")}
+              {isLoading ? t("loading") : t("register")}
             </Button>
           </form>
         </CardContent>

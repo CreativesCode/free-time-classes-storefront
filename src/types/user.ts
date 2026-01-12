@@ -1,18 +1,16 @@
+// User type matching Supabase public.users table
 export interface User {
-  id: string;
+  id: string; // UUID
   username: string;
   email: string;
-  isTutor: boolean;
-  isStaff: boolean;
-  profilePicture?: string;
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  dateOfBirth?: string;
-  country?: string;
-  bio?: string;
-  specialties?: string;
-  experience?: string;
-  createdAt: string;
-  updatedAt: string;
+  phone?: string | null;
+  profile_picture?: string | null; // Path in storage/avatars/
+  date_of_birth?: string | null; // ISO date string
+  country?: string | null;
+  is_student: boolean;
+  is_tutor: boolean;
+  receive_email_notifications: boolean;
+  receive_sms_notifications: boolean;
+  created_at: string;
+  updated_at: string;
 }

@@ -9,22 +9,24 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useAppData } from "@/context/AppContext";
+import { useAuth } from "@/context/UserContext";
+import { getPublicUrl } from "@/lib/supabase/storage";
+import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function Dashboard() {
-  const { data: user, loading, error } = useAppData("user");
+  const { user, isLoading, error } = useAuth();
   const router = useRouter();
+  const locale = useLocale();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/login");
+    if (!isLoading && !user) {
+      router.push(`/${locale}/login`);
     }
-  }, [router]);
+  }, [user, isLoading, router, locale]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
@@ -45,7 +47,7 @@ export default function Dashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center">
-            <Button onClick={() => router.push("/login")}>
+            <Button onClick={() => router.push(`/${locale}/login`)}>
               Volver al login
             </Button>
           </CardContent>
@@ -55,9 +57,16 @@ export default function Dashboard() {
   }
 
   if (!user) {
-    router.push("/login");
-    return null;
+    return null; // useEffect will handle redirect
   }
+
+  // Get profile picture URL - if it's a path, construct the full URL, otherwise use as-is
+  const profilePictureUrl =
+    user.profile_picture && typeof user.profile_picture === "string"
+      ? user.profile_picture.startsWith("http")
+        ? user.profile_picture
+        : getPublicUrl("avatars", user.profile_picture)
+      : null;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
@@ -72,36 +81,31 @@ export default function Dashboard() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex flex-col items-center space-y-4">
-            {user.profilePicture ? (
+            {profilePictureUrl ? (
               <Avatar className="h-24 w-24">
-                <AvatarImage src={user.profilePicture} alt="Profile" />
+                <AvatarImage src={profilePictureUrl} alt="Profile" />
                 <AvatarFallback>
-                  {user.username[0].toUpperCase()}
+                  {user.username?.[0]?.toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
             ) : (
               <Avatar className="h-24 w-24">
                 <AvatarFallback>
-                  {user.username[0].toUpperCase()}
+                  {user.username?.[0]?.toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
             )}
             <p className="text-gray-600">Email: {user.email}</p>
           </div>
           <div className="flex flex-wrap gap-2 justify-center">
-            {user.isStudent && (
+            {user.is_student && (
               <Badge variant="secondary" className="text-sm">
                 Student
               </Badge>
             )}
-            {user.isTutor && (
+            {user.is_tutor && (
               <Badge variant="default" className="text-sm">
                 Tutor
-              </Badge>
-            )}
-            {user.isStaff && (
-              <Badge variant="outline" className="text-sm">
-                Staff
               </Badge>
             )}
           </div>

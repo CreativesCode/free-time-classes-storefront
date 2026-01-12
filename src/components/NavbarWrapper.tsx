@@ -27,6 +27,18 @@ export default function NavbarWrapper({
   const pathname = usePathname();
   const t = useTranslations("navbar");
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // Use window.location for a full page reload to ensure all state is cleared
+      window.location.href = `/${locale}/`;
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Even if there's an error, redirect to home
+      window.location.href = `/${locale}/`;
+    }
+  };
+
   // Check if the current path is for authentication pages
   if (pathname.includes("/login") || pathname.includes("/register")) {
     return <>{children}</>;
@@ -105,7 +117,7 @@ export default function NavbarWrapper({
                     <DropdownMenuItem asChild>
                       <Link
                         href={`/${locale}/${
-                          user.isStudent ? "student" : "teacher"
+                          user.is_student ? "student" : "teacher"
                         }-profile`}
                       >
                         {t("profile")}
@@ -114,22 +126,15 @@ export default function NavbarWrapper({
                     <DropdownMenuItem asChild>
                       <Link href={`/${locale}/settings`}>{t("settings")}</Link>
                     </DropdownMenuItem>
-                    {user.isTutor && (
+                    {user.is_tutor && (
                       <DropdownMenuItem asChild>
                         <Link href={`/${locale}/tutor/dashboard`}>
                           {t("tutorDashboard")}
                         </Link>
                       </DropdownMenuItem>
                     )}
-                    {user.isStaff && (
-                      <DropdownMenuItem asChild>
-                        <Link href={`/${locale}/admin/dashboard`}>
-                          {t("adminDashboard")}
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={logout}>
+                    <DropdownMenuItem onClick={handleLogout}>
                       {t("logout")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>

@@ -15,28 +15,28 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAppData } from "@/context/AppContext";
+import { useAuth } from "@/context/UserContext";
 import { useLocale, useTranslations } from "@/i18n/translations";
+import { getPublicUrl } from "@/lib/supabase/storage";
 import { getAvatarColor } from "@/lib/utils";
 import { BookOpen, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function TeacherProfile() {
-  const { data: user, loading, error } = useAppData("user");
+  const { user, isLoading, error } = useAuth();
   const router = useRouter();
   const t = useTranslations("teacherProfile");
   const locale = useLocale();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!isLoading && !user) {
       router.push(`/${locale}/login`);
     }
-  }, [router, locale]);
+  }, [user, isLoading, router, locale]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
@@ -44,7 +44,7 @@ export default function TeacherProfile() {
     );
   }
 
-  if (error || !user) {
+  if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Card className="w-full max-w-md">
@@ -53,11 +53,11 @@ export default function TeacherProfile() {
               {t("error")}
             </CardTitle>
             <CardDescription className="text-center">
-              {error?.message || t("userNotFound")}
+              {error.message}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center">
-            <Button onClick={() => router.push("/login")}>
+            <Button onClick={() => router.push(`/${locale}/login`)}>
               {t("backToLogin")}
             </Button>
           </CardContent>
@@ -65,6 +65,18 @@ export default function TeacherProfile() {
       </div>
     );
   }
+
+  if (!user) {
+    return null; // useEffect will handle redirect
+  }
+
+  // Get profile picture URL - if it's a path, construct the full URL, otherwise use as-is
+  const profilePictureUrl =
+    user.profile_picture && typeof user.profile_picture === "string"
+      ? user.profile_picture.startsWith("http")
+        ? user.profile_picture
+        : getPublicUrl("avatars", user.profile_picture)
+      : null;
 
   return (
     <div className="max-w-screen-2xl mx-auto py-8">
@@ -77,22 +89,16 @@ export default function TeacherProfile() {
           <CardContent>
             <div className="flex items-center space-x-6">
               <Avatar className="h-24 w-24">
-                <AvatarImage
-                  src={user.profilePicture || "/images/default-avatar.png"}
-                  alt="Foto de perfil"
-                />
+                <AvatarImage src={profilePictureUrl} alt="Foto de perfil" />
                 <AvatarFallback
                   className="text-white"
                   style={{ backgroundColor: getAvatarColor(user.username) }}
                 >
-                  {user.username[0].toUpperCase()}
+                  {user.username?.[0]?.toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold">
-                  {user.firstName} {user.lastName}
-                </h2>
-                <h2 className="text-xl font-bold">{user.username}</h2>
+                <h2 className="text-2xl font-bold">{user.username}</h2>
                 <p className="text-gray-600">{t("teacher")}</p>
                 <div className="mt-2 flex gap-2">
                   <Badge variant="secondary">{t("experience")}: 5 años</Badge>

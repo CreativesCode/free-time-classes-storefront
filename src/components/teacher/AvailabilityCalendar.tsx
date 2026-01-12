@@ -8,21 +8,24 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/UserContext";
-import { DELETE_LESSON_MUTATION, LESSON_QUERY } from "@/graphql/lessons";
 import { useLocale, useTranslations } from "@/i18n/translations";
-import { useMutation, useQuery } from "@apollo/client";
+import {
+  deleteLesson,
+  getLessonWithRelations,
+} from "@/lib/supabase/queries/lessons";
+import type { LessonWithRelations } from "@/types/lesson";
 import { DateSelectArg, DatesSetArg, EventClickArg } from "@fullcalendar/core";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@radix-ui/react-tooltip";
 import { Mail } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -40,16 +43,13 @@ export default function AvailabilityCalendar() {
   const t = useTranslations("teacherProfile");
   const [events, setEvents] = useState<Event[]>([]);
   const { lessons, refreshLessons } = useApp();
-  const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
+  const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null);
+  const [selectedLesson, setSelectedLesson] =
+    useState<LessonWithRelations | null>(null);
+  const [lessonLoading, setLessonLoading] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const { data: lessonData, loading: lessonLoading } = useQuery(LESSON_QUERY, {
-    variables: { id: selectedLessonId },
-    skip: !selectedLessonId,
-  });
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const { user } = useAuth();
-  const [deleteLesson, { loading: deleteLoading }] = useMutation(
-    DELETE_LESSON_MUTATION
-  );
 
   const handleDatesSet = (arg: DatesSetArg) => {
     refreshLessons(
@@ -63,19 +63,44 @@ export default function AvailabilityCalendar() {
 
   useEffect(() => {
     if (lessons.data) {
-      const lessonEvents = lessons.data.map((lesson) => ({
-        id: lesson.id,
-        title: `${lesson.subject.name}\n - ${lesson.priceAmount} ${lesson.priceCurrency}`,
-        start: new Date(lesson.scheduledDateTime),
-        end: new Date(
-          new Date(lesson.scheduledDateTime).getTime() +
-            lesson.durationMinutes * 60000
-        ),
-        backgroundColor: "#4CAF50",
-      }));
+      const lessonEvents = lessons.data
+        .filter((lesson) => lesson.subject && lesson.scheduled_date_time)
+        .map((lesson) => ({
+          id: String(lesson.id),
+          title: `${lesson.subject?.name || ""}\n - ${lesson.price} USD`,
+          start: new Date(lesson.scheduled_date_time!),
+          end: new Date(
+            new Date(lesson.scheduled_date_time!).getTime() +
+              lesson.duration_minutes * 60000
+          ),
+          backgroundColor: "#4CAF50",
+        }));
       setEvents(lessonEvents);
     }
   }, [lessons.data]);
+
+  // Load selected lesson when selectedLessonId changes
+  useEffect(() => {
+    async function loadLesson() {
+      if (!selectedLessonId) {
+        setSelectedLesson(null);
+        return;
+      }
+
+      try {
+        setLessonLoading(true);
+        const lesson = await getLessonWithRelations(selectedLessonId);
+        setSelectedLesson(lesson);
+      } catch (error) {
+        console.error("Error loading lesson:", error);
+        setSelectedLesson(null);
+      } finally {
+        setLessonLoading(false);
+      }
+    }
+
+    loadLesson();
+  }, [selectedLessonId]);
 
   const handleDateSelect = (selectInfo: DateSelectArg) => {
     const title = prompt(t("enterEventTitle"));
@@ -98,7 +123,10 @@ export default function AvailabilityCalendar() {
   };
 
   const handleEventClick = (clickInfo: EventClickArg) => {
-    setSelectedLessonId(clickInfo.event.id);
+    const lessonId = parseInt(clickInfo.event.id, 10);
+    if (!isNaN(lessonId)) {
+      setSelectedLessonId(lessonId);
+    }
   };
 
   const handleCloseDialog = () => {
@@ -117,33 +145,31 @@ export default function AvailabilityCalendar() {
     if (!selectedLessonId) return;
 
     try {
-      const { data } = await deleteLesson({
-        variables: { id: selectedLessonId },
-      });
+      setDeleteLoading(true);
+      await deleteLesson(selectedLessonId);
 
-      if (data?.deleteLesson?.success) {
-        // Remove the event from the calendar
-        setEvents(events.filter((event) => event.id !== selectedLessonId));
-        // Close both dialogs
-        handleCloseDialog();
-        setShowDeleteConfirmation(false);
-        // Refresh the lessons list
-        refreshLessons(
-          {
-            start: new Date(),
-            end: new Date(new Date().setMonth(new Date().getMonth() + 1)),
-          },
-          "available"
-        );
-      }
+      // Remove the event from the calendar
+      setEvents(
+        events.filter((event) => event.id !== String(selectedLessonId))
+      );
+      // Close both dialogs
+      handleCloseDialog();
+      setShowDeleteConfirmation(false);
+      // Refresh the lessons list
+      refreshLessons(
+        {
+          start: new Date(),
+          end: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+        },
+        "available"
+      );
     } catch (error) {
       console.error("Error deleting lesson:", error);
       // You might want to show an error message to the user here
+    } finally {
+      setDeleteLoading(false);
     }
   };
-
-  console.log("lessonData.lesson", lessonData?.lesson);
-  console.log("user", user);
 
   return (
     <Card>
@@ -211,78 +237,87 @@ export default function AvailabilityCalendar() {
             <div className="flex justify-center py-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
-          ) : lessonData?.lesson ? (
+          ) : selectedLesson ? (
             <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold text-primary-800">
-                  {t("tutor")} {lessonData.lesson.tutor.firstName}{" "}
-                  {lessonData.lesson.tutor.lastName}
-                </h3>
-                <p className="text-sm text-gray-600 flex items-center gap-2">
-                  <Mail className="w-4 h-4" />
-                  <Link href={`mailto:${lessonData.lesson.tutor.email}`}>
-                    {lessonData.lesson.tutor.email}
-                  </Link>
-                </p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-primary-800">
-                  {lessonData.lesson.subject.name}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  {lessonData.lesson.subject.language.name} -{" "}
-                  {lessonData.lesson.subject.language.level}
-                </p>
-              </div>
-
-              <div>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <p className="text-sm">
-                      {lessonData.lesson.subject.description}
-                    </p>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-sm">{t("description")}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+              {selectedLesson.tutor?.user && (
                 <div>
-                  <p className="text-sm font-medium text-primary-800">
-                    {t("date")}
-                  </p>
-                  <p className="text-sm">
-                    {new Date(
-                      lessonData.lesson.scheduledDateTime
-                    ).toLocaleString()}
+                  <h3 className="font-semibold text-primary-800">
+                    {t("tutor")} {selectedLesson.tutor.user.username}
+                  </h3>
+                  <p className="text-sm text-gray-600 flex items-center gap-2">
+                    <Mail className="w-4 h-4" />
+                    <Link href={`mailto:${selectedLesson.tutor.user.email}`}>
+                      {selectedLesson.tutor.user.email}
+                    </Link>
                   </p>
                 </div>
+              )}
+              {selectedLesson.subject && (
+                <>
+                  <div>
+                    <h3 className="font-semibold text-primary-800">
+                      {selectedLesson.subject.name}
+                    </h3>
+                    {selectedLesson.subject.language && (
+                      <p className="text-sm text-gray-600">
+                        {selectedLesson.subject.language.name}
+                        {selectedLesson.subject.language.level &&
+                          ` - ${selectedLesson.subject.language.level}`}
+                      </p>
+                    )}
+                  </div>
+
+                  {selectedLesson.subject.description && (
+                    <div>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="text-sm">
+                            {selectedLesson.subject.description}
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-sm">{t("description")}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  )}
+                </>
+              )}
+              <div className="grid grid-cols-2 gap-4">
+                {selectedLesson.scheduled_date_time && (
+                  <div>
+                    <p className="text-sm font-medium text-primary-800">
+                      {t("date")}
+                    </p>
+                    <p className="text-sm">
+                      {new Date(
+                        selectedLesson.scheduled_date_time
+                      ).toLocaleString()}
+                    </p>
+                  </div>
+                )}
                 <div>
                   <p className="text-sm font-medium text-primary-800">
                     {t("duration")}
                   </p>
                   <p className="text-sm">
-                    {lessonData.lesson.durationMinutes} {t("minutes")}
+                    {selectedLesson.duration_minutes} {t("minutes")}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-primary-800">
                     {t("price")}
                   </p>
-                  <p className="text-sm">
-                    {lessonData.lesson.priceAmount}{" "}
-                    {lessonData.lesson.priceCurrency}
-                  </p>
+                  <p className="text-sm">{selectedLesson.price} USD</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-primary-800">
                     {t("status")}
                   </p>
-                  <p className="text-sm">{t(lessonData.lesson.status)}</p>
+                  <p className="text-sm">{t(selectedLesson.status)}</p>
                 </div>
               </div>
-              {user?.email === lessonData.lesson.tutor.email && (
+              {user?.email === selectedLesson.tutor?.user?.email && (
                 <div className="flex gap-2 float-right mt-4">
                   <Button
                     variant="outline"
