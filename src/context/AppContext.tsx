@@ -140,9 +140,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         scheduled_date_time_gte: dateRange.start.toISOString(),
         scheduled_date_time_lte: dateRange.end.toISOString(),
         status: status as any,
+        tutor_id: userData?.id, // Filter by current user's tutor_id
       });
     },
-    []
+    [userData?.id]
   );
 
   const refreshCourses = useCallback((filters?: CourseFilters) => {

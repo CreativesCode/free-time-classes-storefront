@@ -1,11 +1,12 @@
 "use client";
 
+import AvailabilityBrowser from "@/components/student/AvailabilityBrowser";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/UserContext";
 import { getPublicUrl } from "@/lib/supabase/storage";
-import { BookOpen, Settings, User } from "lucide-react";
+import { BookOpen, Calendar, Settings, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 
@@ -64,6 +65,13 @@ export default function StudentProfile() {
             <User className="h-4 w-4" />
             {t("profile")}
           </TabsTrigger>
+          <TabsTrigger
+            value="availabilities"
+            className="flex items-center gap-2"
+          >
+            <Calendar className="h-4 w-4" />
+            {t("availabilities.tab")}
+          </TabsTrigger>
           <TabsTrigger value="courses" className="flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
             {t("courses")}
@@ -118,6 +126,11 @@ export default function StudentProfile() {
               <Button className="mt-4">{t("editProfile")}</Button>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Availabilities Tab */}
+        <TabsContent value="availabilities" className="space-y-4">
+          <AvailabilityBrowser />
         </TabsContent>
 
         {/* Courses Tab */}

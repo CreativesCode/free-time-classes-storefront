@@ -1,5 +1,6 @@
 "use client";
 
+import AddAvailabilityModal from "@/components/teacher/AddAvailabilityModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -50,16 +51,36 @@ export default function AvailabilityCalendar() {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const { user } = useAuth();
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
 
   const handleDatesSet = (arg: DatesSetArg) => {
-    refreshLessons(
-      {
-        start: arg.start,
-        end: arg.end,
-      },
-      "available"
-    );
+    if (user?.id) {
+      refreshLessons(
+        {
+          start: arg.start,
+          end: arg.end,
+        },
+        "available"
+      );
+    }
   };
+
+  // Initial load of lessons when component mounts
+  useEffect(() => {
+    if (user?.id) {
+      const now = new Date();
+      const endDate = new Date();
+      endDate.setMonth(endDate.getMonth() + 2);
+      refreshLessons(
+        {
+          start: now,
+          end: endDate,
+        },
+        "available"
+      );
+    }
+  }, [user?.id, refreshLessons]);
 
   useEffect(() => {
     if (lessons.data) {
@@ -103,23 +124,26 @@ export default function AvailabilityCalendar() {
   }, [selectedLessonId]);
 
   const handleDateSelect = (selectInfo: DateSelectArg) => {
-    const title = prompt(t("enterEventTitle"));
     const calendarApi = selectInfo.view.calendar;
-
     calendarApi.unselect();
 
-    if (title) {
-      setEvents([
-        ...events,
-        {
-          id: createEventId(),
-          title,
-          start: selectInfo.start,
-          end: selectInfo.end,
-          backgroundColor: "#4CAF50",
-        },
-      ]);
-    }
+    // Open the add availability modal with the selected date
+    setSelectedDate(selectInfo.start);
+    setShowAddModal(true);
+  };
+
+  const handleAddAvailabilitySuccess = () => {
+    // Refresh the lessons to show the new availability
+    const now = new Date();
+    const endDate = new Date();
+    endDate.setMonth(endDate.getMonth() + 2);
+    refreshLessons(
+      {
+        start: now,
+        end: endDate,
+      },
+      "available"
+    );
   };
 
   const handleEventClick = (clickInfo: EventClickArg) => {
@@ -131,10 +155,6 @@ export default function AvailabilityCalendar() {
 
   const handleCloseDialog = () => {
     setSelectedLessonId(null);
-  };
-
-  const createEventId = () => {
-    return String(Math.random()).replace(/\D/g, "");
   };
 
   const handleDeleteClick = () => {
@@ -178,7 +198,11 @@ export default function AvailabilityCalendar() {
       </CardHeader>
       <CardContent>
         <div className="mb-4 flex gap-2">
-          <Button variant="ghost" className="btn-primary" onClick={() => {}}>
+          <Button
+            variant="ghost"
+            className="btn-primary"
+            onClick={() => setShowAddModal(true)}
+          >
             {t("addAvailability")}
           </Button>
         </div>
@@ -366,6 +390,17 @@ export default function AvailabilityCalendar() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Add Availability Modal */}
+      <AddAvailabilityModal
+        isOpen={showAddModal}
+        onClose={() => {
+          setShowAddModal(false);
+          setSelectedDate(undefined);
+        }}
+        onSuccess={handleAddAvailabilitySuccess}
+        initialDate={selectedDate}
+      />
     </Card>
   );
 }

@@ -61,7 +61,28 @@
     "configureNotifications": "Configurar Notificaciones",
     "changePassword": "Cambiar Contraseña",
     "updatePassword": "Actualizar Contraseña",
-    "deleteAccount": "Eliminar Cuenta"
+    "deleteAccount": "Eliminar Cuenta",
+    "availabilities": {
+      "tab": "Clases Disponibles",
+      "title": "Buscar Clases Disponibles",
+      "searchPlaceholder": "Buscar por materia o profesor...",
+      "filters": "Filtros",
+      "subject": "Materia",
+      "allSubjects": "Todas las Materias",
+      "tutor": "Profesor",
+      "tutorNamePlaceholder": "Filtrar por nombre de profesor",
+      "resultsCount": "{{count}} clases encontradas",
+      "noAvailabilities": "No se encontraron clases disponibles",
+      "viewDetails": "Ver Detalles",
+      "lessonDetails": "Detalles de la Clase",
+      "dateTime": "Fecha y Hora",
+      "duration": "Duración",
+      "minutes": "minutos",
+      "price": "Precio",
+      "cancel": "Cancelar",
+      "book": "Reservar Clase",
+      "booking": "Reservando..."
+    }
   },
   "navigation": {
     "home": "Inicio",
@@ -282,6 +303,18 @@
     "COMPLETED": "Completado",
     "confirmDelete": "Confirmar Eliminación",
     "confirmDeleteMessage": "¿Estás seguro de que deseas eliminar esta clase?",
-    "confirm": "Confirmar"
+    "confirm": "Confirmar",
+    "addAvailabilityModal": {
+      "title": "Añadir Disponibilidad",
+      "subject": "Materia",
+      "selectSubject": "Selecciona una materia",
+      "dateTime": "Fecha y Hora",
+      "duration": "Duración",
+      "minutes": "minutos",
+      "price": "Precio (USD)",
+      "cancel": "Cancelar",
+      "create": "Crear",
+      "creating": "Creando..."
+    }
   }
 }
