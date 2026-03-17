@@ -16,7 +16,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChangeEvent, FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -24,10 +24,25 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [loginError, setLoginError] = useState<string | null>(null);
-  const { login, isLoading } = useAuth();
+  const { login, isLoading, user } = useAuth();
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("login");
+  const [shouldRedirectAfterLogin, setShouldRedirectAfterLogin] =
+    useState(false);
+
+  useEffect(() => {
+    if (!shouldRedirectAfterLogin) return;
+    if (!user) return;
+
+    if (user.is_student && user.is_tutor) {
+      router.push(`/${locale}/dashboard`);
+    } else if (user.is_tutor) {
+      router.push(`/${locale}/teacher-profile`);
+    } else {
+      router.push(`/${locale}/student-profile`);
+    }
+  }, [shouldRedirectAfterLogin, user, router, locale]);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -47,6 +62,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoginError(null);
+    setShouldRedirectAfterLogin(false);
 
     if (!validateEmail(email)) {
       setEmailError("Please enter a valid email address");
@@ -55,18 +71,13 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-
-      // Get user from auth context to determine redirect
-      // We need to wait a bit for the user state to update
-      setTimeout(() => {
-        // This will be handled by the auth state change in UserContext
-        // For now, redirect to dashboard - the navbar will handle proper redirects
-        router.push(`/${locale}/dashboard`);
-      }, 100);
-    } catch (error: any) {
+      // Wait for UserContext to populate `user`, then redirect by role
+      setShouldRedirectAfterLogin(true);
+    } catch (error: unknown) {
       setLoginError(
-        error.message === "Invalid login credentials" ||
-          error.message?.includes("Invalid")
+        error instanceof Error &&
+          (error.message === "Invalid login credentials" ||
+            error.message.includes("Invalid"))
           ? "Invalid email or password"
           : "An error occurred. Please try again."
       );

@@ -11,8 +11,9 @@ interface UserContextType {
   register: (
     email: string,
     password: string,
-    isStudent: boolean
-  ) => Promise<void>;
+    role: "student" | "tutor" | "both",
+    options?: { emailRedirectTo?: string }
+  ) => Promise<"signed_in" | "email_confirmation_required">;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   isLoading: boolean;
@@ -109,16 +110,27 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const register = async (
     email: string,
     password: string,
-    isStudent: boolean
+    role: "student" | "tutor" | "both",
+    options?: { emailRedirectTo?: string }
   ) => {
     try {
       setError(null);
       setIsLoading(true);
 
+      const isStudent = role === "student" || role === "both";
+      const isTutor = role === "tutor" || role === "both";
+
       // Sign up with Supabase Auth
       const { data, error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: options?.emailRedirectTo,
+          data: {
+            is_student: isStudent,
+            is_tutor: isTutor,
+          },
+        },
       });
 
       if (authError) {
@@ -129,28 +141,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         throw new Error("Registration failed: No user data returned");
       }
 
-      // The trigger handle_new_user() should create the user in public.users
-      // But we need to update it with is_student/is_tutor flags
-      // Wait a bit for the trigger to complete
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      // Update user record with is_student/is_tutor
-      const { error: updateError } = await supabase
-        .from("users")
-        .update({
-          is_student: isStudent,
-          is_tutor: !isStudent,
-        })
-        .eq("id", data.user.id);
-
-      if (updateError) {
-        console.error("Error updating user flags:", updateError);
-        // Continue anyway, the user is created
+      // If email confirmation is enabled, Supabase returns no session.
+      // In that case, we should not attempt DB writes (RLS will block unauthenticated users).
+      // The DB rows should be created by a trigger using auth.users metadata.
+      if (!data.session) {
+        return "email_confirmation_required";
       }
 
       // Get the updated user data
       const userData = await getCurrentUser();
       setUser(userData);
+      return "signed_in";
     } catch (error) {
       setError(error as Error);
       throw error;

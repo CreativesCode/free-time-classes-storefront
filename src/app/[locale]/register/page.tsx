@@ -18,20 +18,28 @@ import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
-type AccountType = "student" | "tutor";
+type AccountType = "student" | "tutor" | "both";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isStudent, setIsStudent] = useState(true);
+  const [accountType, setAccountType] = useState<AccountType>("student");
   const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [registerError, setRegisterError] = useState<string | null>(null);
+  const [registrationState, setRegistrationState] = useState<
+    "idle" | "email_confirmation_required"
+  >("idle");
+  const [resendState, setResendState] = useState<"idle" | "sending" | "sent">(
+    "idle"
+  );
   const { register, isLoading } = useAuth();
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("register");
+  const supabase = createClient();
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -51,6 +59,7 @@ export default function RegisterPage() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setRegisterError(null);
+    setRegistrationState("idle");
 
     if (!validateEmail(email)) {
       setEmailError("Please enter a valid email address");
@@ -58,15 +67,97 @@ export default function RegisterPage() {
     }
 
     try {
-      await register(email, password, isStudent);
-      router.push(`/${locale}/login`);
-    } catch (error: any) {
-      setRegisterError(error.message || t("registrationFailed"));
+      const emailRedirectTo =
+        typeof window !== "undefined"
+          ? `${window.location.origin}/${locale}/auth/callback`
+          : undefined;
+      const result = await register(email, password, accountType, {
+        emailRedirectTo,
+      });
+
+      if (result === "email_confirmation_required") {
+        setRegistrationState("email_confirmation_required");
+        return;
+      }
+
+      // If email confirmation is disabled and we got signed in immediately
+      if (accountType === "both") {
+        router.push(`/${locale}/dashboard`);
+      } else if (accountType === "tutor") {
+        router.push(`/${locale}/teacher-profile`);
+      } else {
+        router.push(`/${locale}/student-profile`);
+      }
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : t("registrationFailed");
+      setRegisterError(message || t("registrationFailed"));
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    try {
+      setResendState("sending");
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+      });
+      if (error) throw error;
+      setResendState("sent");
+    } catch (err) {
+      setRegisterError(err instanceof Error ? err.message : t("resendFailed"));
+      setResendState("idle");
     }
   };
 
   const handlePasswordChange = (e: ChangeEvent<HTMLInputElement>) =>
     setPassword(e.target.value);
+
+  if (registrationState === "email_confirmation_required") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-100 bg-[url('/images/bg.webp')] bg-cover bg-center bg-no-repeat">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-2xl text-center text-secondary-500">
+              {t("checkEmail.title")}
+            </CardTitle>
+            <CardDescription className="text-center">
+              {t("checkEmail.description", { email })}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {registerError && (
+              <Alert variant="destructive">
+                <AlertDescription>{registerError}</AlertDescription>
+              </Alert>
+            )}
+
+            <Button
+              type="button"
+              className="w-full btn-primary"
+              onClick={handleResendConfirmation}
+              disabled={resendState === "sending"}
+            >
+              {resendState === "sending"
+                ? t("checkEmail.resending")
+                : resendState === "sent"
+                  ? t("checkEmail.resent")
+                  : t("checkEmail.resend")}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => router.push(`/${locale}/login`)}
+            >
+              {t("checkEmail.goToLogin")}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 bg-[url('/images/bg.webp')] bg-cover bg-center bg-no-repeat">
@@ -123,10 +214,8 @@ export default function RegisterPage() {
             <div className="space-y-2">
               <Label>{t("accountType")}</Label>
               <RadioGroup
-                value={isStudent ? "student" : "tutor"}
-                onValueChange={(value: AccountType) =>
-                  setIsStudent(value === "student")
-                }
+                value={accountType}
+                onValueChange={(value: AccountType) => setAccountType(value)}
                 className="flex space-x-4"
               >
                 <div className="flex items-center space-x-2">
@@ -136,6 +225,10 @@ export default function RegisterPage() {
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="tutor" id="tutor" />
                   <Label htmlFor="tutor">{t("tutor")}</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="both" id="both" />
+                  <Label htmlFor="both">{t("both")}</Label>
                 </div>
               </RadioGroup>
             </div>

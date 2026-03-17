@@ -26,8 +26,18 @@
     "accountType": "Account Type",
     "student": "Student",
     "tutor": "Tutor",
+    "both": "Student and tutor",
     "registrationFailed": "Registration failed. Please try again.",
+    "resendFailed": "We couldn't resend the email. Please try again.",
     "loading": "Registering...",
+    "checkEmail": {
+      "title": "Check your email",
+      "description": "We sent a confirmation link to {email}. Confirm your account, then log in.",
+      "resend": "Resend confirmation email",
+      "resending": "Resending...",
+      "resent": "Email resent",
+      "goToLogin": "Go to login"
+    },
     "alreadyHaveAccount": "Already have an account?",
     "login": "Login here",
     "register": "Register here"
@@ -43,6 +53,18 @@
     "contact": "Contact",
     "login": "Login",
     "register": "Register"
+  },
+  "authCallback": {
+    "verifyingTitle": "Verifying your account",
+    "verifyingDescription": "We're confirming your email and preparing your session.",
+    "successTitle": "Account verified",
+    "successDescription": "Your email was verified successfully. You can now log in.",
+    "errorTitle": "Verification failed",
+    "genericError": "An error occurred while verifying your account. Please try again.",
+    "missingCode": "The verification link is missing the code parameter.",
+    "autoRedirect": "Redirecting to login in {seconds, plural, one {# second} other {# seconds}}…",
+    "goToLogin": "Go to login",
+    "goToDashboard": "Go to dashboard"
   },
   "studentProfile": {
     "profile": "Profile",

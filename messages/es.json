@@ -26,8 +26,18 @@
     "accountType": "Tipo de Cuenta",
     "student": "Estudiante",
     "tutor": "Profesor",
+    "both": "Estudiante y profesor",
     "registrationFailed": "Registro fallido. Por favor, inténtalo de nuevo.",
+    "resendFailed": "No pudimos reenviar el correo. Inténtalo de nuevo.",
     "loading": "Registrando...",
+    "checkEmail": {
+      "title": "Revisa tu correo",
+      "description": "Te enviamos un enlace de confirmación a {email}. Confirma tu cuenta y luego inicia sesión.",
+      "resend": "Reenviar correo de confirmación",
+      "resending": "Reenviando...",
+      "resent": "Correo reenviado",
+      "goToLogin": "Ir a iniciar sesión"
+    },
     "alreadyHaveAccount": "¿Ya tienes una cuenta?",
     "login": "Inicia sesión aquí",
     "register": "Regístrate aquí"
@@ -43,6 +53,18 @@
     "contact": "Contacto",
     "login": "Iniciar Sesión",
     "register": "Registrarse"
+  },
+  "authCallback": {
+    "verifyingTitle": "Verificando tu cuenta",
+    "verifyingDescription": "Estamos confirmando tu correo y preparando tu sesión.",
+    "successTitle": "Cuenta verificada",
+    "successDescription": "Tu correo fue verificado correctamente. Ya puedes iniciar sesión.",
+    "errorTitle": "No se pudo verificar",
+    "genericError": "Ocurrió un error al verificar tu cuenta. Inténtalo de nuevo.",
+    "missingCode": "Falta el código de verificación en el enlace.",
+    "autoRedirect": "Redirigiendo a iniciar sesión en {seconds, plural, one {# segundo} other {# segundos}}…",
+    "goToLogin": "Ir a iniciar sesión",
+    "goToDashboard": "Ir al dashboard"
   },
   "studentProfile": {
     "profile": "Perfil",
