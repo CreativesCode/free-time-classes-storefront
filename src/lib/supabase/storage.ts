@@ -6,32 +6,44 @@ const supabase = createClient();
  * Upload avatar image to Supabase Storage
  * @param userId - User UUID
  * @param file - File to upload
- * @returns Public URL of the uploaded file
+ * @returns File path saved in bucket
  */
 export async function uploadAvatar(
   userId: string,
   file: File
 ): Promise<string> {
-  const fileExt = file.name.split(".").pop();
-  const fileName = `${userId}.${fileExt}`;
-  const filePath = `${fileName}`;
+  const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
+  const preferredPath = `${userId}.${fileExt}`;
+  const fallbackPath = `${userId}/${Date.now()}.${fileExt}`;
 
-  const { error: uploadError } = await supabase.storage
+  // Prefer flat filename because many RLS policies for avatars
+  // validate object.name against auth.uid() without folder support.
+  const preferredUpload = await supabase.storage
     .from("avatars")
-    .upload(filePath, file, {
+    .upload(preferredPath, file, {
       cacheControl: "3600",
       upsert: true,
+      contentType: file.type || "image/jpeg",
     });
 
-  if (uploadError) {
-    throw uploadError;
+  if (!preferredUpload.error) {
+    return preferredPath;
   }
 
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from("avatars").getPublicUrl(filePath);
+  // Fallback for projects that use folder-based policies.
+  const fallbackUpload = await supabase.storage
+    .from("avatars")
+    .upload(fallbackPath, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type || "image/jpeg",
+    });
 
-  return publicUrl;
+  if (fallbackUpload.error) {
+    throw fallbackUpload.error;
+  }
+
+  return fallbackPath;
 }
 
 /**

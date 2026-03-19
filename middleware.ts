@@ -21,7 +21,12 @@ const PROTECTED_ROUTES = [
   "/teacher-profile",
   "/settings",
   "/tutor/dashboard",
+  "/bookings",
+  "/courses/create",
 ];
+
+const STUDENT_ONLY_ROUTES = ["/student-profile"];
+const TUTOR_ONLY_ROUTES = ["/teacher-profile", "/tutor/dashboard", "/courses/create"];
 
 // Create the next-intl middleware
 const intlMiddleware = createMiddleware({
@@ -55,10 +60,14 @@ export default async function middleware(req: NextRequest) {
 
   // Extract locale from pathname
   const pathnameParts = pathname.split("/");
-  const locale =
-    pathnameParts[1] && routing.locales.includes(pathnameParts[1])
-      ? pathnameParts[1]
-      : routing.defaultLocale;
+  const localeCandidate = pathnameParts[1];
+  const isValidLocale = routing.locales.some(
+    (supportedLocale) => supportedLocale === localeCandidate
+  );
+  const locale = isValidLocale
+    ? (localeCandidate as (typeof routing.locales)[number])
+    : routing.defaultLocale;
+  const pathnameWithoutLocale = pathname.replace(new RegExp(`^/${locale}`), "") || "/";
 
   // Create Supabase client for middleware
   let response = NextResponse.next({
@@ -69,7 +78,8 @@ export default async function middleware(req: NextRequest) {
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
       cookies: {
         get(name: string) {
@@ -119,11 +129,11 @@ export default async function middleware(req: NextRequest) {
   } = await supabase.auth.getSession();
 
   const isAuthPage =
-    pathname.includes("/login") || pathname.includes("/register");
+    pathnameWithoutLocale === "/login" || pathnameWithoutLocale === "/register";
 
   // Check if the current path is a protected route
   const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
-    pathname.includes(route)
+    pathnameWithoutLocale === route || pathnameWithoutLocale.startsWith(`${route}/`)
   );
 
   // Redirect to login if accessing protected routes without session
@@ -131,6 +141,39 @@ export default async function middleware(req: NextRequest) {
     const redirectUrl = new URL(`/${locale}/login`, req.url);
     redirectUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(redirectUrl);
+  }
+
+  // Enforce role-based access for protected sections
+  if (session && isProtectedRoute) {
+    const { data: profile, error } = await supabase
+      .from("users")
+      .select("is_student, is_tutor")
+      .eq("id", session.user.id)
+      .single();
+
+    // If role profile can't be resolved, treat as unauthorized and send to login
+    if (error || !profile) {
+      const redirectUrl = new URL(`/${locale}/login`, req.url);
+      redirectUrl.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    const needsStudentRole = STUDENT_ONLY_ROUTES.some(
+      (route) =>
+        pathnameWithoutLocale === route ||
+        pathnameWithoutLocale.startsWith(`${route}/`)
+    );
+    const needsTutorRole = TUTOR_ONLY_ROUTES.some(
+      (route) =>
+        pathnameWithoutLocale === route ||
+        pathnameWithoutLocale.startsWith(`${route}/`)
+    );
+
+    if ((needsStudentRole && !profile.is_student) || (needsTutorRole && !profile.is_tutor)) {
+      const redirectUrl = new URL(`/${locale}/login`, req.url);
+      redirectUrl.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
   }
 
   // Redirect to dashboard if accessing auth pages with active session

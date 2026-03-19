@@ -22,10 +22,13 @@ export default function AuthCallbackPage() {
   const [redirectSeconds, setRedirectSeconds] = useState<number | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     const run = async () => {
       const errorFromUrl =
         params.get("error_description") || params.get("error");
       if (errorFromUrl) {
+        if (!isMounted) return;
         setStatus("error");
         setErrorMessage(decodeURIComponent(errorFromUrl));
         return;
@@ -33,22 +36,47 @@ export default function AuthCallbackPage() {
 
       const code = params.get("code");
       if (!code) {
+        if (!isMounted) return;
         setStatus("error");
         setErrorMessage(t("missingCode"));
         return;
       }
 
-      const { error } = await supabase.auth.exchangeCodeForSession(code);
-      if (error) {
+      try {
+        const exchangePromise = supabase.auth.exchangeCodeForSession(code);
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          window.setTimeout(() => reject(new Error("callback-timeout")), 12000);
+        });
+
+        const { error } = await Promise.race([exchangePromise, timeoutPromise]);
+        if (error) {
+          if (!isMounted) return;
+          setStatus("error");
+          setErrorMessage(error.message);
+          return;
+        }
+      } catch (err) {
+        if (!isMounted) return;
         setStatus("error");
-        setErrorMessage(error.message);
+        setErrorMessage(
+          err instanceof Error && err.message === "callback-timeout"
+            ? t("verificationTimeout")
+            : err instanceof Error
+              ? err.message
+              : t("genericError")
+        );
         return;
       }
 
+      if (!isMounted) return;
       setStatus("success");
     };
 
     run();
+
+    return () => {
+      isMounted = false;
+    };
   }, [params, supabase, t]);
 
   useEffect(() => {
@@ -87,9 +115,14 @@ export default function AuthCallbackPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {status === "verifying" && (
-            <p className="text-center text-sm text-secondary-500">
-              {t("verifyingDescription")}
-            </p>
+            <>
+              <p className="text-center text-sm text-secondary-500">
+                {t("verifyingDescription")}
+              </p>
+              <Button className="w-full" variant="outline" onClick={goToLogin}>
+                {t("goToLogin")}
+              </Button>
+            </>
           )}
 
           {status === "success" && (

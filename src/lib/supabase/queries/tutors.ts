@@ -1,4 +1,5 @@
 import type { TutorProfile, TutorSubject } from "@/types/tutor";
+import type { Subject } from "@/types/subject";
 import type { User } from "@/types/user";
 import { createClient } from "../client";
 
@@ -86,6 +87,38 @@ export async function getTutorSubjects(tutorId: string): Promise<TutorSubject[]>
   }
 
   return (data || []) as TutorSubject[];
+}
+
+/**
+ * Get detailed subjects taught by a tutor
+ */
+export async function getTutorSubjectDetails(
+  tutorId: string
+): Promise<Subject[]> {
+  const { data, error } = await supabase
+    .from("tutor_subjects")
+    .select(
+      `
+      subject:subjects (
+        id,
+        name,
+        description,
+        icon,
+        created_at,
+        updated_at
+      )
+    `
+    )
+    .eq("tutor_id", tutorId);
+
+  if (error) {
+    throw error;
+  }
+
+  const rows = (data || []) as { subject: Subject[] | null }[];
+  return rows
+    .flatMap((row) => row.subject || [])
+    .filter((subject): subject is Subject => subject !== null);
 }
 
 /**

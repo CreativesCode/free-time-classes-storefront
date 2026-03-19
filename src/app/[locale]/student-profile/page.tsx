@@ -3,16 +3,69 @@
 import AvailabilityBrowser from "@/components/student/AvailabilityBrowser";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/UserContext";
+import { COUNTRIES } from "@/lib/constants/countries";
+import { updateUser } from "@/lib/supabase/queries/users";
+import { uploadAvatar } from "@/lib/supabase/storage";
 import { getPublicUrl } from "@/lib/supabase/storage";
 import { BookOpen, Calendar, Settings, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  errorMessage: string
+): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => {
+        reject(new Error(errorMessage));
+      }, timeoutMs);
+    });
+
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
 
 export default function StudentProfile() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, refreshUser } = useAuth();
   const t = useTranslations("studentProfile");
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [formData, setFormData] = useState({
+    username: "",
+    phone: "",
+    country: "",
+  });
+
+  useEffect(() => {
+    if (!user) return;
+    setFormData({
+      username: user.username || "",
+      phone: user.phone || "",
+      country: user.country || "",
+    });
+  }, [user]);
 
   if (isLoading) {
     return (
@@ -33,6 +86,76 @@ export default function StudentProfile() {
         ? user.profile_picture
         : getPublicUrl("avatars", user.profile_picture)
       : null;
+
+  const modalAvatarPreviewUrl = avatarFile
+    ? URL.createObjectURL(avatarFile)
+    : user.profile_picture && typeof user.profile_picture === "string"
+      ? user.profile_picture.startsWith("http")
+        ? user.profile_picture
+        : getPublicUrl("avatars", user.profile_picture)
+      : null;
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error(t("invalidImageType"));
+      return;
+    }
+
+    setAvatarFile(file);
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user?.id) return;
+
+    try {
+      setIsSaving(true);
+      let profilePicture = user.profile_picture || null;
+
+      if (avatarFile) {
+        profilePicture = await withTimeout(
+          uploadAvatar(user.id, avatarFile),
+          30000,
+          "Avatar upload timeout"
+        );
+      }
+
+      await withTimeout(
+        updateUser(user.id, {
+          username: formData.username || user.username,
+          phone: formData.phone || null,
+          country: formData.country || null,
+          profile_picture: profilePicture,
+        }),
+        15000,
+        "Profile update timeout"
+      );
+
+      await withTimeout(refreshUser(), 15000, "Refresh user timeout");
+      setAvatarFile(null);
+      setIsEditModalOpen(false);
+      toast.success(t("profileUpdated"));
+    } catch (error) {
+      console.error("Error updating student profile:", error);
+      toast.error(
+        error instanceof Error && error.message.includes("timeout")
+          ? t("updateTimeout")
+          : t("updateError")
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-screen-2xl">
@@ -104,6 +227,18 @@ export default function StudentProfile() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-700">
+                    {t("phone")}
+                  </label>
+                  <p className="mt-1">{user.phone || t("notProvided")}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">
+                    {t("country")}
+                  </label>
+                  <p className="mt-1">{user.country || t("notProvided")}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">
                     {t("registrationDate")}
                   </label>
                   <p className="mt-1">
@@ -123,7 +258,9 @@ export default function StudentProfile() {
                   </p>
                 </div>
               </div>
-              <Button className="mt-4">{t("editProfile")}</Button>
+              <Button className="mt-4" onClick={() => setIsEditModalOpen(true)}>
+                {t("editProfile")}
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -196,6 +333,99 @@ export default function StudentProfile() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog
+        open={isEditModalOpen}
+        onOpenChange={(open) => {
+          setIsEditModalOpen(open);
+          if (!open) {
+            setAvatarFile(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>{t("editProfile")}</DialogTitle>
+            <DialogDescription>{t("editProfileDescription")}</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSaveProfile} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="username">{t("name")}</Label>
+              <Input
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleInputChange}
+                placeholder={t("namePlaceholder")}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">{t("phone")}</Label>
+              <Input
+                id="phone"
+                name="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={handleInputChange}
+                placeholder="+34 123 456 789"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="country">{t("country")}</Label>
+              <select
+                id="country"
+                name="country"
+                value={formData.country}
+                onChange={handleInputChange}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <option value="">{t("selectCountry")}</option>
+                {COUNTRIES.map((country) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="avatar_file">{t("uploadNewPhoto")}</Label>
+              <Input
+                id="avatar_file"
+                name="avatar_file"
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+              />
+              {modalAvatarPreviewUrl ? (
+                <div className="relative h-16 w-16 overflow-hidden rounded-full border">
+                  <Image
+                    src={modalAvatarPreviewUrl}
+                    alt={t("profilePicturePreviewAlt")}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              ) : null}
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsEditModalOpen(false)}
+              >
+                {t("cancel")}
+              </Button>
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? t("saving") : t("save")}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

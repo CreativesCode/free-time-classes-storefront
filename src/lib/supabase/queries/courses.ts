@@ -59,11 +59,14 @@ export async function getCoursesWithRelations(
   let query = supabase.from("courses").select(
     `
       *,
-      tutor:users!courses_tutor_id_fkey (
+      tutor_profile:tutor_profiles!courses_tutor_id_fkey (
         id,
-        username,
-        email,
-        profile_picture
+        user:users!tutor_profiles_id_fkey (
+          id,
+          username,
+          email,
+          profile_picture
+        )
       ),
       subject:subjects (
         id,
@@ -104,7 +107,24 @@ export async function getCoursesWithRelations(
     throw error;
   }
 
-  return (data || []) as CourseWithRelations[];
+  const rows = (data || []) as Array<
+    Course & {
+      tutor_profile?: {
+        user?: {
+          id: string;
+          username: string;
+          email: string;
+          profile_picture?: string | null;
+        } | null;
+      } | null;
+      subject?: CourseWithRelations["subject"];
+    }
+  >;
+
+  return rows.map((row) => ({
+    ...row,
+    tutor: row.tutor_profile?.user ?? null,
+  })) as CourseWithRelations[];
 }
 
 /**
@@ -138,11 +158,14 @@ export async function getCourseWithRelations(
     .select(
       `
       *,
-      tutor:users!courses_tutor_id_fkey (
+      tutor_profile:tutor_profiles!courses_tutor_id_fkey (
         id,
-        username,
-        email,
-        profile_picture
+        user:users!tutor_profiles_id_fkey (
+          id,
+          username,
+          email,
+          profile_picture
+        )
       ),
       subject:subjects (
         id,
@@ -162,7 +185,22 @@ export async function getCourseWithRelations(
     throw error;
   }
 
-  return data as CourseWithRelations;
+  const row = data as Course & {
+    tutor_profile?: {
+      user?: {
+        id: string;
+        username: string;
+        email: string;
+        profile_picture?: string | null;
+      } | null;
+    } | null;
+    subject?: CourseWithRelations["subject"];
+  };
+
+  return {
+    ...row,
+    tutor: row.tutor_profile?.user ?? null,
+  } as CourseWithRelations;
 }
 
 /**

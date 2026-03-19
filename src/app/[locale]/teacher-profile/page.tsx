@@ -17,7 +17,15 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/UserContext";
 import { useLocale, useTranslations } from "@/i18n/translations";
+import { getCoursesByTutor } from "@/lib/supabase/queries/courses";
+import {
+  getTutorProfile,
+  getTutorSubjectDetails,
+} from "@/lib/supabase/queries/tutors";
 import { getPublicUrl } from "@/lib/supabase/storage";
+import type { CourseWithRelations } from "@/types/course";
+import type { Subject } from "@/types/subject";
+import type { TutorProfile } from "@/types/tutor";
 import { getAvatarColor } from "@/lib/utils";
 import { BookOpen, User } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -29,12 +37,47 @@ export default function TeacherProfile() {
   const t = useTranslations("teacherProfile");
   const locale = useLocale();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [tutorProfile, setTutorProfile] = useState<TutorProfile | null>(null);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [courses, setCourses] = useState<CourseWithRelations[]>([]);
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && !user) {
       router.push(`/${locale}/login`);
     }
   }, [user, isLoading, router, locale]);
+
+  useEffect(() => {
+    const loadTutorData = async () => {
+      if (!user?.id) {
+        return;
+      }
+
+      try {
+        setIsProfileLoading(true);
+        setProfileError(null);
+
+        const [profile, tutorSubjects, tutorCourses] = await Promise.all([
+          getTutorProfile(user.id),
+          getTutorSubjectDetails(user.id),
+          getCoursesByTutor(user.id),
+        ]);
+
+        setTutorProfile(profile);
+        setSubjects(tutorSubjects);
+        setCourses(tutorCourses);
+      } catch (err) {
+        console.error("Error loading tutor profile data:", err);
+        setProfileError(t("loadError"));
+      } finally {
+        setIsProfileLoading(false);
+      }
+    };
+
+    void loadTutorData();
+  }, [user?.id, t]);
 
   if (isLoading) {
     return (
@@ -70,13 +113,36 @@ export default function TeacherProfile() {
     return null; // useEffect will handle redirect
   }
 
+  if (isProfileLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+      </div>
+    );
+  }
+
+  if (profileError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-center text-destructive">
+              {t("error")}
+            </CardTitle>
+            <CardDescription className="text-center">{profileError}</CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
   // Get profile picture URL - if it's a path, construct the full URL, otherwise use as-is
   const profilePictureUrl =
     user.profile_picture && typeof user.profile_picture === "string"
       ? user.profile_picture.startsWith("http")
         ? user.profile_picture
         : getPublicUrl("avatars", user.profile_picture)
-      : null;
+      : undefined;
 
   return (
     <div className="max-w-screen-2xl mx-auto py-8">
@@ -101,8 +167,13 @@ export default function TeacherProfile() {
                 <h2 className="text-2xl font-bold">{user.username}</h2>
                 <p className="text-gray-600">{t("teacher")}</p>
                 <div className="mt-2 flex gap-2">
-                  <Badge variant="secondary">{t("experience")}: 5 años</Badge>
-                  <Badge variant="secondary">{t("courses")}: 12</Badge>
+                  <Badge variant="secondary">
+                    {t("experience")}:{" "}
+                    {tutorProfile?.years_of_experience ?? 0} {t("years")}
+                  </Badge>
+                  <Badge variant="secondary">
+                    {t("courses")}: {courses.length}
+                  </Badge>
                 </div>
               </div>
               <Button
@@ -152,17 +223,25 @@ export default function TeacherProfile() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">{t("phone")}</Label>
-                    <Input id="phone" value="+34 123 456 789" readOnly />
+                    <Input id="phone" value={user.phone || t("notProvided")} readOnly />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="location">{t("location")}</Label>
-                    <Input id="location" value="Madrid, España" readOnly />
+                    <Input
+                      id="location"
+                      value={user.country || tutorProfile?.timezone || t("notProvided")}
+                      readOnly
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="specialties">{t("specialties")}</Label>
                     <Input
                       id="specialties"
-                      value="Matemáticas, Física"
+                      value={
+                        subjects.length > 0
+                          ? subjects.map((subject) => subject.name).join(", ")
+                          : t("notProvided")
+                      }
                       readOnly
                     />
                   </div>
@@ -180,18 +259,28 @@ export default function TeacherProfile() {
               <CardContent>
                 <div className="space-y-4">
                   <div className="border-b pb-4">
-                    <h3 className="font-semibold">
-                      Universidad Complutense de Madrid
-                    </h3>
-                    <p className="text-sm text-gray-600">2018 - Presente</p>
-                    <p className="mt-2">Profesor de Matemáticas Avanzadas</p>
+                    <h3 className="font-semibold">{t("bio")}</h3>
+                    <p className="mt-2">
+                      {tutorProfile?.bio?.trim() || t("notProvided")}
+                    </p>
                   </div>
                   <div className="border-b pb-4">
-                    <h3 className="font-semibold">
-                      Instituto de Educación Secundaria
-                    </h3>
-                    <p className="text-sm text-gray-600">2015 - 2018</p>
-                    <p className="mt-2">Profesor de Matemáticas y Física</p>
+                    <h3 className="font-semibold">{t("hourlyRate")}</h3>
+                    <p className="mt-2">
+                      {tutorProfile?.hourly_rate
+                        ? `${tutorProfile.hourly_rate} USD`
+                        : t("notProvided")}
+                    </p>
+                  </div>
+                  <div className="grid gap-2 md:grid-cols-2">
+                    <p className="text-sm text-gray-700">
+                      <span className="font-semibold">{t("rating")}:</span>{" "}
+                      {tutorProfile?.rating ?? 0}
+                    </p>
+                    <p className="text-sm text-gray-700">
+                      <span className="font-semibold">{t("totalReviews")}:</span>{" "}
+                      {tutorProfile?.total_reviews ?? 0}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -205,30 +294,34 @@ export default function TeacherProfile() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b pb-4">
-                    <div>
-                      <h3 className="font-semibold">Cálculo Avanzado</h3>
-                      <p className="text-sm text-gray-600">
-                        30 {t("students")}
-                      </p>
-                    </div>
-                    <Badge className="bg-accent-500 text-white">
-                      {t("inProgress")}
-                    </Badge>
+                {courses.length === 0 ? (
+                  <p className="text-sm text-gray-600">{t("noCourses")}</p>
+                ) : (
+                  <div className="space-y-4">
+                    {courses.map((course) => (
+                      <div
+                        key={course.id}
+                        className="flex items-center justify-between border-b pb-4"
+                      >
+                        <div>
+                          <h3 className="font-semibold">{course.title}</h3>
+                          <p className="text-sm text-gray-600">
+                            {course.max_students} {t("students")}
+                          </p>
+                        </div>
+                        <Badge
+                          className={
+                            course.is_active
+                              ? "bg-accent-500 text-white"
+                              : "bg-gray-500 text-white"
+                          }
+                        >
+                          {course.is_active ? t("active") : t("inactive")}
+                        </Badge>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex items-center justify-between border-b pb-4">
-                    <div>
-                      <h3 className="font-semibold">Física Cuántica</h3>
-                      <p className="text-sm text-gray-600">
-                        25 {t("students")}
-                      </p>
-                    </div>
-                    <Badge className="bg-accent-500 text-white">
-                      {t("inProgress")}
-                    </Badge>
-                  </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

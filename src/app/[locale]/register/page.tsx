@@ -50,7 +50,7 @@ export default function RegisterPage() {
     const newEmail = e.target.value;
     setEmail(newEmail);
     if (!validateEmail(newEmail) && newEmail.length > 0) {
-      setEmailError("Please enter a valid email address");
+      setEmailError(t("invalidEmail"));
     } else {
       setEmailError("");
     }
@@ -62,7 +62,7 @@ export default function RegisterPage() {
     setRegistrationState("idle");
 
     if (!validateEmail(email)) {
-      setEmailError("Please enter a valid email address");
+      setEmailError(t("invalidEmail"));
       return;
     }
 

@@ -24,7 +24,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [loginError, setLoginError] = useState<string | null>(null);
-  const { login, isLoading, user } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login, user } = useAuth();
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("login");
@@ -70,6 +71,7 @@ export default function LoginPage() {
     }
 
     try {
+      setIsSubmitting(true);
       await login(email, password);
       // Wait for UserContext to populate `user`, then redirect by role
       setShouldRedirectAfterLogin(true);
@@ -81,6 +83,8 @@ export default function LoginPage() {
           ? "Invalid email or password"
           : "An error occurred. Please try again."
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -149,9 +153,9 @@ export default function LoginPage() {
             <Button
               type="submit"
               className="w-full btn-primary"
-              disabled={isLoading}
+              disabled={isSubmitting}
             >
-              {isLoading ? t("loading") : t("login")}
+              {isSubmitting ? t("loading") : t("login")}
             </Button>
           </form>
         </CardContent>

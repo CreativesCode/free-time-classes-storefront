@@ -30,12 +30,12 @@ export default function NavbarWrapper({
   const handleLogout = async () => {
     try {
       await logout();
-      // Use window.location for a full page reload to ensure all state is cleared
-      window.location.href = `/${locale}/`;
     } catch (error) {
       console.error("Logout error:", error);
-      // Even if there's an error, redirect to home
-      window.location.href = `/${locale}/`;
+    } finally {
+      // Finalize logout on the server as well to guarantee cookie cleanup
+      // used by middleware-based auth checks.
+      window.location.assign(`/${locale}/auth/logout`);
     }
   };
 

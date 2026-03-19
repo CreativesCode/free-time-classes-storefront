@@ -12,7 +12,10 @@ import { Label } from "@/components/ui/label";
 // import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/UserContext";
 import { useTranslations } from "@/i18n/translations";
+import { COUNTRIES } from "@/lib/constants/countries";
 import { updateUser } from "@/lib/supabase/queries/users";
+import { getPublicUrl, uploadAvatar } from "@/lib/supabase/storage";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -24,8 +27,6 @@ interface EditProfileModalProps {
 interface FormData {
   username: string;
   phone: string;
-  profile_picture: string;
-  date_of_birth: string;
   country: string;
 }
 
@@ -35,11 +36,10 @@ export default function EditProfileModal({
 }: EditProfileModalProps) {
   const { user, refreshUser } = useAuth();
   const t = useTranslations("teacherProfile");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [formData, setFormData] = useState<FormData>({
     username: user?.username || "",
     phone: user?.phone || "",
-    profile_picture: user?.profile_picture || "",
-    date_of_birth: user?.date_of_birth || "",
     country: user?.country || "",
   });
 
@@ -50,8 +50,6 @@ export default function EditProfileModal({
     setFormData({
       username: user?.username || "",
       phone: user?.phone || "",
-      profile_picture: user?.profile_picture || "",
-      date_of_birth: user?.date_of_birth || "",
       country: user?.country || "",
     });
   }, [user]);
@@ -66,16 +64,21 @@ export default function EditProfileModal({
     const formDataToUpdate: Partial<FormData> = {};
     if (formData.username) formDataToUpdate.username = formData.username;
     if (formData.phone) formDataToUpdate.phone = formData.phone;
-    if (formData.profile_picture)
-      formDataToUpdate.profile_picture = formData.profile_picture;
-    if (formData.date_of_birth)
-      formDataToUpdate.date_of_birth = formData.date_of_birth;
     if (formData.country) formDataToUpdate.country = formData.country;
 
     try {
-      await updateUser(user.id, formDataToUpdate);
+      let profilePicture = user.profile_picture || null;
+      if (avatarFile) {
+        profilePicture = await uploadAvatar(user.id, avatarFile);
+      }
+
+      await updateUser(user.id, {
+        ...formDataToUpdate,
+        profile_picture: profilePicture,
+      });
       await refreshUser();
       toast.success(t("profileUpdated"));
+      setAvatarFile(null);
       onClose();
     } catch (err) {
       console.error("Error updating profile:", err);
@@ -86,14 +89,42 @@ export default function EditProfileModal({
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error(t("invalidImageType"));
+      return;
+    }
+
+    setAvatarFile(file);
+  };
+
+  const avatarPreviewUrl = avatarFile
+    ? URL.createObjectURL(avatarFile)
+    : user?.profile_picture
+      ? user.profile_picture.startsWith("http")
+        ? user.profile_picture
+        : getPublicUrl("avatars", user.profile_picture)
+      : null;
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          setAvatarFile(null);
+          onClose();
+        }
+      }}
+    >
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>{t("editProfile")}</DialogTitle>
@@ -124,37 +155,42 @@ export default function EditProfileModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="profile_picture">{t("profilePicture")}</Label>
-            <Input
-              id="profile_picture"
-              name="profile_picture"
-              value={formData.profile_picture}
+            <Label htmlFor="country">{t("country")}</Label>
+            <select
+              id="country"
+              name="country"
+              value={formData.country}
               onChange={handleChange}
-              placeholder="URL de la imagen"
-            />
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <option value="">{t("selectCountry")}</option>
+              {COUNTRIES.map((country) => (
+                <option key={country} value={country}>
+                  {country}
+                </option>
+              ))}
+            </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="date_of_birth">{t("dateOfBirth")}</Label>
-              <Input
-                id="date_of_birth"
-                name="date_of_birth"
-                type="date"
-                value={formData.date_of_birth}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="country">{t("country")}</Label>
-              <Input
-                id="country"
-                name="country"
-                value={formData.country}
-                onChange={handleChange}
-                placeholder="España"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="avatar_file">{t("uploadNewPhoto")}</Label>
+            <Input
+              id="avatar_file"
+              name="avatar_file"
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarChange}
+            />
+            {avatarPreviewUrl ? (
+              <div className="relative h-16 w-16 overflow-hidden rounded-full border">
+                <Image
+                  src={avatarPreviewUrl}
+                  alt={t("profilePicturePreviewAlt")}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            ) : null}
           </div>
 
           {/* <div className="space-y-2">
