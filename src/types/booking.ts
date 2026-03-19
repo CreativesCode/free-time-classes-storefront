@@ -1,5 +1,10 @@
 // Booking type matching Supabase bookings table
-export type BookingStatus = "pending" | "confirmed" | "cancelled";
+export type BookingStatus =
+  | "pending"
+  | "confirmed"
+  | "rejected"
+  | "cancelled"
+  | "completed";
 
 export interface Booking {
   id: number; // Serial primary key

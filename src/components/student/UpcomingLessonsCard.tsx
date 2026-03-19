@@ -8,6 +8,7 @@ import { useAuth } from "@/context/UserContext";
 import { useTranslations } from "@/i18n/translations";
 import { addFavoriteTutor, getFavoriteTutorIds, removeFavoriteTutor } from "@/lib/supabase/queries/studentFavorites";
 import { getLessonsWithRelations } from "@/lib/supabase/queries/lessons";
+import { getBookingsByStudent } from "@/lib/supabase/queries/bookings";
 import { getPublicUrl } from "@/lib/supabase/storage";
 import type { LessonWithRelations } from "@/types/lesson";
 import { Calendar, Clock, DollarSign, Star, StarOff } from "lucide-react";
@@ -80,7 +81,7 @@ export default function UpcomingLessonsCard() {
         setLoading(true);
         setError(null);
 
-        const [scheduled, inProgress] = await Promise.all([
+        const [scheduled, inProgress, bookings] = await Promise.all([
           getLessonsWithRelations({
             student_id: user.id,
             status: "scheduled",
@@ -91,9 +92,16 @@ export default function UpcomingLessonsCard() {
             status: "in_progress",
             scheduled_date_time_gte: nowIso,
           }),
+          getBookingsByStudent(user.id),
         ]);
 
         if (cancelled) return;
+
+        const confirmedLessonIds = new Set(
+          bookings
+            .filter((b) => b.status === "confirmed" && typeof b.lesson_id === "number")
+            .map((b) => b.lesson_id as number)
+        );
 
         const combined = [...scheduled, ...inProgress].sort((a, b) => {
           const aTime = a.scheduled_date_time
@@ -103,7 +111,7 @@ export default function UpcomingLessonsCard() {
             ? new Date(b.scheduled_date_time).getTime()
             : 0;
           return aTime - bTime;
-        });
+        }).filter((lesson) => confirmedLessonIds.has(lesson.id));
 
         setLessons(combined);
       } catch (e) {

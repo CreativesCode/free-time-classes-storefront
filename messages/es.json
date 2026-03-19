@@ -137,6 +137,26 @@
     "favoriteAdded": "Tutor añadido a favoritos",
     "favoriteRemoved": "Tutor eliminado de favoritos",
     "favoriteToggleError": "No se pudo actualizar favoritos. Inténtalo de nuevo.",
+    "requests": {
+      "tab": "Solicitudes",
+      "title": "Clases solicitadas",
+      "description": "Aquí puedes ver y cancelar tus solicitudes pendientes.",
+      "pendingCount": "pendientes",
+      "pendingBadge": "Pendiente",
+      "loading": "Cargando solicitudes...",
+      "empty": "No tienes solicitudes pendientes.",
+      "teacher": "Profesor",
+      "lessonUnknown": "Clase",
+      "dateTime": "Fecha y hora",
+      "duration": "Duración",
+      "minutes": "minutos",
+      "price": "Precio",
+      "cancelRequest": "Cancelar solicitud",
+      "cancelRequestLoading": "Cancelando...",
+      "cancelSuccess": "Solicitud cancelada correctamente.",
+      "cancelError": "No se pudo cancelar la solicitud.",
+      "loadError": "No se pudieron cargar tus solicitudes."
+    },
     "availabilities": {
       "tab": "Clases Disponibles",
       "title": "Buscar Clases Disponibles",
@@ -146,7 +166,7 @@
       "allSubjects": "Todas las Materias",
       "tutor": "Profesor",
       "tutorNamePlaceholder": "Filtrar por nombre de profesor",
-      "resultsCount": "{{count}} clases encontradas",
+      "resultsCount": "{count} clases encontradas",
       "noAvailabilities": "No se encontraron clases disponibles",
       "viewDetails": "Ver Detalles",
       "lessonDetails": "Detalles de la Clase",
@@ -156,7 +176,10 @@
       "price": "Precio",
       "cancel": "Cancelar",
       "book": "Reservar Clase",
-      "booking": "Reservando..."
+      "booking": "Reservando...",
+      "bookingRequested": "Solicitud enviada. Espera la confirmación del profesor.",
+      "bookingRequestedError": "No se pudo enviar la solicitud. Inténtalo de nuevo.",
+      "loadError": "No se pudieron cargar las clases disponibles."
     }
   },
   "navigation": {
@@ -332,6 +355,34 @@
     "error": "Error",
     "profile": "Perfil",
     "availability": "Disponibilidad",
+    "requests": {
+      "tab": "Solicitudes",
+      "title": "Solicitudes de clases",
+      "description": "Revisa y gestiona las clases pendientes de confirmar.",
+      "pendingCount": "pendientes",
+      "pendingBadge": "Pendiente",
+      "loading": "Cargando solicitudes...",
+      "empty": "No tienes solicitudes pendientes.",
+      "student": "Estudiante",
+      "lessonUnknown": "Clase",
+      "dateTime": "Fecha y hora",
+      "duration": "Duración",
+      "minutes": "minutos",
+      "price": "Precio",
+      "accept": "Aceptar",
+      "reject": "Rechazar",
+      "acceptLoading": "Aceptando...",
+      "rejectLoading": "Procesando...",
+      "rejectDialogTitle": "Rechazar solicitud",
+      "rejectReasonLabel": "Motivo (opcional)",
+      "rejectReasonPlaceholder": "Escribe el motivo para el estudiante",
+      "confirmReject": "Confirmar rechazo",
+      "cancel": "Cancelar",
+      "confirmSuccess": "Solicitud confirmada correctamente.",
+      "rejectSuccess": "Solicitud rechazada correctamente.",
+      "actionError": "No se pudo actualizar la solicitud.",
+      "loadError": "No se pudieron cargar las solicitudes."
+    },
     "addAvailability": "Añadir Disponibilidad",
     "clearAll": "Limpiar Todo",
     "confirmClearAll": "¿Estás seguro de que quieres eliminar todos los eventos?",
@@ -378,7 +429,15 @@
       "emptyNameError": "Escribe un nombre para la materia.",
       "duplicateNameError": "Esa materia ya existe.",
       "loadCatalogError": "No se pudo cargar el catálogo de materias.",
-      "updateError": "No se pudo actualizar tus materias."
+      "updateError": "No se pudo actualizar tus materias.",
+      "deleteAction": "Eliminar materia",
+      "deleteConfirm": "¿Seguro que quieres eliminar \"{subject}\" del catálogo general?",
+      "deleteDialogTitle": "Eliminar materia",
+      "deleteDialogCancel": "Cancelar",
+      "deleteDialogConfirm": "Eliminar",
+      "deleting": "Eliminando...",
+      "deleteError": "No se pudo eliminar la materia.",
+      "deleted": "Materia eliminada correctamente."
     },
     "coursesManager": {
       "title": "Tus Cursos",
@@ -443,6 +502,11 @@
       "more": "Más",
       "noEvents": "No hay eventos para mostrar"
     },
+    "calendarStatus": {
+      "available": "Disponible",
+      "requested": "Solicitada (pendiente)",
+      "confirmed": "Aceptada (confirmada)"
+    },
     "lessonDetails": "Clase",
     "tutor": "Profesor:",
     "description": "Descripción",
@@ -474,6 +538,41 @@
       "cancel": "Cancelar",
       "create": "Crear",
       "creating": "Creando..."
+    }
+  },
+  "tutorDashboardPage": {
+    "title": "Reservas pendientes",
+    "description": "Solicitudes de clase esperando tu confirmación.",
+    "loading": "Cargando...",
+    "noPendingBookings": "No tienes solicitudes pendientes.",
+    "pending": "Pendiente",
+    "lessonUnknown": "Clase",
+    "student": "Estudiante",
+    "scheduledAt": "Fecha y hora",
+    "duration": "Duración",
+    "minutes": "minutos",
+    "price": "Precio",
+    "accept": "Aceptar",
+    "reject": "Rechazar",
+    "confirmSuccess": "Reserva confirmada.",
+    "confirmError": "No se pudo confirmar la reserva.",
+    "rejectSuccess": "Reserva rechazada.",
+    "rejectError": "No se pudo rechazar la reserva.",
+    "loadingError": "No se pudieron cargar las reservas.",
+    "rejectDialogTitle": "Rechazar reserva",
+    "rejectReason": "Motivo",
+    "notesOptional": "Notas (opcional)",
+    "notesOptionalPlaceholder": "Escribe un motivo adicional para el estudiante",
+    "cancelReject": "Cancelar",
+    "confirmReject": "Confirmar rechazo",
+    "rejectionReasons": {
+      "tutorUnavailable": "Tutor no disponible",
+      "sickTutor": "Tutor enfermo",
+      "sickStudent": "Estudiante enfermo",
+      "schedulingConflict": "Conflicto de horario",
+      "emergency": "Emergencia",
+      "technicalIssues": "Problemas técnicos",
+      "other": "Otro"
     }
   }
 }

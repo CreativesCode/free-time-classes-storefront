@@ -23,6 +23,27 @@ interface AddAvailabilityModalProps {
   initialDate?: Date;
 }
 
+function toLocalDateTimeInputValue(date: Date): string {
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
+}
+
+function toDatabaseLocalDateTime(value: string): string {
+  // `datetime-local` has no timezone; keep local wall-clock time as-is.
+  // Postgres timestamp columns expect "YYYY-MM-DDTHH:mm:ss" here.
+  if (!value) return value;
+  return value.length === 16 ? `${value}:00` : value;
+}
+
+function getNextHourDate(): Date {
+  const now = new Date();
+  const nextHour = new Date(now);
+  nextHour.setMinutes(0, 0, 0);
+  nextHour.setHours(nextHour.getHours() + 1);
+  return nextHour;
+}
+
 export default function AddAvailabilityModal({
   isOpen,
   onClose,
@@ -38,14 +59,22 @@ export default function AddAvailabilityModal({
   // Form state
   const [formData, setFormData] = useState({
     subject_id: "",
-    scheduled_date_time: initialDate
-      ? new Date(initialDate.getTime() - initialDate.getTimezoneOffset() * 60000)
-          .toISOString()
-          .slice(0, 16)
-      : "",
+    scheduled_date_time: initialDate ? toLocalDateTimeInputValue(initialDate) : "",
     duration_minutes: "60",
     price: "10.00",
   });
+
+  // Keep date/time input synced when opening modal from calendar selection.
+  useEffect(() => {
+    if (!isOpen) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      scheduled_date_time: initialDate
+        ? toLocalDateTimeInputValue(initialDate)
+        : toLocalDateTimeInputValue(getNextHourDate()),
+    }));
+  }, [isOpen, initialDate]);
 
   // Load subjects from database
   useEffect(() => {
@@ -76,7 +105,7 @@ export default function AddAvailabilityModal({
       await createLesson({
         tutor_id: user.id,
         subject_id: parseInt(formData.subject_id),
-        scheduled_date_time: new Date(formData.scheduled_date_time).toISOString(),
+        scheduled_date_time: toDatabaseLocalDateTime(formData.scheduled_date_time),
         duration_minutes: parseInt(formData.duration_minutes),
         price: parseFloat(formData.price),
         status: "available",

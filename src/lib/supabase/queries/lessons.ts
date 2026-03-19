@@ -70,12 +70,7 @@ export async function getLessonsWithRelations(
         id,
         name,
         description,
-        icon,
-        language:languages (
-          id,
-          name,
-          level
-        )
+        icon
       ),
       tutor:tutor_profiles!lessons_tutor_id_fkey (
         id,
@@ -167,12 +162,7 @@ export async function getLessonWithRelations(
         id,
         name,
         description,
-        icon,
-        language:languages (
-          id,
-          name,
-          level
-        )
+        icon
       ),
       tutor:tutor_profiles!lessons_tutor_id_fkey (
         id,

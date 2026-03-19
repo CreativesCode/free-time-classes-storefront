@@ -11,22 +11,28 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/UserContext";
-import { useTranslations } from "@/i18n/translations";
-import {
-  getLessonsWithRelations,
-  updateLesson,
-} from "@/lib/supabase/queries/lessons";
+import { useLocale, useTranslations } from "@/i18n/translations";
+import { toast } from "sonner";
+import { getLessonsWithRelations } from "@/lib/supabase/queries/lessons";
 import { getSubjects } from "@/lib/supabase/queries/subjects";
 import type { LessonWithRelations } from "@/types/lesson";
 import type { Subject } from "@/types/subject";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { getPublicUrl } from "@/lib/supabase/storage";
 import { getAvatarColor } from "@/lib/utils";
-import { Calendar, Clock, DollarSign, Filter, Search, User } from "lucide-react";
+import { Calendar, Clock, DollarSign, Filter, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 
+function getLocalNowForTimestampFilter(): string {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 19);
+  return local;
+}
+
 export default function AvailabilityBrowser() {
+  const locale = useLocale();
   const t = useTranslations("studentProfile.availabilities");
   const { user } = useAuth();
   const [availabilities, setAvailabilities] = useState<LessonWithRelations[]>([]);
@@ -39,6 +45,8 @@ export default function AvailabilityBrowser() {
   const [bookingLoading, setBookingLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [bookingFeedback, setBookingFeedback] = useState<string | null>(null);
 
   // Filter state
   const [filters, setFilters] = useState({
@@ -65,6 +73,7 @@ export default function AvailabilityBrowser() {
     async function loadAvailabilities() {
       try {
         setLoading(true);
+        setLoadError(null);
         // Load available lessons from DB. We filter by subject in the query
         // to avoid fetching everything and only filtering on the client.
         const subjectIdNum = filters.subject_id
@@ -73,13 +82,15 @@ export default function AvailabilityBrowser() {
 
         const data = await getLessonsWithRelations({
           status: "available",
-          scheduled_date_time_gte: new Date().toISOString(),
+          scheduled_date_time_gte: getLocalNowForTimestampFilter(),
           ...(subjectIdNum ? { subject_id: subjectIdNum } : {}),
         });
         setAvailabilities(data);
         setFilteredAvailabilities(data);
       } catch (error) {
         console.error("Error loading availabilities:", error);
+        setLoadError(t("loadError"));
+        toast.error(t("loadError"));
       } finally {
         setLoading(false);
       }
@@ -124,24 +135,45 @@ export default function AvailabilityBrowser() {
   const handleBookLesson = async () => {
     if (!selectedLesson || !user?.id) return;
 
+    const lessonId = selectedLesson.id;
     try {
       setBookingLoading(true);
-      // Update the lesson to mark it as scheduled and assign the student
-      await updateLesson(selectedLesson.id, {
-        student_id: user.id,
-        status: "scheduled",
+      setBookingFeedback(null);
+      const response = await fetch(`/${locale}/api/bookings/request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lessonId }),
       });
+
+      const result = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        throw new Error(result.error || t("bookingRequestedError"));
+      }
+
+      // Optimistic UI: remove the booked slot immediately.
+      setAvailabilities((prev) => prev.filter((lesson) => lesson.id !== lessonId));
+      setFilteredAvailabilities((prev) =>
+        prev.filter((lesson) => lesson.id !== lessonId)
+      );
 
       // Reload availabilities
       const data = await getLessonsWithRelations({
         status: "available",
-        scheduled_date_time_gte: new Date().toISOString(),
+        scheduled_date_time_gte: getLocalNowForTimestampFilter(),
       });
       setAvailabilities(data);
       setFilteredAvailabilities(data);
       setSelectedLesson(null);
+      setBookingFeedback(t("bookingRequested"));
+
+      toast.success(t("bookingRequested"));
     } catch (error) {
       console.error("Error booking lesson:", error);
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : t("bookingRequestedError");
+      toast.error(message);
     } finally {
       setBookingLoading(false);
     }
@@ -241,9 +273,19 @@ export default function AvailabilityBrowser() {
       </Card>
 
       {/* Results count */}
-      <div className="text-sm text-gray-600">
-        {t("resultsCount", { count: filteredAvailabilities.length })}
-      </div>
+      {loadError ? (
+        <div className="text-sm text-destructive">{loadError}</div>
+      ) : (
+        <div className="text-sm text-gray-600">
+          {t("resultsCount", { count: filteredAvailabilities.length })}
+        </div>
+      )}
+
+      {bookingFeedback && (
+        <div className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+          {bookingFeedback}
+        </div>
+      )}
 
       {/* Availabilities grid */}
       {filteredAvailabilities.length === 0 ? (

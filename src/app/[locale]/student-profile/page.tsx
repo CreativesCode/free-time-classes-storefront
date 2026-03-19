@@ -11,11 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/UserContext";
 import { getPublicUrl } from "@/lib/supabase/storage";
 import { getStudentProfileWithUser } from "@/lib/supabase/queries/students";
-import { BookOpen, Calendar, Settings, User } from "lucide-react";
+import { BookOpen, Calendar, ClipboardList, Settings, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import type { StudentProfile } from "@/types/student";
+import StudentBookingRequests from "@/components/student/StudentBookingRequests";
 
 export default function StudentProfile() {
   const { user, isLoading } = useAuth();
@@ -113,6 +114,10 @@ export default function StudentProfile() {
           <TabsTrigger value="courses" className="flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
             {t("courses")}
+          </TabsTrigger>
+          <TabsTrigger value="requests" className="flex items-center gap-2">
+            <ClipboardList className="h-4 w-4" />
+            {t("requests.tab")}
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
@@ -285,6 +290,11 @@ export default function StudentProfile() {
             <LessonHistoryTable />
             <FavoriteTutorsList />
           </div>
+        </TabsContent>
+
+        {/* Requests Tab */}
+        <TabsContent value="requests" className="space-y-4">
+          <StudentBookingRequests />
         </TabsContent>
 
         {/* Settings Tab */}

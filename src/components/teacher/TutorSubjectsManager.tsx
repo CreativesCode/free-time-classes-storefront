@@ -3,6 +3,14 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useTranslations } from "@/i18n/translations";
 import { getSubjects } from "@/lib/supabase/queries/subjects";
@@ -14,6 +22,7 @@ import {
 import type { Subject } from "@/types/subject";
 import { useEffect, useMemo, useState } from "react";
 import { useLocale } from "@/i18n/translations";
+import { Trash2 } from "lucide-react";
 
 interface TutorSubjectsManagerProps {
   tutorId: string;
@@ -37,6 +46,7 @@ export default function TutorSubjectsManager({
   const [newSubjectName, setNewSubjectName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [subjectToDelete, setSubjectToDelete] = useState<Subject | null>(null);
 
   useEffect(() => {
     setSelectedSubjectIds(new Set(initialSubjects.map((subject) => subject.id)));
@@ -153,6 +163,54 @@ export default function TutorSubjectsManager({
     }
   };
 
+  const handleDeleteSubject = async (subject: Subject) => {
+    if (isSaving) {
+      return;
+    }
+    setSubjectToDelete(subject);
+  };
+
+  const confirmDeleteSubject = async () => {
+    if (!subjectToDelete || isSaving) {
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setError(null);
+      setSuccessMessage(null);
+
+      const res = await fetch(`/${locale}/api/subjects/delete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subjectId: subjectToDelete.id }),
+      });
+
+      const json = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        throw new Error(json.error || t("deleteError"));
+      }
+
+      const [updatedCatalog, updatedSelectedSubjects] = await Promise.all([
+        getSubjects(),
+        getTutorSubjectDetails(tutorId),
+      ]);
+
+      setAllSubjects(updatedCatalog);
+      setSelectedSubjectIds(
+        new Set(updatedSelectedSubjects.map((updatedSubject) => updatedSubject.id))
+      );
+      onSubjectsUpdated(updatedSelectedSubjects);
+      setSuccessMessage(t("deleted"));
+      setSubjectToDelete(null);
+    } catch (err) {
+      console.error("Error deleting subject:", err);
+      setError(err instanceof Error ? err.message : t("deleteError"));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -173,18 +231,36 @@ export default function TutorSubjectsManager({
               const isSelected = selectedSubjectIds.has(subject.id);
 
               return (
-                <Button
+                <div
                   key={subject.id}
-                  type="button"
-                  variant={isSelected ? "default" : "outline"}
-                  className="h-auto py-2 px-3"
-                  disabled={isSaving}
-                  onClick={() => {
-                    void toggleSubject(subject.id);
-                  }}
+                  className="inline-flex items-center rounded-md border bg-white"
                 >
-                  {subject.name}
-                </Button>
+                  <Button
+                    type="button"
+                    variant={isSelected ? "default" : "outline"}
+                    className="h-auto py-2 px-3 rounded-r-none border-r"
+                    disabled={isSaving}
+                    onClick={() => {
+                      void toggleSubject(subject.id);
+                    }}
+                  >
+                    {subject.name}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 rounded-l-none text-destructive hover:text-destructive"
+                    disabled={isSaving}
+                    title={t("deleteAction")}
+                    aria-label={t("deleteAction")}
+                    onClick={() => {
+                      void handleDeleteSubject(subject);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               );
             })}
           </div>
@@ -226,6 +302,46 @@ export default function TutorSubjectsManager({
         {successMessage && <p className="text-sm text-green-700">{successMessage}</p>}
         {error && <p className="text-sm text-destructive">{error}</p>}
       </CardContent>
+
+      <Dialog
+        open={!!subjectToDelete}
+        onOpenChange={(open) => {
+          if (!open && !isSaving) {
+            setSubjectToDelete(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>{t("deleteDialogTitle")}</DialogTitle>
+            <DialogDescription>
+              {subjectToDelete
+                ? t("deleteConfirm", { subject: subjectToDelete.name })
+                : ""}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isSaving}
+              onClick={() => setSubjectToDelete(null)}
+            >
+              {t("deleteDialogCancel")}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isSaving}
+              onClick={() => {
+                void confirmDeleteSubject();
+              }}
+            >
+              {isSaving ? t("deleting") : t("deleteDialogConfirm")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

@@ -137,6 +137,26 @@
     "favoriteAdded": "Tutor added to favorites",
     "favoriteRemoved": "Tutor removed from favorites",
     "favoriteToggleError": "Could not update favorites. Please try again.",
+    "requests": {
+      "tab": "Requests",
+      "title": "Requested classes",
+      "description": "Here you can review and cancel your pending requests.",
+      "pendingCount": "pending",
+      "pendingBadge": "Pending",
+      "loading": "Loading requests...",
+      "empty": "You have no pending requests.",
+      "teacher": "Teacher",
+      "lessonUnknown": "Lesson",
+      "dateTime": "Date & time",
+      "duration": "Duration",
+      "minutes": "minutes",
+      "price": "Price",
+      "cancelRequest": "Cancel request",
+      "cancelRequestLoading": "Cancelling...",
+      "cancelSuccess": "Request cancelled successfully.",
+      "cancelError": "Could not cancel the request.",
+      "loadError": "Could not load your requests."
+    },
     "availabilities": {
       "tab": "Available Classes",
       "title": "Find Available Classes",
@@ -146,7 +166,7 @@
       "allSubjects": "All Subjects",
       "tutor": "Tutor",
       "tutorNamePlaceholder": "Filter by tutor name",
-      "resultsCount": "{{count}} classes found",
+      "resultsCount": "{count} classes found",
       "noAvailabilities": "No available classes found",
       "viewDetails": "View Details",
       "lessonDetails": "Class Details",
@@ -156,7 +176,10 @@
       "price": "Price",
       "cancel": "Cancel",
       "book": "Book Class",
-      "booking": "Booking..."
+      "booking": "Booking...",
+      "bookingRequested": "Request sent. Waiting for the teacher confirmation.",
+      "bookingRequestedError": "Could not send the request. Please try again.",
+      "loadError": "Could not load available classes."
     }
   },
 
@@ -333,6 +356,34 @@
     "error": "Error",
     "profile": "Profile",
     "availability": "Availability",
+    "requests": {
+      "tab": "Requests",
+      "title": "Class requests",
+      "description": "Review and manage classes pending your confirmation.",
+      "pendingCount": "pending",
+      "pendingBadge": "Pending",
+      "loading": "Loading requests...",
+      "empty": "You have no pending requests.",
+      "student": "Student",
+      "lessonUnknown": "Lesson",
+      "dateTime": "Date & time",
+      "duration": "Duration",
+      "minutes": "minutes",
+      "price": "Price",
+      "accept": "Accept",
+      "reject": "Reject",
+      "acceptLoading": "Accepting...",
+      "rejectLoading": "Processing...",
+      "rejectDialogTitle": "Reject request",
+      "rejectReasonLabel": "Reason (optional)",
+      "rejectReasonPlaceholder": "Add a reason for the student",
+      "confirmReject": "Confirm rejection",
+      "cancel": "Cancel",
+      "confirmSuccess": "Request confirmed successfully.",
+      "rejectSuccess": "Request rejected successfully.",
+      "actionError": "Could not update the request.",
+      "loadError": "Could not load requests."
+    },
     "addAvailability": "Add Availability",
     "clearAll": "Clear All",
     "confirmClearAll": "Are you sure you want to delete all events?",
@@ -379,7 +430,15 @@
       "emptyNameError": "Please enter a subject name.",
       "duplicateNameError": "That subject already exists.",
       "loadCatalogError": "Failed to load subjects catalog.",
-      "updateError": "Failed to update your subjects."
+      "updateError": "Failed to update your subjects.",
+      "deleteAction": "Delete subject",
+      "deleteConfirm": "Are you sure you want to delete \"{subject}\" from the global catalog?",
+      "deleteDialogTitle": "Delete subject",
+      "deleteDialogCancel": "Cancel",
+      "deleteDialogConfirm": "Delete",
+      "deleting": "Deleting...",
+      "deleteError": "Failed to delete subject.",
+      "deleted": "Subject deleted successfully."
     },
     "coursesManager": {
       "title": "Your Courses",
@@ -444,6 +503,11 @@
       "more": "More",
       "noEvents": "No events to display"
     },
+    "calendarStatus": {
+      "available": "Available",
+      "requested": "Requested (pending)",
+      "confirmed": "Accepted (confirmed)"
+    },
     "lessonDetails": "Lesson",
     "tutor": "Tutor:",
     "description": "Description",
@@ -475,6 +539,41 @@
       "cancel": "Cancel",
       "create": "Create",
       "creating": "Creating..."
+    }
+  },
+  "tutorDashboardPage": {
+    "title": "Pending bookings",
+    "description": "Class requests waiting for your confirmation.",
+    "loading": "Loading...",
+    "noPendingBookings": "You have no pending requests.",
+    "pending": "Pending",
+    "lessonUnknown": "Lesson",
+    "student": "Student",
+    "scheduledAt": "Date & time",
+    "duration": "Duration",
+    "minutes": "minutes",
+    "price": "Price",
+    "accept": "Accept",
+    "reject": "Reject",
+    "confirmSuccess": "Booking confirmed.",
+    "confirmError": "Could not confirm the booking.",
+    "rejectSuccess": "Booking rejected.",
+    "rejectError": "Could not reject the booking.",
+    "loadingError": "Could not load pending bookings.",
+    "rejectDialogTitle": "Reject booking",
+    "rejectReason": "Reason",
+    "notesOptional": "Notes (optional)",
+    "notesOptionalPlaceholder": "Add a brief reason for the student",
+    "cancelReject": "Cancel",
+    "confirmReject": "Confirm rejection",
+    "rejectionReasons": {
+      "tutorUnavailable": "Tutor not available",
+      "sickTutor": "Tutor is sick",
+      "sickStudent": "Student is sick",
+      "schedulingConflict": "Scheduling conflict",
+      "emergency": "Emergency",
+      "technicalIssues": "Technical issues",
+      "other": "Other"
     }
   }
 }

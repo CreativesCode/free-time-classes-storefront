@@ -14,7 +14,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useApp } from "@/context/AppContext";
 import { useAuth } from "@/context/UserContext";
 import { useLocale, useTranslations } from "@/i18n/translations";
 import {
@@ -39,11 +38,27 @@ interface Event {
   backgroundColor: string;
 }
 
+type CalendarApiItem = {
+  lessonId: number;
+  subjectName: string | null;
+  scheduledDateTime: string | null;
+  durationMinutes: number;
+  price: number;
+  lessonStatus: string;
+  bookingStatus: string | null;
+};
+
+const STATUS_COLORS = {
+  available: "#4CAF50",
+  requested: "#F59E0B",
+  confirmed: "#2563EB",
+  fallback: "#6B7280",
+};
+
 export default function AvailabilityCalendar() {
   const locale = useLocale();
   const t = useTranslations("teacherProfile");
   const [events, setEvents] = useState<Event[]>([]);
-  const { lessons, refreshLessons } = useApp();
   const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null);
   const [selectedLesson, setSelectedLesson] =
     useState<LessonWithRelations | null>(null);
@@ -53,52 +68,64 @@ export default function AvailabilityCalendar() {
   const { user } = useAuth();
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [currentRange, setCurrentRange] = useState<{ start: Date; end: Date } | null>(
+    null
+  );
 
-  const handleDatesSet = (arg: DatesSetArg) => {
-    if (user?.id) {
-      refreshLessons(
-        {
-          start: arg.start,
-          end: arg.end,
-        },
-        "available"
-      );
+  const loadCalendarEvents = async (start: Date, end: Date) => {
+    try {
+      const params = new URLSearchParams({
+        start: start.toISOString(),
+        end: end.toISOString(),
+      });
+      const response = await fetch(`/${locale}/api/bookings/tutor/calendar?${params}`);
+      const result = (await response.json()) as {
+        error?: string;
+        items?: CalendarApiItem[];
+      };
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to load calendar events");
+      }
+
+      const items = result.items || [];
+      const lessonEvents = items
+        .filter((item) => item.scheduledDateTime)
+        .map((item) => {
+          const statusKey =
+            item.bookingStatus === "pending"
+              ? "requested"
+              : item.bookingStatus === "confirmed"
+                ? "confirmed"
+                : item.lessonStatus === "available"
+                  ? "available"
+                  : "fallback";
+
+          return {
+            id: String(item.lessonId),
+            title: `${item.subjectName || ""} · $${item.price}`,
+            start: new Date(item.scheduledDateTime!),
+            end: new Date(
+              new Date(item.scheduledDateTime!).getTime() + item.durationMinutes * 60000
+            ),
+            backgroundColor:
+              STATUS_COLORS[statusKey as keyof typeof STATUS_COLORS] ||
+              STATUS_COLORS.fallback,
+          } satisfies Event;
+        });
+
+      setEvents(lessonEvents);
+    } catch (error) {
+      console.error("Error loading calendar events:", error);
+      setEvents([]);
     }
   };
 
-  // Initial load of lessons when component mounts
-  useEffect(() => {
-    if (user?.id) {
-      const now = new Date();
-      const endDate = new Date();
-      endDate.setMonth(endDate.getMonth() + 2);
-      refreshLessons(
-        {
-          start: now,
-          end: endDate,
-        },
-        "available"
-      );
-    }
-  }, [user?.id, refreshLessons]);
-
-  useEffect(() => {
-    if (lessons.data) {
-      const lessonEvents = lessons.data
-        .filter((lesson) => lesson.subject && lesson.scheduled_date_time)
-        .map((lesson) => ({
-          id: String(lesson.id),
-          title: `${lesson.subject?.name || ""}\n - $${lesson.price}`,
-          start: new Date(lesson.scheduled_date_time!),
-          end: new Date(
-            new Date(lesson.scheduled_date_time!).getTime() +
-              lesson.duration_minutes * 60000
-          ),
-          backgroundColor: "#4CAF50",
-        }));
-      setEvents(lessonEvents);
-    }
-  }, [lessons.data]);
+  const handleDatesSet = (arg: DatesSetArg) => {
+    if (!user?.id) return;
+    setCurrentRange({ start: arg.start, end: arg.end });
+    void loadCalendarEvents(arg.start, arg.end);
+  };
 
   // Load selected lesson when selectedLessonId changes
   useEffect(() => {
@@ -133,17 +160,9 @@ export default function AvailabilityCalendar() {
   };
 
   const handleAddAvailabilitySuccess = () => {
-    // Refresh the lessons to show the new availability
-    const now = new Date();
-    const endDate = new Date();
-    endDate.setMonth(endDate.getMonth() + 2);
-    refreshLessons(
-      {
-        start: now,
-        end: endDate,
-      },
-      "available"
-    );
+    if (currentRange) {
+      void loadCalendarEvents(currentRange.start, currentRange.end);
+    }
   };
 
   const handleEventClick = (clickInfo: EventClickArg) => {
@@ -176,13 +195,9 @@ export default function AvailabilityCalendar() {
       handleCloseDialog();
       setShowDeleteConfirmation(false);
       // Refresh the lessons list
-      refreshLessons(
-        {
-          start: new Date(),
-          end: new Date(new Date().setMonth(new Date().getMonth() + 1)),
-        },
-        "available"
-      );
+      if (currentRange) {
+        await loadCalendarEvents(currentRange.start, currentRange.end);
+      }
     } catch (error) {
       console.error("Error deleting lesson:", error);
       // You might want to show an error message to the user here
@@ -205,6 +220,29 @@ export default function AvailabilityCalendar() {
           >
             {t("addAvailability")}
           </Button>
+        </div>
+        <div className="mb-4 flex flex-wrap gap-3 text-xs text-gray-700">
+          <div className="inline-flex items-center gap-2">
+            <span
+              className="inline-block h-3 w-3 rounded-full"
+              style={{ backgroundColor: STATUS_COLORS.available }}
+            />
+            <span>{t("calendarStatus.available")}</span>
+          </div>
+          <div className="inline-flex items-center gap-2">
+            <span
+              className="inline-block h-3 w-3 rounded-full"
+              style={{ backgroundColor: STATUS_COLORS.requested }}
+            />
+            <span>{t("calendarStatus.requested")}</span>
+          </div>
+          <div className="inline-flex items-center gap-2">
+            <span
+              className="inline-block h-3 w-3 rounded-full"
+              style={{ backgroundColor: STATUS_COLORS.confirmed }}
+            />
+            <span>{t("calendarStatus.confirmed")}</span>
+          </div>
         </div>
         <div className="h-[600px]">
           <FullCalendar
