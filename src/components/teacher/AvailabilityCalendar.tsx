@@ -88,7 +88,7 @@ export default function AvailabilityCalendar() {
         .filter((lesson) => lesson.subject && lesson.scheduled_date_time)
         .map((lesson) => ({
           id: String(lesson.id),
-          title: `${lesson.subject?.name || ""}\n - ${lesson.price} USD`,
+          title: `${lesson.subject?.name || ""}\n - $${lesson.price}`,
           start: new Date(lesson.scheduled_date_time!),
           end: new Date(
             new Date(lesson.scheduled_date_time!).getTime() +
@@ -332,7 +332,7 @@ export default function AvailabilityCalendar() {
                   <p className="text-sm font-medium text-primary-800">
                     {t("price")}
                   </p>
-                  <p className="text-sm">{selectedLesson.price} USD</p>
+                  <p className="text-sm">${selectedLesson.price}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-primary-800">

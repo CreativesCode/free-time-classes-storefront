@@ -65,10 +65,16 @@ export default function AvailabilityBrowser() {
     async function loadAvailabilities() {
       try {
         setLoading(true);
-        // Get all available lessons (not filtering by tutor for students)
+        // Load available lessons from DB. We filter by subject in the query
+        // to avoid fetching everything and only filtering on the client.
+        const subjectIdNum = filters.subject_id
+          ? parseInt(filters.subject_id, 10)
+          : null;
+
         const data = await getLessonsWithRelations({
           status: "available",
           scheduled_date_time_gte: new Date().toISOString(),
+          ...(subjectIdNum ? { subject_id: subjectIdNum } : {}),
         });
         setAvailabilities(data);
         setFilteredAvailabilities(data);
@@ -80,7 +86,7 @@ export default function AvailabilityBrowser() {
     }
 
     loadAvailabilities();
-  }, []);
+  }, [filters.subject_id]);
 
   // Apply filters
   useEffect(() => {

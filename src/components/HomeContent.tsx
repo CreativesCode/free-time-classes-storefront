@@ -11,8 +11,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+import { useApp } from "@/context/AppContext";
+import {
+  getTutorProfileWithUser,
+  getTutorSubjectDetails,
+} from "@/lib/supabase/queries/tutors";
+import type { CourseWithRelations } from "@/types/course";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 
 // Función auxiliar para generar colores de avatar
 function getAvatarColor(letter: string) {
@@ -30,63 +37,115 @@ function getAvatarColor(letter: string) {
   return colors[index];
 }
 
+type FeaturedTeacher = {
+  id: string;
+  name: string;
+  specialty: string;
+  yearsOfExperience: number;
+  coursesCount: number;
+  profilePicture: string;
+};
+
 export default function HomeContent() {
   const t = useTranslations("home");
 
-  // Mock data using translations
-  const featuredTeachers = [
-    {
-      id: 1,
-      name: t("teachers.math.name"),
-      specialty: t("teachers.math.specialty"),
-      experience: t("teachers.math.experience"),
-      courses: t("teachers.math.courses"),
-      profilePicture: "/images/default-avatar.png",
-    },
-    {
-      id: 2,
-      name: t("teachers.physics.name"),
-      specialty: t("teachers.physics.specialty"),
-      experience: t("teachers.physics.experience"),
-      courses: t("teachers.physics.courses"),
-      profilePicture: "/images/default-avatar.png",
-    },
-    {
-      id: 3,
-      name: t("teachers.chemistry.name"),
-      specialty: t("teachers.chemistry.specialty"),
-      experience: t("teachers.chemistry.experience"),
-      courses: t("teachers.chemistry.courses"),
-      profilePicture: "/images/default-avatar.png",
-    },
-  ];
+  const { courses, refreshCourses } = useApp();
+  const [featuredTeachers, setFeaturedTeachers] = useState<FeaturedTeacher[]>(
+    []
+  );
+  const [, setFeaturedLoading] = useState(false);
 
-  const popularCourses = [
-    {
-      id: 1,
-      title: t("courses.calculus.title"),
-      description: t("courses.calculus.description"),
-      teacher: t("teachers.math.name"),
-      students: 45,
-      level: t("courses.calculus.level"),
-    },
-    {
-      id: 2,
-      title: t("courses.quantum.title"),
-      description: t("courses.quantum.description"),
-      teacher: t("teachers.physics.name"),
-      students: 38,
-      level: t("courses.quantum.level"),
-    },
-    {
-      id: 3,
-      title: t("courses.organic.title"),
-      description: t("courses.organic.description"),
-      teacher: t("teachers.chemistry.name"),
-      students: 42,
-      level: t("courses.organic.level"),
-    },
-  ];
+  // Populate HomeContent from Supabase.
+  useEffect(() => {
+    refreshCourses({ is_active: true });
+  }, [refreshCourses]);
+
+  const popularCourses = useMemo(() => {
+    const data = courses.data ?? [];
+
+    const mapCourseLevelLabel = (
+      level: CourseWithRelations["level"] | null | undefined
+    ) => {
+      if (level === "advanced") return t("advanced");
+      if (level === "intermediate") return t("intermediate");
+      return level ?? "";
+    };
+
+    return data.slice(0, 3).map((course) => ({
+      id: course.id,
+      title: course.title,
+      description: course.description,
+      teacher: course.tutor?.username ?? "—",
+      level: mapCourseLevelLabel(course.level),
+      students: course.enrolled_students_count ?? course.max_students ?? 0,
+    }));
+  }, [courses.data, t]);
+
+  const tutorIds = useMemo(() => {
+    const ids: string[] = [];
+    for (const course of courses.data ?? []) {
+      const tutorId = course.tutor?.id;
+      if (!tutorId) continue;
+      if (ids.includes(tutorId)) continue;
+      ids.push(tutorId);
+      if (ids.length >= 3) break;
+    }
+    return ids;
+  }, [courses.data]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadFeaturedTeachers() {
+      if (tutorIds.length === 0) {
+        setFeaturedTeachers([]);
+        return;
+      }
+
+      setFeaturedLoading(true);
+      try {
+        const data = await Promise.all(
+          tutorIds.map(async (tutorId) => {
+            const [profile, subjects] = await Promise.all([
+              getTutorProfileWithUser(tutorId),
+              getTutorSubjectDetails(tutorId),
+            ]);
+
+            const name = profile?.user.username ?? "Profesor";
+            const yearsOfExperience = profile?.years_of_experience ?? 0;
+            const specialty = subjects?.[0]?.name ?? "—";
+            const profilePicture =
+              profile?.user.profile_picture ?? "/images/default-avatar.png";
+
+            const coursesCount = (courses.data ?? []).filter(
+              (c) => c.tutor?.id === tutorId
+            ).length;
+
+            return {
+              id: tutorId,
+              name,
+              specialty,
+              yearsOfExperience,
+              coursesCount,
+              profilePicture,
+            } satisfies FeaturedTeacher;
+          })
+        );
+
+        if (!cancelled) {
+          setFeaturedTeachers(data);
+        }
+      } finally {
+        if (!cancelled) setFeaturedLoading(false);
+      }
+    }
+
+    void loadFeaturedTeachers();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tutorIds, courses.data]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -131,41 +190,47 @@ export default function HomeContent() {
             {t("featuredTeachersTitle")}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredTeachers.map((teacher) => (
-              <Card
-                key={teacher.id}
-                className="hover:shadow-lg transition-shadow"
-              >
-                <CardContent className="pt-6">
-                  <div className="flex items-center space-x-4">
-                    <Avatar className="h-16 w-16">
-                      <AvatarImage
-                        src={teacher.profilePicture}
-                        alt={teacher.name}
-                      />
-                      <AvatarFallback
-                        className="text-white"
-                        style={{
-                          backgroundColor: getAvatarColor(teacher.name[0]),
-                        }}
-                      >
-                        {teacher.name[0].toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-semibold text-lg">{teacher.name}</h3>
-                      <p className="text-gray-600">{teacher.specialty}</p>
+            {featuredTeachers.map((teacher) => {
+              const firstChar = teacher.name?.[0] ?? "P";
+
+              return (
+                <Card
+                  key={teacher.id}
+                  className="hover:shadow-lg transition-shadow"
+                >
+                  <CardContent className="pt-6">
+                    <div className="flex items-center space-x-4">
+                      <Avatar className="h-16 w-16">
+                        <AvatarImage
+                          src={teacher.profilePicture}
+                          alt={teacher.name}
+                        />
+                        <AvatarFallback
+                          className="text-white"
+                          style={{
+                            backgroundColor: getAvatarColor(firstChar),
+                          }}
+                        >
+                          {firstChar.toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3 className="font-semibold text-lg">{teacher.name}</h3>
+                        <p className="text-gray-600">{teacher.specialty}</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="mt-4 flex gap-2">
-                    <Badge variant="secondary">{teacher.experience}</Badge>
-                    <Badge variant="secondary">
-                      {teacher.courses} {t("coursesText")}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    <div className="mt-4 flex gap-2">
+                      <Badge variant="secondary">
+                        {teacher.yearsOfExperience} {t("years")}
+                      </Badge>
+                      <Badge variant="secondary">
+                        {teacher.coursesCount} {t("coursesText")}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </section>
