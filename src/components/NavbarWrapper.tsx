@@ -68,7 +68,7 @@ export default function NavbarWrapper({
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white flex flex-col">
       <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6">
           <div className="flex justify-between items-center h-[72px]">
@@ -179,7 +179,7 @@ export default function NavbarWrapper({
           </div>
         </div>
       </nav>
-      <main>{children}</main>
+      <main className="flex flex-col flex-1">{children}</main>
     </div>
   );
 }

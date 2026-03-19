@@ -168,7 +168,7 @@ export default function AvailabilityBrowser() {
   return (
     <div className="space-y-6">
       {/* Header with search and filters */}
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-primary-800">
@@ -247,7 +247,7 @@ export default function AvailabilityBrowser() {
 
       {/* Availabilities grid */}
       {filteredAvailabilities.length === 0 ? (
-        <Card>
+        <Card className="w-full">
           <CardContent className="py-12 text-center text-gray-500">
             {t("noAvailabilities")}
           </CardContent>
@@ -257,7 +257,7 @@ export default function AvailabilityBrowser() {
           {filteredAvailabilities.map((lesson) => (
             <Card
               key={lesson.id}
-              className="hover:shadow-lg transition-shadow cursor-pointer"
+              className="w-full hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => setSelectedLesson(lesson)}
             >
               <CardContent className="p-4 space-y-3">
@@ -265,8 +265,8 @@ export default function AvailabilityBrowser() {
                 <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10">
                     <AvatarImage
-                      src={getTutorProfilePictureUrl(lesson)}
-                      alt={lesson.tutor?.user?.username || "Tutor"}
+                      src={getTutorProfilePictureUrl(lesson) ?? undefined}
+                      alt={lesson.tutor?.user?.username ?? "Tutor"}
                     />
                     <AvatarFallback
                       className="text-white"
@@ -334,8 +334,8 @@ export default function AvailabilityBrowser() {
               <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
                 <Avatar className="h-16 w-16">
                   <AvatarImage
-                    src={getTutorProfilePictureUrl(selectedLesson)}
-                    alt={selectedLesson.tutor?.user?.username || "Tutor"}
+                    src={getTutorProfilePictureUrl(selectedLesson) ?? undefined}
+                    alt={selectedLesson.tutor?.user?.username ?? "Tutor"}
                   />
                   <AvatarFallback
                     className="text-white text-xl"

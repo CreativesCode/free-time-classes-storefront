@@ -293,7 +293,7 @@ export default function TutorCoursesManager({
   };
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle className="text-primary-800">{t("title")}</CardTitle>
         <CardDescription>{t("description")}</CardDescription>

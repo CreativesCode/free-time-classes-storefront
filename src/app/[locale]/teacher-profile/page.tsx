@@ -147,10 +147,10 @@ export default function TeacherProfile() {
       : undefined;
 
   return (
-    <div className="max-w-screen-2xl mx-auto py-8">
-      <div className="grid gap-6">
+    <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 py-8">
+      <div className="grid gap-6 w-full">
         {/* Profile Header */}
-        <Card>
+        <Card className="w-full">
           <CardHeader>
             <CardTitle className="text-primary-800">{t("title")}</CardTitle>
           </CardHeader>
@@ -211,7 +211,7 @@ export default function TeacherProfile() {
           {/* Profile Tab */}
           <TabsContent value="profile" className="space-y-4">
             {/* Personal Information */}
-            <Card>
+            <Card className="w-full">
               <CardHeader>
                 <CardTitle className="text-primary-800">
                   {t("personalInfo")}
@@ -252,7 +252,7 @@ export default function TeacherProfile() {
             </Card>
 
             {/* Teaching Experience */}
-            <Card>
+            <Card className="w-full">
               <CardHeader>
                 <CardTitle className="text-primary-800">
                   {t("teachingExperience")}

@@ -1,109 +1,55 @@
 "use client";
 
 import AvailabilityBrowser from "@/components/student/AvailabilityBrowser";
+import StudentProfileEdit from "@/components/student/StudentProfileEdit";
+import UpcomingLessonsCard from "@/components/student/UpcomingLessonsCard";
+import LessonHistoryTable from "@/components/student/LessonHistoryTable";
+import FavoriteTutorsList from "@/components/student/FavoriteTutorsList";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/UserContext";
-import { COUNTRIES } from "@/lib/constants/countries";
-import { getLessonsWithRelations } from "@/lib/supabase/queries/lessons";
-import { updateUser } from "@/lib/supabase/queries/users";
-import { uploadAvatar } from "@/lib/supabase/storage";
 import { getPublicUrl } from "@/lib/supabase/storage";
+import { getStudentProfileWithUser } from "@/lib/supabase/queries/students";
 import { BookOpen, Calendar, Settings, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import type { LessonWithRelations } from "@/types/lesson";
-
-async function withTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number,
-  errorMessage: string
-): Promise<T> {
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  try {
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      timeoutId = setTimeout(() => {
-        reject(new Error(errorMessage));
-      }, timeoutMs);
-    });
-
-    return await Promise.race([promise, timeoutPromise]);
-  } finally {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-  }
-}
+import type { StudentProfile } from "@/types/student";
 
 export default function StudentProfile() {
-  const { user, isLoading, refreshUser } = useAuth();
+  const { user, isLoading } = useAuth();
   const t = useTranslations("studentProfile");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isEnrolledLoading, setIsEnrolledLoading] = useState(false);
-  const [enrolledLessons, setEnrolledLessons] = useState<LessonWithRelations[]>([]);
-  const [enrolledError, setEnrolledError] = useState<string | null>(null);
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [formData, setFormData] = useState({
-    username: "",
-    phone: "",
-    country: "",
-  });
+  const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(
+    null
+  );
+  const [studentProfileLoading, setStudentProfileLoading] = useState(false);
+  const [studentProfileError, setStudentProfileError] = useState<string | null>(
+    null
+  );
 
-  useEffect(() => {
-    if (!user) return;
-    setFormData({
-      username: user.username || "",
-      phone: user.phone || "",
-      country: user.country || "",
-    });
-  }, [user]);
+  const refreshStudentProfile = async () => {
+    if (!user?.id) return;
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadEnrolledLessons() {
-      if (!user?.id) return;
-
-      try {
-        setIsEnrolledLoading(true);
-        setEnrolledError(null);
-
-        // Lessons are the "scheduled" units a student reserves.
-        // We show all lessons assigned to this student.
-        const data = await getLessonsWithRelations({
-          student_id: user.id,
-        });
-
-        if (cancelled) return;
-        setEnrolledLessons(data);
-      } catch (err) {
-        console.error("Error loading enrolled lessons:", err);
-        if (cancelled) return;
-        setEnrolledError(err instanceof Error ? err.message : "Failed to load courses");
-      } finally {
-        if (cancelled) return;
-        setIsEnrolledLoading(false);
-      }
+    setStudentProfileLoading(true);
+    setStudentProfileError(null);
+    try {
+      const data = await getStudentProfileWithUser(user.id);
+      setStudentProfile(data);
+    } catch (e) {
+      console.error("Error loading student profile:", e);
+      setStudentProfileError(
+        e instanceof Error ? e.message : "Failed to load student profile"
+      );
+    } finally {
+      setStudentProfileLoading(false);
     }
+  };
 
-    void loadEnrolledLessons();
-    return () => {
-      cancelled = true;
-    };
+  useEffect(() => {
+    void refreshStudentProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   if (isLoading) {
@@ -126,78 +72,8 @@ export default function StudentProfile() {
         : getPublicUrl("avatars", user.profile_picture)
       : null;
 
-  const modalAvatarPreviewUrl = avatarFile
-    ? URL.createObjectURL(avatarFile)
-    : user.profile_picture && typeof user.profile_picture === "string"
-      ? user.profile_picture.startsWith("http")
-        ? user.profile_picture
-        : getPublicUrl("avatars", user.profile_picture)
-      : null;
-
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      toast.error(t("invalidImageType"));
-      return;
-    }
-
-    setAvatarFile(file);
-  };
-
-  const handleSaveProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user?.id) return;
-
-    try {
-      setIsSaving(true);
-      let profilePicture = user.profile_picture || null;
-
-      if (avatarFile) {
-        profilePicture = await withTimeout(
-          uploadAvatar(user.id, avatarFile),
-          30000,
-          "Avatar upload timeout"
-        );
-      }
-
-      await withTimeout(
-        updateUser(user.id, {
-          username: formData.username || user.username,
-          phone: formData.phone || null,
-          country: formData.country || null,
-          profile_picture: profilePicture,
-        }),
-        15000,
-        "Profile update timeout"
-      );
-
-      await withTimeout(refreshUser(), 15000, "Refresh user timeout");
-      setAvatarFile(null);
-      setIsEditModalOpen(false);
-      toast.success(t("profileUpdated"));
-    } catch (error) {
-      console.error("Error updating student profile:", error);
-      toast.error(
-        error instanceof Error && error.message.includes("timeout")
-          ? t("updateTimeout")
-          : t("updateError")
-      );
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   return (
-    <div className="container mx-auto py-8 px-4 max-w-screen-2xl">
+    <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 py-8">
       {/* Profile Header */}
       <div className="flex items-center space-x-6 mb-8">
         <div className="relative h-24 w-24 rounded-full overflow-hidden bg-gray-100">
@@ -246,7 +122,7 @@ export default function StudentProfile() {
 
         {/* Profile Tab */}
         <TabsContent value="profile" className="space-y-4">
-          <Card>
+          <Card className="w-full">
             <CardHeader>
               <CardTitle>{t("personalInformation")}</CardTitle>
             </CardHeader>
@@ -297,6 +173,99 @@ export default function StudentProfile() {
                   </p>
                 </div>
               </div>
+
+              <div className="pt-4 border-t space-y-3">
+                {studentProfileLoading ? (
+                  <div className="text-sm text-gray-500">{t("loading")}...</div>
+                ) : studentProfileError ? (
+                  <div className="text-sm text-destructive text-gray-700">
+                    {studentProfileError}
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        {t("bio")}
+                      </label>
+                      <p className="mt-1">
+                        {studentProfile?.bio || t("notProvided")}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        {t("learningGoals")}
+                      </label>
+                      <p className="mt-1">
+                        {studentProfile?.learning_goals || t("notProvided")}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">
+                          {t("languageLevel")}
+                        </label>
+                        <p className="mt-1">
+                          {studentProfile?.language_level
+                            ? (() => {
+                                switch (studentProfile.language_level) {
+                                  case "beginner":
+                                    return t("languageLevels.beginner");
+                                  case "elementary":
+                                    return t("languageLevels.elementary");
+                                  case "intermediate":
+                                    return t("languageLevels.intermediate");
+                                  case "upper_intermediate":
+                                    return t(
+                                      "languageLevels.upper_intermediate"
+                                    );
+                                  case "advanced":
+                                    return t("languageLevels.advanced");
+                                  case "proficient":
+                                    return t("languageLevels.proficient");
+                                  default:
+                                    return t("notProvided");
+                                }
+                              })()
+                            : t("notProvided")}
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">
+                          {t("timezone")}
+                        </label>
+                        <p className="mt-1">
+                          {studentProfile?.timezone || t("notProvided")}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        {t("preferredCommunication")}
+                      </label>
+                      <p className="mt-1 text-sm text-gray-700">
+                        {[
+                          studentProfile?.prefers_audio_calls
+                            ? t("prefersAudioCalls")
+                            : null,
+                          studentProfile?.prefers_video_calls
+                            ? t("prefersVideoCalls")
+                            : null,
+                          studentProfile?.prefers_text_chat
+                            ? t("prefersTextChat")
+                            : null,
+                        ]
+                          .filter((v): v is string => Boolean(v))
+                          .join(", ") || t("notProvided")}
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+
               <Button className="mt-4" onClick={() => setIsEditModalOpen(true)}>
                 {t("editProfile")}
               </Button>
@@ -311,60 +280,16 @@ export default function StudentProfile() {
 
         {/* Courses Tab */}
         <TabsContent value="courses" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("enrolledCourses")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isEnrolledLoading ? (
-                <div className="py-8 text-center text-gray-500 text-sm">
-                  Cargando...
-                </div>
-              ) : enrolledError ? (
-                <div className="py-8 text-center text-destructive text-sm">
-                  {enrolledError}
-                </div>
-              ) : enrolledLessons.length === 0 ? (
-                <div className="text-center text-gray-500 py-8">
-                  {t("noCoursesEnrolled")}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {enrolledLessons.map((lesson) => (
-                    <div
-                      key={lesson.id}
-                      className="border rounded-lg p-4 space-y-2 bg-white"
-                    >
-                      <div className="font-semibold">
-                        {lesson.subject?.name ?? "—"}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {lesson.tutor?.user?.username ?? "—"}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {lesson.scheduled_date_time
-                          ? new Date(lesson.scheduled_date_time).toLocaleString()
-                          : "—"}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {lesson.duration_minutes} {t("availabilities.minutes")}
-                        {" · "}
-                        ${lesson.price}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        Status: {lesson.status}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            <UpcomingLessonsCard />
+            <LessonHistoryTable />
+            <FavoriteTutorsList />
+          </div>
         </TabsContent>
 
         {/* Settings Tab */}
         <TabsContent value="settings" className="space-y-4">
-          <Card>
+          <Card className="w-full">
             <CardHeader>
               <CardTitle>{t("accountSettings")}</CardTitle>
             </CardHeader>
@@ -408,99 +333,14 @@ export default function StudentProfile() {
           </Card>
         </TabsContent>
       </Tabs>
-
-      <Dialog
-        open={isEditModalOpen}
-        onOpenChange={(open) => {
-          setIsEditModalOpen(open);
-          if (!open) {
-            setAvatarFile(null);
-          }
+      <StudentProfileEdit
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        studentProfile={studentProfile}
+        onUpdated={() => {
+          void refreshStudentProfile();
         }}
-      >
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>{t("editProfile")}</DialogTitle>
-            <DialogDescription>{t("editProfileDescription")}</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSaveProfile} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">{t("name")}</Label>
-              <Input
-                id="username"
-                name="username"
-                value={formData.username}
-                onChange={handleInputChange}
-                placeholder={t("namePlaceholder")}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phone">{t("phone")}</Label>
-              <Input
-                id="phone"
-                name="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={handleInputChange}
-                placeholder="+34 123 456 789"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="country">{t("country")}</Label>
-              <select
-                id="country"
-                name="country"
-                value={formData.country}
-                onChange={handleInputChange}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                <option value="">{t("selectCountry")}</option>
-                {COUNTRIES.map((country) => (
-                  <option key={country} value={country}>
-                    {country}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="avatar_file">{t("uploadNewPhoto")}</Label>
-              <Input
-                id="avatar_file"
-                name="avatar_file"
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarChange}
-              />
-              {modalAvatarPreviewUrl ? (
-                <div className="relative h-16 w-16 overflow-hidden rounded-full border">
-                  <Image
-                    src={modalAvatarPreviewUrl}
-                    alt={t("profilePicturePreviewAlt")}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              ) : null}
-            </div>
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsEditModalOpen(false)}
-              >
-                {t("cancel")}
-              </Button>
-              <Button type="submit" disabled={isSaving}>
-                {isSaving ? t("saving") : t("save")}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      />
     </div>
   );
 }
