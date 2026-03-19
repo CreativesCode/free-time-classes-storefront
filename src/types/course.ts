@@ -3,13 +3,13 @@ import type { User } from "./user";
 
 // Course type matching Supabase courses table
 export interface Course {
-  id: number; // Serial primary key
+  id: string; // UUID primary key
   title: string;
   description: string;
   tutor_id: string; // References users(id)
   subject_id?: number | null; // References subjects(id)
-  price: number; // Decimal
-  duration_hours: number; // Integer - total course duration in hours
+  price_per_session: number; // numeric(10,2)
+  duration_minutes: number; // Integer - total course duration in minutes
   max_students: number; // Integer
   level?: "beginner" | "intermediate" | "advanced" | null;
   is_active: boolean;

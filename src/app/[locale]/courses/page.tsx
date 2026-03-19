@@ -269,13 +269,13 @@ export default function CoursesPage() {
                           {levelLabel(course.level)}
                         </Badge>
                         <div className="text-sm font-semibold">
-                          ${course.price}
+                          ${course.price_per_session}
                         </div>
                       </div>
 
                       <div className="flex justify-between items-center text-sm text-gray-600">
                         <span>
-                          {course.duration_hours}h
+                          {(course.duration_minutes ?? 0)} {tStudent("minutes")}
                         </span>
                         <span className="text-gray-500">
                           Max {course.max_students}

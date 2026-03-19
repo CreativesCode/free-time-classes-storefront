@@ -2,6 +2,7 @@
 
 import AvailabilityCalendar from "@/components/teacher/AvailabilityCalendar";
 import EditProfileModal from "@/components/teacher/EditProfileModal";
+import TutorCoursesManager from "@/components/teacher/TutorCoursesManager";
 import TutorSubjectsManager from "@/components/teacher/TutorSubjectsManager";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -294,43 +295,11 @@ export default function TeacherProfile() {
             />
 
             {/* Current Courses */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-primary-800">
-                  {t("currentCourses")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {courses.length === 0 ? (
-                  <p className="text-sm text-gray-600">{t("noCourses")}</p>
-                ) : (
-                  <div className="space-y-4">
-                    {courses.map((course) => (
-                      <div
-                        key={course.id}
-                        className="flex items-center justify-between border-b pb-4"
-                      >
-                        <div>
-                          <h3 className="font-semibold">{course.title}</h3>
-                          <p className="text-sm text-gray-600">
-                            {course.max_students} {t("students")}
-                          </p>
-                        </div>
-                        <Badge
-                          className={
-                            course.is_active
-                              ? "bg-accent-500 text-white"
-                              : "bg-gray-500 text-white"
-                          }
-                        >
-                          {course.is_active ? t("active") : t("inactive")}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <TutorCoursesManager
+              tutorId={user.id}
+              initialCourses={courses}
+              onCoursesUpdated={setCourses}
+            />
           </TabsContent>
 
           {/* Availability Tab */}

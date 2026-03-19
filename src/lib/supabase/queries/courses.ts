@@ -130,7 +130,7 @@ export async function getCoursesWithRelations(
 /**
  * Get course by ID
  */
-export async function getCourse(id: number): Promise<Course | null> {
+export async function getCourse(id: string): Promise<Course | null> {
   const { data, error } = await supabase
     .from("courses")
     .select("*")
@@ -151,7 +151,7 @@ export async function getCourse(id: number): Promise<Course | null> {
  * Get course by ID with relations
  */
 export async function getCourseWithRelations(
-  id: number
+  id: string
 ): Promise<CourseWithRelations | null> {
   const { data, error } = await supabase
     .from("courses")
@@ -226,7 +226,7 @@ export async function createCourse(
  * Update course
  */
 export async function updateCourse(
-  id: number,
+  id: string,
   updates: Partial<Omit<Course, "id" | "created_at">>
 ): Promise<Course> {
   const { data, error } = await supabase
@@ -246,7 +246,7 @@ export async function updateCourse(
 /**
  * Delete course
  */
-export async function deleteCourse(id: number): Promise<void> {
+export async function deleteCourse(id: string): Promise<void> {
   const { error } = await supabase.from("courses").delete().eq("id", id);
 
   if (error) {

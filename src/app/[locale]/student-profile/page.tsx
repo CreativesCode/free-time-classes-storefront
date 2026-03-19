@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/UserContext";
 import { COUNTRIES } from "@/lib/constants/countries";
+import { getLessonsWithRelations } from "@/lib/supabase/queries/lessons";
 import { updateUser } from "@/lib/supabase/queries/users";
 import { uploadAvatar } from "@/lib/supabase/storage";
 import { getPublicUrl } from "@/lib/supabase/storage";
@@ -24,6 +25,7 @@ import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import type { LessonWithRelations } from "@/types/lesson";
 
 async function withTimeout<T>(
   promise: Promise<T>,
@@ -51,6 +53,9 @@ export default function StudentProfile() {
   const t = useTranslations("studentProfile");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isEnrolledLoading, setIsEnrolledLoading] = useState(false);
+  const [enrolledLessons, setEnrolledLessons] = useState<LessonWithRelations[]>([]);
+  const [enrolledError, setEnrolledError] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     username: "",
@@ -66,6 +71,40 @@ export default function StudentProfile() {
       country: user.country || "",
     });
   }, [user]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadEnrolledLessons() {
+      if (!user?.id) return;
+
+      try {
+        setIsEnrolledLoading(true);
+        setEnrolledError(null);
+
+        // Lessons are the "scheduled" units a student reserves.
+        // We show all lessons assigned to this student.
+        const data = await getLessonsWithRelations({
+          student_id: user.id,
+        });
+
+        if (cancelled) return;
+        setEnrolledLessons(data);
+      } catch (err) {
+        console.error("Error loading enrolled lessons:", err);
+        if (cancelled) return;
+        setEnrolledError(err instanceof Error ? err.message : "Failed to load courses");
+      } finally {
+        if (cancelled) return;
+        setIsEnrolledLoading(false);
+      }
+    }
+
+    void loadEnrolledLessons();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   if (isLoading) {
     return (
@@ -277,12 +316,48 @@ export default function StudentProfile() {
               <CardTitle>{t("enrolledCourses")}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Placeholder for enrolled courses */}
+              {isEnrolledLoading ? (
+                <div className="py-8 text-center text-gray-500 text-sm">
+                  Cargando...
+                </div>
+              ) : enrolledError ? (
+                <div className="py-8 text-center text-destructive text-sm">
+                  {enrolledError}
+                </div>
+              ) : enrolledLessons.length === 0 ? (
                 <div className="text-center text-gray-500 py-8">
                   {t("noCoursesEnrolled")}
                 </div>
-              </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {enrolledLessons.map((lesson) => (
+                    <div
+                      key={lesson.id}
+                      className="border rounded-lg p-4 space-y-2 bg-white"
+                    >
+                      <div className="font-semibold">
+                        {lesson.subject?.name ?? "—"}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {lesson.tutor?.user?.username ?? "—"}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {lesson.scheduled_date_time
+                          ? new Date(lesson.scheduled_date_time).toLocaleString()
+                          : "—"}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {lesson.duration_minutes} {t("availabilities.minutes")}
+                        {" · "}
+                        ${lesson.price}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        Status: {lesson.status}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
