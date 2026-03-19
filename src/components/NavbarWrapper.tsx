@@ -15,6 +15,7 @@ import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 export default function NavbarWrapper({
@@ -23,19 +24,41 @@ export default function NavbarWrapper({
   children: React.ReactNode;
 }) {
   const locale = useLocale();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const pathname = usePathname();
   const t = useTranslations("navbar");
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const logoutTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (logoutTimeoutRef.current) {
+        window.clearTimeout(logoutTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleLogout = async () => {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
+    const logoutUrl = `/${locale}/auth/logout`;
+
+    // Fallback: force browser navigation if fetch hangs for any reason.
+    logoutTimeoutRef.current = window.setTimeout(() => {
+      window.location.assign(logoutUrl);
+    }, 4000);
+
     try {
-      await logout();
+      await fetch(logoutUrl, {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+      });
+      window.location.assign(`/${locale}/`);
     } catch (error) {
-      console.error("Logout error:", error);
-    } finally {
-      // Finalize logout on the server as well to guarantee cookie cleanup
-      // used by middleware-based auth checks.
-      window.location.assign(`/${locale}/auth/logout`);
+      console.error("Server logout request failed:", error);
+      window.location.assign(logoutUrl);
     }
   };
 
@@ -134,8 +157,11 @@ export default function NavbarWrapper({
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>
-                      {t("logout")}
+                    <DropdownMenuItem
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
+                    >
+                      {isLoggingOut ? t("loggingOut") : t("logout")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

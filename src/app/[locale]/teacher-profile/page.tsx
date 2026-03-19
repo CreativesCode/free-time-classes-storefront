@@ -2,6 +2,7 @@
 
 import AvailabilityCalendar from "@/components/teacher/AvailabilityCalendar";
 import EditProfileModal from "@/components/teacher/EditProfileModal";
+import TutorSubjectsManager from "@/components/teacher/TutorSubjectsManager";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -285,6 +286,12 @@ export default function TeacherProfile() {
                 </div>
               </CardContent>
             </Card>
+
+            <TutorSubjectsManager
+              tutorId={user.id}
+              initialSubjects={subjects}
+              onSubjectsUpdated={setSubjects}
+            />
 
             {/* Current Courses */}
             <Card>
