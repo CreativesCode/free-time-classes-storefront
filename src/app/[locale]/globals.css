@@ -2,104 +2,298 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────────────────────────────
+   FreeTime Lumina — Design System Tokens
+   Design North Star: "The Editorial Mentor"
+   Primary: #702ae1 (light) / #A78BFA (dark)
+   Surface strategy: Tonal layering, no 1px borders, glassmorphism for nav
+   ───────────────────────────────────────────────────────────────────────── */
+
 @layer base {
   :root {
-    --color-background: var(--background);
-    --color-foreground: var(--foreground);
-    --font-sans: var(--font-geist-sans);
-    --font-mono: var(--font-geist-mono);
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+    /* ── shadcn/ui compatibility (HSL format) ────────────────────────── */
+    --background:             280 100% 99%;   /* #fef3ff */
+    --foreground:             270  31% 22%;   /* #3a264b */
+    --card:                     0   0% 100%;  /* #ffffff */
+    --card-foreground:        270  31% 22%;
+    --popover:                  0   0% 100%;
+    --popover-foreground:     270  31% 22%;
+    --primary:                270  78% 52%;   /* #702ae1 */
+    --primary-foreground:     270 100% 97%;   /* #f8f0ff */
+    --secondary:              278  43% 45%;   /* #7742a6 */
+    --secondary-foreground:   278 100% 97%;
+    --muted:                  280 100% 96%;   /* ~surface-container-low */
+    --muted-foreground:       270  19% 40%;   /* #69537b */
+    --accent:                 270 100% 95%;   /* ~surface-container */
+    --accent-foreground:      270  78% 52%;
+    --destructive:            346  81% 39%;   /* #b41340 */
+    --destructive-foreground:   0 100% 97%;
+    --border:                 280  55% 87%;   /* ~outline-variant */
+    --input:                  280  55% 87%;
+    --ring:                   270  78% 52%;   /* #702ae1 */
+    --radius:                 1rem;
+    --chart-1:                270  78% 52%;
+    --chart-2:                278  43% 45%;
+    --chart-3:                340  60% 55%;
+    --chart-4:                 43  74% 66%;
+    --chart-5:                 27  87% 67%;
+
+    /* ── Lumina color tokens — RGB channels (supports opacity modifiers) */
+
+    /* Background & Surface */
+    --lt-background:                  254 243 255;  /* #fef3ff */
+    --lt-surface:                     254 243 255;  /* #fef3ff */
+    --lt-surface-bright:              254 243 255;  /* #fef3ff */
+    --lt-surface-dim:                 232 201 255;  /* #e8c9ff */
+    --lt-surface-tint:                112  42 225;  /* #702ae1 */
+    --lt-surface-variant:             237 211 255;  /* #edd3ff */
+    --lt-surface-container-lowest:    255 255 255;  /* #ffffff */
+    --lt-surface-container-low:       250 236 255;  /* #faecff */
+    --lt-surface-container:           245 226 255;  /* #f5e2ff */
+    --lt-surface-container-high:      241 218 255;  /* #f1daff */
+    --lt-surface-container-highest:   237 211 255;  /* #edd3ff */
+
+    /* Primary */
+    --lt-primary:                     112  42 225;  /* #702ae1 */
+    --lt-primary-dim:                 100  17 213;  /* #6411d5 */
+    --lt-primary-container:           178 140 255;  /* #b28cff */
+    --lt-primary-fixed:               178 140 255;  /* #b28cff */
+    --lt-primary-fixed-dim:           166 122 255;  /* #a67aff */
+    --lt-on-primary:                  248 240 255;  /* #f8f0ff */
+    --lt-on-primary-container:         46   0 108;  /* #2e006c */
+    --lt-on-primary-fixed:              0   0   0;  /* #000000 */
+    --lt-on-primary-fixed-variant:     57   0 131;  /* #390083 */
+    --lt-inverse-primary:             164 118 255;  /* #a476ff */
+
+    /* Secondary */
+    --lt-secondary:                   119  66 166;  /* #7742a6 */
+    --lt-secondary-dim:               106  53 153;  /* #6a3599 */
+    --lt-secondary-container:         230 197 255;  /* #e6c5ff */
+    --lt-secondary-fixed:             230 197 255;  /* #e6c5ff */
+    --lt-secondary-fixed-dim:         221 179 255;  /* #ddb3ff */
+    --lt-on-secondary:                251 239 255;  /* #fbefff */
+    --lt-on-secondary-container:       97  44 144;  /* #612c90 */
+    --lt-on-secondary-fixed:           77  19 123;  /* #4d137b */
+    --lt-on-secondary-fixed-variant:  107  54 154;  /* #6b369a */
+
+    /* Tertiary */
+    --lt-tertiary:                    158  54  87;  /* #9e3657 */
+    --lt-tertiary-dim:                142  41  76;  /* #8e294c */
+    --lt-tertiary-container:          255 142 172;  /* #ff8eac */
+    --lt-tertiary-fixed:              255 142 172;  /* #ff8eac */
+    --lt-tertiary-fixed-dim:          247 124 158;  /* #f77c9e */
+    --lt-on-tertiary:                 255 239 241;  /* #ffeff1 */
+    --lt-on-tertiary-container:       100   4  45;  /* #64042d */
+    --lt-on-tertiary-fixed:            56   0  22;  /* #380016 */
+    --lt-on-tertiary-fixed-variant:   113  16  54;  /* #711036 */
+
+    /* On-Surface / On-Background */
+    --lt-on-background:                58  38  75;  /* #3a264b */
+    --lt-on-surface:                   58  38  75;  /* #3a264b */
+    --lt-on-surface-variant:          105  83 123;  /* #69537b */
+    --lt-inverse-surface:              24   4  41;  /* #180429 */
+    --lt-inverse-on-surface:          173 147 192;  /* #ad93c0 */
+
+    /* Outline */
+    --lt-outline:                     133 110 152;  /* #856e98 */
+    --lt-outline-variant:             189 163 209;  /* #bda3d1 */
+
+    /* Error */
+    --lt-error:                       180  19  64;  /* #b41340 */
+    --lt-error-dim:                   167   1  56;  /* #a70138 */
+    --lt-error-container:             247  75 109;  /* #f74b6d */
+    --lt-on-error:                    255 239 239;  /* #ffefef */
+    --lt-on-error-container:           81   0  23;  /* #510017 */
+
+    /* Guía tipografía — no negro puro; Zinc para jerarquía de lectura */
+    --lt-text-strong:                   9   9  11;  /* #09090B Zinc 950 */
+    --lt-text-body-secondary:          82  82  91;  /* #52525B Zinc 600 */
   }
+
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-  }
-}
+    /* ── shadcn/ui dark variables ────────────────────────────────────── */
+    --background:             240   4%  4%;   /* #09090B */
+    --foreground:               0   0% 98%;   /* #FAFAFA */
+    --card:                   240   4% 11%;   /* #18181B */
+    --card-foreground:          0   0% 98%;
+    --popover:                240   4% 11%;
+    --popover-foreground:       0   0% 98%;
+    --primary:                258  94% 75%;   /* #A78BFA */
+    --primary-foreground:       0   0%  0%;
+    --secondary:              240   4% 16%;   /* #27272A */
+    --secondary-foreground:     0   0% 98%;
+    --muted:                  240   4% 16%;
+    --muted-foreground:       240   5% 65%;   /* #A1A1AA */
+    --accent:                 240   4% 16%;
+    --accent-foreground:        0   0% 98%;
+    --destructive:              0  84% 60%;   /* #EF4444 */
+    --destructive-foreground:   0   0% 98%;
+    --border:                 240   4% 16%;   /* #27272A */
+    --input:                  240   4% 16%;
+    --ring:                   258  94% 75%;   /* #A78BFA */
+    --chart-1:                258  94% 75%;
+    --chart-2:                240  60% 65%;
+    --chart-3:                 30  80% 55%;
+    --chart-4:                280  65% 60%;
+    --chart-5:                340  75% 55%;
 
-@layer base {
-  body {
-    @apply bg-white text-gray-900 dark:bg-gray-900 dark:text-white font-sans;
-  }
-}
+    /* ── Lumina dark tokens — RGB channels ──────────────────────────── */
 
-@layer base {
+    /* Background & Surface (Zinc-based, no pure black) */
+    --lt-background:                    9   9  11;  /* #09090B – Zinc 950 */
+    --lt-surface:                      24  24  27;  /* #18181B – Zinc 900 */
+    --lt-surface-bright:               39  39  42;  /* #27272A – Zinc 800 */
+    --lt-surface-dim:                   9   9  11;  /* #09090B */
+    --lt-surface-tint:                167 139 250;  /* #A78BFA */
+    --lt-surface-variant:              63  63  70;  /* #3F3F46 – Zinc 700 */
+    --lt-surface-container-lowest:      9   9  11;  /* #09090B */
+    --lt-surface-container-low:        24  24  27;  /* #18181B */
+    --lt-surface-container:            24  24  27;  /* #18181B */
+    --lt-surface-container-high:       39  39  42;  /* #27272A */
+    --lt-surface-container-highest:    63  63  70;  /* #3F3F46 */
+
+    /* Primary (violet shifts lighter for contrast on dark) */
+    --lt-primary:                     167 139 250;  /* #A78BFA – Violet 400 */
+    --lt-primary-dim:                 139  92 246;  /* #8B5CF6 – Violet 500 */
+    --lt-primary-container:           167 139 250;  /* #A78BFA */
+    --lt-primary-fixed:               167 139 250;
+    --lt-primary-fixed-dim:           139  92 246;
+    --lt-on-primary:                    0   0   0;  /* #000000 */
+    --lt-on-primary-container:          0   0   0;
+    --lt-on-primary-fixed:              0   0   0;
+    --lt-on-primary-fixed-variant:      0   0   0;
+    --lt-inverse-primary:             112  42 225;  /* #702ae1 */
+
+    /* Secondary */
+    --lt-secondary:                   161 161 170;  /* #A1A1AA – Zinc 400 */
+    --lt-secondary-dim:               113 113 122;  /* #71717A – Zinc 500 */
+    --lt-secondary-container:          39  39  42;  /* #27272A */
+    --lt-secondary-fixed:              39  39  42;
+    --lt-secondary-fixed-dim:          39  39  42;
+    --lt-on-secondary:                250 250 250;  /* #FAFAFA */
+    --lt-on-secondary-container:      250 250 250;
+    --lt-on-secondary-fixed:          250 250 250;
+    --lt-on-secondary-fixed-variant:  250 250 250;
+
+    /* Tertiary */
+    --lt-tertiary:                    244 114 182;  /* #F472B6 – Pink 400 */
+    --lt-tertiary-dim:                236  72 153;  /* #EC4899 – Pink 500 */
+    --lt-tertiary-container:           39  39  42;  /* #27272A */
+    --lt-tertiary-fixed:               39  39  42;
+    --lt-tertiary-fixed-dim:           39  39  42;
+    --lt-on-tertiary:                   0   0   0;
+    --lt-on-tertiary-container:       250 250 250;
+    --lt-on-tertiary-fixed:           250 250 250;
+    --lt-on-tertiary-fixed-variant:   250 250 250;
+
+    /* On-Surface / On-Background */
+    --lt-on-background:               250 250 250;  /* #FAFAFA */
+    --lt-on-surface:                  250 250 250;  /* #FAFAFA */
+    --lt-on-surface-variant:          161 161 170;  /* #A1A1AA – Zinc 400 */
+    --lt-inverse-surface:             250 250 250;
+    --lt-inverse-on-surface:           24   4  41;  /* #180429 */
+
+    /* Outline */
+    --lt-outline:                      39  39  42;  /* #27272A */
+    --lt-outline-variant:              63  63  70;  /* #3F3F46 */
+
+    /* Error */
+    --lt-error:                       239  68  68;  /* #EF4444 */
+    --lt-error-dim:                   220  38  38;  /* #DC2626 */
+    --lt-error-container:             127  29  29;  /* #7F1D1D */
+    --lt-on-error:                    254 242 242;  /* #FEF2F2 */
+    --lt-on-error-container:          254 202 202;  /* #FECACA */
+
+    /* Tipografía oscura — contraste sin halación */
+    --lt-text-strong:                 250 250 250;  /* #FAFAFA */
+    --lt-text-body-secondary:         161 161 170;  /* #A1A1AA Zinc 400 */
+  }
+
   * {
     @apply border-border;
   }
+
+  /* Cuerpo por defecto: 14px / leading 1.5 (guía Lumina — Body Medium) */
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans text-sm leading-[1.5];
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Jerarquía editorial — usar también clases text-lumina-h1 md:text-lumina-h1-lg si hace falta */
+  h1 {
+    @apply font-headline text-lumina-h1 font-extrabold tracking-display md:text-lumina-h1-lg;
+  }
+
+  h2 {
+    @apply font-headline text-lumina-h2 font-bold tracking-headline md:text-lumina-h2-lg;
+  }
+
+  h3 {
+    @apply font-headline text-lumina-h3 font-semibold;
+  }
+
+  h4,
+  h5,
+  h6 {
+    @apply font-headline font-semibold;
   }
 }
 
+/* ── Lumina glass effect utility ───────────────────────────────────────── */
 @layer utilities {
+  .glass-lumina {
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+
+  .glass-lumina-lg {
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+  }
+
   .text-shadow-lg {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   }
+
+  .gradient-primary {
+    background: linear-gradient(135deg, #702ae1, #b28cff);
+  }
+
+  .gradient-primary-dark {
+    background: linear-gradient(135deg, #A78BFA, #8B5CF6);
+  }
+
+  /** Overline / categoría: 11px bold uppercase + tracking 0.1em */
+  .text-lumina-overline-style {
+    @apply text-lumina-overline font-bold uppercase tracking-overline font-headline;
+  }
+
+  /** Texto de botón / CTA: 14px bold (uppercase opcional con `uppercase`) */
+  .text-lumina-button-style {
+    @apply text-lumina-button font-bold font-headline;
+  }
 }
 
+/* ── Legacy button classes (kept for backward compat) ──────────────────── */
 .btn-primary,
 .fc-button-primary {
-  @apply bg-primary-500 hover:bg-primary-600 text-white !important;
+  @apply bg-primary hover:opacity-90 text-on-primary !important;
 }
 
 .btn-secondary {
-  @apply bg-secondary-500 hover:bg-secondary-600 text-white;
+  @apply bg-secondary-container hover:opacity-90 text-on-secondary-container;
 }
 
 .fc-toolbar-title {
-  @apply text-lg font-bold text-primary-700;
+  @apply text-lg font-bold text-primary;
 }
 
 .fc-col-header-cell-cushion {
-  @apply text-primary-800;
+  @apply text-on-surface;
 }
 
 .fc-timegrid-slot-label-frame {
-  @apply text-primary-600;
+  @apply text-on-surface-variant;
 }

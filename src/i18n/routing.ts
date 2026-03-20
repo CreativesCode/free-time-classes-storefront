@@ -26,5 +26,9 @@ export const routing = defineRouting({
     "/courses/[id]": "/courses/[id]",
     "/courses/[id]/lessons": "/courses/[id]/lessons",
     "/courses/[id]/lessons/[lessonId]": "/courses/[id]/lessons/[lessonId]",
+    "/tutors": "/tutors",
+    "/become-tutor": "/become-tutor",
+    "/bookings": "/bookings",
+    "/messages": "/messages",
   },
 });

@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import {
   Settings2,
   Trash2,
@@ -28,7 +28,15 @@ function isValidEmail(email: string) {
   return emailRegex.test(email);
 }
 
-export default function SettingsPage() {
+export default function SettingsPageWrapper() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>}>
+      <SettingsPage />
+    </Suspense>
+  );
+}
+
+function SettingsPage() {
   const { user, isLoading } = useAuth();
   const locale = useLocale();
   const router = useRouter();

@@ -17,7 +17,7 @@ import {
   getTutorSubjectDetails,
 } from "@/lib/supabase/queries/tutors";
 import type { CourseWithRelations } from "@/types/course";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
@@ -48,6 +48,7 @@ type FeaturedTeacher = {
 
 export default function HomeContent() {
   const t = useTranslations("home");
+  const locale = useLocale();
 
   const { courses, refreshCourses } = useApp();
   const [featuredTeachers, setFeaturedTeachers] = useState<FeaturedTeacher[]>(
@@ -159,8 +160,8 @@ export default function HomeContent() {
             <p className="text-xl mb-8 text-shadow-lg">
               {t("heroDescription")}
             </p>
-            <div className="flex gap-4 justify-center">
-              <Link href="/register">
+            <div className="flex gap-4 justify-center flex-wrap">
+              <Link href={`/${locale}/register`}>
                 <Button
                   size="lg"
                   variant="secondary"
@@ -169,7 +170,7 @@ export default function HomeContent() {
                   {t("startNow")}
                 </Button>
               </Link>
-              <Link href="/tutors">
+              <Link href={`/${locale}/tutors`}>
                 <Button
                   size="lg"
                   variant="outline"
@@ -243,28 +244,27 @@ export default function HomeContent() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {popularCourses.map((course) => (
-              <Card
-                key={course.id}
-                className="hover:shadow-lg transition-shadow"
-              >
-                <CardHeader>
-                  <CardTitle>{course.title}</CardTitle>
-                  <CardDescription>{course.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-600">
-                      {t("teacher")}: {course.teacher}
-                    </p>
-                    <div className="flex justify-between items-center">
-                      <Badge variant="outline">{course.level}</Badge>
-                      <span className="text-sm text-gray-600">
-                        {course.students} {t("students")}
-                      </span>
+              <Link key={course.id} href={`/${locale}/courses/${course.id}`} className="block">
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                  <CardHeader>
+                    <CardTitle>{course.title}</CardTitle>
+                    <CardDescription>{course.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-600">
+                        {t("teacher")}: {course.teacher}
+                      </p>
+                      <div className="flex justify-between items-center">
+                        <Badge variant="outline">{course.level}</Badge>
+                        <span className="text-sm text-gray-600">
+                          {course.students} {t("students")}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         </div>
@@ -322,7 +322,7 @@ export default function HomeContent() {
         <div className="px-4 sm:px-6 lg:px-8 py-20 text-center">
           <h2 className="text-3xl font-bold mb-6">{t("ready")}</h2>
           <p className="text-xl text-gray-600 mb-8">{t("joinCommunity")}</p>
-          <Link href="/register">
+          <Link href={`/${locale}/register`}>
             <Button size="lg">{t("registerNow")}</Button>
           </Link>
         </div>

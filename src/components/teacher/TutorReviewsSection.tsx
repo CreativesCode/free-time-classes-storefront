@@ -31,7 +31,7 @@ export default function TutorReviewsSection() {
     async function load() {
       setLoading(true);
       try {
-        const data = await getReviewsByTutor(user.id, 8);
+        const data = await getReviewsByTutor(user!.id, 8);
         if (cancelled) return;
         setReviews(data);
 

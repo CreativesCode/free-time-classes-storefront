@@ -20,9 +20,10 @@ import { getSubjects } from "@/lib/supabase/queries/subjects";
 import type { CourseWithRelations } from "@/types/course";
 import type { Subject } from "@/types/subject";
 import { getAvatarColor } from "@/lib/utils";
-import { useTranslations } from "@/i18n/translations";
+import { useTranslations, useLocale } from "@/i18n/translations";
 import { useEffect, useMemo, useState } from "react";
 import { Star } from "lucide-react";
+import Link from "next/link";
 
 type CourseLevel = NonNullable<CourseFilters["level"]>;
 
@@ -30,6 +31,7 @@ export default function CoursesPage() {
   const tStudent = useTranslations("studentProfile.availabilities");
   const tCommon = useTranslations("common");
   const tHome = useTranslations("home");
+  const locale = useLocale();
 
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [courses, setCourses] = useState<CourseWithRelations[]>([]);
@@ -406,8 +408,9 @@ export default function CoursesPage() {
 
                 const firstChar = tutor?.username?.[0]?.toUpperCase() ?? "U";
 
-                return (
-                  <Card key={course.id} className="hover:shadow-lg transition-shadow">
+                  return (
+                  <Link key={course.id} href={`/${locale}/courses/${course.id}`} className="block">
+                  <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
                     <CardHeader>
                       <CardTitle className="line-clamp-1">{course.title}</CardTitle>
                       <CardDescription className="line-clamp-2">
@@ -462,6 +465,7 @@ export default function CoursesPage() {
                       </div>
                     </CardContent>
                   </Card>
+                  </Link>
                 );
               })}
             </div>

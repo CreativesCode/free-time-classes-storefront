@@ -22,6 +22,7 @@ const PROTECTED_ROUTES = [
   "/settings",
   "/tutor/dashboard",
   "/bookings",
+  "/messages",
   "/courses/create",
 ];
 

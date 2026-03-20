@@ -21,7 +21,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 type InternalMessagingPanelProps = {
-  namespace: "studentProfile" | "teacherProfile";
+  namespace: "studentProfile" | "teacherProfile" | "messagesPage";
 };
 
 export default function InternalMessagingPanel({
