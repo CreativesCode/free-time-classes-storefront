@@ -28,7 +28,7 @@ import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import { Mail } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 interface Event {
   id: string;
@@ -55,7 +55,14 @@ const STATUS_COLORS = {
   fallback: "#6B7280",
 };
 
-export default function AvailabilityCalendar() {
+interface AvailabilityCalendarProps {
+  /** Increment to refetch events after bulk availability changes */
+  refreshKey?: number;
+}
+
+export default function AvailabilityCalendar({
+  refreshKey,
+}: AvailabilityCalendarProps) {
   const locale = useLocale();
   const t = useTranslations("teacherProfile");
   const [events, setEvents] = useState<Event[]>([]);
@@ -65,6 +72,7 @@ export default function AvailabilityCalendar() {
   const [lessonLoading, setLessonLoading] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [calendarLoading, setCalendarLoading] = useState(false);
   const { user } = useAuth();
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
@@ -72,60 +80,74 @@ export default function AvailabilityCalendar() {
     null
   );
 
-  const loadCalendarEvents = async (start: Date, end: Date) => {
-    try {
-      const params = new URLSearchParams({
-        start: start.toISOString(),
-        end: end.toISOString(),
-      });
-      const response = await fetch(`/${locale}/api/bookings/tutor/calendar?${params}`);
-      const result = (await response.json()) as {
-        error?: string;
-        items?: CalendarApiItem[];
-      };
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to load calendar events");
-      }
-
-      const items = result.items || [];
-      const lessonEvents = items
-        .filter((item) => item.scheduledDateTime)
-        .map((item) => {
-          const statusKey =
-            item.bookingStatus === "pending"
-              ? "requested"
-              : item.bookingStatus === "confirmed"
-                ? "confirmed"
-                : item.lessonStatus === "available"
-                  ? "available"
-                  : "fallback";
-
-          return {
-            id: String(item.lessonId),
-            title: `${item.subjectName || ""} · $${item.price}`,
-            start: new Date(item.scheduledDateTime!),
-            end: new Date(
-              new Date(item.scheduledDateTime!).getTime() + item.durationMinutes * 60000
-            ),
-            backgroundColor:
-              STATUS_COLORS[statusKey as keyof typeof STATUS_COLORS] ||
-              STATUS_COLORS.fallback,
-          } satisfies Event;
+  const loadCalendarEvents = useCallback(
+    async (start: Date, end: Date) => {
+      try {
+        setCalendarLoading(true);
+        const params = new URLSearchParams({
+          start: start.toISOString(),
+          end: end.toISOString(),
         });
+        const response = await fetch(
+          `/${locale}/api/bookings/tutor/calendar?${params}`
+        );
+        const result = (await response.json()) as {
+          error?: string;
+          items?: CalendarApiItem[];
+        };
 
-      setEvents(lessonEvents);
-    } catch (error) {
-      console.error("Error loading calendar events:", error);
-      setEvents([]);
-    }
-  };
+        if (!response.ok) {
+          throw new Error(result.error || "Failed to load calendar events");
+        }
+
+        const items = result.items || [];
+        const lessonEvents = items
+          .filter((item) => item.scheduledDateTime)
+          .map((item) => {
+            const statusKey =
+              item.bookingStatus === "pending"
+                ? "requested"
+                : item.bookingStatus === "confirmed"
+                  ? "confirmed"
+                  : item.lessonStatus === "available"
+                    ? "available"
+                    : "fallback";
+
+            return {
+              id: String(item.lessonId),
+              title: `${item.subjectName || ""} · $${item.price}`,
+              start: new Date(item.scheduledDateTime!),
+              end: new Date(
+                new Date(item.scheduledDateTime!).getTime() +
+                  item.durationMinutes * 60000
+              ),
+              backgroundColor:
+                STATUS_COLORS[statusKey as keyof typeof STATUS_COLORS] ||
+                STATUS_COLORS.fallback,
+            } satisfies Event;
+          });
+
+        setEvents(lessonEvents);
+      } catch (error) {
+        console.error("Error loading calendar events:", error);
+        setEvents([]);
+      } finally {
+        setCalendarLoading(false);
+      }
+    },
+    [locale]
+  );
 
   const handleDatesSet = (arg: DatesSetArg) => {
     if (!user?.id) return;
     setCurrentRange({ start: arg.start, end: arg.end });
     void loadCalendarEvents(arg.start, arg.end);
   };
+
+  useEffect(() => {
+    if (refreshKey === undefined || !currentRange || !user?.id) return;
+    void loadCalendarEvents(currentRange.start, currentRange.end);
+  }, [refreshKey, currentRange, user?.id, loadCalendarEvents]);
 
   // Load selected lesson when selectedLessonId changes
   useEffect(() => {
@@ -244,7 +266,18 @@ export default function AvailabilityCalendar() {
             <span>{t("calendarStatus.confirmed")}</span>
           </div>
         </div>
-        <div className="h-[600px]">
+        <p className="mb-3 text-xs text-muted-foreground">
+          {t("calendarGenerationHint")}
+        </p>
+        <div className="relative h-[600px]">
+          {calendarLoading && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-background/70 backdrop-blur-[1px]">
+              <div className="flex items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm text-muted-foreground shadow-sm">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <span>{t("calendarLoading")}</span>
+              </div>
+            </div>
+          )}
           <FullCalendar
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
             headerToolbar={{

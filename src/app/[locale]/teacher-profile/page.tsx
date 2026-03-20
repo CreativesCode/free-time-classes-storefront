@@ -1,6 +1,7 @@
 "use client";
 
 import AvailabilityCalendar from "@/components/teacher/AvailabilityCalendar";
+import RecurringAvailabilityManager from "@/components/teacher/RecurringAvailabilityManager";
 import EditProfileModal from "@/components/teacher/EditProfileModal";
 import TutorBookingRequests from "@/components/teacher/TutorBookingRequests";
 import TutorCoursesManager from "@/components/teacher/TutorCoursesManager";
@@ -45,6 +46,7 @@ export default function TeacherProfile() {
   const [courses, setCourses] = useState<CourseWithRelations[]>([]);
   const [isProfileLoading, setIsProfileLoading] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
+  const [calendarRefresh, setCalendarRefresh] = useState(0);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -309,7 +311,13 @@ export default function TeacherProfile() {
 
           {/* Availability Tab */}
           <TabsContent value="availability" className="space-y-4">
-            <AvailabilityCalendar />
+            <AvailabilityCalendar refreshKey={calendarRefresh} />
+            {user?.id ? (
+              <RecurringAvailabilityManager
+                tutorId={user.id}
+                onChanged={() => setCalendarRefresh((n) => n + 1)}
+              />
+            ) : null}
           </TabsContent>
 
           {/* Requests Tab */}

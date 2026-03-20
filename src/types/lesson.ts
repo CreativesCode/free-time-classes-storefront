@@ -15,6 +15,8 @@ export interface Lesson {
   scheduled_date_time?: string | null; // Timestamp
   duration_minutes: number; // int, check >= 30
   status: LessonStatus; // default 'available'
+  /** Set when this slot was generated from a recurring weekly rule */
+  availability_rule_id?: string | null;
   created_at: string;
   updated_at: string;
 }
