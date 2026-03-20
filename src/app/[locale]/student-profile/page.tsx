@@ -12,15 +12,18 @@ import { useAuth } from "@/context/UserContext";
 import { getPublicUrl } from "@/lib/supabase/storage";
 import { getStudentProfileWithUser } from "@/lib/supabase/queries/students";
 import { BookOpen, Calendar, ClipboardList, Settings, User } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import type { StudentProfile } from "@/types/student";
 import StudentBookingRequests from "@/components/student/StudentBookingRequests";
+import { useRouter } from "next/navigation";
 
 export default function StudentProfile() {
   const { user, isLoading } = useAuth();
   const t = useTranslations("studentProfile");
+  const locale = useLocale();
+  const router = useRouter();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(
     null
@@ -310,7 +313,13 @@ export default function StudentProfile() {
                     {t("emailNotifications")}
                   </label>
                   <div className="mt-2">
-                    <Button variant="outline" className="w-full justify-start">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() =>
+                        router.push(`/${locale}/settings?tab=notifications`)
+                      }
+                    >
                       {t("configureNotifications")}
                     </Button>
                   </div>
@@ -320,7 +329,11 @@ export default function StudentProfile() {
                     {t("changePassword")}
                   </label>
                   <div className="mt-2">
-                    <Button variant="outline" className="w-full justify-start">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => router.push(`/${locale}/settings?tab=account`)}
+                    >
                       {t("updatePassword")}
                     </Button>
                   </div>
@@ -333,6 +346,7 @@ export default function StudentProfile() {
                     <Button
                       variant="destructive"
                       className="w-full justify-start"
+                      onClick={() => router.push(`/${locale}/settings?tab=account`)}
                     >
                       {t("deleteAccount")}
                     </Button>

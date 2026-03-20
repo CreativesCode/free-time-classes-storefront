@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useLocale, useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   Settings2,
@@ -40,6 +40,15 @@ export default function SettingsPage() {
   const locale = useLocale();
   const router = useRouter();
   const t = useTranslations("settingsPage");
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const initialTab =
+    tabParam === "account" ||
+    tabParam === "notifications" ||
+    tabParam === "payments" ||
+    tabParam === "privacy"
+      ? tabParam
+      : "account";
 
   const [newEmail, setNewEmail] = useState("");
   const [isUpdatingEmail, setIsUpdatingEmail] = useState(false);
@@ -304,7 +313,7 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="account" className="space-y-4">
+      <Tabs defaultValue={initialTab} className="space-y-4">
         <TabsList className="grid grid-cols-1 sm:grid-cols-4 gap-2">
           <TabsTrigger value="account" className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4" />
