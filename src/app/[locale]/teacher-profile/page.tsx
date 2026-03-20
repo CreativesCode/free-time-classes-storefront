@@ -6,6 +6,7 @@ import EditProfileModal from "@/components/teacher/EditProfileModal";
 import TutorBookingRequests from "@/components/teacher/TutorBookingRequests";
 import TutorCoursesManager from "@/components/teacher/TutorCoursesManager";
 import TutorSubjectsManager from "@/components/teacher/TutorSubjectsManager";
+import TutorReviewsSection from "@/components/teacher/TutorReviewsSection";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -294,6 +295,9 @@ export default function TeacherProfile() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Reviews */}
+            <TutorReviewsSection />
 
             <TutorSubjectsManager
               tutorId={user.id}

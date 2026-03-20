@@ -40,6 +40,30 @@ export async function getBookingsByTutor(tutorId: string): Promise<Booking[]> {
 }
 
 /**
+ * Get completed bookings for a student filtered by lesson IDs.
+ * Used to map completed lessons to booking IDs (to attach a review).
+ */
+export async function getCompletedBookingsByStudentAndLessonIds(
+  studentId: string,
+  lessonIds: number[]
+): Promise<Booking[]> {
+  if (lessonIds.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from("bookings")
+    .select("id, lesson_id, tutor_id, student_id, status, created_at, updated_at")
+    .eq("student_id", studentId)
+    // En esta app, a veces el estado "finalizado" se refleja como `confirmed`
+    // mientras que `lessons.status` es el que indica completitud.
+    // Permitimos ambos para que el historial mapee la reseña correctamente.
+    .in("status", ["completed", "confirmed"])
+    .in("lesson_id", lessonIds);
+
+  if (error) throw error;
+  return (data || []) as Booking[];
+}
+
+/**
  * Get booking by ID
  */
 export async function getBooking(id: number): Promise<Booking | null> {

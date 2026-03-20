@@ -1,0 +1,145 @@
+import { NextResponse } from "next/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
+
+export async function POST() {
+  try {
+    if (process.env.NODE_ENV === "production") {
+      return NextResponse.json({ error: "Not available in production." }, { status: 404 });
+    }
+
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    }
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !serviceRoleKey) {
+      return NextResponse.json(
+        { error: "Server misconfigured: missing Supabase env vars." },
+        { status: 500 }
+      );
+    }
+
+    // Admin client to bypass RLS for dev seeding.
+    const admin = createAdminClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+    });
+
+    const userId = user.id;
+
+    // Ensure profiles exist (so foreign keys won't fail).
+    await admin
+      .from("student_profiles")
+      .upsert({ id: userId }, { onConflict: "id" });
+    await admin
+      .from("tutor_profiles")
+      .upsert({ id: userId }, { onConflict: "id" });
+
+    // Pick any subject from the public catalog.
+    const { data: subjects, error: subjectsError } = await admin
+      .from("subjects")
+      .select("id")
+      .limit(1);
+
+    if (subjectsError || !subjects || subjects.length === 0) {
+      return NextResponse.json(
+        { error: "No hay materias disponibles en `subjects`." },
+        { status: 400 }
+      );
+    }
+    const subjectId = subjects[0].id as number;
+
+    const scheduledAt = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    // Create a completed lesson.
+    const { data: lesson, error: lessonError } = await admin
+      .from("lessons")
+      .insert({
+        tutor_id: userId,
+        student_id: userId,
+        subject_id: subjectId,
+        price: 0,
+        scheduled_date_time: scheduledAt,
+        duration_minutes: 60,
+        status: "completed",
+        availability_rule_id: null,
+      })
+      .select("id")
+      .single();
+
+    if (lessonError || !lesson) {
+      return NextResponse.json(
+        { error: lessonError?.message || "No se pudo crear la lección demo." },
+        { status: 400 }
+      );
+    }
+
+    // Create a completed booking attached to the lesson.
+    const { data: booking, error: bookingError } = await admin
+      .from("bookings")
+      .insert({
+        student_id: userId,
+        tutor_id: userId,
+        lesson_id: lesson.id,
+        requested_date: scheduledAt,
+        // En muchos entornos del proyecto el estado que existe en DB es `confirmed`
+        // (el check constraint suele no permitir `completed`).
+        // Para el seed nos sirve `confirmed` y dejamos que `lessons.status` marque completitud.
+        status: "confirmed",
+      })
+      .select("id")
+      .single();
+
+    if (bookingError || !booking) {
+      return NextResponse.json(
+        { error: bookingError?.message || "No se pudo crear la reserva demo." },
+        { status: 400 }
+      );
+    }
+
+    // Create the review tied to the booking (1 review per booking_id).
+    const rating = 5;
+    const comment = "Clase demo: ¡muy útil y excelente explicación!";
+
+    const { data: review, error: reviewError } = await admin
+      .from("reviews")
+      .insert({
+        booking_id: booking.id,
+        student_id: userId,
+        tutor_id: userId,
+        rating,
+        comment,
+      })
+      .select("id, booking_id, tutor_id, student_id, rating")
+      .single();
+
+    if (reviewError || !review) {
+      return NextResponse.json(
+        { error: reviewError?.message || "No se pudo crear la reseña demo." },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        ok: true,
+        lessonId: lesson.id,
+        bookingId: booking.id,
+        reviewId: review.id,
+        rating: review.rating,
+      },
+      { status: 200 }
+    );
+  } catch (err) {
+    console.error("[dev/seed-reviews] error:", err);
+    return NextResponse.json({ error: "Unexpected server error." }, { status: 500 });
+  }
+}
+

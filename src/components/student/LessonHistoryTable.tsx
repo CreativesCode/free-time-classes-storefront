@@ -8,22 +8,46 @@ import {
   getFavoriteTutorIds,
   removeFavoriteTutor,
 } from "@/lib/supabase/queries/studentFavorites";
+import {
+  getCompletedBookingsByStudentAndLessonIds,
+} from "@/lib/supabase/queries/bookings";
 import { getLessonsWithRelations } from "@/lib/supabase/queries/lessons";
+import { getReviewsByStudentAndBookingIds } from "@/lib/supabase/queries/reviews";
 import type { LessonWithRelations } from "@/types/lesson";
+import type { Review } from "@/types/review";
 import { useAuth } from "@/context/UserContext";
-import { useTranslations } from "@/i18n/translations";
+import { useLocale, useTranslations } from "@/i18n/translations";
 import { toast } from "sonner";
 import { Calendar, Star, StarOff } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import LeaveReviewModal from "@/components/student/LeaveReviewModal";
 
 export default function LessonHistoryTable() {
   const { user } = useAuth();
   const t = useTranslations("studentProfile");
+  const locale = useLocale();
+  // Keep demo-seed capability in code, but hidden by default.
+  const canSeedDemo = false && process.env.NODE_ENV !== "production";
 
   const [loading, setLoading] = useState(false);
+  const [seedLoading, setSeedLoading] = useState(false);
   const [lessons, setLessons] = useState<LessonWithRelations[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  type BookingForLesson = { bookingId: number; tutorId: string };
+  const [bookingsByLessonId, setBookingsByLessonId] = useState<
+    Record<number, BookingForLesson>
+  >({});
+  const [reviewsByBookingId, setReviewsByBookingId] = useState<
+    Record<number, Review>
+  >({});
+
+  const [leaveReviewOpen, setLeaveReviewOpen] = useState(false);
+  const [selectedReviewBooking, setSelectedReviewBooking] = useState<{
+    bookingId: number;
+    tutorId: string;
+  } | null>(null);
 
   const [favoriteTutorIds, setFavoriteTutorIds] = useState<Set<string>>(
     () => new Set()
@@ -33,6 +57,7 @@ export default function LessonHistoryTable() {
   >(null);
 
   const nowIso = useMemo(() => new Date().toISOString(), []);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -84,6 +109,44 @@ export default function LessonHistoryTable() {
         });
 
         setLessons(sorted);
+
+        // Map lesson -> booking + reviews.
+        // Si fallan (por ejemplo, porque todavía no se ha aplicado la migración),
+        // mostramos igual el historial y omitimos la funcionalidad de reseñas.
+        try {
+          const lessonIds = sorted.map((l) => l.id);
+          const bookings =
+            lessonIds.length > 0
+              ? await getCompletedBookingsByStudentAndLessonIds(user.id, lessonIds)
+              : [];
+
+          if (cancelled) return;
+
+          const nextBookingsByLessonId: Record<number, BookingForLesson> = {};
+          for (const b of bookings) {
+            if (b.lesson_id) {
+              nextBookingsByLessonId[b.lesson_id] = {
+                bookingId: b.id,
+                tutorId: b.tutor_id,
+              };
+            }
+          }
+          setBookingsByLessonId(nextBookingsByLessonId);
+
+          const bookingIds = bookings.map((b) => b.id);
+          const reviews =
+            bookingIds.length > 0
+              ? await getReviewsByStudentAndBookingIds(user.id, bookingIds)
+              : [];
+
+          const nextReviewsByBookingId: Record<number, Review> = {};
+          for (const r of reviews) {
+            nextReviewsByBookingId[r.booking_id] = r;
+          }
+          setReviewsByBookingId(nextReviewsByBookingId);
+        } catch (e) {
+          console.error("[reviews] Failed loading booking/review info:", e);
+        }
       } catch (e) {
         console.error("Error loading lesson history:", e);
         if (cancelled) return;
@@ -97,7 +160,31 @@ export default function LessonHistoryTable() {
     return () => {
       cancelled = true;
     };
-  }, [user?.id, nowIso]);
+  }, [user?.id, nowIso, refreshKey]);
+
+  async function handleSeedDemoReviews() {
+    if (!user?.id || seedLoading) return;
+    setSeedLoading(true);
+    try {
+      const res = await fetch(`/${locale}/api/dev/seed-reviews`, {
+        method: "POST",
+      });
+
+      const json = (await res.json()) as { error?: string; ok?: boolean };
+      if (!res.ok || json?.error) {
+        toast.error(json?.error || t("seedReviewsError"));
+        return;
+      }
+
+      toast.success(t("seedReviewsSuccess"));
+      setRefreshKey((n) => n + 1);
+    } catch (e) {
+      console.error("[seedReviews] error:", e);
+      toast.error(t("seedReviewsError"));
+    } finally {
+      setSeedLoading(false);
+    }
+  }
 
   const toggleFavorite = async (tutorId: string) => {
     if (!user?.id) return;
@@ -173,11 +260,18 @@ export default function LessonHistoryTable() {
                   <th className="pb-2 font-medium">Fecha</th>
                   <th className="pb-2 font-medium">Duración</th>
                   <th className="pb-2 font-medium">Precio</th>
+                  <th className="pb-2 font-medium">{t("reviewColumn")}</th>
                   <th className="pb-2 font-medium">Favorito</th>
                 </tr>
               </thead>
               <tbody>
                 {lessons.map((lesson) => {
+                  const bookingInfo = bookingsByLessonId[lesson.id];
+                  const review =
+                    bookingInfo && reviewsByBookingId[bookingInfo.bookingId]
+                      ? reviewsByBookingId[bookingInfo.bookingId]
+                      : null;
+
                   const tutor = lesson.tutor?.user;
                   const tutorProfilePicture = tutor?.profile_picture;
                   const tutorAvatarUrl =
@@ -239,6 +333,35 @@ export default function LessonHistoryTable() {
                       <td className="py-3 font-medium text-primary-600">
                         ${lesson.price}
                       </td>
+
+                      <td className="py-3">
+                        {review ? (
+                          <div className="flex items-center gap-2">
+                            <Star className="h-4 w-4 text-primary-600" fill="currentColor" />
+                            <span className="text-xs text-gray-700">
+                              {review.rating}/5
+                            </span>
+                          </div>
+                        ) : bookingInfo ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-9"
+                            onClick={() => {
+                              setSelectedReviewBooking({
+                                bookingId: bookingInfo.bookingId,
+                                tutorId: bookingInfo.tutorId,
+                              });
+                              setLeaveReviewOpen(true);
+                            }}
+                          >
+                            {t("leaveReview")}
+                          </Button>
+                        ) : (
+                          <span className="text-gray-500 text-xs">—</span>
+                        )}
+                      </td>
+
                       <td className="py-3">
                         <Button
                           variant="outline"
@@ -264,7 +387,36 @@ export default function LessonHistoryTable() {
             </table>
           </div>
         )}
+
+        {canSeedDemo ? (
+          <div className="pt-6">
+            <Button
+              variant="secondary"
+              onClick={() => void handleSeedDemoReviews()}
+              disabled={!user?.id || seedLoading}
+              className="w-full"
+            >
+              {seedLoading ? t("seedReviewsLoading") : t("seedReviewsDemo")}
+            </Button>
+          </div>
+        ) : null}
       </CardContent>
+
+      <LeaveReviewModal
+        open={leaveReviewOpen}
+        onOpenChange={(open) => {
+          setLeaveReviewOpen(open);
+          if (!open) setSelectedReviewBooking(null);
+        }}
+        bookingId={selectedReviewBooking?.bookingId ?? null}
+        tutorId={selectedReviewBooking?.tutorId ?? null}
+        onCreated={(created) => {
+          setReviewsByBookingId((prev) => ({
+            ...prev,
+            [created.booking_id]: created,
+          }));
+        }}
+      />
     </Card>
   );
 }

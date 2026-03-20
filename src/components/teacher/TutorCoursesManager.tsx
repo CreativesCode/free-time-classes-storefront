@@ -30,6 +30,7 @@ import {
 import { getSubjects } from "@/lib/supabase/queries/subjects";
 import type { CourseWithRelations } from "@/types/course";
 import type { Subject } from "@/types/subject";
+import { Star } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 type CourseLevel = "beginner" | "intermediate" | "advanced" | "";
@@ -344,6 +345,13 @@ export default function TutorCoursesManager({
                           ? t("level.advanced")
                           : t("level.none")}
                   </p>
+                  <div className="mt-1 flex items-center gap-1 text-sm text-gray-700">
+                    <Star className="h-4 w-4 text-primary-600" fill="currentColor" />
+                    <span>{(course.rating ?? 0).toFixed(1)}</span>
+                    <span className="text-gray-500">
+                      ({course.total_reviews ?? 0} {t("reviewsLabel")})
+                    </span>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2">

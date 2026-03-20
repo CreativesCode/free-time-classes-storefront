@@ -11,6 +11,8 @@ export interface Course {
   duration_minutes: number; // Integer - total course duration in minutes
   max_students: number; // Integer
   level?: "beginner" | "intermediate" | "advanced" | null;
+  rating?: number; // float4, default 0
+  total_reviews?: number; // int, default 0
   is_active: boolean;
   created_at: string;
   updated_at: string;

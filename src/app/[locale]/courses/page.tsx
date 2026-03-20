@@ -22,6 +22,7 @@ import type { Subject } from "@/types/subject";
 import { getAvatarColor } from "@/lib/utils";
 import { useTranslations } from "@/i18n/translations";
 import { useEffect, useMemo, useState } from "react";
+import { Star } from "lucide-react";
 
 type CourseLevel = NonNullable<CourseFilters["level"]>;
 
@@ -452,6 +453,12 @@ export default function CoursesPage() {
                         <span className="text-gray-500">
                           Max {course.max_students}
                         </span>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-1 text-sm text-gray-700">
+                        <Star className="h-4 w-4 text-primary-600" fill="currentColor" />
+                        <span>{(course.rating ?? 0).toFixed(1)}</span>
+                        <span className="text-gray-500">({course.total_reviews ?? 0})</span>
                       </div>
                     </CardContent>
                   </Card>
