@@ -11,6 +11,7 @@ export interface User {
   is_tutor: boolean;
   receive_email_notifications: boolean;
   receive_sms_notifications: boolean;
+  profile_visibility?: "public" | "booking_only" | string | null;
   created_at: string;
   updated_at: string;
 }

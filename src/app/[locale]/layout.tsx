@@ -1,5 +1,6 @@
 import FooterWrapper from "@/components/FooterWrapper";
 import LocaleLayoutWrapper from "@/components/LocaleLayoutWrapper";
+import AppToaster from "@/components/AppToaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { routing } from "@/i18n/routing";
 import { NextIntlClientProvider } from "next-intl";
@@ -44,6 +45,7 @@ export default async function LocaleLayout({
             <LocaleLayoutWrapper messages={messages} locale={locale}>
               {children}
               <FooterWrapper />
+              <AppToaster />
             </LocaleLayoutWrapper>
           </TooltipProvider>
         </NextIntlClientProvider>
