@@ -36,22 +36,47 @@ export default function CoursesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [filters, setFilters] = useState<{
+  type CourseSort = NonNullable<CourseFilters["sort"]>;
+
+  const [queryFilters, setQueryFilters] = useState<{
     search: string;
     subject_id: string;
-    level: CourseLevel | "" ;
+    level: CourseLevel | "";
+    minPrice: string;
+    maxPrice: string;
+    minDuration: string;
+    maxDuration: string;
+    sort: CourseSort;
   }>({
     search: "",
     subject_id: "",
     level: "",
+    minPrice: "",
+    maxPrice: "",
+    minDuration: "",
+    maxDuration: "",
+    sort: "created_desc",
   });
 
   // Debounce search so we don't hammer Supabase while typing.
-  const [debouncedFilters, setDebouncedFilters] = useState(filters);
+  const [debouncedQueryFilters, setDebouncedQueryFilters] = useState(
+    queryFilters
+  );
   useEffect(() => {
-    const t = window.setTimeout(() => setDebouncedFilters(filters), 400);
+    const t = window.setTimeout(
+      () => setDebouncedQueryFilters(queryFilters),
+      400
+    );
     return () => window.clearTimeout(t);
-  }, [filters]);
+  }, [queryFilters]);
+
+  // Client-only filter (we already fetch tutor info in the query results)
+  const [tutorSearch, setTutorSearch] = useState("");
+  const [debouncedTutorSearch, setDebouncedTutorSearch] = useState("");
+  useEffect(() => {
+    const t = window.setTimeout(() => setDebouncedTutorSearch(tutorSearch), 300);
+    return () => window.clearTimeout(t);
+  }, [tutorSearch]);
 
   useEffect(() => {
     async function loadSubjects() {
@@ -76,17 +101,55 @@ export default function CoursesPage() {
           is_active: true,
         };
 
-        if (debouncedFilters.subject_id) {
-          courseFilters.subject_id = parseInt(debouncedFilters.subject_id, 10);
+        if (debouncedQueryFilters.subject_id) {
+          courseFilters.subject_id = parseInt(
+            debouncedQueryFilters.subject_id,
+            10
+          );
         }
 
-        if (debouncedFilters.level) {
-          courseFilters.level = debouncedFilters.level as CourseFilters["level"];
+        if (debouncedQueryFilters.level) {
+          courseFilters.level =
+            debouncedQueryFilters.level as CourseFilters["level"];
         }
 
-        if (debouncedFilters.search.trim()) {
-          courseFilters.search = debouncedFilters.search.trim();
+        if (debouncedQueryFilters.search.trim()) {
+          courseFilters.search = debouncedQueryFilters.search.trim();
         }
+
+        const minPriceNum =
+          debouncedQueryFilters.minPrice.trim() === ""
+            ? undefined
+            : Number(debouncedQueryFilters.minPrice);
+        if (minPriceNum !== undefined && !Number.isNaN(minPriceNum)) {
+          courseFilters.min_price_per_session = minPriceNum;
+        }
+
+        const maxPriceNum =
+          debouncedQueryFilters.maxPrice.trim() === ""
+            ? undefined
+            : Number(debouncedQueryFilters.maxPrice);
+        if (maxPriceNum !== undefined && !Number.isNaN(maxPriceNum)) {
+          courseFilters.max_price_per_session = maxPriceNum;
+        }
+
+        const minDurationNum =
+          debouncedQueryFilters.minDuration.trim() === ""
+            ? undefined
+            : Number(debouncedQueryFilters.minDuration);
+        if (minDurationNum !== undefined && !Number.isNaN(minDurationNum)) {
+          courseFilters.min_duration_minutes = minDurationNum;
+        }
+
+        const maxDurationNum =
+          debouncedQueryFilters.maxDuration.trim() === ""
+            ? undefined
+            : Number(debouncedQueryFilters.maxDuration);
+        if (maxDurationNum !== undefined && !Number.isNaN(maxDurationNum)) {
+          courseFilters.max_duration_minutes = maxDurationNum;
+        }
+
+        courseFilters.sort = debouncedQueryFilters.sort;
 
         const data = await getCoursesWithRelations(courseFilters);
         setCourses(data);
@@ -99,7 +162,15 @@ export default function CoursesPage() {
     }
 
     void loadCourses();
-  }, [debouncedFilters]);
+  }, [debouncedQueryFilters]);
+
+  const displayedCourses = useMemo(() => {
+    const needle = debouncedTutorSearch.trim().toLowerCase();
+    if (!needle) return courses;
+    return courses.filter((course) =>
+      (course.tutor?.username ?? "").toLowerCase().includes(needle)
+    );
+  }, [courses, debouncedTutorSearch]);
 
   const levelLabel = useMemo(() => {
     return (level: CourseWithRelations["level"] | null | undefined) => {
@@ -122,11 +193,19 @@ export default function CoursesPage() {
               type="button"
               variant="outline"
               onClick={() =>
-                setFilters({
-                  search: "",
-                  subject_id: "",
-                  level: "",
-                })
+                (() => {
+                  setQueryFilters({
+                    search: "",
+                    subject_id: "",
+                    level: "",
+                    minPrice: "",
+                    maxPrice: "",
+                    minDuration: "",
+                    maxDuration: "",
+                    sort: "created_desc",
+                  });
+                  setTutorSearch("");
+                })()
               }
             >
               {tStudent("filters")}
@@ -142,13 +221,13 @@ export default function CoursesPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Input
                   placeholder={tStudent("searchPlaceholder")}
-                  value={filters.search}
+                  value={queryFilters.search}
                   onChange={(e) =>
-                    setFilters((prev) => ({
+                    setQueryFilters((prev) => ({
                       ...prev,
                       search: e.target.value,
                     }))
@@ -158,9 +237,9 @@ export default function CoursesPage() {
 
               <div className="space-y-2">
                 <select
-                  value={filters.subject_id}
+                  value={queryFilters.subject_id}
                   onChange={(e) =>
-                    setFilters((prev) => ({
+                    setQueryFilters((prev) => ({
                       ...prev,
                       subject_id: e.target.value,
                     }))
@@ -178,9 +257,9 @@ export default function CoursesPage() {
 
               <div className="space-y-2">
                 <select
-                  value={filters.level}
+                  value={queryFilters.level}
                   onChange={(e) =>
-                    setFilters((prev) => ({
+                    setQueryFilters((prev) => ({
                       ...prev,
                       level: e.target.value as CourseLevel | "",
                     }))
@@ -193,6 +272,99 @@ export default function CoursesPage() {
                   <option value="advanced">{tHome("advanced")}</option>
                 </select>
               </div>
+
+              <div className="space-y-2">
+                <Input
+                  placeholder={tStudent("tutorNamePlaceholder")}
+                  value={tutorSearch}
+                  onChange={(e) => setTutorSearch(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder={tStudent("priceMinPlaceholder")}
+                  value={queryFilters.minPrice}
+                  onChange={(e) =>
+                    setQueryFilters((prev) => ({
+                      ...prev,
+                      minPrice: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder={tStudent("priceMaxPlaceholder")}
+                  value={queryFilters.maxPrice}
+                  onChange={(e) =>
+                    setQueryFilters((prev) => ({
+                      ...prev,
+                      maxPrice: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder={tStudent("durationMinPlaceholder")}
+                  value={queryFilters.minDuration}
+                  onChange={(e) =>
+                    setQueryFilters((prev) => ({
+                      ...prev,
+                      minDuration: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder={tStudent("durationMaxPlaceholder")}
+                  value={queryFilters.maxDuration}
+                  onChange={(e) =>
+                    setQueryFilters((prev) => ({
+                      ...prev,
+                      maxDuration: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <select
+                value={queryFilters.sort}
+                onChange={(e) =>
+                  setQueryFilters((prev) => ({
+                    ...prev,
+                    sort: e.target.value as CourseSort,
+                  }))
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="created_desc">{tStudent("sortNewest")}</option>
+                <option value="price_asc">{tStudent("sortPriceAsc")}</option>
+                <option value="price_desc">{tStudent("sortPriceDesc")}</option>
+                <option value="duration_asc">
+                  {tStudent("sortDurationAsc")}
+                </option>
+                <option value="duration_desc">
+                  {tStudent("sortDurationDesc")}
+                </option>
+              </select>
             </div>
           </CardContent>
         </Card>
@@ -207,7 +379,7 @@ export default function CoursesPage() {
               {error}
             </CardContent>
           </Card>
-        ) : courses.length === 0 ? (
+        ) : displayedCourses.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center text-gray-500">
               {tStudent("noAvailabilities")}
@@ -216,11 +388,11 @@ export default function CoursesPage() {
         ) : (
           <>
             <div className="text-sm text-gray-600">
-              {tStudent("resultsCount", { count: courses.length })}
+              {tStudent("resultsCount", { count: displayedCourses.length })}
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {courses.map((course) => {
+              {displayedCourses.map((course) => {
                 const tutor = course.tutor;
                 const rawProfilePicture = tutor?.profile_picture;
 

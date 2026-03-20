@@ -10,7 +10,7 @@ import {
   type LessonFilters,
 } from "@/lib/supabase/queries/lessons";
 import type { CourseWithRelations } from "@/types/course";
-import type { LessonWithRelations } from "@/types/lesson";
+import type { LessonStatus, LessonWithRelations } from "@/types/lesson";
 import type { User } from "@/types/user";
 import {
   ReactNode,
@@ -44,7 +44,7 @@ interface AppContextType {
   lessonStatusChoices: LessonStatusChoice[];
   refreshLessons: (
     dateRange: { start: Date; end: Date },
-    status?: string
+    status?: LessonStatus
   ) => void;
   refreshCourses: (filters?: CourseFilters) => void;
 }
@@ -135,11 +135,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [lessonsFilters]);
 
   const refreshLessons = useCallback(
-    (dateRange: { start: Date; end: Date }, status?: string) => {
+    (dateRange: { start: Date; end: Date }, status?: LessonStatus) => {
       setLessonsFilters({
         scheduled_date_time_gte: dateRange.start.toISOString(),
         scheduled_date_time_lte: dateRange.end.toISOString(),
-        status: status as any,
+        status,
         tutor_id: userData?.id, // Filter by current user's tutor_id
       });
     },

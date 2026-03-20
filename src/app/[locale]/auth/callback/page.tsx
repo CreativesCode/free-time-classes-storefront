@@ -6,11 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 
 type Status = "verifying" | "success" | "error";
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
   const supabase = useMemo(() => createClient(), []);
   const params = useSearchParams();
   const router = useRouter();
@@ -165,6 +165,14 @@ export default function AuthCallbackPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={null}>
+      <AuthCallbackContent />
+    </Suspense>
   );
 }
 

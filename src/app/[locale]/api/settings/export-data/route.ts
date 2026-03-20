@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(_request: NextRequest) {
+  void _request; // Explicitly mark as used; not needed for this endpoint
   try {
     const supabase = await createClient();
     const {

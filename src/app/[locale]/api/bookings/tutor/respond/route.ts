@@ -14,7 +14,6 @@ export async function POST(request: NextRequest) {
     const bookingId =
       typeof body.bookingId === "number" ? body.bookingId : Number(body.bookingId);
     const action = body.action;
-    const reason = (body.reason || "").trim();
 
     if (!Number.isInteger(bookingId) || bookingId <= 0) {
       return NextResponse.json({ error: "Invalid bookingId." }, { status: 400 });

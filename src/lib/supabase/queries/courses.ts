@@ -9,6 +9,20 @@ export interface CourseFilters {
   level?: "beginner" | "intermediate" | "advanced";
   is_active?: boolean;
   search?: string; // Search in title or description
+
+  // Numeric range filters
+  min_price_per_session?: number;
+  max_price_per_session?: number;
+  min_duration_minutes?: number;
+  max_duration_minutes?: number;
+
+  // Sorting
+  sort?:
+    | "created_desc"
+    | "price_asc"
+    | "price_desc"
+    | "duration_asc"
+    | "duration_desc";
 }
 
 /**
@@ -39,9 +53,31 @@ export async function getCourses(filters?: CourseFilters): Promise<Course[]> {
     );
   }
 
-  const { data, error } = await query.order("created_at", {
-    ascending: false,
-  });
+  if (filters?.min_price_per_session !== undefined) {
+    query = query.gte("price_per_session", filters.min_price_per_session);
+  }
+  if (filters?.max_price_per_session !== undefined) {
+    query = query.lte("price_per_session", filters.max_price_per_session);
+  }
+
+  if (filters?.min_duration_minutes !== undefined) {
+    query = query.gte("duration_minutes", filters.min_duration_minutes);
+  }
+  if (filters?.max_duration_minutes !== undefined) {
+    query = query.lte("duration_minutes", filters.max_duration_minutes);
+  }
+
+  const sort = filters?.sort ?? "created_desc";
+  const { data, error } =
+    sort === "price_asc"
+      ? await query.order("price_per_session", { ascending: true })
+      : sort === "price_desc"
+        ? await query.order("price_per_session", { ascending: false })
+        : sort === "duration_asc"
+          ? await query.order("duration_minutes", { ascending: true })
+          : sort === "duration_desc"
+            ? await query.order("duration_minutes", { ascending: false })
+            : await query.order("created_at", { ascending: false });
 
   if (error) {
     throw error;
@@ -99,9 +135,31 @@ export async function getCoursesWithRelations(
     );
   }
 
-  const { data, error } = await query.order("created_at", {
-    ascending: false,
-  });
+  if (filters?.min_price_per_session !== undefined) {
+    query = query.gte("price_per_session", filters.min_price_per_session);
+  }
+  if (filters?.max_price_per_session !== undefined) {
+    query = query.lte("price_per_session", filters.max_price_per_session);
+  }
+
+  if (filters?.min_duration_minutes !== undefined) {
+    query = query.gte("duration_minutes", filters.min_duration_minutes);
+  }
+  if (filters?.max_duration_minutes !== undefined) {
+    query = query.lte("duration_minutes", filters.max_duration_minutes);
+  }
+
+  const sort = filters?.sort ?? "created_desc";
+  const { data, error } =
+    sort === "price_asc"
+      ? await query.order("price_per_session", { ascending: true })
+      : sort === "price_desc"
+        ? await query.order("price_per_session", { ascending: false })
+        : sort === "duration_asc"
+          ? await query.order("duration_minutes", { ascending: true })
+          : sort === "duration_desc"
+            ? await query.order("duration_minutes", { ascending: false })
+            : await query.order("created_at", { ascending: false });
 
   if (error) {
     throw error;

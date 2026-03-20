@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 
 export default function AboutPage() {
   const t = useTranslations("aboutUs");
@@ -109,12 +110,12 @@ export default function AboutPage() {
               </h2>
               <p className="text-gray-600 mb-6">{t("joinUs.description")}</p>
               <div className="flex justify-center">
-                <a
+                <Link
                   href="/register"
                   className="bg-primary text-white px-6 py-3 rounded-md hover:bg-primary/90 transition-colors"
                 >
                   {t("joinUs.cta")}
-                </a>
+                </Link>
               </div>
             </section>
           </div>

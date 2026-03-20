@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/UserContext";
 import { useLocale, useTranslations } from "@/i18n/translations";
 import { toast } from "sonner";
-import { getLessonsWithRelations } from "@/lib/supabase/queries/lessons";
 import { getSubjects } from "@/lib/supabase/queries/subjects";
 import type { LessonWithRelations } from "@/types/lesson";
 import type { Subject } from "@/types/subject";
@@ -21,14 +20,35 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getPublicUrl } from "@/lib/supabase/storage";
 import { getAvatarColor } from "@/lib/utils";
 import { Calendar, Clock, DollarSign, Filter, Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-function getLocalNowForTimestampFilter(): string {
-  const now = new Date();
-  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
-    .toISOString()
-    .slice(0, 19);
-  return local;
+async function fetchAvailableLessons(
+  locale: string,
+  subjectId: string
+): Promise<LessonWithRelations[]> {
+  const params = new URLSearchParams();
+  if (subjectId) {
+    params.set("subjectId", subjectId);
+  }
+
+  const response = await fetch(
+    `/${locale}/api/lessons/available${params.toString() ? `?${params.toString()}` : ""}`,
+    {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    }
+  );
+
+  const result = (await response.json().catch(() => null)) as
+    | { items?: LessonWithRelations[]; error?: string }
+    | null;
+
+  if (!response.ok) {
+    throw new Error(result?.error || "Failed to load available lessons.");
+  }
+
+  return result?.items || [];
 }
 
 export default function AvailabilityBrowser() {
@@ -36,9 +56,6 @@ export default function AvailabilityBrowser() {
   const t = useTranslations("studentProfile.availabilities");
   const { user } = useAuth();
   const [availabilities, setAvailabilities] = useState<LessonWithRelations[]>([]);
-  const [filteredAvailabilities, setFilteredAvailabilities] = useState<
-    LessonWithRelations[]
-  >([]);
   const [loading, setLoading] = useState(true);
   const [selectedLesson, setSelectedLesson] =
     useState<LessonWithRelations | null>(null);
@@ -54,6 +71,15 @@ export default function AvailabilityBrowser() {
     subject_id: "",
     tutor_name: "",
   });
+  const [debouncedFilters, setDebouncedFilters] = useState(filters);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedFilters(filters);
+    }, 300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [filters]);
 
   // Load subjects from database
   useEffect(() => {
@@ -76,17 +102,8 @@ export default function AvailabilityBrowser() {
         setLoadError(null);
         // Load available lessons from DB. We filter by subject in the query
         // to avoid fetching everything and only filtering on the client.
-        const subjectIdNum = filters.subject_id
-          ? parseInt(filters.subject_id, 10)
-          : null;
-
-        const data = await getLessonsWithRelations({
-          status: "available",
-          scheduled_date_time_gte: getLocalNowForTimestampFilter(),
-          ...(subjectIdNum ? { subject_id: subjectIdNum } : {}),
-        });
+        const data = await fetchAvailableLessons(locale, debouncedFilters.subject_id);
         setAvailabilities(data);
-        setFilteredAvailabilities(data);
       } catch (error) {
         console.error("Error loading availabilities:", error);
         setLoadError(t("loadError"));
@@ -96,41 +113,53 @@ export default function AvailabilityBrowser() {
       }
     }
 
-    loadAvailabilities();
-  }, [filters.subject_id]);
+    void loadAvailabilities();
+  }, [debouncedFilters.subject_id, locale, t]);
 
-  // Apply filters
-  useEffect(() => {
+  const filteredAvailabilities = useMemo(() => {
     let filtered = [...availabilities];
 
-    if (filters.search) {
+    if (debouncedFilters.search) {
+      const normalizedSearch = debouncedFilters.search.toLowerCase();
       filtered = filtered.filter(
         (lesson) =>
           lesson.subject?.name
             ?.toLowerCase()
-            .includes(filters.search.toLowerCase()) ||
+            .includes(normalizedSearch) ||
           lesson.tutor?.user?.username
             ?.toLowerCase()
-            .includes(filters.search.toLowerCase())
+            .includes(normalizedSearch)
       );
     }
 
-    if (filters.subject_id) {
+    if (debouncedFilters.subject_id) {
       filtered = filtered.filter(
-        (lesson) => lesson.subject_id === parseInt(filters.subject_id)
+        (lesson) => lesson.subject_id === parseInt(debouncedFilters.subject_id, 10)
       );
     }
 
-    if (filters.tutor_name) {
+    if (debouncedFilters.tutor_name) {
+      const normalizedTutorName = debouncedFilters.tutor_name.toLowerCase();
       filtered = filtered.filter((lesson) =>
         lesson.tutor?.user?.username
           ?.toLowerCase()
-          .includes(filters.tutor_name.toLowerCase())
+          .includes(normalizedTutorName)
       );
     }
 
-    setFilteredAvailabilities(filtered);
-  }, [filters, availabilities]);
+    return filtered;
+  }, [availabilities, debouncedFilters]);
+
+  const hasPendingFilterChanges =
+    filters.search !== debouncedFilters.search ||
+    filters.subject_id !== debouncedFilters.subject_id ||
+    filters.tutor_name !== debouncedFilters.tutor_name;
+
+  const isUpdatingResults = loading || hasPendingFilterChanges;
+  const hasActiveFilters =
+    debouncedFilters.search.trim().length > 0 ||
+    debouncedFilters.subject_id.length > 0 ||
+    debouncedFilters.tutor_name.trim().length > 0;
 
   const handleBookLesson = async () => {
     if (!selectedLesson || !user?.id) return;
@@ -152,17 +181,10 @@ export default function AvailabilityBrowser() {
 
       // Optimistic UI: remove the booked slot immediately.
       setAvailabilities((prev) => prev.filter((lesson) => lesson.id !== lessonId));
-      setFilteredAvailabilities((prev) =>
-        prev.filter((lesson) => lesson.id !== lessonId)
-      );
 
       // Reload availabilities
-      const data = await getLessonsWithRelations({
-        status: "available",
-        scheduled_date_time_gte: getLocalNowForTimestampFilter(),
-      });
+      const data = await fetchAvailableLessons(locale, debouncedFilters.subject_id);
       setAvailabilities(data);
-      setFilteredAvailabilities(data);
       setSelectedLesson(null);
       setBookingFeedback(t("bookingRequested"));
 
@@ -276,8 +298,15 @@ export default function AvailabilityBrowser() {
       {loadError ? (
         <div className="text-sm text-destructive">{loadError}</div>
       ) : (
-        <div className="text-sm text-gray-600">
-          {t("resultsCount", { count: filteredAvailabilities.length })}
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          {isUpdatingResults ? (
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-200 border-t-primary-600" />
+          ) : null}
+          <span>
+            {isUpdatingResults
+              ? t("loadingResults")
+              : t("resultsCount", { count: filteredAvailabilities.length })}
+          </span>
         </div>
       )}
 
@@ -288,10 +317,16 @@ export default function AvailabilityBrowser() {
       )}
 
       {/* Availabilities grid */}
-      {filteredAvailabilities.length === 0 ? (
+      {isUpdatingResults ? (
         <Card className="w-full">
           <CardContent className="py-12 text-center text-gray-500">
-            {t("noAvailabilities")}
+            {t("loadingResults")}
+          </CardContent>
+        </Card>
+      ) : filteredAvailabilities.length === 0 ? (
+        <Card className="w-full">
+          <CardContent className="py-12 text-center text-gray-500">
+            {hasActiveFilters ? t("noFilteredAvailabilities") : t("noAvailabilities")}
           </CardContent>
         </Card>
       ) : (
@@ -340,15 +375,17 @@ export default function AvailabilityBrowser() {
                         new Date(lesson.scheduled_date_time).toLocaleString()}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Clock className="h-4 w-4" />
-                    <span>{lesson.duration_minutes} min</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <DollarSign className="h-4 w-4" />
-                    <span className="font-semibold text-primary-600">
-                      ${lesson.price}
-                    </span>
+                  <div className="flex items-center gap-4 flex-wrap text-gray-600">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      <span>{lesson.duration_minutes} min</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4" />
+                      <span className="font-semibold text-primary-600">
+                        {lesson.price}
+                      </span>
+                    </div>
                   </div>
                 </div>
 

@@ -123,6 +123,7 @@ export default function TutorDashboardPage() {
 
     const { booking } = rejectTarget;
     const lessonId = booking.lesson_id;
+    if (typeof lessonId !== "number") return;
 
     setActionLoadingBookingId(booking.id);
     try {

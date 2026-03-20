@@ -4,9 +4,9 @@ export interface TutorProfile {
   bio?: string | null;
   years_of_experience?: number | null;
   certifications?: string | null;
-  languages_spoken?: Record<string, any> | null; // JSONB
+  languages_spoken?: Record<string, unknown> | null; // JSONB
   hourly_rate?: number | null; // numeric(6,2)
-  availability?: Record<string, any> | null; // JSONB
+  availability?: Record<string, unknown> | null; // JSONB
   timezone?: string | null;
   rating: number; // float4, default 0
   total_reviews: number; // default 0

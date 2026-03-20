@@ -1,5 +1,4 @@
 import type { Subject } from "./subject";
-import type { User } from "./user";
 
 // Course type matching Supabase courses table
 export interface Course {

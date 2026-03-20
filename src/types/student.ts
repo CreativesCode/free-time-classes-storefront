@@ -15,6 +15,6 @@ export interface StudentProfile {
   prefers_video_calls: boolean;
   prefers_text_chat: boolean;
   timezone?: string | null;
-  preferred_schedules?: Record<string, any> | null; // JSONB
+  preferred_schedules?: Record<string, unknown> | null; // JSONB
   created_at: string;
 }
