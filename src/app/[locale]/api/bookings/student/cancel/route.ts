@@ -6,6 +6,17 @@ type Body = {
   bookingId: number;
 };
 
+const DEFAULT_STUDENT_CANCEL_HOURS = 24;
+
+function getStudentCancelHours(): number {
+  const rawValue = process.env.BOOKING_STUDENT_CANCEL_HOURS;
+  if (!rawValue) return DEFAULT_STUDENT_CANCEL_HOURS;
+
+  const parsed = Number(rawValue);
+  if (!Number.isFinite(parsed) || parsed <= 0) return DEFAULT_STUDENT_CANCEL_HOURS;
+  return parsed;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as Partial<Body>;
@@ -53,11 +64,58 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden." }, { status: 403 });
     }
 
-    if (booking.status !== "pending") {
-      return NextResponse.json(
-        { error: "Only pending bookings can be cancelled from this view." },
-        { status: 409 }
-      );
+    if (booking.status !== "pending" && booking.status !== "confirmed") {
+      return NextResponse.json({ error: "This booking cannot be cancelled." }, { status: 409 });
+    }
+
+    if (booking.status === "confirmed") {
+      if (!booking.lesson_id) {
+        return NextResponse.json(
+          { error: "Booking has no associated lesson to validate cancellation window." },
+          { status: 409 }
+        );
+      }
+
+      const { data: lesson, error: lessonError } = await admin
+        .from("lessons")
+        .select("id,scheduled_date_time")
+        .eq("id", booking.lesson_id)
+        .single();
+
+      if (lessonError || !lesson) {
+        return NextResponse.json(
+          { error: "Associated lesson not found for this booking." },
+          { status: 404 }
+        );
+      }
+
+      if (!lesson.scheduled_date_time) {
+        return NextResponse.json(
+          { error: "Lesson has no scheduled date/time." },
+          { status: 409 }
+        );
+      }
+
+      const cancelHours = getStudentCancelHours();
+      const nowMs = Date.now();
+      const lessonMs = new Date(lesson.scheduled_date_time).getTime();
+
+      if (!Number.isFinite(lessonMs)) {
+        return NextResponse.json(
+          { error: "Lesson date/time is invalid." },
+          { status: 409 }
+        );
+      }
+
+      const requiredNoticeMs = cancelHours * 60 * 60 * 1000;
+      if (lessonMs - nowMs < requiredNoticeMs) {
+        return NextResponse.json(
+          {
+            error: `You can only cancel confirmed bookings at least ${cancelHours} hours before the class.`,
+          },
+          { status: 409 }
+        );
+      }
     }
 
     const { error: cancelError } = await admin

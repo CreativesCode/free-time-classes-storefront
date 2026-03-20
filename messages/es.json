@@ -153,6 +153,10 @@
     "favoriteAdded": "Tutor añadido a favoritos",
     "favoriteRemoved": "Tutor eliminado de favoritos",
     "favoriteToggleError": "No se pudo actualizar favoritos. Inténtalo de nuevo.",
+    "cancelConfirmed": "Cancelar clase",
+    "cancelConfirmedLoading": "Cancelando clase...",
+    "cancelConfirmedSuccess": "Clase cancelada correctamente.",
+    "cancelConfirmedError": "No se pudo cancelar la clase.",
     "requests": {
       "tab": "Solicitudes",
       "title": "Clases solicitadas",

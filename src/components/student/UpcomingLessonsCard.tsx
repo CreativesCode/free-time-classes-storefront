@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useAuth } from "@/context/UserContext";
-import { useTranslations } from "@/i18n/translations";
+import { useLocale, useTranslations } from "@/i18n/translations";
 import { addFavoriteTutor, getFavoriteTutorIds, removeFavoriteTutor } from "@/lib/supabase/queries/studentFavorites";
 import { getLessonsWithRelations } from "@/lib/supabase/queries/lessons";
 import { getBookingsByStudent } from "@/lib/supabase/queries/bookings";
@@ -32,6 +32,7 @@ function toStatusBadge(status: LessonWithRelations["status"]): {
 export default function UpcomingLessonsCard() {
   const { user } = useAuth();
   const t = useTranslations("studentProfile");
+  const locale = useLocale();
 
   const [loading, setLoading] = useState(false);
   const [lessons, setLessons] = useState<LessonWithRelations[]>([]);
@@ -45,6 +46,7 @@ export default function UpcomingLessonsCard() {
   const [favoriteActionLoading, setFavoriteActionLoading] = useState<
     string | null
   >(null);
+  const [cancelActionLoading, setCancelActionLoading] = useState<number | null>(null);
 
   const nowIso = useMemo(() => new Date().toISOString(), []);
 
@@ -97,11 +99,12 @@ export default function UpcomingLessonsCard() {
 
         if (cancelled) return;
 
-        const confirmedLessonIds = new Set(
-          bookings
-            .filter((b) => b.status === "confirmed" && typeof b.lesson_id === "number")
-            .map((b) => b.lesson_id as number)
-        );
+        const confirmedBookingByLessonId = new Map<number, number>();
+        bookings
+          .filter((b) => b.status === "confirmed" && typeof b.lesson_id === "number")
+          .forEach((b) => {
+            confirmedBookingByLessonId.set(b.lesson_id as number, b.id);
+          });
 
         const combined = [...scheduled, ...inProgress].sort((a, b) => {
           const aTime = a.scheduled_date_time
@@ -111,7 +114,7 @@ export default function UpcomingLessonsCard() {
             ? new Date(b.scheduled_date_time).getTime()
             : 0;
           return aTime - bTime;
-        }).filter((lesson) => confirmedLessonIds.has(lesson.id));
+        }).filter((lesson) => confirmedBookingByLessonId.has(lesson.id));
 
         setLessons(combined);
       } catch (e) {
@@ -159,6 +162,40 @@ export default function UpcomingLessonsCard() {
       toast.error(t("favoriteToggleError"));
     } finally {
       setFavoriteActionLoading(null);
+    }
+  };
+
+  const cancelConfirmedBooking = async (lessonId: number) => {
+    if (!user?.id) return;
+    const bookings = await getBookingsByStudent(user.id);
+    const booking = bookings.find(
+      (item) => item.status === "confirmed" && item.lesson_id === lessonId
+    );
+
+    if (!booking) {
+      toast.error(t("requests.cancelError"));
+      return;
+    }
+
+    try {
+      setCancelActionLoading(lessonId);
+      const response = await fetch(`/${locale}/api/bookings/student/cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId: booking.id }),
+      });
+      const result = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        throw new Error(result.error || t("cancelConfirmedError"));
+      }
+
+      setLessons((prev) => prev.filter((lesson) => lesson.id !== lessonId));
+      toast.success(t("cancelConfirmedSuccess"));
+    } catch (error) {
+      console.error("Error cancelling confirmed booking:", error);
+      toast.error(error instanceof Error ? error.message : t("cancelConfirmedError"));
+    } finally {
+      setCancelActionLoading(null);
     }
   };
 
@@ -280,6 +317,17 @@ export default function UpcomingLessonsCard() {
                         ${lesson.price}
                       </span>
                     </div>
+                  </div>
+                  <div className="flex justify-end border-t pt-2">
+                    <Button
+                      variant="destructive"
+                      disabled={cancelActionLoading === lesson.id}
+                      onClick={() => void cancelConfirmedBooking(lesson.id)}
+                    >
+                      {cancelActionLoading === lesson.id
+                        ? t("cancelConfirmedLoading")
+                        : t("cancelConfirmed")}
+                    </Button>
                   </div>
                 </div>
               );
