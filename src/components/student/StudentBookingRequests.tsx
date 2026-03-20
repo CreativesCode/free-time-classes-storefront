@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useLocale, useTranslations } from "@/i18n/translations";
+import { useTranslations } from "@/i18n/translations";
 import { useAuth } from "@/context/UserContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +20,6 @@ type PendingBookingItem = {
 
 export default function StudentBookingRequests() {
   const t = useTranslations("studentProfile.requests");
-  const locale = useLocale();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<PendingBookingItem[]>([]);
@@ -30,7 +29,7 @@ export default function StudentBookingRequests() {
     if (!user?.id) return;
     setLoading(true);
     try {
-      const response = await fetch(`/${locale}/api/bookings/student/pending`, {
+      const response = await fetch(`/api/bookings/student/pending`, {
         method: "GET",
       });
       const result = (await response.json()) as {
@@ -57,7 +56,7 @@ export default function StudentBookingRequests() {
   const cancelRequest = async (bookingId: number) => {
     setActionLoadingId(bookingId);
     try {
-      const response = await fetch(`/${locale}/api/bookings/student/cancel`, {
+      const response = await fetch(`/api/bookings/student/cancel`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bookingId }),

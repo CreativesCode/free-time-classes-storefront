@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -28,7 +28,6 @@ export default function InternalMessagingPanel({
   namespace,
 }: InternalMessagingPanelProps) {
   const { user } = useAuth();
-  const locale = useLocale();
   const t = useTranslations(namespace);
   const tm = useTranslations(`${namespace}.messaging`);
 
@@ -52,7 +51,7 @@ export default function InternalMessagingPanel({
     const byId = new Map<string, MessageContact>();
 
     try {
-      const studentPending = await fetch(`/${locale}/api/bookings/student/pending`);
+      const studentPending = await fetch(`/api/bookings/student/pending`);
       if (studentPending.ok) {
         const result = (await studentPending.json()) as {
           items?: Array<{ tutorId: string; tutorName?: string | null }>;
@@ -72,7 +71,7 @@ export default function InternalMessagingPanel({
     }
 
     try {
-      const tutorPending = await fetch(`/${locale}/api/bookings/tutor/pending`);
+      const tutorPending = await fetch(`/api/bookings/tutor/pending`);
       if (tutorPending.ok) {
         const result = (await tutorPending.json()) as {
           items?: Array<{ studentId: string; studentName?: string | null }>;
@@ -92,7 +91,7 @@ export default function InternalMessagingPanel({
     }
 
     return Array.from(byId.values());
-  }, [locale]);
+  }, []);
 
   const selectedConversation = useMemo(
     () => conversations.find((c) => c.id === selectedConversationId) || null,

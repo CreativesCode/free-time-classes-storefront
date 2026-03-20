@@ -14,7 +14,6 @@ import {
 } from "@/lib/supabase/queries/tutors";
 import type { Subject } from "@/types/subject";
 import { useEffect, useMemo, useState } from "react";
-import { useLocale } from "@/i18n/translations";
 import { Trash2 } from "lucide-react";
 
 interface TutorSubjectsManagerProps {
@@ -29,7 +28,6 @@ export default function TutorSubjectsManager({
   onSubjectsUpdated,
 }: TutorSubjectsManagerProps) {
   const t = useTranslations("teacherProfile.subjectsManager");
-  const locale = useLocale();
   const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<Set<number>>(
     () => new Set(initialSubjects.map((subject) => subject.id))
@@ -124,7 +122,7 @@ export default function TutorSubjectsManager({
       setError(null);
       setSuccessMessage(null);
 
-      const res = await fetch(`/${locale}/api/subjects/create`, {
+      const res = await fetch(`/api/subjects/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tutorId, name: normalizedName }),
@@ -173,7 +171,7 @@ export default function TutorSubjectsManager({
       setError(null);
       setSuccessMessage(null);
 
-      const res = await fetch(`/${locale}/api/subjects/delete`, {
+      const res = await fetch(`/api/subjects/delete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ subjectId: subjectToDelete.id }),

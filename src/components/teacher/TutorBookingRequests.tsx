@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useLocale, useTranslations } from "@/i18n/translations";
+import { useTranslations } from "@/i18n/translations";
 import { useAuth } from "@/context/UserContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,7 +29,6 @@ type PendingBookingItem = {
 
 export default function TutorBookingRequests() {
   const t = useTranslations("teacherProfile.requests");
-  const locale = useLocale();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<PendingBookingItem[]>([]);
@@ -41,7 +40,7 @@ export default function TutorBookingRequests() {
     if (!user?.id) return;
     setLoading(true);
     try {
-      const response = await fetch(`/${locale}/api/bookings/tutor/pending`, {
+      const response = await fetch(`/api/bookings/tutor/pending`, {
         method: "GET",
       });
       const result = (await response.json()) as {
@@ -72,7 +71,7 @@ export default function TutorBookingRequests() {
   ) => {
     setActionLoadingId(bookingId);
     try {
-      const response = await fetch(`/${locale}/api/bookings/tutor/respond`, {
+      const response = await fetch(`/api/bookings/tutor/respond`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

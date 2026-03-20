@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useAuth } from "@/context/UserContext";
-import { useLocale, useTranslations } from "@/i18n/translations";
+import { useTranslations } from "@/i18n/translations";
 import { addFavoriteTutor, getFavoriteTutorIds, removeFavoriteTutor } from "@/lib/supabase/queries/studentFavorites";
 import { getLessonsWithRelations } from "@/lib/supabase/queries/lessons";
 import { getBookingsByStudent } from "@/lib/supabase/queries/bookings";
@@ -32,7 +32,6 @@ function toStatusBadge(status: LessonWithRelations["status"]): {
 export default function UpcomingLessonsCard() {
   const { user } = useAuth();
   const t = useTranslations("studentProfile");
-  const locale = useLocale();
 
   const [loading, setLoading] = useState(false);
   const [lessons, setLessons] = useState<LessonWithRelations[]>([]);
@@ -179,7 +178,7 @@ export default function UpcomingLessonsCard() {
 
     try {
       setCancelActionLoading(lessonId);
-      const response = await fetch(`/${locale}/api/bookings/student/cancel`, {
+      const response = await fetch(`/api/bookings/student/cancel`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bookingId: booking.id }),

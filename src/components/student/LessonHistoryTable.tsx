@@ -16,7 +16,7 @@ import { getReviewsByStudentAndBookingIds } from "@/lib/supabase/queries/reviews
 import type { LessonWithRelations } from "@/types/lesson";
 import type { Review } from "@/types/review";
 import { useAuth } from "@/context/UserContext";
-import { useLocale, useTranslations } from "@/i18n/translations";
+import { useTranslations } from "@/i18n/translations";
 import { toast } from "sonner";
 import { Calendar, Star, StarOff } from "lucide-react";
 import Image from "next/image";
@@ -26,7 +26,6 @@ import LeaveReviewModal from "@/components/student/LeaveReviewModal";
 export default function LessonHistoryTable() {
   const { user } = useAuth();
   const t = useTranslations("studentProfile");
-  const locale = useLocale();
   // Keep demo-seed capability in code, but hidden by default.
   const canSeedDemo = false && process.env.NODE_ENV !== "production";
 
@@ -166,7 +165,7 @@ export default function LessonHistoryTable() {
     if (!user?.id || seedLoading) return;
     setSeedLoading(true);
     try {
-      const res = await fetch(`/${locale}/api/dev/seed-reviews`, {
+      const res = await fetch(`/api/dev/seed-reviews`, {
         method: "POST",
       });
 

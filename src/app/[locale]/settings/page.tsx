@@ -99,7 +99,7 @@ function SettingsPage() {
     if (!user?.id) return;
     setIsUpdatingPrivacy(true);
     try {
-      const response = await fetch(`/${locale}/api/settings/update-privacy`, {
+      const response = await fetch(`/api/settings/update-privacy`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ profile_visibility: value }),
@@ -129,7 +129,7 @@ function SettingsPage() {
     if (!user?.id) return;
     setIsExporting(true);
     try {
-      const response = await fetch(`/${locale}/api/settings/export-data`, {
+      const response = await fetch(`/api/settings/export-data`, {
         method: "POST",
       });
 
@@ -168,7 +168,7 @@ function SettingsPage() {
 
     setIsUpdatingEmail(true);
     try {
-      const response = await fetch(`/${locale}/api/settings/update-email`, {
+      const response = await fetch(`/api/settings/update-email`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -212,7 +212,7 @@ function SettingsPage() {
 
     setIsUpdatingPassword(true);
     try {
-      const response = await fetch(`/${locale}/api/settings/update-password`, {
+      const response = await fetch(`/api/settings/update-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -267,7 +267,7 @@ function SettingsPage() {
 
     setIsDeletingAccount(true);
     try {
-      const res = await fetch(`/${locale}/api/settings/delete-account`, {
+      const res = await fetch(`/api/settings/delete-account`, {
         method: "POST",
       });
 

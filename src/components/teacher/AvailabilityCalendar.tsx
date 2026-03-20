@@ -90,7 +90,7 @@ export default function AvailabilityCalendar({
           end: end.toISOString(),
         });
         const response = await fetch(
-          `/${locale}/api/bookings/tutor/calendar?${params}`
+          `/api/bookings/tutor/calendar?${params}`
         );
         const result = (await response.json()) as {
           error?: string;
@@ -136,7 +136,7 @@ export default function AvailabilityCalendar({
         setCalendarLoading(false);
       }
     },
-    [locale]
+    []
   );
 
   const handleDatesSet = (arg: DatesSetArg) => {

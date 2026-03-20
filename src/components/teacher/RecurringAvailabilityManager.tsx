@@ -155,7 +155,7 @@ export default function RecurringAvailabilityManager({
     }
     try {
       setRuleSaving(true);
-      const res = await fetch(`/${locale}/api/availability/rules`, {
+      const res = await fetch(`/api/availability/rules`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -202,7 +202,7 @@ export default function RecurringAvailabilityManager({
     try {
       setDeletingRule(true);
       const res = await fetch(
-        `/${locale}/api/availability/rules/${deleteRuleId}`,
+        `/api/availability/rules/${deleteRuleId}`,
         {
         method: "DELETE",
         }
@@ -236,7 +236,7 @@ export default function RecurringAvailabilityManager({
     }
     try {
       setBlockSaving(true);
-      const res = await fetch(`/${locale}/api/availability/exceptions`, {
+      const res = await fetch(`/api/availability/exceptions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -275,7 +275,7 @@ export default function RecurringAvailabilityManager({
     }
     try {
       setExtraSaving(true);
-      const res = await fetch(`/${locale}/api/availability/exceptions`, {
+      const res = await fetch(`/api/availability/exceptions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -316,7 +316,7 @@ export default function RecurringAvailabilityManager({
     try {
       setDeletingException(true);
       const res = await fetch(
-        `/${locale}/api/availability/exceptions/${deleteExceptionId}`,
+        `/api/availability/exceptions/${deleteExceptionId}`,
         { method: "DELETE" }
       );
       const json = (await res.json()) as { error?: string };

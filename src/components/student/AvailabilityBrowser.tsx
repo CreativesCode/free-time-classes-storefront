@@ -11,7 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/UserContext";
-import { useLocale, useTranslations } from "@/i18n/translations";
+import { useTranslations } from "@/i18n/translations";
 import { toast } from "sonner";
 import { getSubjects } from "@/lib/supabase/queries/subjects";
 import type { LessonWithRelations } from "@/types/lesson";
@@ -22,17 +22,14 @@ import { getAvatarColor } from "@/lib/utils";
 import { Calendar, Clock, DollarSign, Filter, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
-async function fetchAvailableLessons(
-  locale: string,
-  subjectId: string
-): Promise<LessonWithRelations[]> {
+async function fetchAvailableLessons(subjectId: string): Promise<LessonWithRelations[]> {
   const params = new URLSearchParams();
   if (subjectId) {
     params.set("subjectId", subjectId);
   }
 
   const response = await fetch(
-    `/${locale}/api/lessons/available${params.toString() ? `?${params.toString()}` : ""}`,
+    `/api/lessons/available${params.toString() ? `?${params.toString()}` : ""}`,
     {
       method: "GET",
       credentials: "include",
@@ -52,7 +49,6 @@ async function fetchAvailableLessons(
 }
 
 export default function AvailabilityBrowser() {
-  const locale = useLocale();
   const t = useTranslations("studentProfile.availabilities");
   const { user } = useAuth();
   const [availabilities, setAvailabilities] = useState<LessonWithRelations[]>([]);
@@ -102,7 +98,7 @@ export default function AvailabilityBrowser() {
         setLoadError(null);
         // Load available lessons from DB. We filter by subject in the query
         // to avoid fetching everything and only filtering on the client.
-        const data = await fetchAvailableLessons(locale, debouncedFilters.subject_id);
+        const data = await fetchAvailableLessons(debouncedFilters.subject_id);
         setAvailabilities(data);
       } catch (error) {
         console.error("Error loading availabilities:", error);
@@ -114,7 +110,7 @@ export default function AvailabilityBrowser() {
     }
 
     void loadAvailabilities();
-  }, [debouncedFilters.subject_id, locale, t]);
+  }, [debouncedFilters.subject_id, t]);
 
   const filteredAvailabilities = useMemo(() => {
     let filtered = [...availabilities];
@@ -168,7 +164,7 @@ export default function AvailabilityBrowser() {
     try {
       setBookingLoading(true);
       setBookingFeedback(null);
-      const response = await fetch(`/${locale}/api/bookings/request`, {
+      const response = await fetch(`/api/bookings/request`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lessonId }),
@@ -183,7 +179,7 @@ export default function AvailabilityBrowser() {
       setAvailabilities((prev) => prev.filter((lesson) => lesson.id !== lessonId));
 
       // Reload availabilities
-      const data = await fetchAvailableLessons(locale, debouncedFilters.subject_id);
+      const data = await fetchAvailableLessons(debouncedFilters.subject_id);
       setAvailabilities(data);
       setSelectedLesson(null);
       setBookingFeedback(t("bookingRequested"));
