@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import ConfirmActionDialog from "@/components/common/ConfirmActionDialog";
 import {
   Card,
   CardContent,
@@ -8,12 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLocale, useTranslations } from "@/i18n/translations";
@@ -349,60 +344,27 @@ export default function RecurringAvailabilityManager({
 
   return (
     <div className="space-y-6">
-      <Dialog open={deleteRuleDialogOpen} onOpenChange={setDeleteRuleDialogOpen}>
-        <DialogContent className="sm:max-w-[520px]">
-          <DialogHeader>
-            <DialogTitle>{t("confirmDeleteRule")}</DialogTitle>
-          </DialogHeader>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setDeleteRuleDialogOpen(false)}
-              disabled={deletingRule}
-            >
-              {tTeacher("cancel")}
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => void performDeleteRule()}
-              disabled={deletingRule}
-            >
-              {deletingRule ? tTeacher("saving") : tTeacher("confirm")}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ConfirmActionDialog
+        open={deleteRuleDialogOpen}
+        onOpenChange={setDeleteRuleDialogOpen}
+        title={t("confirmDeleteRule")}
+        cancelLabel={tTeacher("cancel")}
+        confirmLabel={deletingRule ? tTeacher("saving") : tTeacher("confirm")}
+        loading={deletingRule}
+        onCancel={() => setDeleteRuleDialogOpen(false)}
+        onConfirm={() => void performDeleteRule()}
+      />
 
-      <Dialog
+      <ConfirmActionDialog
         open={deleteExceptionDialogOpen}
         onOpenChange={setDeleteExceptionDialogOpen}
-      >
-        <DialogContent className="sm:max-w-[520px]">
-          <DialogHeader>
-            <DialogTitle>{t("confirmDeleteException")}</DialogTitle>
-          </DialogHeader>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setDeleteExceptionDialogOpen(false)}
-              disabled={deletingException}
-            >
-              {tTeacher("cancel")}
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => void performDeleteException()}
-              disabled={deletingException}
-            >
-              {deletingException ? tTeacher("saving") : tTeacher("confirm")}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        title={t("confirmDeleteException")}
+        cancelLabel={tTeacher("cancel")}
+        confirmLabel={deletingException ? tTeacher("saving") : tTeacher("confirm")}
+        loading={deletingException}
+        onCancel={() => setDeleteExceptionDialogOpen(false)}
+        onConfirm={() => void performDeleteException()}
+      />
 
       <Card>
         <CardHeader>

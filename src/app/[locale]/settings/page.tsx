@@ -1,17 +1,10 @@
 "use client";
 
+import ConfirmActionDialog from "@/components/common/ConfirmActionDialog";
 import { updateUser } from "@/lib/supabase/queries/users";
 import { useAuth } from "@/context/UserContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -608,32 +601,19 @@ export default function SettingsPage() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[520px]">
-          <DialogHeader>
-            <DialogTitle>{t("deleteAccountConfirmTitle")}</DialogTitle>
-            <DialogDescription>{t("deleteAccountConfirmDescription")}</DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              type="button"
-              disabled={isDeletingAccount}
-              onClick={() => setIsDeleteDialogOpen(false)}
-            >
-              {t("cancel")}
-            </Button>
-            <Button
-              variant="destructive"
-              type="button"
-              onClick={() => void handleDeleteAccount()}
-              disabled={isDeletingAccount}
-            >
-              {isDeletingAccount ? t("deleting") : t("deleteAccountConfirm")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmActionDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title={t("deleteAccountConfirmTitle")}
+        description={t("deleteAccountConfirmDescription")}
+        cancelLabel={t("cancel")}
+        confirmLabel={isDeletingAccount ? t("deleting") : t("deleteAccountConfirm")}
+        loading={isDeletingAccount}
+        onCancel={() => setIsDeleteDialogOpen(false)}
+        onConfirm={() => {
+          void handleDeleteAccount();
+        }}
+      />
     </div>
   );
 }

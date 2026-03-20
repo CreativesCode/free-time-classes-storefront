@@ -3,14 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import ConfirmActionDialog from "@/components/common/ConfirmActionDialog";
 import { Input } from "@/components/ui/input";
 import { useTranslations } from "@/i18n/translations";
 import { getSubjects } from "@/lib/supabase/queries/subjects";
@@ -303,45 +296,26 @@ export default function TutorSubjectsManager({
         {error && <p className="text-sm text-destructive">{error}</p>}
       </CardContent>
 
-      <Dialog
+      <ConfirmActionDialog
         open={!!subjectToDelete}
         onOpenChange={(open) => {
           if (!open && !isSaving) {
             setSubjectToDelete(null);
           }
         }}
-      >
-        <DialogContent className="sm:max-w-[480px]">
-          <DialogHeader>
-            <DialogTitle>{t("deleteDialogTitle")}</DialogTitle>
-            <DialogDescription>
-              {subjectToDelete
-                ? t("deleteConfirm", { subject: subjectToDelete.name })
-                : ""}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isSaving}
-              onClick={() => setSubjectToDelete(null)}
-            >
-              {t("deleteDialogCancel")}
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={isSaving}
-              onClick={() => {
-                void confirmDeleteSubject();
-              }}
-            >
-              {isSaving ? t("deleting") : t("deleteDialogConfirm")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        title={t("deleteDialogTitle")}
+        description={
+          subjectToDelete ? t("deleteConfirm", { subject: subjectToDelete.name }) : ""
+        }
+        cancelLabel={t("deleteDialogCancel")}
+        confirmLabel={isSaving ? t("deleting") : t("deleteDialogConfirm")}
+        loading={isSaving}
+        onCancel={() => setSubjectToDelete(null)}
+        onConfirm={() => {
+          void confirmDeleteSubject();
+        }}
+        contentClassName="sm:max-w-[480px]"
+      />
     </Card>
   );
 }

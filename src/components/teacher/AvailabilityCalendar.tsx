@@ -1,6 +1,7 @@
 "use client";
 
 import AddAvailabilityModal from "@/components/teacher/AddAvailabilityModal";
+import ConfirmActionDialog from "@/components/common/ConfirmActionDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -432,35 +433,20 @@ export default function AvailabilityCalendar({
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog
+      <ConfirmActionDialog
         open={showDeleteConfirmation}
         onOpenChange={setShowDeleteConfirmation}
-      >
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>{t("confirmDelete")}</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-gray-600">{t("confirmDeleteMessage")}</p>
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowDeleteConfirmation(false)}
-            >
-              {t("cancel")}
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleConfirmDelete}
-              disabled={deleteLoading}
-            >
-              {deleteLoading ? t("deleting") : t("confirm")}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        title={t("confirmDelete")}
+        description={t("confirmDeleteMessage")}
+        cancelLabel={t("cancel")}
+        confirmLabel={deleteLoading ? t("deleting") : t("confirm")}
+        loading={deleteLoading}
+        onCancel={() => setShowDeleteConfirmation(false)}
+        onConfirm={() => {
+          void handleConfirmDelete();
+        }}
+        contentClassName="sm:max-w-[425px]"
+      />
 
       {/* Add Availability Modal */}
       <AddAvailabilityModal
