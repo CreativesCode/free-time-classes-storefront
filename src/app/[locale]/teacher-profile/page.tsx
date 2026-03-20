@@ -7,6 +7,7 @@ import TutorBookingRequests from "@/components/teacher/TutorBookingRequests";
 import TutorCoursesManager from "@/components/teacher/TutorCoursesManager";
 import TutorSubjectsManager from "@/components/teacher/TutorSubjectsManager";
 import TutorReviewsSection from "@/components/teacher/TutorReviewsSection";
+import InternalMessagingPanel from "@/components/messages/InternalMessagingPanel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,7 +33,7 @@ import type { CourseWithRelations } from "@/types/course";
 import type { Subject } from "@/types/subject";
 import type { TutorProfile } from "@/types/tutor";
 import { getAvatarColor } from "@/lib/utils";
-import { BookOpen, Inbox, User } from "lucide-react";
+import { BookOpen, Inbox, MessageSquare, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -214,6 +215,10 @@ export default function TeacherProfile() {
               <Inbox className="h-4 w-4" />
               {t("requests.tab")}
             </TabsTrigger>
+            <TabsTrigger value="messages" className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              {t("messaging.tab")}
+            </TabsTrigger>
           </TabsList>
 
           {/* Profile Tab */}
@@ -327,6 +332,11 @@ export default function TeacherProfile() {
           {/* Requests Tab */}
           <TabsContent value="requests" className="space-y-4">
             <TutorBookingRequests />
+          </TabsContent>
+
+          {/* Messages Tab */}
+          <TabsContent value="messages" className="space-y-4">
+            <InternalMessagingPanel namespace="teacherProfile" />
           </TabsContent>
         </Tabs>
       </div>

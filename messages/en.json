@@ -211,6 +211,29 @@
       "bookingRequested": "Request sent. Waiting for the teacher confirmation.",
       "bookingRequestedError": "Could not send the request. Please try again.",
       "loadError": "Could not load available classes."
+    },
+    "messaging": {
+      "tab": "Messages",
+      "title": "Conversations",
+      "loadError": "Could not load messaging.",
+      "loadMessagesError": "Could not load messages.",
+      "createConversationError": "Could not open the conversation.",
+      "sendError": "Could not send the message.",
+      "emptyConversations": "You don't have conversations yet.",
+      "startConversation": "Start conversation",
+      "searchPlaceholder": "Search by name or email...",
+      "searching": "Searching...",
+      "searchNoResults": "No users found.",
+      "noContacts": "You don't have available contacts yet.",
+      "creating": "Opening...",
+      "open": "Open",
+      "chatWith": "Chat with {name}",
+      "selectConversation": "Select a conversation",
+      "selectConversationHelp": "Pick a conversation from the list to read and send messages.",
+      "noMessagesYet": "No messages yet.",
+      "messagePlaceholder": "Write a message...",
+      "sending": "Sending...",
+      "send": "Send"
     }
   },
 
@@ -643,6 +666,29 @@
       "cancel": "Cancel",
       "create": "Create",
       "creating": "Creating..."
+    },
+    "messaging": {
+      "tab": "Messages",
+      "title": "Conversations",
+      "loadError": "Could not load messaging.",
+      "loadMessagesError": "Could not load messages.",
+      "createConversationError": "Could not open the conversation.",
+      "sendError": "Could not send the message.",
+      "emptyConversations": "You don't have conversations yet.",
+      "startConversation": "Start conversation",
+      "searchPlaceholder": "Search by name or email...",
+      "searching": "Searching...",
+      "searchNoResults": "No users found.",
+      "noContacts": "You don't have available contacts yet.",
+      "creating": "Opening...",
+      "open": "Open",
+      "chatWith": "Chat with {name}",
+      "selectConversation": "Select a conversation",
+      "selectConversationHelp": "Pick a conversation from the list to read and send messages.",
+      "noMessagesYet": "No messages yet.",
+      "messagePlaceholder": "Write a message...",
+      "sending": "Sending...",
+      "send": "Send"
     }
   },
   "settingsPage": {

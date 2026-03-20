@@ -11,12 +11,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/UserContext";
 import { getPublicUrl } from "@/lib/supabase/storage";
 import { getStudentProfileWithUser } from "@/lib/supabase/queries/students";
-import { BookOpen, Calendar, ClipboardList, Settings, User } from "lucide-react";
+import {
+  BookOpen,
+  Calendar,
+  ClipboardList,
+  MessageSquare,
+  Settings,
+  User,
+} from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import type { StudentProfile } from "@/types/student";
 import StudentBookingRequests from "@/components/student/StudentBookingRequests";
+import InternalMessagingPanel from "@/components/messages/InternalMessagingPanel";
 import { useRouter } from "next/navigation";
 
 export default function StudentProfile() {
@@ -125,6 +133,10 @@ export default function StudentProfile() {
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             {t("settings")}
+          </TabsTrigger>
+          <TabsTrigger value="messages" className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4" />
+            {t("messaging.tab")}
           </TabsTrigger>
         </TabsList>
 
@@ -355,6 +367,11 @@ export default function StudentProfile() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Messaging Tab */}
+        <TabsContent value="messages" className="space-y-4">
+          <InternalMessagingPanel namespace="studentProfile" />
         </TabsContent>
       </Tabs>
       <StudentProfileEdit

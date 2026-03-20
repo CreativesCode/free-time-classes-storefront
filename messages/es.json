@@ -211,6 +211,29 @@
       "bookingRequested": "Solicitud enviada. Espera la confirmación del profesor.",
       "bookingRequestedError": "No se pudo enviar la solicitud. Inténtalo de nuevo.",
       "loadError": "No se pudieron cargar las clases disponibles."
+    },
+    "messaging": {
+      "tab": "Mensajes",
+      "title": "Conversaciones",
+      "loadError": "No se pudo cargar la mensajería.",
+      "loadMessagesError": "No se pudieron cargar los mensajes.",
+      "createConversationError": "No se pudo abrir la conversación.",
+      "sendError": "No se pudo enviar el mensaje.",
+      "emptyConversations": "Aún no tienes conversaciones.",
+      "startConversation": "Iniciar conversación",
+      "searchPlaceholder": "Buscar por nombre o email...",
+      "searching": "Buscando...",
+      "searchNoResults": "No se encontraron usuarios.",
+      "noContacts": "No tienes contactos disponibles todavía.",
+      "creating": "Abriendo...",
+      "open": "Abrir",
+      "chatWith": "Chat con {name}",
+      "selectConversation": "Selecciona una conversación",
+      "selectConversationHelp": "Elige una conversación de la lista para ver y enviar mensajes.",
+      "noMessagesYet": "Aún no hay mensajes.",
+      "messagePlaceholder": "Escribe un mensaje...",
+      "sending": "Enviando...",
+      "send": "Enviar"
     }
   },
   "navigation": {
@@ -642,6 +665,29 @@
       "cancel": "Cancelar",
       "create": "Crear",
       "creating": "Creando..."
+    },
+    "messaging": {
+      "tab": "Mensajes",
+      "title": "Conversaciones",
+      "loadError": "No se pudo cargar la mensajería.",
+      "loadMessagesError": "No se pudieron cargar los mensajes.",
+      "createConversationError": "No se pudo abrir la conversación.",
+      "sendError": "No se pudo enviar el mensaje.",
+      "emptyConversations": "Aún no tienes conversaciones.",
+      "startConversation": "Iniciar conversación",
+      "searchPlaceholder": "Buscar por nombre o email...",
+      "searching": "Buscando...",
+      "searchNoResults": "No se encontraron usuarios.",
+      "noContacts": "No tienes contactos disponibles todavía.",
+      "creating": "Abriendo...",
+      "open": "Abrir",
+      "chatWith": "Chat con {name}",
+      "selectConversation": "Selecciona una conversación",
+      "selectConversationHelp": "Elige una conversación de la lista para ver y enviar mensajes.",
+      "noMessagesYet": "Aún no hay mensajes.",
+      "messagePlaceholder": "Escribe un mensaje...",
+      "sending": "Enviando...",
+      "send": "Enviar"
     }
   },
   "settingsPage": {
