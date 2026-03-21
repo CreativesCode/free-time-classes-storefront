@@ -50,6 +50,7 @@ function SettingsPage() {
     tabParam === "privacy"
       ? tabParam
       : "account";
+  const [currentTab, setCurrentTab] = useState(initialTab);
 
   const [newEmail, setNewEmail] = useState("");
   const [isUpdatingEmail, setIsUpdatingEmail] = useState(false);
@@ -303,39 +304,79 @@ function SettingsPage() {
   if (!user) return null;
 
   return (
-    <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 py-8">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="h-10 w-10 rounded-lg bg-primary-100 text-primary-700 flex items-center justify-center">
-          <Settings2 className="h-5 w-5" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold">{t("title")}</h1>
-          <p className="text-gray-600">{t("subtitle")}</p>
-        </div>
-      </div>
+    <div className="relative overflow-hidden bg-[#fef3ff]">
+      <div className="pointer-events-none absolute -right-24 -top-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-20 -left-10 h-64 w-64 rounded-full bg-purple-300/20 blur-3xl" />
+      <div className="mx-auto w-full max-w-screen-2xl px-4 py-6 sm:px-6 md:py-8">
+        <Tabs
+          value={currentTab}
+          onValueChange={(value) =>
+            setCurrentTab(value as "account" | "notifications" | "payments" | "privacy")
+          }
+          className="space-y-5"
+        >
+          <div className="rounded-3xl border border-primary/10 bg-white/75 p-4 shadow-[0_20px_60px_-35px_rgba(112,42,225,0.45)] backdrop-blur-md sm:p-6">
+            <div className="mb-5 flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Settings2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900">
+                    {t("title")}
+                  </h1>
+                  <p className="text-sm text-zinc-600 sm:text-base">{t("subtitle")}</p>
+                </div>
+              </div>
+            </div>
 
-      <Tabs defaultValue={initialTab} className="space-y-4">
-        <TabsList className="grid grid-cols-1 sm:grid-cols-4 gap-2">
-          <TabsTrigger value="account" className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4" />
-            {t("accountTab")}
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex items-center gap-2">
-            <Bell className="h-4 w-4" />
-            {t("notificationsTab")}
-          </TabsTrigger>
-          <TabsTrigger value="payments" className="flex items-center gap-2">
-            <CreditCard className="h-4 w-4" />
-            {user.is_tutor ? t("paymentsAndPayoutsTab") : t("paymentsTab")}
-          </TabsTrigger>
-          <TabsTrigger value="privacy" className="flex items-center gap-2">
-            {t("privacyTab")}
-          </TabsTrigger>
-        </TabsList>
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
+              <TabsList className="grid h-auto w-full grid-cols-4 gap-2 bg-[#faecff] p-1 md:grid-cols-4 lg:sticky lg:top-6 lg:grid-cols-1 lg:gap-1 lg:self-start lg:rounded-lg lg:p-2">
+                <TabsTrigger
+                  value="account"
+                  className="justify-center gap-2 rounded-md py-2.5 text-xs data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm lg:justify-start lg:px-3 lg:text-sm"
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t("accountTab")}</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="notifications"
+                  className="justify-center gap-2 rounded-md py-2.5 text-xs data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm lg:justify-start lg:px-3 lg:text-sm"
+                >
+                  <Bell className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t("notificationsTab")}</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="payments"
+                  className="justify-center gap-2 rounded-md py-2.5 text-xs data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm lg:justify-start lg:px-3 lg:text-sm"
+                >
+                  <CreditCard className="h-4 w-4" />
+                  <span className="hidden sm:inline">
+                    {user.is_tutor ? t("paymentsAndPayoutsTab") : t("paymentsTab")}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="privacy"
+                  className="justify-center gap-2 rounded-md py-2.5 text-xs data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm lg:justify-start lg:px-3 lg:text-sm"
+                >
+                  <span className="text-base leading-none">🔒</span>
+                  <span className="hidden sm:inline">{t("privacyTab")}</span>
+                </TabsTrigger>
+              </TabsList>
 
-        <TabsContent value="account" className="space-y-4">
-          <Card className="w-full">
+              <div className="space-y-4">
+                <TabsContent value="account" className="space-y-4">
+                    <Card className="w-full border-primary/10 bg-white/95 shadow-[0_25px_55px_-40px_rgba(112,42,225,0.65)]">
             <CardHeader>
+              <div className="mb-2 flex items-center gap-3 rounded-2xl bg-[#faecff] p-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-lg font-bold text-primary">
+                  {(user.full_name || user.email || "U").charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-zinc-900">{user.full_name || t("accountTab")}</p>
+                  <p className="text-xs text-zinc-600">{user.email}</p>
+                </div>
+              </div>
               <CardTitle>{t("accountSectionTitle")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -462,11 +503,11 @@ function SettingsPage() {
                 </Button>
               </div>
             </CardContent>
-          </Card>
-        </TabsContent>
+                    </Card>
+                </TabsContent>
 
-        <TabsContent value="notifications" className="space-y-4">
-          <Card className="w-full">
+                <TabsContent value="notifications" className="space-y-4">
+                  <Card className="w-full border-primary/10 bg-white/95 shadow-[0_25px_55px_-40px_rgba(112,42,225,0.65)]">
             <CardHeader>
               <CardTitle>{t("notificationsSectionTitle")}</CardTitle>
             </CardHeader>
@@ -517,11 +558,11 @@ function SettingsPage() {
                 </Button>
               </div>
             </CardContent>
-          </Card>
-        </TabsContent>
+                  </Card>
+                </TabsContent>
 
-        <TabsContent value="payments" className="space-y-4">
-          <Card className="w-full">
+                <TabsContent value="payments" className="space-y-4">
+                  <Card className="w-full border-primary/10 bg-white/95 shadow-[0_25px_55px_-40px_rgba(112,42,225,0.65)]">
             <CardHeader>
               <CardTitle>{user.is_tutor ? t("paymentsAndPayoutsTab") : t("paymentsTab")}</CardTitle>
             </CardHeader>
@@ -553,11 +594,11 @@ function SettingsPage() {
                 <p className="text-sm text-gray-600">{t("noPaymentRole")}</p>
               )}
             </CardContent>
-          </Card>
-        </TabsContent>
+                  </Card>
+                </TabsContent>
 
-        <TabsContent value="privacy" className="space-y-4">
-          <Card className="w-full">
+                <TabsContent value="privacy" className="space-y-4">
+                  <Card className="w-full border-primary/10 bg-white/95 shadow-[0_25px_55px_-40px_rgba(112,42,225,0.65)]">
             <CardHeader>
               <CardTitle>{t("privacySectionTitle")}</CardTitle>
             </CardHeader>
@@ -605,23 +646,27 @@ function SettingsPage() {
                 <p className="text-xs text-gray-500">{t("exportUnavailable")}</p>
               </div>
             </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                  </Card>
+                </TabsContent>
+              </div>
+            </div>
+          </div>
+        </Tabs>
 
-      <ConfirmActionDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-        title={t("deleteAccountConfirmTitle")}
-        description={t("deleteAccountConfirmDescription")}
-        cancelLabel={t("cancel")}
-        confirmLabel={isDeletingAccount ? t("deleting") : t("deleteAccountConfirm")}
-        loading={isDeletingAccount}
-        onCancel={() => setIsDeleteDialogOpen(false)}
-        onConfirm={() => {
-          void handleDeleteAccount();
-        }}
-      />
+        <ConfirmActionDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          title={t("deleteAccountConfirmTitle")}
+          description={t("deleteAccountConfirmDescription")}
+          cancelLabel={t("cancel")}
+          confirmLabel={isDeletingAccount ? t("deleting") : t("deleteAccountConfirm")}
+          loading={isDeletingAccount}
+          onCancel={() => setIsDeleteDialogOpen(false)}
+          onConfirm={() => {
+            void handleDeleteAccount();
+          }}
+        />
+      </div>
     </div>
   );
 }
