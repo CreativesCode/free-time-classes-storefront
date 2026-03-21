@@ -30,7 +30,14 @@ import {
 import { getSubjects } from "@/lib/supabase/queries/subjects";
 import type { CourseWithRelations } from "@/types/course";
 import type { Subject } from "@/types/subject";
-import { Star } from "lucide-react";
+import {
+  BookOpen,
+  CheckCircle2,
+  Clock3,
+  Sparkles,
+  Star,
+  Users,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 type CourseLevel = "beginner" | "intermediate" | "advanced" | "";
@@ -131,6 +138,7 @@ export default function TutorCoursesManager({
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [publishedSuccessOpen, setPublishedSuccessOpen] = useState(false);
   const [editCourseId, setEditCourseId] = useState<string | null>(null);
 
   const [createForm, setCreateForm] = useState<CourseFormState>(emptyCourseForm);
@@ -242,6 +250,7 @@ export default function TutorCoursesManager({
       await refreshCourses();
       setCreateOpen(false);
       resetCreateForm();
+      setPublishedSuccessOpen(true);
     } catch (err) {
       console.error("Error creating course:", err);
       setError(err instanceof Error ? err.message : t("createError"));
@@ -293,101 +302,193 @@ export default function TutorCoursesManager({
     }
   };
 
+  const getLevelLabel = (level: CourseWithRelations["level"]) => {
+    if (level === "beginner") return t("level.beginner");
+    if (level === "intermediate") return t("level.intermediate");
+    if (level === "advanced") return t("level.advanced");
+    return t("level.none");
+  };
+
+  const totalPublished = courses.filter((course) => course.is_active).length;
+
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="text-primary-800">{t("title")}</CardTitle>
-        <CardDescription>{t("description")}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm text-gray-600">
-            {isLoadingCatalog
-              ? t("loading")
-              : courses.length > 0
-                ? `${courses.length} ${t("coursesFound")}`
-                : t("noCourses")}
-          </p>
-          <Button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            disabled={isLoadingCatalog}
-          >
-            {t("createAction")}
-          </Button>
-        </div>
-
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
-
-        {isLoadingCatalog ? (
-          <div className="h-24 flex items-center justify-center text-sm text-gray-600">
-            {t("loading")}
+    <div className="space-y-6 lg:space-y-8">
+      <section className="relative overflow-hidden rounded-2xl border border-primary-100 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-6 sm:p-8">
+        <div className="absolute -right-16 -top-20 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute -left-16 -bottom-20 h-48 w-48 rounded-full bg-fuchsia-300/20 blur-3xl" />
+        <div className="relative flex flex-col gap-6">
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-700">
+              Curriculum Builder
+            </p>
+            <h2 className="text-2xl font-extrabold tracking-tight text-primary-950 sm:text-3xl lg:text-4xl">
+              Disena tu proximo curso
+            </h2>
+            <p className="max-w-2xl text-sm text-gray-600 sm:text-base">
+              Configura los detalles de tu clase y publica una experiencia premium
+              para tus estudiantes.
+            </p>
           </div>
-        ) : courses.length === 0 ? (
-          <p className="text-sm text-gray-600">{t("noCourses")}</p>
-        ) : (
-          <div className="space-y-4">
-            {courses.map((course) => (
-              <div
-                key={course.id}
-                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b pb-4"
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-white/70 bg-white/80 p-5 backdrop-blur">
+              <p className="text-xs uppercase tracking-wide text-gray-500">Cursos totales</p>
+              <p className="mt-2 text-2xl font-bold text-primary-900">{courses.length}</p>
+            </div>
+            <div className="rounded-xl border border-white/70 bg-white/80 p-5 backdrop-blur">
+              <p className="text-xs uppercase tracking-wide text-gray-500">Publicados</p>
+              <p className="mt-2 text-2xl font-bold text-primary-900">{totalPublished}</p>
+            </div>
+            <div className="rounded-xl border border-white/70 bg-white/80 p-5 backdrop-blur">
+              <p className="text-xs uppercase tracking-wide text-gray-500">Estado</p>
+              <p className="mt-2 text-sm font-semibold text-primary-900">
+                {isLoadingCatalog ? t("loading") : "Listo para crear"}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+        <Card className="w-full border-violet-100 xl:col-span-8">
+          <CardHeader className="space-y-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <CardTitle className="text-primary-900">{t("title")}</CardTitle>
+                <CardDescription>{t("description")}</CardDescription>
+              </div>
+              <Button
+                type="button"
+                onClick={() => setCreateOpen(true)}
+                disabled={isLoadingCatalog}
+                className="w-full rounded-full sm:w-auto"
               >
-                <div className="min-w-0">
-                  <h3 className="font-semibold truncate">{course.title}</h3>
-                  <p className="text-sm text-gray-600">
-                    {subjectNameById.get(course.subject_id ?? -1) ?? "—"} ·{" "}
-                    {course.duration_minutes ?? 60} min · ${course.price_per_session} ·{" "}
-                    {course.level === "beginner"
-                      ? t("level.beginner")
-                      : course.level === "intermediate"
-                        ? t("level.intermediate")
-                        : course.level === "advanced"
-                          ? t("level.advanced")
-                          : t("level.none")}
-                  </p>
-                  <div className="mt-1 flex items-center gap-1 text-sm text-gray-700">
-                    <Star className="h-4 w-4 text-primary-600" fill="currentColor" />
-                    <span>{(course.rating ?? 0).toFixed(1)}</span>
-                    <span className="text-gray-500">
-                      ({course.total_reviews ?? 0} {t("reviewsLabel")})
-                    </span>
+                {t("createAction")}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {error ? <p className="text-sm text-destructive">{error}</p> : null}
+
+            {isLoadingCatalog ? (
+              <div className="flex h-24 items-center justify-center text-sm text-gray-600">
+                {t("loading")}
+              </div>
+            ) : courses.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-violet-200 bg-violet-50/40 p-8 text-center">
+                <p className="text-sm text-gray-600">{t("noCourses")}</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {courses.map((course) => (
+                  <article
+                    key={course.id}
+                    className="rounded-xl border border-violet-100 bg-white p-5 shadow-sm sm:p-6"
+                  >
+                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <h3 className="truncate text-base font-bold text-primary-950 sm:text-lg">
+                          {course.title}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          {subjectNameById.get(course.subject_id ?? -1) ?? "—"} ·{" "}
+                          {course.duration_minutes ?? 60} min · ${course.price_per_session} ·{" "}
+                          {getLevelLabel(course.level)}
+                        </p>
+                        <div className="mt-1 flex items-center gap-1 text-sm text-gray-700">
+                          <Star className="h-4 w-4 text-primary-600" fill="currentColor" />
+                          <span>{(course.rating ?? 0).toFixed(1)}</span>
+                          <span className="text-gray-500">
+                            ({course.total_reviews ?? 0} {t("reviewsLabel")})
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge
+                          className={
+                            course.is_active
+                              ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100"
+                              : "bg-gray-200 text-gray-700 hover:bg-gray-200"
+                          }
+                        >
+                          {course.is_active ? t("active") : t("inactive")}
+                        </Badge>
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={isSaving}
+                          onClick={() => openEditForCourse(course)}
+                          className="rounded-full"
+                        >
+                          {t("edit")}
+                        </Button>
+
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          disabled={isSaving}
+                          onClick={() => void handleDelete(course.id)}
+                          className="rounded-full"
+                        >
+                          {t("delete")}
+                        </Button>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <aside className="xl:col-span-4">
+          <div className="sticky top-24 space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 xl:grid-cols-1">
+            <div className="overflow-hidden rounded-xl border border-violet-100 bg-white shadow-sm">
+              <div className="h-28 bg-gradient-to-br from-primary via-violet-500 to-fuchsia-500 md:h-32" />
+              <div className="space-y-4 p-5">
+                <div className="flex items-center justify-between">
+                  <span className="rounded-md bg-violet-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-violet-700">
+                    Preview
+                  </span>
+                  <span className="text-lg font-bold text-primary-900">
+                    ${createForm.price || "0"}
+                  </span>
+                </div>
+                <h4 className="line-clamp-2 text-base font-bold text-primary-950">
+                  {createForm.title.trim() || "Titulo de tu curso..."}
+                </h4>
+                <div className="space-y-2 text-xs text-gray-600">
+                  <div className="flex items-center gap-2">
+                    <Clock3 className="h-3.5 w-3.5 text-primary-600" />
+                    <span>{createForm.duration_minutes || "60"} min</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="h-3.5 w-3.5 text-primary-600" />
+                    <span>{createForm.level ? getLevelLabel(createForm.level) : t("level.none")}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="h-3.5 w-3.5 text-primary-600" />
+                    <span>{createForm.max_students || "1"} estudiantes</span>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-2">
-                  <Badge
-                    className={
-                      course.is_active
-                        ? "bg-accent-500 text-white"
-                        : "bg-gray-500 text-white"
-                    }
-                  >
-                    {course.is_active ? t("active") : t("inactive")}
-                  </Badge>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={isSaving}
-                    onClick={() => openEditForCourse(course)}
-                  >
-                    {t("edit")}
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    disabled={isSaving}
-                    onClick={() => void handleDelete(course.id)}
-                  >
-                    {t("delete")}
-                  </Button>
-                </div>
               </div>
-            ))}
+            </div>
+
+            <div className="rounded-xl border border-violet-100 bg-violet-50/50 p-5 shadow-sm">
+              <p className="mb-2 flex items-center gap-2 text-sm font-bold text-primary-900">
+                <Sparkles className="h-4 w-4" />
+                Consejo editorial
+              </p>
+              <p className="text-xs leading-relaxed text-gray-600">
+                Los cursos con una descripcion clara y objetivos concretos suelen
+                convertir mejor.
+              </p>
+            </div>
           </div>
-        )}
-      </CardContent>
+        </aside>
+      </div>
 
       {/* Create */}
       <Dialog
@@ -530,7 +631,7 @@ export default function TutorCoursesManager({
                   id="course-max"
                   type="number"
                   step="1"
-                  min="30"
+                  min="1"
                   value={createForm.max_students}
                   onChange={(e) =>
                     setCreateForm((p) => ({
@@ -732,7 +833,7 @@ export default function TutorCoursesManager({
                   id="edit-course-max"
                   type="number"
                   step="1"
-                  min="30"
+                  min="1"
                   value={editForm.max_students}
                   onChange={(e) =>
                     setEditForm((p) => ({
@@ -786,7 +887,46 @@ export default function TutorCoursesManager({
           </form>
         </DialogContent>
       </Dialog>
-    </Card>
+
+      <Dialog open={publishedSuccessOpen} onOpenChange={setPublishedSuccessOpen}>
+        <DialogContent className="max-w-md overflow-hidden border-violet-100 p-0">
+          <div className="bg-gradient-to-br from-primary to-violet-500 p-8 text-white">
+            <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-white/20">
+              <CheckCircle2 className="h-8 w-8" />
+            </div>
+            <h3 className="text-2xl font-extrabold tracking-tight">Curso publicado</h3>
+            <p className="mt-2 text-sm text-violet-100">
+              Tu curso ya esta disponible para tus estudiantes.
+            </p>
+          </div>
+          <div className="space-y-4 p-6">
+            <div className="rounded-xl bg-violet-50 p-4 text-sm text-violet-900">
+              Comparte el curso y sigue creando nuevas experiencias de aprendizaje.
+            </div>
+            <DialogFooter className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setPublishedSuccessOpen(false)}
+                className="w-full rounded-full sm:w-auto"
+              >
+                Cerrar
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  setPublishedSuccessOpen(false);
+                  setCreateOpen(true);
+                }}
+                className="w-full rounded-full sm:w-auto"
+              >
+                Crear otro
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
 

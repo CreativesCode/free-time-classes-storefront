@@ -28,8 +28,8 @@ export default function TutorCoursesCreatePage() {
   }
 
   return (
-    <div className="max-w-screen-2xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-      <h1 className="text-2xl font-bold text-primary-800 mb-6">{t("title")}</h1>
+    <div className="mx-auto max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <h1 className="mb-4 text-xl font-bold text-primary-800 sm:text-2xl">{t("title")}</h1>
       <TutorCoursesManager tutorId={user.id} />
     </div>
   );
