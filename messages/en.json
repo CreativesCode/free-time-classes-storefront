@@ -28,6 +28,23 @@
   "register": {
     "title": "Register",
     "description": "Create your account to get started",
+    "lumina": {
+      "badge": "Start your journey",
+      "headline": "Unleash your <accent>creative</accent> potential.",
+      "editorial": "Join a community of learners exploring workshops in art, tech, and design.",
+      "featureMentors": "Top tutors",
+      "featureFlexible": "Flexible pace",
+      "stepLabel": "Step 1 of 1",
+      "whoAreYou": "Tell us who you are",
+      "roleStudentDesc": "Access courses and workshops from expert tutors.",
+      "roleTutorDesc": "Share your skills and grow your income.",
+      "roleBothDesc": "Learn and teach on the same account.",
+      "secureBadge": "Secure registration",
+      "submitCta": "Create account",
+      "mobileHeadline": "Begin your <accent>journey</accent>.",
+      "mobileSubtitle": "Choose how you'll use FreeTime and set up your sign-in details.",
+      "backAria": "Go back"
+    },
     "email": "Email",
     "password": "Password",
     "input": {

@@ -28,6 +28,23 @@
   "register": {
     "title": "Registrarse",
     "description": "Crea tu cuenta para comenzar",
+    "lumina": {
+      "badge": "Comienza tu camino",
+      "headline": "Desata tu potencial <accent>creativo</accent>.",
+      "editorial": "Únete a una comunidad de personas que aprenden con talleres de arte, tecnología y diseño.",
+      "featureMentors": "Tutores destacados",
+      "featureFlexible": "Ritmo flexible",
+      "stepLabel": "Paso 1 de 1",
+      "whoAreYou": "Cuéntanos quién eres",
+      "roleStudentDesc": "Accede a cursos y talleres con tutores expertos.",
+      "roleTutorDesc": "Comparte tus habilidades y haz crecer tus ingresos.",
+      "roleBothDesc": "Aprende y enseña con la misma cuenta.",
+      "secureBadge": "Registro seguro",
+      "submitCta": "Crear cuenta",
+      "mobileHeadline": "Comienza tu <accent>aventura</accent>.",
+      "mobileSubtitle": "Elige cómo usarás FreeTime y configura tu acceso.",
+      "backAria": "Volver"
+    },
     "email": "Correo Electrónico",
     "password": "Contraseña",
     "input": {
