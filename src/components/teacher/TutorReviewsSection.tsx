@@ -24,14 +24,16 @@ export default function TutorReviewsSection() {
   const [respondingReviewId, setRespondingReviewId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user?.id) return;
+    const userId = user?.id;
+    if (!userId) return;
 
     let cancelled = false;
 
     async function load() {
+      if (!userId) return;
       setLoading(true);
       try {
-        const data = await getReviewsByTutor(user!.id, 8);
+        const data = await getReviewsByTutor(userId, 8);
         if (cancelled) return;
         setReviews(data);
 

@@ -667,8 +667,8 @@ export default function TutorDashboardPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm italic text-slate-600">
-                "Recuerda enviar materiales de apoyo al menos 24 horas antes para mejorar el
-                engagement en tus clases."
+                &quot;Recuerda enviar materiales de apoyo al menos 24 horas antes para mejorar el
+                engagement en tus clases.&quot;
               </p>
               <Button variant="ghost" className="w-full justify-center text-violet-700">
                 Ver mas consejos

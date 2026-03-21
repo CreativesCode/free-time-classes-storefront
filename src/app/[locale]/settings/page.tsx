@@ -126,7 +126,7 @@ function SettingsPage() {
     } else {
       setProfileVisibility("public");
     }
-  }, [user?.profile_visibility]);
+  }, [user]);
 
   const handleUpdateProfileVisibility = async (value: "public" | "booking_only") => {
     if (!user?.id) return;
@@ -334,6 +334,7 @@ function SettingsPage() {
   }
 
   if (!user) return null;
+  const displayName = user.username || user.email || "U";
 
   return (
     <div className="relative overflow-hidden bg-[#fef3ff]">
@@ -405,10 +406,10 @@ function SettingsPage() {
             <CardHeader>
               <div className="mb-2 flex items-center gap-3 rounded-lg bg-[#faecff] p-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-lg font-bold text-primary">
-                  {(user.full_name || user.email || "U").charAt(0).toUpperCase()}
+                  {displayName.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-zinc-900">{user.full_name || t("accountTab")}</p>
+                  <p className="text-sm font-semibold text-zinc-900">{displayName || t("accountTab")}</p>
                   <p className="text-xs text-zinc-600">{user.email}</p>
                 </div>
               </div>
