@@ -277,7 +277,7 @@ export default function BookingsPage() {
   };
 
   return (
-    <div className="relative mx-auto w-full max-w-screen-2xl px-4 pb-10 pt-6 sm:px-6 lg:px-8 lg:pt-10">
+    <div className="relative mx-auto w-full max-w-screen-2xl px-4 pb-28 pt-6 sm:px-6 md:pb-12 lg:px-8 lg:pt-10">
       <div className="pointer-events-none absolute -top-16 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-primary/15 blur-3xl" />
 
       <section className="relative overflow-hidden rounded-[2rem] border border-primary/10 bg-gradient-to-br from-white via-violet-50/60 to-fuchsia-50/50 p-5 shadow-[0_18px_60px_rgba(112,42,225,0.08)] md:p-8">
@@ -288,7 +288,13 @@ export default function BookingsPage() {
               <Calendar className="h-3.5 w-3.5" />
               FreeTime Lumina
             </div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 md:text-4xl">
+            <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 md:hidden">
+              {t("title")}
+            </h1>
+            <h1 className="hidden text-4xl font-extrabold tracking-tight text-zinc-900 md:block lg:hidden">
+              {t("title")}
+            </h1>
+            <h1 className="hidden text-5xl font-extrabold tracking-tight text-zinc-900 lg:block">
               {t("title")}
             </h1>
             <p className="max-w-2xl text-sm text-zinc-600 md:text-base">{t("subtitle")}</p>
@@ -573,6 +579,27 @@ export default function BookingsPage() {
           <div className="flex items-center gap-2">
             <CheckCircle className="h-4 w-4 text-emerald-500" />
             Reserva y pago se procesan de forma segura.
+          </div>
+        </div>
+      )}
+
+      {!loading && !error && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-violet-100 bg-white/90 px-4 pb-4 pt-3 backdrop-blur md:hidden">
+          <div className="mx-auto flex w-full max-w-md items-center justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-violet-500">
+                Reservas visibles
+              </p>
+              <p className="text-lg font-black text-violet-900">{filteredBookings.length}</p>
+            </div>
+            <Button
+              onClick={() => router.push(`/${locale}/courses`)}
+              className="rounded-full px-5"
+              size="sm"
+            >
+              <BookOpen className="h-4 w-4" />
+              {t("exploreCourses")}
+            </Button>
           </div>
         </div>
       )}

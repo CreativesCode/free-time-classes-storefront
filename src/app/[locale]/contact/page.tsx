@@ -3,6 +3,7 @@ import {
   ArrowRight,
   BookOpen,
   CreditCard,
+  ExternalLink,
   LifeBuoy,
   MessageCircle,
   MonitorSmartphone,
@@ -89,17 +90,24 @@ const faqItems = [
 
 export default function ContactPage() {
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-10 sm:px-6 md:pb-20 md:pt-14 lg:px-8 lg:pt-20">
+    <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-8 sm:px-6 md:pb-20 md:pt-12 lg:px-8 lg:pt-16">
       <section className="mb-10 md:mb-14 lg:mb-20">
         <div className="max-w-4xl">
           <p className="mb-3 inline-flex rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-xs font-semibold tracking-wide text-primary">
             Centro de ayuda
           </p>
-          <h1 className="text-balance text-4xl font-black tracking-tight text-foreground md:text-5xl lg:text-6xl">
+          <h1 className="text-balance text-3xl font-black tracking-tight text-foreground sm:text-4xl md:hidden">
+            ¿Cómo te ayudamos hoy?
+          </h1>
+          <h1 className="hidden text-balance text-5xl font-black tracking-tight text-foreground md:block lg:hidden">
+            ¿Cómo podemos
+            <span className="text-primary"> guiarte</span> hoy?
+          </h1>
+          <h1 className="hidden text-balance text-6xl font-black tracking-tight text-foreground lg:block">
             ¿Cómo podemos ayudarte hoy?
           </h1>
           <p className="mt-4 max-w-3xl text-sm text-muted-foreground md:text-base lg:text-lg">
-            Busca en nuestra base de conocimiento o explora las categorías para
+            Busca en nuestra base de conocimiento o explora categorías para
             resolver dudas sobre clases, pagos y tu cuenta.
           </p>
         </div>
@@ -217,6 +225,13 @@ export default function ContactPage() {
             >
               Llamar ahora
             </a>
+            <Link
+              href="/messages"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-primary-foreground/30 px-6 py-3 text-sm font-bold text-primary-foreground transition hover:bg-primary-foreground/10 md:hidden"
+            >
+              Abrir chat
+              <ExternalLink className="h-4 w-4" />
+            </Link>
           </div>
         </div>
       </section>
@@ -242,6 +257,42 @@ export default function ContactPage() {
             Ir al panel de soporte
           </Link>
         </div>
+      </section>
+
+      <section className="mt-8 grid gap-4 md:mt-10 md:grid-cols-2">
+        <article className="rounded-3xl bg-surface-container-low p-5 md:p-7">
+          <h3 className="text-lg font-bold tracking-tight md:text-xl">
+            Estado de ticket
+          </h3>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Si ya abriste un caso, consulta su estado en tiempo real desde tu
+            panel.
+          </p>
+          <Link
+            href="/settings"
+            className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary"
+          >
+            Revisar tickets
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </article>
+
+        <article className="rounded-3xl border border-primary/15 bg-primary/5 p-5 md:p-7">
+          <h3 className="text-lg font-bold tracking-tight md:text-xl">
+            Soporte para tutores
+          </h3>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Ayuda dedicada para publicación de cursos, disponibilidad y pagos
+            de tutor.
+          </p>
+          <Link
+            href="/tutor/dashboard"
+            className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary"
+          >
+            Ir al panel tutor
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </article>
       </section>
     </main>
   );

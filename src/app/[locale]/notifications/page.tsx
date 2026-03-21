@@ -1,7 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Bell, CalendarCheck2, CheckCircle2, Mail, ReceiptText } from "lucide-react";
+import {
+  Bell,
+  CalendarCheck2,
+  CheckCircle2,
+  Mail,
+  Sparkles,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "@/i18n/translations";
@@ -77,14 +83,14 @@ export default function NotificationsPage() {
       <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-20 -left-10 h-64 w-64 rounded-full bg-purple-300/20 blur-3xl" />
 
-      <main className="relative mx-auto w-full max-w-5xl px-4 pb-10 pt-6 sm:px-6 md:pt-8">
-        <section className="mb-6 rounded-3xl border border-primary/10 bg-white/80 p-4 shadow-[0_20px_60px_-35px_rgba(112,42,225,0.45)] backdrop-blur-md sm:p-6">
+      <main className="relative mx-auto w-full max-w-5xl px-4 pb-10 pt-6 sm:px-6 md:pt-8 lg:pt-10">
+        <section className="mb-6 rounded-3xl border border-primary/10 bg-white/80 p-4 shadow-[0_20px_60px_-35px_rgba(112,42,225,0.45)] backdrop-blur-md sm:p-6 lg:mb-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div className="space-y-2">
               <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
                 {t("badge")}
               </span>
-              <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl md:text-4xl">
+              <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl md:text-4xl lg:text-5xl">
                 {t("title")}
               </h1>
               <p className="max-w-xl text-sm text-zinc-600 sm:text-base">{t("subtitle")}</p>
@@ -113,8 +119,11 @@ export default function NotificationsPage() {
                   <article
                     key={item.id}
                     className={cn(
-                      "rounded-2xl border bg-white p-4 shadow-sm transition-all sm:p-5",
+                      "rounded-2xl border-l-4 border bg-white p-4 shadow-sm transition-all sm:p-5 lg:p-6",
                       "md:hover:-translate-y-0.5 md:hover:shadow-md",
+                      item.type === "booking" && "border-l-primary",
+                      item.type === "message" && "border-l-violet-500",
+                      item.type === "payment" && "border-l-emerald-500/60",
                       item.isNew ? "border-primary/25" : "border-zinc-100",
                     )}
                   >
@@ -142,12 +151,16 @@ export default function NotificationsPage() {
                         {(item.ctaLabel || item.secondaryCtaLabel) && (
                           <div className="mt-4 flex flex-wrap gap-2">
                             {item.ctaLabel && (
-                              <Button size="sm" className="rounded-full">
+                              <Button size="sm" className="rounded-full px-4">
                                 {item.ctaLabel}
                               </Button>
                             )}
                             {item.secondaryCtaLabel && (
-                              <Button size="sm" variant="secondary" className="rounded-full">
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                className="rounded-full px-4"
+                              >
                                 {item.secondaryCtaLabel}
                               </Button>
                             )}
@@ -162,8 +175,15 @@ export default function NotificationsPage() {
           ))}
         </div>
 
+        <div className="mt-8 flex flex-col items-center justify-center py-3 text-center md:mt-10">
+          <div className="mb-2 h-10 w-px bg-gradient-to-b from-primary/60 to-transparent" />
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">
+            Fin de actualizaciones recientes
+          </p>
+        </div>
+
         <section className="mt-8 rounded-3xl bg-gradient-to-br from-primary to-violet-700 p-6 text-white shadow-[0_24px_50px_-30px_rgba(112,42,225,0.8)] sm:p-8">
-          <div className="max-w-sm space-y-3">
+          <div className="max-w-sm space-y-3 md:max-w-lg">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/80">{t("promoTag")}</p>
             <h3 className="text-2xl font-extrabold leading-tight">{t("promoTitle")}</h3>
             <p className="text-sm text-white/80">{t("promoDescription")}</p>
@@ -171,7 +191,7 @@ export default function NotificationsPage() {
               variant="secondary"
               className="rounded-full bg-white text-primary hover:bg-white/90"
             >
-              <ReceiptText className="mr-2 h-4 w-4" />
+              <Sparkles className="mr-2 h-4 w-4" />
               {t("promoCta")}
             </Button>
           </div>
