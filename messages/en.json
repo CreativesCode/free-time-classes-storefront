@@ -1117,6 +1117,18 @@
       "send": "Send"
     }
   },
+  "notificationsPage": {
+    "badge": "Stay updated",
+    "title": "Notification Center",
+    "subtitle": "Review your latest messages, bookings, and payments in one place.",
+    "markAllAsRead": "Mark all as read",
+    "groupToday": "Today",
+    "groupYesterday": "Yesterday",
+    "promoTag": "Mentorship Pro",
+    "promoTitle": "Level up your learning journey",
+    "promoDescription": "Unlock premium 1:1 sessions and exclusive editorial resources.",
+    "promoCta": "View plans"
+  },
   "dashboard": {
     "welcome": "Welcome back, {name}!",
     "welcomeSubtitle": "Here's an overview of your activity",
