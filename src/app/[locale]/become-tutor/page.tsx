@@ -7,20 +7,19 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-  CardDescription,
+  CardTitle
 } from "@/components/ui/card";
 import {
-  GraduationCap,
-  Calendar,
-  DollarSign,
-  Users,
-  CheckCircle,
   ArrowRight,
-  Clock,
-  Star,
+  BadgeCheck,
   BookOpen,
-  Shield,
+  BriefcaseBusiness,
+  CircleDollarSign,
+  Clock3,
+  CheckCircle,
+  LinkIcon,
+  Sparkles,
+  Users
 } from "lucide-react";
 import Link from "next/link";
 
@@ -60,140 +59,198 @@ export default function BecomeTutorPage() {
     );
   }
 
-  const steps = [
+  const highlights = [
     {
-      icon: BookOpen,
-      title: t("step1Title"),
-      description: t("step1Description"),
-    },
-    {
-      icon: Calendar,
-      title: t("step2Title"),
-      description: t("step2Description"),
-    },
-    {
-      icon: Users,
-      title: t("step3Title"),
-      description: t("step3Description"),
-    },
-  ];
-
-  const benefits = [
-    {
-      icon: DollarSign,
-      title: t("benefit1Title"),
-      description: t("benefit1Description"),
-    },
-    {
-      icon: Clock,
-      title: t("benefit2Title"),
-      description: t("benefit2Description"),
-    },
-    {
-      icon: Star,
+      icon: BadgeCheck,
       title: t("benefit3Title"),
       description: t("benefit3Description"),
     },
     {
-      icon: Shield,
-      title: t("benefit4Title"),
-      description: t("benefit4Description"),
+      icon: CircleDollarSign,
+      title: t("benefit1Title"),
+      description: t("benefit1Description"),
     },
   ];
 
+  const steps = [
+    { icon: BookOpen, title: t("step1Title"), description: t("step1Description") },
+    { icon: Clock3, title: t("step2Title"), description: t("step2Description") },
+    { icon: Users, title: t("step3Title"), description: t("step3Description") },
+  ];
+
   return (
-    <div className="min-h-screen">
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-background py-20 sm:py-28 lg:py-32">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(45%_40%_at_50%_60%,hsl(var(--primary)/0.12),transparent)]" />
-        <div className="mx-auto max-w-screen-xl px-4 text-center sm:px-6 lg:px-8">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10">
-            <GraduationCap className="h-10 w-10 text-primary" />
+    <div className="min-h-screen bg-[radial-gradient(80%_90%_at_10%_0%,hsl(var(--primary)/0.10),transparent_55%),radial-gradient(80%_90%_at_100%_20%,hsl(var(--primary)/0.08),transparent_60%)]">
+      <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 pb-16 pt-10 sm:px-6 md:gap-10 md:px-8 md:pt-14 lg:flex-row lg:gap-14 lg:px-10 lg:pt-20">
+        <section className="w-full lg:sticky lg:top-24 lg:h-fit lg:w-5/12">
+          <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
+            Expert onboarding
           </div>
-          <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
+          <h1 className="mt-5 text-balance text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
             {t("title")}
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground sm:text-xl">
+          <p className="mt-4 max-w-xl text-pretty text-base text-muted-foreground md:text-lg">
             {t("subtitle")}
           </p>
-          <div className="mt-10">
-            <HeroCta user={user} locale={locale} t={t} />
-          </div>
-        </div>
-      </section>
 
-      {/* How it works */}
-      <section className="py-20 sm:py-24">
-        <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-center text-3xl font-bold sm:text-4xl">
-            {t("howItWorks")}
-          </h2>
-          <div className="mt-14 grid gap-8 sm:grid-cols-3">
-            {steps.map((step, i) => (
-              <div key={i} className="relative text-center">
-                <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-lg">
-                  <span className="text-xl font-bold">{i + 1}</span>
-                </div>
-                <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                  <step.icon className="h-5 w-5 text-primary" />
-                </div>
-                <h3 className="text-lg font-semibold">{step.title}</h3>
-                <p className="mt-2 text-muted-foreground">
-                  {step.description}
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {highlights.map((item) => (
+              <article
+                key={item.title}
+                className="rounded-lg border border-border/50 bg-background/75 p-4 backdrop-blur-sm"
+              >
+                <item.icon className="h-5 w-5 text-primary" />
+                <h3 className="mt-2 text-sm font-semibold">{item.title}</h3>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  {item.description}
                 </p>
-                {i < steps.length - 1 && (
-                  <ArrowRight className="absolute -right-4 top-8 hidden h-6 w-6 text-muted-foreground/40 sm:block" />
-                )}
+              </article>
+            ))}
+          </div>
+
+          <div className="mt-8 hidden gap-3 md:flex md:flex-col">
+            {steps.map((step, index) => (
+              <div
+                key={step.title}
+                className="flex items-start gap-3 rounded-xl border border-border/50 bg-background/65 p-3 backdrop-blur-sm"
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                  {index + 1}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-semibold">
+                    <step.icon className="h-4 w-4 text-primary" />
+                    {step.title}
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {step.description}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Benefits */}
-      <section className="bg-muted/40 py-20 sm:py-24">
-        <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-center text-3xl font-bold sm:text-4xl">
-            {t("benefits")}
-          </h2>
-          <div className="mt-14 grid gap-6 sm:grid-cols-2">
-            {benefits.map((benefit, i) => (
-              <Card
-                key={i}
-                className="border-0 bg-background shadow-md transition-shadow hover:shadow-lg"
+        <section className="w-full lg:w-7/12">
+          <div className="rounded-3xl border border-border/60 bg-background/95 p-5 shadow-[0_24px_80px_rgba(112,42,225,0.10)] backdrop-blur-sm sm:p-8 md:p-10">
+            <form className="space-y-7">
+              <div className="space-y-4">
+                <div className="border-l-4 border-primary pl-4">
+                  <h2 className="text-xl font-bold tracking-tight md:text-2xl">
+                    Perfil profesional
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Cuéntanos sobre tu área de especialización.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <InputField
+                    icon={BookOpen}
+                    label="Materia principal"
+                    placeholder="Ej. Dirección creativa"
+                  />
+                  <InputField
+                    icon={BriefcaseBusiness}
+                    label="Experiencia"
+                    placeholder="Selecciona experiencia"
+                  />
+                </div>
+                <InputField
+                  icon={LinkIcon}
+                  label="Portfolio URL"
+                  placeholder="https://tuportfolio.com"
+                />
+              </div>
+
+              <div className="space-y-4">
+                <div className="border-l-4 border-primary pl-4">
+                  <h2 className="text-xl font-bold tracking-tight md:text-2xl">
+                    Tarifas por sesión
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Configura tu precio estándar por hora.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-[1.2fr_1fr]">
+                  <InputField
+                    icon={CircleDollarSign}
+                    label="Tarifa por sesión (USD)"
+                    placeholder="95.00 / hora"
+                  />
+                  <div className="flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/10 p-4 text-xs leading-relaxed text-primary/90">
+                    <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
+                    Los tutores con tu nivel suelen cobrar entre $80 y $140 para
+                    esta materia.
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-border/60 bg-muted/40 p-4 text-xs text-muted-foreground">
+                <div className="flex items-start gap-3">
+                  <input
+                    className="mt-0.5 h-4 w-4 rounded border-primary/30 text-primary focus:ring-primary"
+                    type="checkbox"
+                    defaultChecked
+                  />
+                  <p>
+                    Acepto los términos de servicio para tutores y confirmo que
+                    cuento con las credenciales necesarias para impartir clases.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <HeroCta user={user} locale={locale} t={t} />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="h-12 rounded-full px-8"
+                >
+                  Guardar avance
+                </Button>
+              </div>
+            </form>
+
+            <p className="mt-8 text-center text-sm text-muted-foreground">
+              {user ? "¿Quieres revisar tus datos?" : "¿Ya tienes cuenta?"}{" "}
+              <Link
+                href={user ? `/${locale}/settings` : `/${locale}/login`}
+                className="font-semibold text-primary hover:underline"
               >
-                <CardHeader className="flex-row items-start gap-4 space-y-0">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-                    <benefit.icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">{benefit.title}</CardTitle>
-                    <CardDescription className="mt-1">
-                      {benefit.description}
-                    </CardDescription>
-                  </div>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="py-20 sm:py-24">
-        <div className="mx-auto max-w-screen-xl px-4 text-center sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl rounded-2xl bg-gradient-to-br from-primary to-primary/80 px-8 py-14 text-primary-foreground shadow-xl sm:px-14">
-            <h2 className="text-3xl font-bold sm:text-4xl">{t("cta")}</h2>
-            <p className="mx-auto mt-4 max-w-lg opacity-90">
-              {t("ctaSubtext")}
+                {user ? "Ir a configuración" : "Inicia sesión"}
+              </Link>
             </p>
-            <div className="mt-8">
-              <HeroCta user={user} locale={locale} t={t} variant="secondary" />
-            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
     </div>
+  );
+}
+
+function InputField({
+  icon: Icon,
+  label,
+  placeholder,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  placeholder: string;
+}) {
+  return (
+    <label className="space-y-2">
+      <span className="block pl-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        {label}
+      </span>
+      <div className="group relative">
+        <Icon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
+        <input
+          readOnly
+          value=""
+          placeholder={placeholder}
+          className="h-12 w-full rounded-xl border border-transparent bg-muted/60 pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground/80 focus:border-primary/20 focus:outline-none focus:ring-2 focus:ring-primary/20"
+        />
+      </div>
+    </label>
   );
 }
 
@@ -201,40 +258,28 @@ function HeroCta({
   user,
   locale,
   t,
-  variant = "default",
 }: {
   user: ReturnType<typeof useAuth>["user"];
   locale: string;
   t: ReturnType<typeof useTranslations>;
-  variant?: "default" | "secondary";
 }) {
   if (user) {
     return (
-      <div className="flex flex-col items-center gap-3">
-        <Button size="lg" variant={variant} asChild>
-          <Link href={`/${locale}/settings`}>
-            {t("upgradeAccount")}
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
-        </Button>
-        <p className={`text-sm ${variant === "secondary" ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
-          {t("upgradeDescription")}
-        </p>
-      </div>
+      <Button asChild className="h-12 flex-1 rounded-full px-8">
+        <Link href={`/${locale}/settings`}>
+          {t("upgradeAccount")}
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Link>
+      </Button>
     );
   }
 
   return (
-    <div className="flex flex-col items-center gap-3">
-      <Button size="lg" variant={variant} asChild>
-        <Link href={`/${locale}/register`}>
-          {t("registerNow")}
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Link>
-      </Button>
-      <p className={`text-sm ${variant === "secondary" ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
-        {t("loginRequired")}
-      </p>
-    </div>
+    <Button asChild className="h-12 flex-1 rounded-full px-8">
+      <Link href={`/${locale}/register`}>
+        {t("registerNow")}
+        <ArrowRight className="ml-2 h-4 w-4" />
+      </Link>
+    </Button>
   );
 }
