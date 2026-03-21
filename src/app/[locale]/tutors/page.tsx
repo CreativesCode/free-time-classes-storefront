@@ -237,33 +237,38 @@ export default function TutorsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary-50/40 to-gray-50">
-      {/* Hero / Header */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 text-white">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')] opacity-30" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
-          <div className="text-center max-w-3xl mx-auto space-y-6">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+    <div className="min-h-screen bg-[#fdf7ff]">
+      <section className="relative overflow-hidden border-b border-violet-100 bg-gradient-to-br from-violet-700 via-violet-700 to-fuchsia-600 text-white">
+        <div className="pointer-events-none absolute -left-28 top-8 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
+        <div className="pointer-events-none absolute -right-24 bottom-0 h-64 w-64 rounded-full bg-fuchsia-300/20 blur-3xl" />
+        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 md:py-16 lg:px-8 lg:py-20">
+          <div className="mx-auto max-w-4xl text-center">
+            <span className="inline-flex rounded-full border border-white/25 bg-white/10 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-50">
+              FreeTime Lumina
+            </span>
+            <h1 className="mt-5 text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl">
               {t("title")}
             </h1>
-            <p className="text-lg md:text-xl text-primary-100">
+            <p className="mx-auto mt-4 max-w-2xl text-sm text-violet-100 sm:text-base md:text-lg">
               {t("subtitle")}
             </p>
+          </div>
 
-            <div className="relative max-w-xl mx-auto mt-8">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <div className="mx-auto mt-8 max-w-2xl md:mt-10">
+            <div className="relative rounded-full border border-white/20 bg-white/95 shadow-[0_25px_80px_-25px_rgba(76,29,149,0.8)]">
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-violet-400" />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t("searchPlaceholder")}
-                className="pl-12 pr-10 h-14 rounded-full bg-white text-gray-900 border-0 shadow-xl text-base placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-white/50"
+                className="h-12 rounded-full border-0 bg-transparent pl-12 pr-10 text-sm text-slate-900 placeholder:text-slate-400 focus-visible:ring-0 md:h-14 md:text-base"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-4 w-4 md:h-5 md:w-5" />
                 </button>
               )}
             </div>
@@ -271,48 +276,49 @@ export default function TutorsPage() {
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Filters Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3 flex-wrap">
-            <Button
-              variant="outline"
-              onClick={() => setFiltersOpen(!filtersOpen)}
-              className="gap-2"
-            >
-              <Filter className="h-4 w-4" />
-              {t("filters")}
-              <ChevronDown
-                className={`h-4 w-4 transition-transform ${filtersOpen ? "rotate-180" : ""}`}
-              />
-            </Button>
-
-            {hasActiveFilters && (
+      <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 md:py-8 lg:px-8">
+        <div className="rounded-3xl border border-violet-100/80 bg-white/90 p-4 shadow-[0_20px_50px_-35px_rgba(112,42,225,0.6)] backdrop-blur md:p-5">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-wrap items-center gap-2.5">
               <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearFilters}
-                className="text-red-600 hover:text-red-700 gap-1"
+                variant="outline"
+                onClick={() => setFiltersOpen(!filtersOpen)}
+                className="h-10 gap-2 rounded-full border-violet-200 bg-violet-50/70 px-4 text-violet-700 hover:bg-violet-100 hover:text-violet-800"
               >
-                <X className="h-3.5 w-3.5" />
-                {t("clearFilters")}
+                <Filter className="h-4 w-4" />
+                {t("filters")}
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform ${filtersOpen ? "rotate-180" : ""}`}
+                />
               </Button>
-            )}
-          </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">{t("sortBy")}:</span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer"
-            >
-              <option value="relevance">{t("sortRelevance")}</option>
-              <option value="rating_desc">{t("sortRatingDesc")}</option>
-              <option value="price_asc">{t("sortPriceAsc")}</option>
-              <option value="price_desc">{t("sortPriceDesc")}</option>
-              <option value="experience_desc">{t("sortExperienceDesc")}</option>
-            </select>
+              {hasActiveFilters && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="h-10 rounded-full px-3 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                >
+                  <X className="mr-1 h-3.5 w-3.5" />
+                  {t("clearFilters")}
+                </Button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-slate-500">{t("sortBy")}:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className="h-10 rounded-full border border-violet-200 bg-white px-4 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400"
+              >
+                <option value="relevance">{t("sortRelevance")}</option>
+                <option value="rating_desc">{t("sortRatingDesc")}</option>
+                <option value="price_asc">{t("sortPriceAsc")}</option>
+                <option value="price_desc">{t("sortPriceDesc")}</option>
+                <option value="experience_desc">{t("sortExperienceDesc")}</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -322,7 +328,7 @@ export default function TutorsPage() {
             filtersOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
           }`}
         >
-          <Card className="border-primary-100">
+          <Card className="rounded-3xl border-violet-100/80 bg-white/95">
             <CardContent className="p-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Subject filter */}
@@ -333,7 +339,7 @@ export default function TutorsPage() {
                   <select
                     value={selectedSubject}
                     onChange={(e) => setSelectedSubject(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full rounded-xl border border-violet-100 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
                   >
                     <option value="">{t("allSubjects")}</option>
                     {subjects.map((s) => (
@@ -352,7 +358,7 @@ export default function TutorsPage() {
                   <select
                     value={minRating}
                     onChange={(e) => setMinRating(e.target.value)}
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full rounded-xl border border-violet-100 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
                   >
                     <option value="">{t("anyRating")}</option>
                     <option value="4.5">4.5+ {t("stars")}</option>
@@ -395,7 +401,7 @@ export default function TutorsPage() {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as SortOption)}
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full rounded-xl border border-violet-100 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
                   >
                     <option value="relevance">{t("sortRelevance")}</option>
                     <option value="rating_desc">{t("sortRatingDesc")}</option>
@@ -411,7 +417,7 @@ export default function TutorsPage() {
 
         {/* Results count */}
         {!loading && !error && (
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-slate-500">
             {t("resultsCount", { count: filteredTutors.length })}
           </p>
         )}
@@ -454,7 +460,7 @@ export default function TutorsPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 md:gap-5 lg:grid-cols-3">
             {filteredTutors.map((tutor) => {
               const user = tutor.user;
               const avatarUrl = resolveAvatar(user?.profile_picture);
@@ -464,15 +470,13 @@ export default function TutorsPage() {
               return (
                 <Card
                   key={tutor.id}
-                  className="group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden border-gray-100"
+                  className="group overflow-hidden rounded-3xl border-violet-100/80 bg-white shadow-[0_25px_60px_-45px_rgba(88,28,135,0.7)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_30px_70px_-35px_rgba(112,42,225,0.55)]"
                 >
-                  {/* Top accent bar */}
-                  <div className="h-1.5 bg-gradient-to-r from-primary-500 to-primary-600" />
+                  <div className="h-24 bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-500 md:h-28" />
 
-                  <CardContent className="p-6 space-y-4">
-                    {/* Avatar + basic info */}
+                  <CardContent className="-mt-10 space-y-4 p-4 md:-mt-12 md:p-5 lg:p-6">
                     <div className="flex items-start gap-4">
-                      <Avatar className="h-16 w-16 ring-2 ring-primary-100 ring-offset-2 shrink-0">
+                      <Avatar className="h-16 w-16 shrink-0 rounded-2xl ring-4 ring-white md:h-20 md:w-20">
                         {avatarUrl ? (
                           <AvatarImage
                             src={avatarUrl}
@@ -480,7 +484,7 @@ export default function TutorsPage() {
                           />
                         ) : null}
                         <AvatarFallback
-                          className="text-white text-lg font-semibold"
+                          className="rounded-2xl text-lg font-semibold text-white"
                           style={{
                             backgroundColor: getAvatarColor(user?.username ?? ""),
                           }}
@@ -490,26 +494,24 @@ export default function TutorsPage() {
                       </Avatar>
 
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold text-lg truncate text-gray-900">
+                        <h3 className="truncate text-lg font-bold text-slate-900 md:text-xl">
                           {user?.username ?? "—"}
                         </h3>
 
-                        {/* Rating */}
-                        <div className="flex items-center gap-1.5 mt-1">
+                        <div className="mt-1 flex items-center gap-1.5">
                           <div className="flex items-center">{renderStars(rating)}</div>
-                          <span className="text-sm font-medium text-gray-700">
+                          <span className="text-sm font-semibold text-slate-700">
                             {rating.toFixed(1)}
                           </span>
                           {tutor.total_reviews ? (
-                            <span className="text-xs text-gray-400">
+                            <span className="text-xs text-slate-400">
                               ({t("reviewsCount", { count: tutor.total_reviews })})
                             </span>
                           ) : null}
                         </div>
 
-                        {/* Country */}
                         {user?.country && (
-                          <div className="flex items-center gap-1 mt-1.5 text-sm text-gray-500">
+                          <div className="mt-1.5 flex items-center gap-1 text-sm text-slate-500">
                             <MapPin className="h-3.5 w-3.5" />
                             <span className="truncate">{user.country}</span>
                           </div>
@@ -517,52 +519,49 @@ export default function TutorsPage() {
                       </div>
                     </div>
 
-                    {/* Subjects badges */}
                     {tutor.subjects.length > 0 && (
                       <div className="flex flex-wrap gap-1.5">
                         {tutor.subjects.slice(0, 3).map((s) => (
                           <Badge
                             key={s.id}
                             variant="secondary"
-                            className="text-xs bg-primary-50 text-primary-700 border-primary-100"
+                            className="rounded-full border-violet-100 bg-violet-50 px-3 py-1 text-xs text-violet-700"
                           >
                             {s.name}
                           </Badge>
                         ))}
                         {tutor.subjects.length > 3 && (
-                          <Badge variant="outline" className="text-xs text-gray-500">
+                          <Badge variant="outline" className="rounded-full text-xs text-slate-500">
                             +{tutor.subjects.length - 3}
                           </Badge>
                         )}
                       </div>
                     )}
 
-                    {/* Stats row */}
-                    <div className="flex items-center gap-4 text-sm text-gray-600 pt-1">
+                    <div className="grid grid-cols-2 gap-2 rounded-2xl bg-violet-50/70 p-3 text-sm text-slate-700">
                       {tutor.experience_years != null && tutor.experience_years > 0 && (
                         <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4 text-gray-400" />
+                          <Clock className="h-4 w-4 text-violet-500" />
                           <span>
                             {t("yearsExperience", { count: tutor.experience_years })}
                           </span>
                         </div>
                       )}
                       {tutor.coursesCount > 0 && (
-                        <div className="flex items-center gap-1">
-                          <BookOpen className="h-4 w-4 text-gray-400" />
+                        <div className="flex items-center gap-1 justify-self-end">
+                          <BookOpen className="h-4 w-4 text-violet-500" />
                           <span>{t("coursesCount", { count: tutor.coursesCount })}</span>
                         </div>
                       )}
                     </div>
 
-                    {/* Price + CTA */}
-                    <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                    <div className="flex items-center justify-between border-t border-violet-100 pt-3">
                       {tutor.hourly_rate != null ? (
                         <div>
-                          <span className="text-2xl font-bold text-primary-700">
+                          <span className="text-2xl font-extrabold tracking-tight text-violet-700">
                             ${tutor.hourly_rate}
                           </span>
-                          <span className="text-sm text-gray-400 ml-0.5">
+                          <span className="ml-0.5 text-sm text-slate-400">
                             {t("perHour")}
                           </span>
                         </div>
@@ -573,7 +572,7 @@ export default function TutorsPage() {
                       <Link href={`/${locale}/courses?tutor=${tutor.id}`}>
                         <Button
                           size="sm"
-                          className="rounded-full px-5 gap-1.5 group-hover:shadow-md transition-shadow"
+                          className="gap-1.5 rounded-full bg-violet-600 px-5 text-white transition-colors hover:bg-violet-700"
                         >
                           {t("viewProfile")}
                         </Button>
