@@ -6,13 +6,6 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getPublicUrl } from "@/lib/supabase/storage";
 import { getAvatarColor } from "@/lib/utils";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -78,11 +71,11 @@ const STATUS_CONFIG: Record<
   BookingStatus,
   { color: string; icon: React.ElementType }
 > = {
-  pending: { color: "bg-yellow-100 text-yellow-800 border-yellow-300", icon: Clock },
-  confirmed: { color: "bg-green-100 text-green-800 border-green-300", icon: CheckCircle },
-  completed: { color: "bg-blue-100 text-blue-800 border-blue-300", icon: CheckCircle },
-  cancelled: { color: "bg-red-100 text-red-800 border-red-300", icon: XCircle },
-  rejected: { color: "bg-red-100 text-red-800 border-red-300", icon: XCircle },
+  pending: { color: "border-amber-200 bg-amber-50 text-amber-700", icon: Clock },
+  confirmed: { color: "border-emerald-200 bg-emerald-50 text-emerald-700", icon: CheckCircle },
+  completed: { color: "border-sky-200 bg-sky-50 text-sky-700", icon: CheckCircle },
+  cancelled: { color: "border-rose-200 bg-rose-50 text-rose-700", icon: XCircle },
+  rejected: { color: "border-rose-200 bg-rose-50 text-rose-700", icon: XCircle },
 };
 
 const FILTER_TABS: FilterTab[] = [
@@ -275,36 +268,65 @@ export default function BookingsPage() {
 
   if (!user) return null;
 
-  return (
-    <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 py-8">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-          <BookOpen className="h-5 w-5" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold">{t("title")}</h1>
-          <p className="text-muted-foreground text-sm">{t("subtitle")}</p>
-        </div>
-      </div>
+  const countsByStatus: Record<BookingStatus, number> = {
+    pending: bookings.filter((b) => b.status === "pending").length,
+    confirmed: bookings.filter((b) => b.status === "confirmed").length,
+    completed: bookings.filter((b) => b.status === "completed").length,
+    cancelled: bookings.filter((b) => b.status === "cancelled").length,
+    rejected: bookings.filter((b) => b.status === "rejected").length,
+  };
 
-      {/* Role toggle for dual-role users */}
+  return (
+    <div className="relative mx-auto w-full max-w-screen-2xl px-4 pb-10 pt-6 sm:px-6 lg:px-8 lg:pt-10">
+      <div className="pointer-events-none absolute -top-16 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-primary/15 blur-3xl" />
+
+      <section className="relative overflow-hidden rounded-[2rem] border border-primary/10 bg-gradient-to-br from-white via-violet-50/60 to-fuchsia-50/50 p-5 shadow-[0_18px_60px_rgba(112,42,225,0.08)] md:p-8">
+        <div className="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-primary/10 blur-3xl" />
+        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary">
+              <Calendar className="h-3.5 w-3.5" />
+              FreeTime Lumina
+            </div>
+            <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 md:text-4xl">
+              {t("title")}
+            </h1>
+            <p className="max-w-2xl text-sm text-zinc-600 md:text-base">{t("subtitle")}</p>
+          </div>
+
+          <div className="grid w-full gap-3 sm:grid-cols-3 lg:w-auto lg:min-w-[420px]">
+            <div className="rounded-lg border border-violet-100 bg-white/80 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{t("filterPending")}</p>
+              <p className="mt-1 text-2xl font-black text-violet-700">{countsByStatus.pending}</p>
+            </div>
+            <div className="rounded-lg border border-violet-100 bg-white/80 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{t("filterConfirmed")}</p>
+              <p className="mt-1 text-2xl font-black text-violet-700">{countsByStatus.confirmed}</p>
+            </div>
+            <div className="rounded-lg border border-violet-100 bg-white/80 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{t("filterCompleted")}</p>
+              <p className="mt-1 text-2xl font-black text-violet-700">{countsByStatus.completed}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {isBothRoles && (
-        <div className="flex gap-2 mb-6">
+        <div className="mt-6 flex gap-2 rounded-full border border-violet-100 bg-violet-50/70 p-1.5 w-fit">
           <Button
-            variant={viewRole === "student" ? "default" : "outline"}
+            variant={viewRole === "student" ? "default" : "ghost"}
             size="sm"
             onClick={() => setViewRole("student")}
-            className="flex items-center gap-2"
+            className="rounded-full px-4"
           >
             <User className="h-4 w-4" />
             {t("student")}
           </Button>
           <Button
-            variant={viewRole === "tutor" ? "default" : "outline"}
+            variant={viewRole === "tutor" ? "default" : "ghost"}
             size="sm"
             onClick={() => setViewRole("tutor")}
-            className="flex items-center gap-2"
+            className="rounded-full px-4"
           >
             <BookOpen className="h-4 w-4" />
             {t("tutor")}
@@ -312,9 +334,8 @@ export default function BookingsPage() {
         </div>
       )}
 
-      {/* Filter tabs */}
-      <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
-        <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+      <div className="mt-6 flex items-center gap-2 overflow-x-auto pb-2">
+        <Filter className="h-4 w-4 shrink-0 text-zinc-500" />
         {FILTER_TABS.map((tab) => {
           const filterKey =
             tab === "all"
@@ -332,7 +353,7 @@ export default function BookingsPage() {
               variant={filter === tab ? "default" : "outline"}
               size="sm"
               onClick={() => setFilter(tab)}
-              className="whitespace-nowrap"
+              className="whitespace-nowrap rounded-full"
             >
               {t(filterKey)}
               {tab !== "all" && (
@@ -345,35 +366,36 @@ export default function BookingsPage() {
         })}
       </div>
 
-      {/* Loading state */}
       {loading && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader className="pb-3">
+            <div
+              key={i}
+              className="animate-pulse rounded-3xl border border-violet-100 bg-white p-5 shadow-sm"
+            >
+              <div className="pb-3">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-muted" />
+                  <div className="h-10 w-10 rounded-full bg-violet-100" />
                   <div className="space-y-2 flex-1">
-                    <div className="h-4 bg-muted rounded w-2/3" />
-                    <div className="h-3 bg-muted rounded w-1/3" />
+                    <div className="h-4 w-2/3 rounded bg-violet-100" />
+                    <div className="h-3 w-1/3 rounded bg-violet-100" />
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="h-3 bg-muted rounded w-full" />
-                <div className="h-3 bg-muted rounded w-3/4" />
-                <div className="h-3 bg-muted rounded w-1/2" />
-              </CardContent>
-            </Card>
+              </div>
+              <div className="space-y-3">
+                <div className="h-3 w-full rounded bg-violet-100" />
+                <div className="h-3 w-3/4 rounded bg-violet-100" />
+                <div className="h-3 w-1/2 rounded bg-violet-100" />
+              </div>
+            </div>
           ))}
         </div>
       )}
 
-      {/* Error state */}
       {!loading && error && (
-        <Card className="border-destructive/50">
-          <CardContent className="flex items-center gap-3 py-8">
-            <AlertCircle className="h-8 w-8 text-destructive shrink-0" />
+        <div className="mt-6 rounded-3xl border border-destructive/30 bg-destructive/5 p-6">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="h-8 w-8 shrink-0 text-destructive" />
             <div>
               <p className="font-medium text-destructive">{error}</p>
               <Button
@@ -385,36 +407,30 @@ export default function BookingsPage() {
                 {t("filterAll")}
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
-      {/* Empty state */}
       {!loading && !error && filteredBookings.length === 0 && (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center mb-6">
-              <Calendar className="h-10 w-10 text-muted-foreground" />
-            </div>
-            <CardTitle className="text-xl mb-2">{t("noBookings")}</CardTitle>
-            <CardDescription className="max-w-sm mb-6">
-              {t("noBookingsHint")}
-            </CardDescription>
-            <Button
-              onClick={() => router.push(`/${locale}/courses`)}
-              className="flex items-center gap-2"
-            >
-              <BookOpen className="h-4 w-4" />
-              {t("exploreCourses")}
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="mt-6 rounded-3xl border border-dashed border-violet-200 bg-white/70 p-10 text-center md:p-14">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-violet-100">
+            <Calendar className="h-10 w-10 text-violet-500" />
+          </div>
+          <p className="mb-2 text-xl font-bold text-zinc-900">{t("noBookings")}</p>
+          <p className="mx-auto mb-6 max-w-sm text-sm text-zinc-500">{t("noBookingsHint")}</p>
+          <Button
+            onClick={() => router.push(`/${locale}/courses`)}
+            className="rounded-full px-6"
+          >
+            <BookOpen className="h-4 w-4" />
+            {t("exploreCourses")}
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       )}
 
-      {/* Bookings list */}
       {!loading && !error && filteredBookings.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filteredBookings.map((booking) => {
             const personName = getPersonName(booking);
             const personAvatar = getPersonAvatar(booking);
@@ -426,155 +442,138 @@ export default function BookingsPage() {
               : null;
 
             return (
-              <Card
+              <article
                 key={booking.id}
-                className="hover:shadow-md transition-shadow flex flex-col"
+                className="group flex h-full flex-col rounded-3xl border border-violet-100 bg-white/90 p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgba(112,42,225,0.12)]"
               >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <Avatar className="h-10 w-10 shrink-0">
-                        {personAvatar && (
-                          <AvatarImage src={personAvatar} alt={personName} />
-                        )}
-                        <AvatarFallback
-                          style={{
-                            backgroundColor: getAvatarColor(personName),
-                          }}
-                          className="text-white font-semibold text-sm"
-                        >
-                          {personName.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0">
-                        <p className="font-medium text-sm truncate">
-                          {personName}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {viewRole === "student" ? t("tutor") : t("student")}
-                        </p>
-                      </div>
+                <div className="mb-4 flex items-start justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <Avatar className="h-11 w-11 shrink-0 ring-2 ring-primary/15">
+                      {personAvatar && <AvatarImage src={personAvatar} alt={personName} />}
+                      <AvatarFallback
+                        style={{ backgroundColor: getAvatarColor(personName) }}
+                        className="text-sm font-semibold text-white"
+                      >
+                        {personName.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-zinc-900">{personName}</p>
+                      <p className="text-xs text-zinc-500">
+                        {viewRole === "student" ? t("tutor") : t("student")}
+                      </p>
                     </div>
-                    <Badge
-                      variant="outline"
-                      className={`shrink-0 flex items-center gap-1 text-xs ${statusCfg.color}`}
-                    >
-                      <StatusIcon className="h-3 w-3" />
-                      {t(
-                        `status${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}` as
-                          | "statusPending"
-                          | "statusConfirmed"
-                          | "statusRejected"
-                          | "statusCancelled"
-                          | "statusCompleted"
-                      )}
-                    </Badge>
                   </div>
-                </CardHeader>
+                  <Badge variant="outline" className={`gap-1 rounded-full ${statusCfg.color}`}>
+                    <StatusIcon className="h-3 w-3" />
+                    {t(
+                      `status${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}` as
+                        | "statusPending"
+                        | "statusConfirmed"
+                        | "statusRejected"
+                        | "statusCancelled"
+                        | "statusCompleted"
+                    )}
+                  </Badge>
+                </div>
 
-                <CardContent className="flex-1 space-y-3 text-sm">
-                  {/* Subject */}
+                <div className="space-y-3 text-sm">
                   {lesson?.subject?.name && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <BookOpen className="h-4 w-4 shrink-0" />
-                      <span className="font-medium text-foreground">
-                        {lesson.subject.name}
-                      </span>
+                    <div className="flex items-center gap-2 text-zinc-600">
+                      <BookOpen className="h-4 w-4 shrink-0 text-primary" />
+                      <span className="font-medium text-zinc-900">{lesson.subject.name}</span>
                     </div>
                   )}
-
-                  {/* Date & Time */}
                   {dateTime && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Calendar className="h-4 w-4 shrink-0" />
+                    <div className="flex items-center gap-2 text-zinc-600">
+                      <Calendar className="h-4 w-4 shrink-0 text-primary" />
                       <span>{dateTime.date}</span>
-                      <span className="text-muted-foreground/60">|</span>
-                      <Clock className="h-3.5 w-3.5 shrink-0" />
+                      <span className="text-zinc-400">|</span>
+                      <Clock className="h-3.5 w-3.5 shrink-0 text-primary" />
                       <span>{dateTime.time}</span>
                     </div>
                   )}
-
-                  {/* Duration & Price */}
                   <div className="flex items-center gap-4">
                     {lesson?.duration_minutes && (
-                      <div className="flex items-center gap-1.5 text-muted-foreground">
-                        <Clock className="h-4 w-4 shrink-0" />
+                      <div className="flex items-center gap-1.5 text-zinc-600">
+                        <Clock className="h-4 w-4 shrink-0 text-primary" />
                         <span>
                           {lesson.duration_minutes} {t("minutes")}
                         </span>
                       </div>
                     )}
                     {lesson?.price != null && (
-                      <div className="flex items-center gap-1.5 text-muted-foreground">
-                        <DollarSign className="h-4 w-4 shrink-0" />
-                        <span className="font-semibold text-foreground">
-                          ${lesson.price.toFixed(2)}
-                        </span>
+                      <div className="flex items-center gap-1.5 text-zinc-600">
+                        <DollarSign className="h-4 w-4 shrink-0 text-primary" />
+                        <span className="font-semibold text-zinc-900">${lesson.price.toFixed(2)}</span>
                       </div>
                     )}
                   </div>
-
-                  {/* Notes */}
                   {booking.notes && (
-                    <p className="text-xs text-muted-foreground bg-muted/50 rounded-md p-2 line-clamp-2">
+                    <p className="line-clamp-2 rounded-xl bg-violet-50 px-3 py-2 text-xs text-zinc-600">
                       {booking.notes}
                     </p>
                   )}
+                </div>
 
-                  {/* Actions */}
-                  <div className="pt-2 flex gap-2 flex-wrap">
-                    {(booking.status === "pending" ||
-                      booking.status === "confirmed") && (
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        disabled={cancellingId === booking.id}
-                        onClick={() => void handleCancel(booking.id)}
-                      >
-                        {cancellingId === booking.id ? (
-                          <>
-                            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                            {t("cancelling")}
-                          </>
-                        ) : (
-                          t("cancelBooking")
-                        )}
-                      </Button>
-                    )}
-                    {booking.status === "completed" &&
-                      viewRole === "student" && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            router.push(`/${locale}/student-profile`)
-                          }
-                          className="flex items-center gap-1.5"
-                        >
-                          <CheckCircle className="h-3.5 w-3.5" />
-                          {t("leaveReview")}
-                        </Button>
-                      )}
+                <div className="mt-4 flex flex-wrap gap-2 pt-2">
+                  {(booking.status === "pending" || booking.status === "confirmed") && (
                     <Button
-                      variant="ghost"
+                      variant="destructive"
                       size="sm"
-                      className="ml-auto flex items-center gap-1 text-muted-foreground"
-                      onClick={() =>
-                        router.push(
-                          viewRole === "student"
-                            ? `/${locale}/student-profile`
-                            : `/${locale}/teacher-profile`
-                        )
-                      }
+                      className="rounded-full"
+                      disabled={cancellingId === booking.id}
+                      onClick={() => void handleCancel(booking.id)}
                     >
-                      {t("viewDetails")}
-                      <ChevronRight className="h-3.5 w-3.5" />
+                      {cancellingId === booking.id ? (
+                        <>
+                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                          {t("cancelling")}
+                        </>
+                      ) : (
+                        t("cancelBooking")
+                      )}
                     </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                  )}
+                  {booking.status === "completed" && viewRole === "student" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full"
+                      onClick={() => router.push(`/${locale}/student-profile`)}
+                    >
+                      <CheckCircle className="h-3.5 w-3.5" />
+                      {t("leaveReview")}
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="ml-auto rounded-full text-zinc-600 group-hover:text-primary"
+                    onClick={() =>
+                      router.push(
+                        viewRole === "student"
+                          ? `/${locale}/student-profile`
+                          : `/${locale}/teacher-profile`
+                      )
+                    }
+                  >
+                    {t("viewDetails")}
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </article>
             );
           })}
+        </div>
+      )}
+
+      {!loading && !error && filteredBookings.length > 0 && (
+        <div className="mt-6 rounded-3xl border border-violet-100 bg-violet-50/70 p-4 text-xs text-zinc-600 md:hidden">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4 text-emerald-500" />
+            Reserva y pago se procesan de forma segura.
+          </div>
         </div>
       )}
     </div>
