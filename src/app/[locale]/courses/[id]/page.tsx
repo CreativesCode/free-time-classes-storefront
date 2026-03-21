@@ -185,138 +185,168 @@ export default function CourseDetailPage() {
   }
 
   const levelColors: Record<string, string> = {
-    beginner: "bg-green-100 text-green-800 border-green-200",
-    intermediate: "bg-blue-100 text-blue-800 border-blue-200",
-    advanced: "bg-purple-100 text-purple-800 border-purple-200",
+    beginner: "bg-emerald-100/80 text-emerald-700 border-emerald-200",
+    intermediate: "bg-sky-100/80 text-sky-700 border-sky-200",
+    advanced: "bg-violet-100/80 text-violet-700 border-violet-200",
   };
 
   const tutorDisplayName =
     tutorProfile?.user?.username ?? course.tutor?.username ?? t("unknownTutor");
 
   const tutorUser = tutorProfile?.user ?? course.tutor;
+  const ratingValue = course.rating ?? 0;
+  const totalReviews = course.total_reviews ?? 0;
+  const createdAt = new Date(course.created_at).toLocaleDateString(locale, {
+    month: "short",
+    year: "numeric",
+  });
+  const coursePrice = Number(course.price_per_session).toFixed(2);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-      {/* Back button */}
-      <Link
-        href={`/${locale}/courses`}
-        className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t("backToCourses")}
-      </Link>
+    <div className="pb-24 md:pb-28 lg:pb-10">
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-500/10 via-violet-400/10 to-fuchsia-300/10" />
+        <div className="absolute -left-20 top-8 h-44 w-44 rounded-full bg-primary-400/20 blur-3xl" />
+        <div className="absolute -right-24 top-12 h-56 w-56 rounded-full bg-fuchsia-300/30 blur-3xl" />
+        <div className="relative mx-auto max-w-7xl px-4 pb-8 pt-6 sm:px-6 md:pb-10 lg:px-8 lg:pt-10">
+          <Link
+            href={`/${locale}/courses`}
+            className="inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/80 px-4 py-2 text-xs font-semibold text-slate-700 backdrop-blur transition hover:bg-white sm:text-sm"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {t("backToCourses")}
+          </Link>
 
-      <div className="grid gap-8 lg:grid-cols-3">
-        {/* ──── Main content (2 cols on desktop) ──── */}
-        <div className="space-y-8 lg:col-span-2">
-          {/* Header */}
-          <div>
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              {course.subject && (
-                <Badge variant="secondary" className="text-xs">
-                  {course.subject.name}
-                </Badge>
-              )}
-              {course.level && (
-                <Badge
-                  variant="outline"
-                  className={levelColors[course.level] ?? ""}
-                >
-                  {t(`level.${course.level}`)}
-                </Badge>
-              )}
-              {!course.is_active && (
-                <Badge variant="destructive" className="text-xs">
-                  {t("inactive")}
-                </Badge>
-              )}
+          <div className="mt-5 grid items-end gap-8 md:mt-8 lg:grid-cols-12">
+            <div className="space-y-4 md:space-y-6 lg:col-span-7">
+              <div className="flex flex-wrap items-center gap-2">
+                {course.subject && (
+                  <Badge className="rounded-full bg-primary-100 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-primary-700 hover:bg-primary-100">
+                    {course.subject.name}
+                  </Badge>
+                )}
+                {course.level && (
+                  <Badge
+                    variant="outline"
+                    className={`rounded-full bg-white/70 px-3 py-1 text-[11px] font-bold uppercase tracking-wider ${levelColors[course.level] ?? ""}`}
+                  >
+                    {t(`level.${course.level}`)}
+                  </Badge>
+                )}
+                {!course.is_active && (
+                  <Badge variant="destructive" className="rounded-full text-[11px] uppercase">
+                    {t("inactive")}
+                  </Badge>
+                )}
+              </div>
+
+              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl md:text-5xl lg:text-6xl">
+                {course.title}
+              </h1>
+
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-medium text-slate-600">
+                {ratingValue > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <StarRating rating={ratingValue} size={14} />
+                    <span className="font-semibold text-slate-900">{ratingValue.toFixed(1)}</span>
+                    {totalReviews > 0 && (
+                      <span>
+                        ({totalReviews} {t("reviews")})
+                      </span>
+                    )}
+                  </div>
+                )}
+                <div className="flex items-center gap-1.5">
+                  <Clock className="h-4 w-4 text-primary-500" />
+                  {course.duration_minutes} {t("minutes")}
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Users className="h-4 w-4 text-primary-500" />
+                  {t("maxStudents", { count: course.max_students })}
+                </div>
+              </div>
             </div>
 
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              {course.title}
-            </h1>
-
-            {/* Quick stats row */}
-            <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-              {(course.rating ?? 0) > 0 && (
-                <div className="flex items-center gap-1.5">
-                  <StarRating rating={course.rating ?? 0} size={14} />
-                  <span className="font-medium text-foreground">
-                    {(course.rating ?? 0).toFixed(1)}
-                  </span>
-                  {(course.total_reviews ?? 0) > 0 && (
-                    <span>
-                      ({course.total_reviews} {t("reviews")})
-                    </span>
-                  )}
+            <div className="lg:col-span-5">
+              <div className="relative overflow-hidden rounded-2xl border border-white/70 bg-white shadow-[0_20px_60px_rgba(112,42,225,0.12)]">
+                <div className="aspect-[4/3] bg-gradient-to-br from-primary-500 via-violet-500 to-fuchsia-500 p-6 text-white">
+                  <p className="text-xs uppercase tracking-[0.18em] text-white/80">{t("aboutCourse")}</p>
+                  <p className="mt-3 line-clamp-4 text-sm leading-relaxed text-white/95">
+                    {course.description}
+                  </p>
                 </div>
-              )}
-              <div className="flex items-center gap-1.5">
-                <Clock className="h-4 w-4" />
-                {course.duration_minutes} {t("minutes")}
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Users className="h-4 w-4" />
-                {t("maxStudents", { count: course.max_students })}
+                <div className="grid grid-cols-3 gap-2 p-3 text-center">
+                  <div className="rounded-xl bg-slate-50 p-3">
+                    <Clock className="mx-auto h-4 w-4 text-primary-500" />
+                    <p className="mt-1 text-sm font-bold text-slate-900">{course.duration_minutes}</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-500">{t("minutes")}</p>
+                  </div>
+                  <div className="rounded-xl bg-slate-50 p-3">
+                    <Users className="mx-auto h-4 w-4 text-primary-500" />
+                    <p className="mt-1 text-sm font-bold text-slate-900">{course.max_students}</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-500">{t("maxStudentsLabel")}</p>
+                  </div>
+                  <div className="rounded-xl bg-slate-50 p-3">
+                    <Calendar className="mx-auto h-4 w-4 text-primary-500" />
+                    <p className="mt-1 text-sm font-bold text-slate-900">{createdAt}</p>
+                    <p className="text-[10px] uppercase tracking-wider text-slate-500">{t("createdAt")}</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Description */}
-          <Card>
+      <div className="mx-auto mt-8 grid max-w-7xl gap-8 px-4 sm:px-6 lg:mt-12 lg:grid-cols-12 lg:px-8">
+        <div className="space-y-8 md:space-y-10 lg:col-span-8">
+          <Card className="border-violet-100/80 bg-white/90 shadow-sm">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
+              <CardTitle className="flex items-center gap-2 text-lg font-bold md:text-xl">
                 <BookOpen className="h-5 w-5 text-primary-500" />
                 {t("aboutCourse")}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="leading-relaxed text-muted-foreground whitespace-pre-line">
+              <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600 md:text-base">
                 {course.description}
               </p>
             </CardContent>
           </Card>
 
-          {/* Course details grid */}
-          <Card>
+          <Card className="border-violet-100/80 bg-white/90 shadow-sm">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
+              <CardTitle className="flex items-center gap-2 text-lg font-bold md:text-xl">
                 <GraduationCap className="h-5 w-5 text-primary-500" />
                 {t("courseInfo")}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                <div className="rounded-lg bg-muted/50 p-4 text-center">
-                  <Clock className="mx-auto mb-2 h-6 w-6 text-primary-500" />
-                  <p className="text-2xl font-bold">{course.duration_minutes}</p>
-                  <p className="text-xs text-muted-foreground">{t("minutes")}</p>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+                <div className="rounded-xl bg-primary-50/60 p-4 text-center">
+                  <Clock className="mx-auto mb-2 h-5 w-5 text-primary-500" />
+                  <p className="text-2xl font-extrabold text-slate-900">{course.duration_minutes}</p>
+                  <p className="text-[11px] font-medium text-slate-500">{t("minutes")}</p>
                 </div>
-                <div className="rounded-lg bg-muted/50 p-4 text-center">
-                  <Users className="mx-auto mb-2 h-6 w-6 text-primary-500" />
-                  <p className="text-2xl font-bold">{course.max_students}</p>
-                  <p className="text-xs text-muted-foreground">{t("maxStudentsLabel")}</p>
+                <div className="rounded-xl bg-primary-50/60 p-4 text-center">
+                  <Users className="mx-auto mb-2 h-5 w-5 text-primary-500" />
+                  <p className="text-2xl font-extrabold text-slate-900">{course.max_students}</p>
+                  <p className="text-[11px] font-medium text-slate-500">{t("maxStudentsLabel")}</p>
                 </div>
-                <div className="rounded-lg bg-muted/50 p-4 text-center">
-                  <DollarSign className="mx-auto mb-2 h-6 w-6 text-primary-500" />
-                  <p className="text-2xl font-bold">${Number(course.price_per_session).toFixed(2)}</p>
-                  <p className="text-xs text-muted-foreground">{t("perSession")}</p>
+                <div className="rounded-xl bg-primary-50/60 p-4 text-center">
+                  <DollarSign className="mx-auto mb-2 h-5 w-5 text-primary-500" />
+                  <p className="text-2xl font-extrabold text-slate-900">${coursePrice}</p>
+                  <p className="text-[11px] font-medium text-slate-500">{t("perSession")}</p>
                 </div>
-                <div className="rounded-lg bg-muted/50 p-4 text-center">
-                  <Calendar className="mx-auto mb-2 h-6 w-6 text-primary-500" />
-                  <p className="text-2xl font-bold">
-                    {new Date(course.created_at).toLocaleDateString(locale, {
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{t("createdAt")}</p>
+                <div className="rounded-xl bg-primary-50/60 p-4 text-center">
+                  <Calendar className="mx-auto mb-2 h-5 w-5 text-primary-500" />
+                  <p className="text-2xl font-extrabold text-slate-900">{createdAt}</p>
+                  <p className="text-[11px] font-medium text-slate-500">{t("createdAt")}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Tutor card (visible on mobile, hidden on desktop — desktop uses sidebar) */}
           <div className="lg:hidden">
             <TutorCard
               t={t}
@@ -327,60 +357,47 @@ export default function CourseDetailPage() {
             />
           </div>
 
-          {/* Reviews */}
-          <Card>
+          <Card className="border-violet-100/80 bg-white/90 shadow-sm">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
+              <CardTitle className="flex items-center gap-2 text-lg font-bold md:text-xl">
                 <Star className="h-5 w-5 text-primary-500" />
                 {t("reviewsTitle")}
                 {reviews.length > 0 && (
-                  <span className="text-sm font-normal text-muted-foreground">
-                    ({reviews.length})
-                  </span>
+                  <span className="text-sm font-medium text-slate-500">({reviews.length})</span>
                 )}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {reviews.length === 0 ? (
-                <p className="py-4 text-center text-muted-foreground">
-                  {t("noReviews")}
-                </p>
+                <p className="py-4 text-center text-sm text-slate-500 md:text-base">{t("noReviews")}</p>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-5 md:space-y-6">
                   {reviews.map((review) => (
-                    <div
-                      key={review.id}
-                      className="border-b pb-6 last:border-0 last:pb-0"
-                    >
+                    <div key={review.id} className="rounded-xl border border-violet-100/70 bg-white p-4 md:p-5">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex items-center gap-3">
-                          <Avatar className="h-9 w-9">
+                          <Avatar className="h-9 w-9 border border-violet-100">
                             <AvatarFallback
                               style={{
                                 backgroundColor: getAvatarColor(
                                   review.student?.user?.username ?? "S"
                                 ),
                               }}
-                              className="text-xs text-white font-semibold"
+                              className="text-xs font-semibold text-white"
                             >
-                              {(review.student?.user?.username ?? "S")
-                                .charAt(0)
-                                .toUpperCase()}
+                              {(review.student?.user?.username ?? "S").charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="text-sm font-medium">
+                            <p className="text-sm font-semibold text-slate-900">
                               {review.student?.user?.username ?? t("anonymousStudent")}
                             </p>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(review.created_at).toLocaleDateString(
-                                locale,
-                                {
-                                  day: "numeric",
-                                  month: "long",
-                                  year: "numeric",
-                                }
-                              )}
+                            <p className="text-xs text-slate-500">
+                              {new Date(review.created_at).toLocaleDateString(locale, {
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric",
+                              })}
                             </p>
                           </div>
                         </div>
@@ -388,19 +405,15 @@ export default function CourseDetailPage() {
                       </div>
 
                       {review.comment && (
-                        <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-                          {review.comment}
-                        </p>
+                        <p className="mt-3 text-sm leading-relaxed text-slate-600">{review.comment}</p>
                       )}
 
                       {review.tutor_response && (
-                        <div className="mt-3 rounded-lg border-l-4 border-primary-500 bg-muted/40 p-3">
-                          <p className="mb-1 text-xs font-semibold text-primary-600">
+                        <div className="mt-3 rounded-lg border-l-4 border-primary-500 bg-primary-50/60 p-3">
+                          <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-primary-700">
                             {t("tutorResponse")}
                           </p>
-                          <p className="text-sm text-muted-foreground">
-                            {review.tutor_response}
-                          </p>
+                          <p className="text-sm text-slate-600">{review.tutor_response}</p>
                         </div>
                       )}
                     </div>
@@ -411,46 +424,40 @@ export default function CourseDetailPage() {
           </Card>
         </div>
 
-        {/* ──── Sidebar (desktop only) ──── */}
-        <div className="hidden lg:block">
+        <aside className="hidden lg:col-span-4 lg:block">
           <div className="sticky top-24 space-y-6">
-            {/* Price + CTA */}
-            <Card className="overflow-hidden border-primary-500/20">
-              <div className="bg-gradient-to-br from-primary-500 to-primary-600 p-6 text-white">
-                <p className="text-sm font-medium opacity-90">{t("pricePerSession")}</p>
-                <p className="text-4xl font-extrabold">
-                  ${Number(course.price_per_session).toFixed(2)}
+            <Card className="overflow-hidden border-violet-200/70 bg-white shadow-[0_20px_50px_rgba(112,42,225,0.08)]">
+              <div className="bg-gradient-to-br from-primary-500 via-violet-500 to-fuchsia-500 p-6 text-white">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/80">
+                  {t("pricePerSession")}
                 </p>
+                <p className="mt-2 text-4xl font-extrabold">${coursePrice}</p>
+                <p className="mt-2 text-xs text-white/80">{t("perSession")}</p>
               </div>
-              <CardContent className="p-6">
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">{t("duration")}</span>
-                    <span className="font-medium">
-                      {course.duration_minutes} {t("minutes")}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">{t("maxStudentsLabel")}</span>
-                    <span className="font-medium">{course.max_students}</span>
-                  </div>
-                  {course.level && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">{t("levelLabel")}</span>
-                      <Badge
-                        variant="outline"
-                        className={levelColors[course.level] ?? ""}
-                      >
-                        {t(`level.${course.level}`)}
-                      </Badge>
-                    </div>
-                  )}
+              <CardContent className="space-y-3 p-6 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">{t("duration")}</span>
+                  <span className="font-semibold text-slate-900">
+                    {course.duration_minutes} {t("minutes")}
+                  </span>
                 </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">{t("maxStudentsLabel")}</span>
+                  <span className="font-semibold text-slate-900">{course.max_students}</span>
+                </div>
+                {course.level && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">{t("levelLabel")}</span>
+                    <Badge variant="outline" className={levelColors[course.level] ?? ""}>
+                      {t(`level.${course.level}`)}
+                    </Badge>
+                  </div>
+                )}
 
                 <Button
                   asChild
                   size="lg"
-                  className="mt-6 w-full bg-primary-500 text-white hover:bg-primary-600 text-base font-semibold"
+                  className="mt-5 w-full rounded-full bg-primary-500 font-bold text-white shadow-lg shadow-primary-500/20 hover:bg-primary-600"
                 >
                   <Link href={`/${locale}/student/profile?tab=availabilities`}>
                     <Calendar className="mr-2 h-5 w-5" />
@@ -460,7 +467,6 @@ export default function CourseDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Tutor card (desktop sidebar) */}
             <TutorCard
               t={t}
               locale={locale}
@@ -469,22 +475,21 @@ export default function CourseDetailPage() {
               tutorDisplayName={tutorDisplayName}
             />
           </div>
-        </div>
+        </aside>
       </div>
 
-      {/* Mobile sticky CTA */}
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 p-4 backdrop-blur-sm lg:hidden">
-        <div className="mx-auto flex max-w-lg items-center gap-4">
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-violet-100/70 bg-white/90 p-4 backdrop-blur-xl lg:hidden">
+        <div className="mx-auto flex max-w-2xl items-center gap-4">
           <div>
-            <p className="text-xs text-muted-foreground">{t("pricePerSession")}</p>
-            <p className="text-2xl font-extrabold text-primary-600">
-              ${Number(course.price_per_session).toFixed(2)}
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+              {t("pricePerSession")}
             </p>
+            <p className="text-2xl font-extrabold text-slate-900">${coursePrice}</p>
           </div>
           <Button
             asChild
             size="lg"
-            className="flex-1 bg-primary-500 text-white hover:bg-primary-600 font-semibold"
+            className="flex-1 rounded-full bg-primary-500 font-bold text-white shadow-lg shadow-primary-500/20 hover:bg-primary-600"
           >
             <Link href={`/${locale}/student/profile?tab=availabilities`}>
               <Calendar className="mr-2 h-5 w-5" />
@@ -493,9 +498,6 @@ export default function CourseDetailPage() {
           </Button>
         </div>
       </div>
-
-      {/* Bottom spacer for mobile sticky CTA */}
-      <div className="h-24 lg:hidden" />
     </div>
   );
 }
@@ -519,9 +521,9 @@ function TutorCard({
   tutorDisplayName: string;
 }) {
   return (
-    <Card>
+    <Card className="border-violet-100/80 bg-white/95 shadow-sm">
       <CardHeader>
-        <CardTitle className="text-lg">{t("aboutTutor")}</CardTitle>
+        <CardTitle className="text-lg font-bold text-slate-900">{t("aboutTutor")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center gap-4">
@@ -533,11 +535,11 @@ function TutorCard({
             </Avatar>
           )}
           <div className="min-w-0">
-            <h3 className="truncate text-lg font-semibold">{tutorDisplayName}</h3>
+            <h3 className="truncate text-lg font-bold text-slate-900">{tutorDisplayName}</h3>
             {tutorProfile && (tutorProfile.rating ?? 0) > 0 && (
               <div className="mt-1 flex items-center gap-2">
                 <StarRating rating={tutorProfile.rating} size={14} />
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-slate-500">
                   ({tutorProfile.total_reviews} {t("reviews")})
                 </span>
               </div>
@@ -546,38 +548,42 @@ function TutorCard({
         </div>
 
         {tutorProfile?.bio && (
-          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">
+          <p className="line-clamp-4 text-sm leading-relaxed text-slate-600">
             {tutorProfile.bio}
           </p>
         )}
 
         <div className="grid grid-cols-2 gap-3">
           {tutorProfile?.years_of_experience != null && (
-            <div className="rounded-lg bg-muted/50 p-3 text-center">
-              <p className="text-xl font-bold">{tutorProfile.years_of_experience}</p>
-              <p className="text-xs text-muted-foreground">{t("yearsExperience")}</p>
+            <div className="rounded-xl bg-primary-50/60 p-3 text-center">
+              <p className="text-xl font-bold text-slate-900">{tutorProfile.years_of_experience}</p>
+              <p className="text-xs text-slate-500">{t("yearsExperience")}</p>
             </div>
           )}
           {tutorProfile?.hourly_rate != null && (
-            <div className="rounded-lg bg-muted/50 p-3 text-center">
-              <p className="text-xl font-bold">${tutorProfile.hourly_rate}</p>
-              <p className="text-xs text-muted-foreground">{t("hourlyRate")}</p>
+            <div className="rounded-xl bg-primary-50/60 p-3 text-center">
+              <p className="text-xl font-bold text-slate-900">${tutorProfile.hourly_rate}</p>
+              <p className="text-xs text-slate-500">{t("hourlyRate")}</p>
             </div>
           )}
         </div>
 
         {tutorProfile?.certifications && (
           <div>
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
               {t("certifications")}
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-slate-600">
               {tutorProfile.certifications}
             </p>
           </div>
         )}
 
-        <Button asChild variant="outline" className="w-full">
+        <Button
+          asChild
+          variant="outline"
+          className="w-full border-violet-200 font-semibold text-violet-700 hover:bg-violet-50"
+        >
           <Link href={`/${locale}/tutors/${tutorProfile?.id ?? tutorUser?.id ?? ""}`}>
             {t("viewTutorProfile")}
           </Link>
