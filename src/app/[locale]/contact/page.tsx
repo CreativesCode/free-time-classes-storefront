@@ -2,9 +2,10 @@ import Link from "next/link";
 import {
   ArrowRight,
   BookOpen,
-  CircleHelp,
   CreditCard,
+  LifeBuoy,
   MessageCircle,
+  MonitorSmartphone,
   Search,
   Settings2,
   ShieldCheck,
@@ -12,38 +13,50 @@ import {
 
 const helpCategories = [
   {
-    title: "Primeros pasos",
+    title: "Aprendizaje y clases",
     description:
-      "Todo lo esencial para comenzar: registro, acceso a clases y navegación.",
+      "Acceso a cursos, sesiones en vivo, certificados y seguimiento de progreso.",
+    meta: "12 artículos",
     icon: BookOpen,
+    iconWrapClassName: "bg-primary/10 text-primary",
     className:
-      "col-span-2 rounded-2xl bg-primary/10 p-6 md:col-span-8 md:p-10 lg:min-h-[260px]",
+      "col-span-2 rounded-3xl border border-primary/10 bg-surface-container-low p-6 md:col-span-8 md:min-h-[280px] md:p-10",
   },
   {
-    title: "Pagos y planes",
-    description: "Suscripciones, cobros, facturas y reembolsos.",
+    title: "Facturación y planes",
+    description: "Suscripciones, cobros, facturas y políticas de reembolso.",
+    meta: "8 artículos",
     icon: CreditCard,
+    iconWrapClassName: "bg-white/20 text-primary-foreground",
     className:
-      "rounded-2xl bg-primary text-primary-foreground p-6 md:col-span-4 md:p-10",
+      "rounded-3xl bg-primary p-6 text-primary-foreground md:col-span-4 md:p-10",
   },
   {
     title: "Cuenta",
     description: "Perfil, seguridad y preferencias.",
+    meta: "15 artículos",
     icon: Settings2,
-    className: "rounded-2xl bg-surface-container-highest p-6 md:col-span-4 md:p-10",
+    iconWrapClassName: "bg-primary/10 text-primary",
+    className:
+      "rounded-3xl bg-surface-container-highest p-6 md:col-span-4 md:p-10",
   },
   {
     title: "Privacidad",
     description: "Protección de datos y uso responsable de la plataforma.",
+    meta: "6 artículos",
     icon: ShieldCheck,
-    className: "rounded-2xl border border-border/60 bg-card p-6 md:col-span-4 md:p-10",
+    iconWrapClassName: "bg-primary/10 text-primary",
+    className:
+      "rounded-3xl border border-border/60 bg-card p-6 md:col-span-4 md:p-10",
   },
   {
     title: "Soporte técnico",
     description: "Problemas de reproducción, app móvil y compatibilidad.",
-    icon: CircleHelp,
+    meta: "10 artículos",
+    icon: MonitorSmartphone,
+    iconWrapClassName: "bg-primary/10 text-primary",
     className:
-      "rounded-2xl bg-surface-container-high p-6 md:col-span-4 md:p-10 lg:min-h-[220px]",
+      "rounded-3xl bg-surface-container-high p-6 md:col-span-4 md:p-10",
   },
 ];
 
@@ -66,32 +79,43 @@ const faqItems = [
     answer:
       "Sí, en algunos contenidos puedes descargar materiales para estudiarlos sin conexión.",
   },
+  {
+    category: "Cuenta",
+    question: "¿Cómo cambio mi correo o contraseña?",
+    answer:
+      "Desde Configuración puedes actualizar tus datos personales y reforzar la seguridad de tu cuenta.",
+  },
 ];
 
 export default function ContactPage() {
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-10 sm:px-6 md:pt-14 lg:px-8 lg:pt-20">
-      <section className="mb-10 md:mb-16 lg:mb-20">
-        <div className="max-w-3xl">
-          <p className="mb-3 inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold tracking-wide text-primary">
+    <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-10 sm:px-6 md:pb-20 md:pt-14 lg:px-8 lg:pt-20">
+      <section className="mb-10 md:mb-14 lg:mb-20">
+        <div className="max-w-4xl">
+          <p className="mb-3 inline-flex rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-xs font-semibold tracking-wide text-primary">
             Centro de ayuda
           </p>
-          <h1 className="text-balance text-4xl font-black tracking-tight text-foreground md:text-6xl">
+          <h1 className="text-balance text-4xl font-black tracking-tight text-foreground md:text-5xl lg:text-6xl">
             ¿Cómo podemos ayudarte hoy?
           </h1>
-          <p className="mt-4 max-w-2xl text-sm text-muted-foreground md:text-base lg:text-lg">
+          <p className="mt-4 max-w-3xl text-sm text-muted-foreground md:text-base lg:text-lg">
             Busca en nuestra base de conocimiento o explora las categorías para
             resolver dudas sobre clases, pagos y tu cuenta.
           </p>
         </div>
 
-        <div className="relative mt-6 md:mt-8">
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/70" />
-          <input
-            type="text"
-            placeholder="Buscar artículos, guías o soluciones..."
-            className="h-14 w-full rounded-2xl border border-border/60 bg-background pl-12 pr-4 text-sm shadow-sm outline-none ring-primary/20 transition focus:ring-2 md:h-16 md:text-base"
-          />
+        <div className="mt-6 grid gap-3 md:mt-8 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/70" />
+            <input
+              type="text"
+              placeholder="Buscar artículos, guías o soluciones..."
+              className="h-14 w-full rounded-2xl border border-border/60 bg-background pl-12 pr-4 text-sm shadow-sm outline-none ring-primary/20 transition focus:ring-2 md:h-16 md:text-base"
+            />
+          </div>
+          <button className="hidden h-12 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 md:inline-flex md:items-center md:justify-center">
+            Buscar
+          </button>
         </div>
       </section>
 
@@ -104,22 +128,28 @@ export default function ContactPage() {
               key={category.title}
               className={`${category.className} group flex flex-col justify-between`}
             >
-              <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-full bg-background/60 text-primary md:h-12 md:w-12">
-                <Icon className="h-5 w-5" />
-              </div>
-
-              <div>
+              <div className="space-y-4">
+                <div
+                  className={`inline-flex h-11 w-11 items-center justify-center rounded-full md:h-12 md:w-12 ${category.iconWrapClassName}`}
+                >
+                  <Icon className="h-5 w-5" />
+                </div>
                 <h2 className="text-lg font-bold tracking-tight md:text-2xl">
                   {category.title}
                 </h2>
-                <p className="mt-2 text-sm opacity-90 md:text-base">
+                <p className="text-sm opacity-90 md:text-base">
                   {category.description}
                 </p>
               </div>
 
-              <div className="mt-5 inline-flex items-center gap-2 text-sm font-semibold md:mt-8">
-                Ver artículos
-                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+              <div className="mt-5 flex items-center justify-between gap-2 md:mt-8">
+                <span className="rounded-full bg-background/60 px-3 py-1 text-xs font-semibold md:text-sm">
+                  {category.meta}
+                </span>
+                <div className="inline-flex items-center gap-2 text-sm font-semibold">
+                  Ver artículos
+                  <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                </div>
               </div>
             </article>
           );
@@ -139,7 +169,7 @@ export default function ContactPage() {
           </Link>
         </div>
 
-        <div className="space-y-4 md:space-y-5">
+        <div className="grid gap-4 md:grid-cols-2 md:gap-5">
           {faqItems.map((faq) => (
             <article
               key={faq.question}
@@ -159,15 +189,17 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <section className="rounded-3xl bg-primary p-6 text-primary-foreground md:p-10 lg:p-14">
-        <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
+      <section className="relative overflow-hidden rounded-3xl bg-primary p-6 text-primary-foreground md:p-10 lg:p-14">
+        <div className="pointer-events-none absolute -right-14 -top-10 h-44 w-44 rounded-full bg-white/10 blur-2xl" />
+        <div className="pointer-events-none absolute -bottom-16 -left-16 h-52 w-52 rounded-full bg-white/10 blur-3xl" />
+        <div className="relative grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
           <div>
             <h2 className="text-2xl font-black tracking-tight md:text-4xl">
               ¿Sigues necesitando ayuda?
             </h2>
             <p className="mt-3 max-w-2xl text-sm text-primary-foreground/85 md:text-base">
-              Nuestro equipo de soporte está disponible para ayudarte con cualquier
-              incidencia de forma rápida.
+              Nuestro equipo de soporte está disponible para ayudarte con
+              cualquier incidencia de forma rápida.
             </p>
           </div>
 
@@ -188,7 +220,29 @@ export default function ContactPage() {
           </div>
         </div>
       </section>
+
+      <section className="mt-10 rounded-3xl border border-border/50 bg-card p-5 md:mt-12 md:p-7">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary/70">
+              Soporte editorial
+            </p>
+            <h3 className="mt-1 text-xl font-bold tracking-tight md:text-2xl">
+              Canales de atención rápida
+            </h3>
+            <p className="mt-2 text-sm text-muted-foreground md:text-base">
+              También puedes abrir un ticket y hacer seguimiento desde tu panel.
+            </p>
+          </div>
+          <Link
+            href="/"
+            className="inline-flex h-11 items-center justify-center rounded-full border border-border px-5 text-sm font-semibold transition hover:bg-muted"
+          >
+            <LifeBuoy className="mr-2 h-4 w-4" />
+            Ir al panel de soporte
+          </Link>
+        </div>
+      </section>
     </main>
   );
 }
-
