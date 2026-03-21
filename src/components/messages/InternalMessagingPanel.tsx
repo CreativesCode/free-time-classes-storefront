@@ -13,12 +13,12 @@ import {
 } from "@/lib/supabase/queries/messages";
 import type { ConversationListItem, DirectMessage, MessageContact } from "@/types/message";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { ArrowLeft, MessageCircle, Search, SendHorizontal } from "lucide-react";
 
 type InternalMessagingPanelProps = {
   namespace: "studentProfile" | "teacherProfile" | "messagesPage";
@@ -46,6 +46,7 @@ export default function InternalMessagingPanel({
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<MessageContact[]>([]);
   const [searching, setSearching] = useState(false);
+  const [showMobileChat, setShowMobileChat] = useState(false);
 
   const getPendingContacts = useCallback(async (): Promise<MessageContact[]> => {
     const byId = new Map<string, MessageContact>();
@@ -97,6 +98,7 @@ export default function InternalMessagingPanel({
     () => conversations.find((c) => c.id === selectedConversationId) || null,
     [conversations, selectedConversationId]
   );
+  const hasConversationData = conversations.length > 0 || contacts.length > 0;
 
   useEffect(() => {
     let cancelled = false;
@@ -124,7 +126,9 @@ export default function InternalMessagingPanel({
           (a.username || "").localeCompare(b.username || "")
         );
         setContacts(merged);
-        if (list.length > 0) setSelectedConversationId(list[0].id);
+        if (list.length > 0) {
+          setSelectedConversationId(list[0].id);
+        }
       } catch (e) {
         console.error("Error loading messaging module:", e);
         toast.error(tm("loadError"));
@@ -236,191 +240,239 @@ export default function InternalMessagingPanel({
     }
   };
 
+  const formatMessageDate = (value: string) =>
+    new Date(value).toLocaleString(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+      month: "short",
+      day: "numeric",
+    });
+
+  const openConversation = (conversationId: number) => {
+    setSelectedConversationId(conversationId);
+    setShowMobileChat(true);
+  };
+
   if (loading) {
     return (
-      <Card>
-        <CardContent className="py-8 text-center text-sm text-gray-500">
-          {t("loading")}
-        </CardContent>
-      </Card>
+      <div className="rounded-3xl border border-violet-100 bg-white/80 px-6 py-12 text-center text-sm font-medium text-violet-500 shadow-sm">
+        {t("loading")}
+      </div>
     );
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
-      <Card>
-        <CardHeader>
-          <CardTitle>{tm("title")}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="max-h-64 overflow-y-auto space-y-2">
-            {conversations.length === 0 ? (
-              <p className="text-sm text-gray-500">{tm("emptyConversations")}</p>
-            ) : (
-              conversations.map((conversation) => (
-                <button
-                  key={conversation.id}
-                  type="button"
-                  onClick={() => setSelectedConversationId(conversation.id)}
-                  className={`w-full rounded-md border p-3 text-left transition ${
-                    conversation.id === selectedConversationId
-                      ? "border-primary-500 bg-primary-50"
-                      : "border-gray-200 hover:bg-gray-50"
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-medium truncate">
-                      {conversation.other_user.username}
-                    </span>
-                    {conversation.unread_count > 0 ? (
-                      <span className="text-xs rounded-full bg-primary-600 px-2 py-0.5 text-white">
-                        {conversation.unread_count}
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-1 text-xs text-gray-500 truncate">
-                    {conversation.last_message_content || tm("noMessagesYet")}
-                  </p>
-                </button>
-              ))
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-sm font-medium">{tm("startConversation")}</p>
-            <Input
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder={tm("searchPlaceholder")}
-            />
-            {searchTerm.trim().length >= 2 ? (
-              <div className="max-h-40 overflow-y-auto space-y-2 rounded-md border border-gray-200 p-2">
-                {searching ? (
-                  <p className="text-xs text-gray-500">{tm("searching")}</p>
-                ) : searchResults.length === 0 ? (
-                  <p className="text-xs text-gray-500">{tm("searchNoResults")}</p>
-                ) : (
-                  searchResults.map((contact) => (
-                    <div
-                      key={`search-${contact.id}`}
-                      className="flex items-center justify-between gap-2"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-sm truncate">{contact.username}</p>
-                        <p className="text-xs text-gray-500 truncate">{contact.email}</p>
-                      </div>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        disabled={creatingConversationWith === contact.id}
-                        onClick={() => void startConversation(contact.id)}
-                      >
-                        {creatingConversationWith === contact.id
-                          ? tm("creating")
-                          : tm("open")}
-                      </Button>
-                    </div>
-                  ))
-                )}
-              </div>
-            ) : null}
-            <div className="max-h-56 overflow-y-auto space-y-2">
-              {contacts.length === 0 ? (
-                <p className="text-xs text-gray-500">{tm("noContacts")}</p>
-              ) : (
-                contacts.map((contact) => (
-                  <div
-                    key={contact.id}
-                    className="flex items-center justify-between gap-2 rounded-md border border-gray-200 p-2"
-                  >
-                    <span className="text-sm truncate">{contact.username}</span>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      disabled={creatingConversationWith === contact.id}
-                      onClick={() => void startConversation(contact.id)}
-                    >
-                      {creatingConversationWith === contact.id
-                        ? tm("creating")
-                        : tm("open")}
-                    </Button>
-                  </div>
-                ))
-              )}
+    <div className="overflow-hidden rounded-[28px] border border-violet-100 bg-[#fefbff] shadow-[0_24px_60px_-40px_rgba(112,42,225,0.4)]">
+      {!hasConversationData ? (
+        <div className="flex min-h-[560px] flex-col items-center justify-center gap-6 px-8 py-16 text-center">
+          <div className="relative">
+            <div className="absolute -inset-6 rounded-full bg-violet-200/40 blur-2xl" />
+            <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-violet-100 text-violet-700">
+              <MessageCircle className="h-11 w-11" />
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {selectedConversation
-              ? tm("chatWith", { name: selectedConversation.other_user.username })
-              : tm("selectConversation")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {selectedConversationId ? (
-            <div className="space-y-3">
-              <div className="h-[360px] overflow-y-auto rounded-md border border-gray-200 p-3 space-y-3">
-                {messages.length === 0 ? (
-                  <p className="text-sm text-gray-500">{tm("noMessagesYet")}</p>
-                ) : (
-                  messages.map((message) => {
-                    const isMine = message.sender_id === user?.id;
-                    return (
-                      <div
-                        key={message.id}
-                        className={`flex ${isMine ? "justify-end" : "justify-start"}`}
-                      >
-                        <div
-                          className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
-                            isMine
-                              ? "bg-primary-600 text-white"
-                              : "bg-gray-100 text-gray-900"
-                          }`}
-                        >
-                          <p className="whitespace-pre-wrap break-words">{message.content}</p>
-                          <p
-                            className={`mt-1 text-[11px] ${
-                              isMine ? "text-primary-100" : "text-gray-500"
-                            }`}
-                          >
-                            {new Date(message.created_at).toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black tracking-tight text-violet-950">{tm("emptyConversations")}</h2>
+            <p className="mx-auto max-w-xl text-sm text-violet-500">{tm("selectConversationHelp")}</p>
+          </div>
+        </div>
+      ) : (
+        <div className="grid h-[min(78vh,820px)] grid-cols-1 md:grid-cols-[360px_1fr] xl:grid-cols-[380px_1fr]">
+          <aside
+            className={`flex flex-col border-r border-violet-100 bg-white/80 ${
+              showMobileChat ? "hidden md:flex" : "flex"
+            }`}
+          >
+            <div className="border-b border-violet-100 p-4 sm:p-5">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-violet-400">{tm("title")}</p>
+              <div className="mt-3 rounded-full border border-violet-200 bg-violet-50/70 px-3">
+                <div className="flex items-center gap-2">
+                  <Search className="h-4 w-4 text-violet-400" />
+                  <Input
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                    placeholder={tm("searchPlaceholder")}
+                    className="h-11 border-0 bg-transparent px-0 text-sm shadow-none focus-visible:ring-0"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Textarea
-                  value={messageText}
-                  onChange={(e) => setMessageText(e.target.value)}
-                  placeholder={tm("messagePlaceholder")}
-                  rows={3}
-                  maxLength={2000}
-                />
-                <div className="flex justify-end">
-                  <Button
-                    type="button"
-                    onClick={() => void handleSend()}
-                    disabled={!messageText.trim() || sending}
-                  >
-                    {sending ? tm("sending") : tm("send")}
-                  </Button>
+              {searchTerm.trim().length >= 2 ? (
+                <div className="mt-3 space-y-2 rounded-2xl border border-violet-100 bg-white p-3">
+                  {searching ? (
+                    <p className="text-xs text-violet-400">{tm("searching")}</p>
+                  ) : searchResults.length === 0 ? (
+                    <p className="text-xs text-violet-400">{tm("searchNoResults")}</p>
+                  ) : (
+                    searchResults.map((contact) => (
+                      <div
+                        key={`search-${contact.id}`}
+                        className="flex items-center justify-between gap-2 rounded-xl bg-violet-50/60 px-3 py-2"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-violet-950">{contact.username}</p>
+                          <p className="truncate text-xs text-violet-500">{contact.email}</p>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="border-violet-200 text-violet-700"
+                          disabled={creatingConversationWith === contact.id}
+                          onClick={() => void startConversation(contact.id)}
+                        >
+                          {creatingConversationWith === contact.id ? tm("creating") : tm("open")}
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto p-3">
+              {conversations.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-violet-200 bg-violet-50/50 p-4 text-sm text-violet-500">
+                  {tm("emptyConversations")}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {conversations.map((conversation) => (
+                    <button
+                      key={conversation.id}
+                      type="button"
+                      onClick={() => openConversation(conversation.id)}
+                      className={`w-full rounded-2xl px-4 py-3 text-left transition ${
+                        conversation.id === selectedConversationId
+                          ? "bg-violet-100 text-violet-900"
+                          : "bg-white text-violet-700 hover:bg-violet-50"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="truncate text-sm font-bold">
+                          {conversation.other_user.username}
+                        </span>
+                        {conversation.unread_count > 0 ? (
+                          <span className="rounded-full bg-violet-600 px-2 py-0.5 text-[10px] font-bold text-white">
+                            {conversation.unread_count}
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-1 truncate text-xs text-violet-500">
+                        {conversation.last_message_content || tm("noMessagesYet")}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-4 rounded-md border border-violet-100 bg-white p-3">
+                <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-violet-400">
+                  {tm("startConversation")}
+                </p>
+                <div className="max-h-44 space-y-2 overflow-y-auto">
+                  {contacts.length === 0 ? (
+                    <p className="text-xs text-violet-500">{tm("noContacts")}</p>
+                  ) : (
+                    contacts.map((contact) => (
+                      <div key={contact.id} className="flex items-center justify-between gap-2 rounded-md bg-violet-50/60 px-3 py-2">
+                        <span className="truncate text-sm font-medium text-violet-900">{contact.username}</span>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="rounded-md border-violet-200 text-violet-700"
+                          disabled={creatingConversationWith === contact.id}
+                          onClick={() => void startConversation(contact.id)}
+                        >
+                          {creatingConversationWith === contact.id ? tm("creating") : tm("open")}
+                        </Button>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>
-          ) : (
-            <p className="text-sm text-gray-500">{tm("selectConversationHelp")}</p>
-          )}
-        </CardContent>
-      </Card>
+          </aside>
+
+          <section className={`${showMobileChat ? "flex" : "hidden md:flex"} min-h-0 flex-col bg-[#fcf8ff]`}>
+            <header className="flex items-center gap-3 border-b border-violet-100 bg-white/70 px-4 py-4 sm:px-6">
+              <button
+                type="button"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-violet-100 text-violet-700 md:hidden"
+                onClick={() => setShowMobileChat(false)}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              <div className="min-w-0">
+                <h2 className="truncate text-sm font-black text-violet-950 sm:text-base">
+                  {selectedConversation
+                    ? tm("chatWith", { name: selectedConversation.other_user.username })
+                    : tm("selectConversation")}
+                </h2>
+                <p className="text-xs text-violet-500">{tm("messagePlaceholder")}</p>
+              </div>
+            </header>
+
+            {selectedConversationId ? (
+              <>
+                <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-6">
+                  {messages.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-violet-200 bg-white p-4 text-sm text-violet-500">
+                      {tm("noMessagesYet")}
+                    </div>
+                  ) : (
+                    messages.map((message) => {
+                      const isMine = message.sender_id === user?.id;
+                      return (
+                        <div key={message.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
+                          <div
+                            className={`max-w-[88%] rounded-3xl px-4 py-3 sm:max-w-[78%] ${
+                              isMine
+                                ? "rounded-br-md bg-gradient-to-br from-violet-600 to-violet-500 text-white"
+                                : "rounded-bl-md bg-white text-violet-900 shadow-sm"
+                            }`}
+                          >
+                            <p className="whitespace-pre-wrap break-words text-sm">{message.content}</p>
+                            <p className={`mt-1 text-[10px] ${isMine ? "text-violet-100" : "text-violet-400"}`}>
+                              {formatMessageDate(message.created_at)}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                <div className="border-t border-violet-100 bg-white/85 px-4 py-3 sm:px-6">
+                  <div className="flex items-end gap-2 rounded-3xl border border-violet-200 bg-white p-2">
+                    <Textarea
+                      value={messageText}
+                      onChange={(e) => setMessageText(e.target.value)}
+                      placeholder={tm("messagePlaceholder")}
+                      rows={2}
+                      maxLength={2000}
+                      className="min-h-[48px] resize-none border-0 bg-transparent px-2 py-2 text-sm shadow-none focus-visible:ring-0"
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => void handleSend()}
+                      disabled={!messageText.trim() || sending}
+                      className="h-10 rounded-full bg-violet-600 px-4 hover:bg-violet-700"
+                    >
+                      <SendHorizontal className="mr-1 h-4 w-4" />
+                      {sending ? tm("sending") : tm("send")}
+                    </Button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-1 items-center justify-center px-6 text-center text-sm text-violet-500">
+                {tm("selectConversationHelp")}
+              </div>
+            )}
+          </section>
+        </div>
+      )}
     </div>
   );
 }

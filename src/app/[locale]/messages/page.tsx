@@ -41,13 +41,13 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-72px)] bg-gray-50/50">
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="mb-6 flex items-center gap-3">
-          <MessageSquare className="h-6 w-6 text-primary-600" />
+    <div className="min-h-[calc(100vh-72px)] bg-gradient-to-b from-violet-50 via-[#fcf8ff] to-white">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <div className="mb-6 flex items-center gap-3 rounded-3xl border border-violet-100 bg-white/70 px-4 py-4 backdrop-blur">
+          <MessageSquare className="h-6 w-6 text-violet-600" />
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-            <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
+            <h1 className="text-2xl font-black tracking-tight text-violet-950">{t("title")}</h1>
+            <p className="text-sm text-violet-500">{t("subtitle")}</p>
           </div>
         </div>
 
