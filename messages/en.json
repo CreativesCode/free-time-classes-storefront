@@ -2,6 +2,11 @@
   "login": {
     "title": "Login",
     "description": "Enter your credentials to access your account",
+    "brandName": "FreeTime Classes",
+    "tagline": "Continue your journey of pursuit.",
+    "helpCenter": "Help Center",
+    "privacy": "Privacy",
+    "copyright": "© {year} FreeTime Classes",
     "email": "Email",
     "password": "Password",
     "input": {
@@ -10,9 +15,15 @@
     },
     "login": "Login",
     "register": "Register",
+    "joinNow": "Join now",
     "dontHaveAccount": "Don't have an account?",
     "alreadyHaveAccount": "Already have an account?",
-    "loading": "Logging in..."
+    "loading": "Logging in...",
+    "invalidEmail": "Please enter a valid email address",
+    "invalidCredentials": "Invalid email or password",
+    "genericError": "An error occurred. Please try again.",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   },
   "register": {
     "title": "Register",

@@ -2,6 +2,11 @@
   "login": {
     "title": "Iniciar Sesión",
     "description": "Ingresa tus credenciales para acceder a tu cuenta",
+    "brandName": "FreeTime Classes",
+    "tagline": "Sigue tu camino de aprendizaje.",
+    "helpCenter": "Centro de ayuda",
+    "privacy": "Privacidad",
+    "copyright": "© {year} FreeTime Classes",
     "email": "Correo Electrónico",
     "password": "Contraseña",
     "input": {
@@ -10,9 +15,15 @@
     },
     "login": "Iniciar Sesión",
     "register": "Registrarse",
+    "joinNow": "Crear cuenta",
     "dontHaveAccount": "¿No tienes una cuenta?",
     "alreadyHaveAccount": "¿Ya tienes una cuenta?",
-    "loading": "Iniciando sesión..."
+    "loading": "Iniciando sesión...",
+    "invalidEmail": "Por favor, introduce un correo electrónico válido",
+    "invalidCredentials": "Correo o contraseña incorrectos",
+    "genericError": "Ha ocurrido un error. Inténtalo de nuevo.",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña"
   },
   "register": {
     "title": "Registrarse",
