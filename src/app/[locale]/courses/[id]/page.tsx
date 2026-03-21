@@ -497,6 +497,11 @@ export default function CourseDetailPage() {
             </Link>
           </Button>
         </div>
+        <div className="mx-auto mt-2 max-w-2xl">
+          <p className="text-center text-[11px] text-slate-500">
+            {course.duration_minutes} {t("minutes")} · {t("maxStudents", { count: course.max_students })}
+          </p>
+        </div>
       </div>
     </div>
   );

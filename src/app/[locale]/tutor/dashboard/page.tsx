@@ -355,7 +355,10 @@ export default function TutorDashboardPage() {
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-sm font-medium text-violet-600">{todayLabel}</p>
-            <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900 md:text-4xl">
+            <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900 md:hidden">
+              {td("tutorDashboard")}
+            </h1>
+            <h1 className="mt-1 hidden text-4xl font-extrabold tracking-tight text-slate-900 md:block lg:text-5xl">
               {td("tutorDashboard")}
             </h1>
             <p className="mt-2 text-sm text-slate-600 md:text-base">
@@ -402,6 +405,24 @@ export default function TutorDashboardPage() {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-violet-100 bg-white/90 px-4 pb-4 pt-3 backdrop-blur md:hidden">
+        <div className="mx-auto flex w-full max-w-md items-center justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-violet-500">
+              Pendientes
+            </p>
+            <p className="text-lg font-black text-violet-900">{pendingItems.length}</p>
+          </div>
+          <Button
+            size="sm"
+            className="rounded-full px-5"
+            onClick={() => setPendingOpen(true)}
+          >
+            {t("title")}
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">

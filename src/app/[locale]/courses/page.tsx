@@ -240,7 +240,7 @@ export default function CoursesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface pb-24 text-on-background selection:bg-primary-container selection:text-on-primary-container dark:bg-background">
+    <div className="min-h-screen bg-surface pb-28 text-on-background selection:bg-primary-container selection:text-on-primary-container dark:bg-background md:pb-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Hero — mobile / tablet / desktop copy */}
         <header className="pt-8 md:pt-10 lg:pt-12">
@@ -708,6 +708,27 @@ export default function CoursesPage() {
             </>
           )}
         </div>
+
+        {!loading && !error && displayedCourses.length > 0 ? (
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-outline-variant/25 bg-surface/90 px-4 pb-4 pt-3 backdrop-blur md:hidden">
+            <div className="mx-auto flex w-full max-w-md items-center justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-on-surface-variant">
+                  Cursos
+                </p>
+                <p className="text-lg font-black text-on-surface">{displayedCourses.length}</p>
+              </div>
+              <Button
+                size="sm"
+                className="rounded-full px-5"
+                onClick={() => setShowAdvanced((s) => !s)}
+              >
+                <Filter className="mr-2 h-4 w-4" aria-hidden />
+                {tCat("advancedFilters")}
+              </Button>
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

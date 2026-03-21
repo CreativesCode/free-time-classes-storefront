@@ -173,7 +173,7 @@ export default function TeacherProfile() {
       : [t("specialties"), t("teachingExperience")];
 
   return (
-    <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 py-6 md:py-8">
+    <div className="w-full max-w-screen-2xl mx-auto px-4 py-6 sm:px-6 md:py-8 lg:py-10">
       <div className="mb-6 md:mb-8 rounded-3xl border border-violet-100 bg-gradient-to-br from-white via-violet-50/60 to-fuchsia-50/50 p-5 shadow-sm md:p-8">
         <div className="grid gap-6 md:gap-8 xl:grid-cols-12">
           <div className="xl:col-span-8">
@@ -198,7 +198,10 @@ export default function TeacherProfile() {
                     {(tutorProfile?.rating ?? 0).toFixed(1)}
                   </Badge>
                 </div>
-                <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">
+                <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 md:hidden">
+                  {displayName}
+                </h1>
+                <h1 className="hidden text-4xl font-extrabold tracking-tight text-slate-900 md:block lg:text-5xl">
                   {displayName}
                 </h1>
                 <p className="mt-1 text-sm font-medium text-violet-700">
@@ -213,7 +216,7 @@ export default function TeacherProfile() {
           <div className="xl:col-span-4 xl:flex xl:items-start xl:justify-end">
             <Button
               onClick={() => setIsEditModalOpen(true)}
-              className="h-12 w-full rounded-full bg-violet-700 px-6 text-sm font-semibold text-white hover:bg-violet-800 xl:mt-2 xl:w-auto"
+              className="h-12 w-full rounded-full bg-violet-700 px-6 text-sm font-semibold text-white hover:bg-violet-800 md:w-auto xl:mt-2"
             >
               <CalendarDays className="mr-2 h-4 w-4" />
               {t("editProfile")}
@@ -270,28 +273,28 @@ export default function TeacherProfile() {
             className="flex min-h-10 items-center gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:text-violet-700"
           >
             <User className="h-4 w-4" />
-            {t("profile")}
+            <span className="hidden sm:inline">{t("profile")}</span>
           </TabsTrigger>
           <TabsTrigger
             value="availability"
             className="flex min-h-10 items-center gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:text-violet-700"
           >
             <BookOpen className="h-4 w-4" />
-            {t("availability")}
+            <span className="hidden sm:inline">{t("availability")}</span>
           </TabsTrigger>
           <TabsTrigger
             value="requests"
             className="flex min-h-10 items-center gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:text-violet-700"
           >
             <Inbox className="h-4 w-4" />
-            {t("requests.tab")}
+            <span className="hidden sm:inline">{t("requests.tab")}</span>
           </TabsTrigger>
           <TabsTrigger
             value="messages"
             className="flex min-h-10 items-center gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:text-violet-700"
           >
             <MessageSquare className="h-4 w-4" />
-            {t("messaging.tab")}
+            <span className="hidden sm:inline">{t("messaging.tab")}</span>
           </TabsTrigger>
         </TabsList>
 

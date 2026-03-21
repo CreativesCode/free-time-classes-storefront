@@ -339,7 +339,7 @@ function SettingsPage() {
     <div className="relative overflow-hidden bg-[#fef3ff]">
       <div className="pointer-events-none absolute -right-24 -top-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-20 -left-10 h-64 w-64 rounded-full bg-purple-300/20 blur-3xl" />
-      <div className="mx-auto w-full max-w-screen-2xl px-4 py-6 sm:px-6 md:py-8">
+      <div className="mx-auto w-full max-w-screen-2xl px-4 py-6 sm:px-6 md:py-8 lg:py-10">
         <Tabs
           value={currentTab}
           onValueChange={(value) =>
@@ -347,14 +347,17 @@ function SettingsPage() {
           }
           className="space-y-5"
         >
-          <div className="rounded-lg border border-primary/10 bg-white/75 p-4 shadow-[0_20px_60px_-35px_rgba(112,42,225,0.45)] backdrop-blur-md sm:p-6">
+          <div className="rounded-lg border border-primary/10 bg-white/75 p-4 shadow-[0_20px_60px_-35px_rgba(112,42,225,0.45)] backdrop-blur-md sm:p-6 lg:p-7">
             <div className="mb-5 flex items-start justify-between gap-3">
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <Settings2 className="h-5 w-5" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900">
+                  <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 md:hidden">
+                    {t("title")}
+                  </h1>
+                  <h1 className="hidden text-3xl font-extrabold tracking-tight text-zinc-900 md:block lg:text-4xl">
                     {t("title")}
                   </h1>
                   <p className="text-sm text-zinc-600 sm:text-base">{t("subtitle")}</p>
@@ -369,21 +372,21 @@ function SettingsPage() {
                   className="justify-center gap-2 rounded-md py-2.5 text-xs data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm lg:justify-start lg:px-3 lg:text-sm"
                 >
                   <ShieldCheck className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t("accountTab")}</span>
+                    <span className="hidden sm:inline">{t("accountTab")}</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="notifications"
                   className="justify-center gap-2 rounded-md py-2.5 text-xs data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm lg:justify-start lg:px-3 lg:text-sm"
                 >
                   <Bell className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t("notificationsTab")}</span>
+                    <span className="hidden sm:inline">{t("notificationsTab")}</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="payments"
                   className="justify-center gap-2 rounded-md py-2.5 text-xs data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm lg:justify-start lg:px-3 lg:text-sm"
                 >
                   <CreditCard className="h-4 w-4" />
-                  <span className="hidden sm:inline">
+                    <span className="hidden sm:inline">
                     {user.is_tutor ? t("paymentsAndPayoutsTab") : t("paymentsTab")}
                   </span>
                 </TabsTrigger>
@@ -392,7 +395,7 @@ function SettingsPage() {
                   className="justify-center gap-2 rounded-md py-2.5 text-xs data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm lg:justify-start lg:px-3 lg:text-sm"
                 >
                   <span className="text-base leading-none">🔒</span>
-                  <span className="hidden sm:inline">{t("privacyTab")}</span>
+                    <span className="hidden sm:inline">{t("privacyTab")}</span>
                 </TabsTrigger>
               </TabsList>
 

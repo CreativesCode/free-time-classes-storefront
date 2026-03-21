@@ -419,10 +419,10 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="w-full space-y-6 px-4 pt-6 sm:px-6 md:ml-20 md:w-[calc(100%-5rem)] lg:ml-64 lg:w-[calc(100%-16rem)] lg:space-y-8 lg:px-8 lg:pt-8">
+      <div className="w-full space-y-6 px-4 pb-24 pt-6 sm:px-6 md:ml-20 md:w-[calc(100%-5rem)] md:pb-10 lg:ml-64 lg:w-[calc(100%-16rem)] lg:space-y-8 lg:px-8 lg:pt-8">
         <section className="space-y-3">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50 sm:text-4xl">
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50 sm:text-4xl lg:text-5xl">
               {t("welcome", { name: user.username ?? "" })}
             </h1>
             <Badge className="rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-800 dark:bg-violet-950/50 dark:text-violet-200">
@@ -433,6 +433,26 @@ export default function Dashboard() {
             {t("welcomeSubtitle")}
           </p>
         </section>
+
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-violet-100 bg-white/90 px-4 pb-4 pt-3 backdrop-blur md:hidden">
+          <div className="mx-auto flex w-full max-w-md items-center justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-violet-500">
+                Siguiente clase
+              </p>
+              <p className="text-sm font-bold text-violet-900">
+                {upcomingLessons.length > 0 ? formatDate(upcomingLessons[0].scheduled_date_time) : "Sin agenda"}
+              </p>
+            </div>
+            <Button
+              size="sm"
+              className="rounded-full px-5"
+              onClick={() => router.push(`/${locale}/bookings`)}
+            >
+              {t("seeAll")}
+            </Button>
+          </div>
+        </div>
 
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#702ae1] to-[#b28cff] p-5 text-white shadow-xl shadow-violet-300/40 sm:p-8">
           <div className="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-white/20 blur-3xl" />
