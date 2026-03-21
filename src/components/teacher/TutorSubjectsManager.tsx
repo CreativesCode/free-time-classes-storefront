@@ -224,7 +224,7 @@ export default function TutorSubjectsManager({
               return (
                 <div
                   key={subject.id}
-                  className="inline-flex items-center rounded-md border bg-white"
+                  className="inline-flex items-center rounded-md border bg-white pl-px"
                 >
                   <Button
                     type="button"
