@@ -15,11 +15,15 @@ import { getPublicUrl } from "@/lib/supabase/storage";
 import {
   BookOpen,
   ChevronRight,
+  CircleHelp,
+  CreditCard,
+  FolderOpen,
   GraduationCap,
   Home,
   LayoutDashboard,
   Menu,
   MessageSquare,
+  School,
   User,
   X,
 } from "lucide-react";
@@ -145,12 +149,57 @@ export default function NavbarWrapper({
     { href: profileHref, icon: User, label: t("profile") },
   ];
 
+  const mobilePrimaryLinks = [
+    {
+      href: `/${locale}/${user?.is_tutor ? "tutor/dashboard" : "dashboard"}`,
+      label: t("dashboard"),
+      icon: LayoutDashboard,
+      requiresAuth: true,
+    },
+    {
+      href: `/${locale}/bookings`,
+      label: t("bookings"),
+      icon: School,
+      requiresAuth: true,
+    },
+    {
+      href: `/${locale}/messages`,
+      label: t("messages"),
+      icon: MessageSquare,
+      requiresAuth: true,
+    },
+    {
+      href: `/${locale}/tutors`,
+      label: t("tutors"),
+      icon: User,
+      requiresAuth: false,
+    },
+    {
+      href: `/${locale}/settings`,
+      label: t("settings"),
+      icon: CreditCard,
+      requiresAuth: true,
+    },
+    {
+      href: `/${locale}/courses`,
+      label: t("courses"),
+      icon: FolderOpen,
+      requiresAuth: false,
+    },
+    {
+      href: `/${locale}/contact`,
+      label: t("contact"),
+      icon: CircleHelp,
+      requiresAuth: false,
+    },
+  ].filter((link) => !link.requiresAuth || user);
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* ── Top navbar ── */}
-      <nav className="sticky top-0 z-50 bg-white border-b border-gray-200">
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6">
-          <div className="flex justify-between items-center h-[72px]">
+      <nav className="sticky top-0 z-50 border-b border-primary/10 bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/65">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-[72px] md:h-[76px]">
             {/* Left */}
             <div className="flex items-center space-x-8">
               <Link href={`/${locale}/`} className="flex items-center">
@@ -163,15 +212,15 @@ export default function NavbarWrapper({
                 />
               </Link>
 
-              <div className="hidden md:flex items-center space-x-1">
+              <div className="hidden md:flex items-center rounded-full border border-primary/10 bg-white/70 p-1 shadow-sm">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    className={`px-3 py-2 text-sm font-semibold rounded-full transition-colors ${
                       isActive(link.href)
-                        ? "text-primary bg-primary/5"
-                        : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                        ? "text-primary bg-primary/10"
+                        : "text-gray-700 hover:text-gray-900 hover:bg-primary/5"
                     }`}
                   >
                     {link.label}
@@ -193,7 +242,7 @@ export default function NavbarWrapper({
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="ghost"
-                        className="relative h-9 gap-2 rounded-full border border-gray-300 bg-primary-100 pl-3 pr-2"
+                        className="relative h-10 gap-2 rounded-full border border-primary/20 bg-white/80 pl-3 pr-2 shadow-sm hover:bg-primary/5"
                       >
                         <span className="text-sm">{user.username}</span>
                         <UserAvatar user={user} className="h-6 w-6" />
@@ -260,12 +309,17 @@ export default function NavbarWrapper({
                 ) : (
                   <div className="flex items-center space-x-2">
                     <Link href={`/${locale}/login`}>
-                      <Button variant="ghost" size="sm">
+                      <Button variant="ghost" size="sm" className="rounded-full">
                         {t("login")}
                       </Button>
                     </Link>
                     <Link href={`/${locale}/register`}>
-                      <Button size="sm">{t("register")}</Button>
+                      <Button
+                        size="sm"
+                        className="rounded-full bg-gradient-to-r from-primary to-violet-500 shadow-sm"
+                      >
+                        {t("register")}
+                      </Button>
                     </Link>
                   </div>
                 )}
@@ -274,7 +328,7 @@ export default function NavbarWrapper({
               {/* Mobile hamburger */}
               <button
                 type="button"
-                className="md:hidden inline-flex items-center justify-center rounded-md p-2 text-gray-700 hover:bg-gray-100 focus:outline-none"
+                className="md:hidden inline-flex items-center justify-center rounded-full p-2 text-gray-700 hover:bg-primary/10 focus:outline-none"
                 onClick={() => setMobileMenuOpen((v) => !v)}
                 aria-label={t("menu")}
               >
@@ -294,149 +348,134 @@ export default function NavbarWrapper({
         <div className="fixed inset-0 z-40 md:hidden">
           {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-[#180429]/45 backdrop-blur-sm"
             onClick={() => setMobileMenuOpen(false)}
           />
 
           {/* Panel */}
-          <div className="absolute right-0 top-0 h-full w-[80%] max-w-sm bg-white shadow-xl overflow-y-auto animate-in slide-in-from-right duration-200">
+          <div className="absolute left-0 top-0 h-full w-[85%] max-w-[340px] bg-[#FAECFF] shadow-2xl overflow-y-auto animate-in slide-in-from-left duration-200">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 h-[72px] border-b border-gray-200">
+            <div className="px-6 pt-10 pb-6 flex flex-col gap-5 border-b border-primary/10">
+              <div className="flex items-center justify-between">
+                {user ? (
+                  <div className="relative">
+                    <div className="h-16 w-16 rounded-full p-[2px] bg-gradient-to-tr from-primary to-fuchsia-400">
+                      <UserAvatar
+                        user={user}
+                        className="h-full w-full border-2 border-[#FAECFF]"
+                      />
+                    </div>
+                    <span className="absolute bottom-0 right-0 h-4 w-4 rounded-full border-2 border-[#FAECFF] bg-emerald-500" />
+                  </div>
+                ) : (
+                  <p className="text-sm font-semibold text-gray-900">{t("menu")}</p>
+                )}
+                <button
+                  type="button"
+                  className="rounded-full p-2 text-gray-600 hover:bg-white/70"
+                  onClick={() => setMobileMenuOpen(false)}
+                  aria-label="Close menu"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
               {user ? (
-                <div className="flex items-center gap-3">
-                  <UserAvatar user={user} className="h-10 w-10" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">
+                <>
+                  <div className="space-y-1">
+                    <h2 className="text-xl font-extrabold tracking-tight text-gray-900">
                       {user.username}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
+                    </h2>
+                    <p className="text-xs font-medium text-gray-500 truncate">
                       {user.email}
                     </p>
                   </div>
-                </div>
+                  <div className="rounded-2xl bg-white/70 p-4">
+                    <div className="mb-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-primary">
+                      <span>Tu progreso</span>
+                      <span>72%</span>
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary/10">
+                      <div className="h-full w-[72%] rounded-full bg-primary" />
+                    </div>
+                  </div>
+                </>
               ) : (
-                <span className="text-sm font-semibold text-gray-900">
-                  {t("menu")}
-                </span>
+                <p className="text-xs text-gray-500">{t("login")} / {t("register")}</p>
               )}
-              <button
-                type="button"
-                className="rounded-md p-2 text-gray-500 hover:bg-gray-100"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <X className="h-5 w-5" />
-              </button>
             </div>
 
             <div className="py-3">
-              {/* Navigation links */}
-              <div className="px-2">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={`flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
-                      isActive(link.href)
-                        ? "text-primary bg-primary/5"
-                        : "text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    {link.label}
-                    <ChevronRight className="h-4 w-4 text-gray-400" />
-                  </Link>
-                ))}
+              <div className="px-3 space-y-1">
+                {mobilePrimaryLinks.map((link) => {
+                  const Icon = link.icon;
+                  const active = isActive(link.href);
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className={`flex items-center gap-3 rounded-2xl px-4 py-3.5 text-sm transition-colors ${
+                        active
+                          ? "bg-primary/15 text-primary font-semibold"
+                          : "text-gray-700 hover:bg-primary/5"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span>{link.label}</span>
+                      {active && (
+                        <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
+                      )}
+                    </Link>
+                  );
+                })}
               </div>
 
-              {user && (
-                <>
-                  <div className="my-3 border-t border-gray-200" />
-                  <div className="px-2">
-                    <Link
-                      href={profileHref}
-                      className={`flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
-                        isActive(profileHref)
-                          ? "text-primary bg-primary/5"
-                          : "text-gray-700 hover:bg-gray-50"
-                      }`}
-                    >
-                      {t("profile")}
-                      <ChevronRight className="h-4 w-4 text-gray-400" />
-                    </Link>
-                    <Link
-                      href={`/${locale}/${user.is_tutor ? "tutor/dashboard" : "dashboard"}`}
-                      className="flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-                    >
-                      {t("dashboard")}
-                      <ChevronRight className="h-4 w-4 text-gray-400" />
-                    </Link>
-                    <Link
-                      href={`/${locale}/bookings`}
-                      className={`flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
-                        isActive(`/${locale}/bookings`)
-                          ? "text-primary bg-primary/5"
-                          : "text-gray-700 hover:bg-gray-50"
-                      }`}
-                    >
-                      {t("bookings")}
-                      <ChevronRight className="h-4 w-4 text-gray-400" />
-                    </Link>
-                    <Link
-                      href={`/${locale}/messages`}
-                      className={`flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
-                        isActive(`/${locale}/messages`)
-                          ? "text-primary bg-primary/5"
-                          : "text-gray-700 hover:bg-gray-50"
-                      }`}
-                    >
-                      {t("messages")}
-                      <ChevronRight className="h-4 w-4 text-gray-400" />
-                    </Link>
-                    <Link
-                      href={`/${locale}/settings`}
-                      className={`flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
-                        isActive(`/${locale}/settings`)
-                          ? "text-primary bg-primary/5"
-                          : "text-gray-700 hover:bg-gray-50"
-                      }`}
-                    >
-                      {t("settings")}
-                      <ChevronRight className="h-4 w-4 text-gray-400" />
-                    </Link>
-                    {user.is_tutor && (
-                      <Link
-                        href={`/${locale}/tutor/dashboard`}
-                        className={`flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
-                          isActive(`/${locale}/tutor/dashboard`)
-                            ? "text-primary bg-primary/5"
-                            : "text-gray-700 hover:bg-gray-50"
-                        }`}
-                      >
-                        <span className="flex items-center gap-2">
-                          <GraduationCap className="h-4 w-4" />
-                          {t("tutorDashboard")}
-                        </span>
-                        <ChevronRight className="h-4 w-4 text-gray-400" />
-                      </Link>
-                    )}
-                  </div>
-                </>
-              )}
+              <div className="my-3 border-t border-primary/10" />
 
-              <div className="my-3 border-t border-gray-200" />
+              <div className="px-3 space-y-1">
+                <Link
+                  href={profileHref}
+                  className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm ${
+                    isActive(profileHref)
+                      ? "text-primary bg-primary/10 font-semibold"
+                      : "text-gray-700 hover:bg-primary/5"
+                  }`}
+                >
+                  {t("profile")}
+                  <ChevronRight className="h-4 w-4 text-gray-400" />
+                </Link>
+                {user?.is_tutor && (
+                  <Link
+                    href={`/${locale}/tutor/dashboard`}
+                    className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm ${
+                      isActive(`/${locale}/tutor/dashboard`)
+                        ? "text-primary bg-primary/10 font-semibold"
+                        : "text-gray-700 hover:bg-primary/5"
+                    }`}
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      <GraduationCap className="h-4 w-4" />
+                      {t("tutorDashboard")}
+                    </span>
+                    <ChevronRight className="h-4 w-4 text-gray-400" />
+                  </Link>
+                )}
+              </div>
+
+              <div className="my-3 border-t border-primary/10" />
 
               {/* Language switcher */}
               <div className="px-5 py-2">
                 <LanguageSwitcher />
               </div>
 
-              <div className="my-3 border-t border-gray-200" />
+              <div className="my-3 border-t border-primary/10" />
 
               {/* Auth actions */}
-              <div className="px-4">
+              <div className="px-4 pb-6">
                 {user ? (
                   <Button
                     variant="outline"
-                    className="w-full justify-center"
+                    className="w-full justify-center rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
                     onClick={handleLogout}
                     disabled={isLoggingOut}
                   >
@@ -445,15 +484,20 @@ export default function NavbarWrapper({
                 ) : (
                   <div className="flex flex-col gap-2">
                     <Link href={`/${locale}/login`}>
-                      <Button variant="outline" className="w-full">
+                      <Button variant="outline" className="w-full rounded-xl">
                         {t("login")}
                       </Button>
                     </Link>
                     <Link href={`/${locale}/register`}>
-                      <Button className="w-full">{t("register")}</Button>
+                      <Button className="w-full rounded-xl bg-gradient-to-r from-primary to-violet-500">
+                        {t("register")}
+                      </Button>
                     </Link>
                   </div>
                 )}
+                <p className="mt-5 text-center text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400">
+                  FreeTime Classes
+                </p>
               </div>
             </div>
           </div>
