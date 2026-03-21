@@ -8,57 +8,56 @@ import Link from "next/link";
 export default function Footer() {
   const t = useTranslations("home");
   const locale = useLocale();
+  const year = new Date().getFullYear();
+
+  const quickLinks = [
+    { href: `/${locale}/tutors`, label: t("findTutors") },
+    { href: `/${locale}/courses`, label: t("availableCourses") },
+    { href: `/${locale}/become-tutor`, label: t("becomeTutor") },
+    { href: `/${locale}/about`, label: t("aboutUs") },
+  ];
+
+  const socialLinks = [
+    { href: "https://facebook.com", icon: "/images/icons/facebook.svg", alt: "Facebook" },
+    { href: "https://instagram.com", icon: "/images/icons/instagram.svg", alt: "Instagram" },
+    { href: "https://twitter.com", icon: "/images/icons/x.svg", alt: "Twitter" },
+    { href: "https://youtube.com", icon: "/images/icons/youtube.svg", alt: "Youtube" },
+  ];
 
   return (
-    <footer className="bg-gray-900 text-white pb-20 md:pb-0">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          <div className="col-span-2 md:col-span-1 space-y-4">
-            <h3 className="text-xl font-bold">Free Time Classes</h3>
-            <p className="text-gray-400 text-sm">{t("companyDescription")}</p>
+    <footer className="relative overflow-hidden bg-[#09090f] pb-20 pt-10 text-white md:pb-0 md:pt-12">
+      <div className="pointer-events-none absolute inset-x-0 -top-32 h-72 bg-[radial-gradient(circle_at_30%_30%,rgba(124,58,237,0.28),transparent_58%)]" />
+      <div className="pointer-events-none absolute -bottom-36 right-0 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(244,114,182,0.16),transparent_70%)] blur-2xl" />
+
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-lg border border-white/10 bg-white/[0.04] p-6 shadow-lumina-sm backdrop-blur-lumina">
+            <p className="text-lumina-overline font-bold uppercase tracking-overline text-white/65">
+              FreeTime Lumina
+            </p>
+            <h3 className="mt-3 text-lumina-h3 font-semibold text-white">Free Time Classes</h3>
+            <p className="mt-3 text-lumina-body text-white/70">{t("companyDescription")}</p>
           </div>
 
-          <div>
-            <h4 className="text-lg font-semibold mb-4">{t("quickLinks")}</h4>
-            <ul className="space-y-2">
-              <li>
-                <Link
-                  href={`/${locale}/tutors`}
-                  className="text-gray-400 hover:text-white transition-colors text-sm"
-                >
-                  {t("findTutors")}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href={`/${locale}/courses`}
-                  className="text-gray-400 hover:text-white transition-colors text-sm"
-                >
-                  {t("availableCourses")}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href={`/${locale}/become-tutor`}
-                  className="text-gray-400 hover:text-white transition-colors text-sm"
-                >
-                  {t("becomeTutor")}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href={`/${locale}/about`}
-                  className="text-gray-400 hover:text-white transition-colors text-sm"
-                >
-                  {t("aboutUs")}
-                </Link>
-              </li>
+          <div className="rounded-lg border border-white/10 bg-white/[0.03] p-6">
+            <h4 className="text-lumina-body-lg font-semibold text-white">{t("quickLinks")}</h4>
+            <ul className="mt-4 space-y-3">
+              {quickLinks.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="text-lumina-body text-white/70 transition-colors hover:text-white"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          <div>
-            <h4 className="text-lg font-semibold mb-4">{t("contact")}</h4>
-            <ul className="space-y-2 text-gray-400 text-sm">
+          <div className="rounded-lg border border-white/10 bg-white/[0.03] p-6">
+            <h4 className="text-lumina-body-lg font-semibold text-white">{t("contact")}</h4>
+            <ul className="mt-4 space-y-3 text-lumina-body text-white/70">
               <li>{t("email")}</li>
               <li>{t("phone")}</li>
               <li>{t("address")}</li>
@@ -66,66 +65,41 @@ export default function Footer() {
             </ul>
           </div>
 
-          <div>
-            <h4 className="text-lg font-semibold mb-4">{t("followUs")}</h4>
-            <div className="flex space-x-4">
-              <Link
-                href="https://facebook.com"
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <Image
-                  src="/images/icons/facebook.svg"
-                  alt="Facebook"
-                  className="h-6 w-6"
-                  width={24}
-                  height={24}
-                />
-              </Link>
-              <Link
-                href="https://instagram.com"
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <Image
-                  src="/images/icons/instagram.svg"
-                  alt="Instagram"
-                  className="h-6 w-6"
-                  width={24}
-                  height={24}
-                />
-              </Link>
-              <Link
-                href="https://twitter.com"
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <Image
-                  src="/images/icons/x.svg"
-                  alt="Twitter"
-                  className="h-6 w-6"
-                  width={24}
-                  height={24}
-                />
-              </Link>
-              <Link
-                href="https://youtube.com"
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <Image
-                  src="/images/icons/youtube.svg"
-                  alt="Youtube"
-                  className="h-6 w-6"
-                  width={24}
-                  height={24}
-                />
-              </Link>
+          <div className="rounded-lg border border-white/10 bg-white/[0.03] p-6">
+            <h4 className="text-lumina-body-lg font-semibold text-white">{t("followUs")}</h4>
+            <div className="mt-4 flex flex-wrap gap-3">
+              {socialLinks.map((social) => (
+                <Link
+                  key={social.alt}
+                  href={social.href}
+                  aria-label={social.alt}
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-white/15 bg-white/[0.06] transition-all hover:border-white/35 hover:bg-white/[0.14]"
+                >
+                  <Image
+                    src={social.icon}
+                    alt={social.alt}
+                    className="h-5 w-5"
+                    width={20}
+                    height={20}
+                  />
+                </Link>
+              ))}
             </div>
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400 text-sm">
-          <p>
-            &copy; {new Date().getFullYear()} Free Time Classes.{" "}
-            {t("allRightsReserved")}
+        <div className="mt-8 border-t border-white/10 py-6 text-center md:mt-10 md:flex md:items-center md:justify-between md:text-left">
+          <p className="text-lumina-body-sm text-white/65">
+            &copy; {year} Free Time Classes. {t("allRightsReserved")}
           </p>
+          <div className="mt-3 flex items-center justify-center gap-5 md:mt-0 md:justify-end">
+            <Link href={`/${locale}/contact`} className="text-lumina-body-sm text-white/65 transition-colors hover:text-white">
+              {t("contact")}
+            </Link>
+            <Link href={`/${locale}/about`} className="text-lumina-body-sm text-white/65 transition-colors hover:text-white">
+              {t("aboutUs")}
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
