@@ -319,20 +319,79 @@ export default function Dashboard() {
     return pic.startsWith("http") ? pic : getPublicUrl("avatars", pic);
   };
 
+  const sidebarItems = [
+    { label: "Dashboard", icon: BookOpen, href: `/${locale}/dashboard`, active: true },
+    { label: "Mis clases", icon: GraduationCap, href: `/${locale}/courses` },
+    { label: "Tutores", icon: Users, href: `/${locale}/tutors` },
+    { label: "Progreso", icon: TrendingUp, href: `/${locale}/bookings` },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#fef3ff] pb-28 md:pb-8 dark:bg-slate-950">
-      <header className="sticky top-0 z-30 border-b border-violet-100/70 bg-[#fef3ff]/85 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/80">
+    <div className="min-h-screen overflow-x-hidden bg-[#fef3ff] pb-28 md:pb-0 dark:bg-slate-950">
+      <aside className="fixed left-0 top-0 z-40 hidden h-full w-20 flex-col items-center gap-4 border-r border-violet-100/70 bg-[#faecff] py-5 md:flex lg:hidden dark:border-slate-800 dark:bg-slate-900">
+        <div className="mb-2 h-10 w-10 rounded-xl bg-[#702ae1] text-white grid place-items-center font-black">
+          F
+        </div>
+        {sidebarItems.map((item) => (
+          <button
+            key={item.label}
+            type="button"
+            onClick={() => router.push(item.href)}
+            className={`rounded-2xl p-3 transition ${
+              item.active
+                ? "bg-[#edd3ff] text-[#702ae1] dark:bg-slate-800 dark:text-violet-200"
+                : "text-slate-500 hover:bg-violet-100 dark:text-slate-400 dark:hover:bg-slate-800"
+            }`}
+            title={item.label}
+          >
+            <item.icon className="h-5 w-5" />
+          </button>
+        ))}
+      </aside>
+
+      <aside className="fixed left-0 top-0 z-40 hidden h-full w-64 flex-col gap-8 border-r border-violet-100/70 bg-[#faecff] p-6 lg:flex dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-[#702ae1] text-white grid place-items-center font-black">
+            F
+          </div>
+          <div>
+            <p className="text-lg font-black text-[#702ae1]">FreeTime</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-violet-500">
+              Classes
+            </p>
+          </div>
+        </div>
+        <nav className="flex flex-1 flex-col gap-2">
+          {sidebarItems.map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              onClick={() => router.push(item.href)}
+              className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold transition ${
+                item.active
+                  ? "translate-x-1 bg-[#edd3ff] text-[#702ae1] dark:bg-slate-800 dark:text-violet-200"
+                  : "text-slate-600 hover:bg-violet-100 dark:text-slate-300 dark:hover:bg-slate-800"
+              }`}
+            >
+              <item.icon className="h-4 w-4" />
+              {item.label}
+            </button>
+          ))}
+        </nav>
+      </aside>
+
+      <header className="sticky top-0 z-30 border-b border-violet-100/70 bg-[#fef3ff]/85 backdrop-blur-xl md:ml-20 md:w-[calc(100%-5rem)] lg:ml-64 lg:w-[calc(100%-16rem)] dark:border-slate-800 dark:bg-slate-950/80">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
-            <p className="text-lg font-extrabold tracking-tight text-[#702ae1]">
+            <p className="text-lg font-extrabold tracking-tight text-[#702ae1] md:hidden">
               FreeTime
             </p>
-            <div className="relative hidden md:block">
+            <div className="relative hidden lg:block">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-violet-400" />
               <input
                 type="text"
                 placeholder="Buscar clases, tutores..."
-                className="h-10 w-72 rounded-2xl border border-violet-200/70 bg-white/75 pl-9 pr-3 text-sm text-slate-700 outline-none ring-0 placeholder:text-slate-400 focus:border-violet-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                className="h-10 w-80 rounded-2xl border border-violet-200/70 bg-white/75 pl-9 pr-3 text-sm text-slate-700 outline-none ring-0 placeholder:text-slate-400 focus:border-violet-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
               />
             </div>
           </div>
@@ -360,7 +419,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-7xl space-y-6 px-4 pt-6 sm:px-6 lg:space-y-8 lg:px-8 lg:pt-8">
+      <div className="w-full space-y-6 px-4 pt-6 sm:px-6 md:ml-20 md:w-[calc(100%-5rem)] lg:ml-64 lg:w-[calc(100%-16rem)] lg:space-y-8 lg:px-8 lg:pt-8">
         <section className="space-y-3">
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50 sm:text-4xl">
@@ -416,7 +475,7 @@ export default function Dashboard() {
           </div>
         </section>
 
-        <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <section className="grid grid-cols-2 gap-3 md:grid-cols-2 lg:grid-cols-4">
           {statCards.map((stat) => (
             <Card
               key={stat.label}
@@ -561,7 +620,7 @@ export default function Dashboard() {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="grid gap-3 md:grid-cols-2">
+              <CardContent className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                 {recommendedCourses.map((course) => (
                   <button
                     key={course.title}
