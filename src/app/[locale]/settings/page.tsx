@@ -20,6 +20,12 @@ import {
   CreditCard,
   Eye,
   EyeOff,
+  Download,
+  Search,
+  Filter,
+  ReceiptText,
+  GraduationCap,
+  Brain,
 } from "lucide-react";
 
 function isValidEmail(email: string) {
@@ -76,6 +82,32 @@ function SettingsPage() {
   const [isExporting, setIsExporting] = useState(false);
 
   const canUpdateNotifications = Boolean(user?.id);
+  const paymentHistory = [
+    {
+      id: "INV-2024-11",
+      title: t("paymentHistoryItem1Title"),
+      subtitle: t("paymentHistoryItem1Subtitle"),
+      amount: "$49.00",
+      status: "paid" as const,
+      icon: ReceiptText,
+    },
+    {
+      id: "INV-2024-10",
+      title: t("paymentHistoryItem2Title"),
+      subtitle: t("paymentHistoryItem2Subtitle"),
+      amount: "$129.00",
+      status: "paid" as const,
+      icon: GraduationCap,
+    },
+    {
+      id: "INV-2024-09",
+      title: t("paymentHistoryItem3Title"),
+      subtitle: t("paymentHistoryItem3Subtitle"),
+      amount: "$75.00",
+      status: "pending" as const,
+      icon: Brain,
+    },
+  ];
 
   useEffect(() => {
     if (!user) return;
@@ -315,10 +347,10 @@ function SettingsPage() {
           }
           className="space-y-5"
         >
-          <div className="rounded-3xl border border-primary/10 bg-white/75 p-4 shadow-[0_20px_60px_-35px_rgba(112,42,225,0.45)] backdrop-blur-md sm:p-6">
+          <div className="rounded-lg border border-primary/10 bg-white/75 p-4 shadow-[0_20px_60px_-35px_rgba(112,42,225,0.45)] backdrop-blur-md sm:p-6">
             <div className="mb-5 flex items-start justify-between gap-3">
               <div className="flex items-start gap-3">
-                <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <Settings2 className="h-5 w-5" />
                 </div>
                 <div>
@@ -368,7 +400,7 @@ function SettingsPage() {
                 <TabsContent value="account" className="space-y-4">
                     <Card className="w-full border-primary/10 bg-white/95 shadow-[0_25px_55px_-40px_rgba(112,42,225,0.65)]">
             <CardHeader>
-              <div className="mb-2 flex items-center gap-3 rounded-2xl bg-[#faecff] p-3">
+              <div className="mb-2 flex items-center gap-3 rounded-lg bg-[#faecff] p-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-lg font-bold text-primary">
                   {(user.full_name || user.email || "U").charAt(0).toUpperCase()}
                 </div>
@@ -567,13 +599,157 @@ function SettingsPage() {
               <CardTitle>{user.is_tutor ? t("paymentsAndPayoutsTab") : t("paymentsTab")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {user.is_student && (
-                <div className="space-y-3">
-                  <h2 className="text-lg font-semibold">{t("paymentsMethodsTitle")}</h2>
-                  <Button variant="outline" className="w-full justify-start" disabled>
-                    {t("savedPaymentMethods")} ({t("comingSoon")})
-                  </Button>
-                  <p className="text-sm text-gray-600">{t("paymentHistory")}</p>
+              {(user.is_student || user.is_tutor) && (
+                <div className="space-y-6">
+                  <section className="overflow-hidden rounded-lg bg-gradient-to-br from-primary to-violet-700 p-5 text-white sm:p-6">
+                    <div className="relative z-10">
+                      <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/70">
+                        {t("currentSubscription")}
+                      </p>
+                      <h2 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">
+                        {user.is_tutor ? t("tutorPlanTitle") : t("studentPlanTitle")}
+                      </h2>
+                      <div className="mt-6 flex items-end justify-between gap-3">
+                        <div>
+                          <p className="text-sm text-white/80">{t("nextPaymentDateLabel")}</p>
+                          <p className="font-semibold">{t("nextPaymentDateValue")}</p>
+                        </div>
+                        <p className="text-3xl font-black sm:text-4xl">$49</p>
+                      </div>
+                      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <Button className="rounded-md bg-white text-primary hover:bg-white/90">
+                          {t("upgradePlan")}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="rounded-md border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white"
+                        >
+                          {t("managePaymentMethod")}
+                        </Button>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="grid grid-cols-1 gap-4 md:grid-cols-5">
+                    <div className="rounded-lg border border-primary/10 bg-[#faecff] p-4 md:col-span-2">
+                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary/70">
+                        {t("savedCardLabel")}
+                      </p>
+                      <div className="mt-5 flex items-center justify-between">
+                        <div>
+                          <p className="text-xl font-extrabold text-zinc-900">•••• •••• •••• 8812</p>
+                          <p className="mt-1 text-sm text-zinc-600">{t("cardExpires")}: 09/27</p>
+                        </div>
+                        <CreditCard className="h-8 w-8 text-primary" />
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border border-primary/10 bg-white p-4 md:col-span-3">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <h3 className="text-lg font-bold text-zinc-900">{t("paymentHistoryTitle")}</h3>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 rounded-md border border-zinc-200 bg-white px-3 py-2 text-zinc-500">
+                            <Search className="h-4 w-4" />
+                            <span className="text-xs">{t("searchInvoicesPlaceholder")}</span>
+                          </div>
+                          <Button variant="outline" size="icon" className="rounded-md">
+                            <Filter className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="rounded-lg border border-primary/10 bg-[#faf7ff] p-3 sm:p-4">
+                    <div className="hidden rounded-md border border-primary/10 bg-white lg:block">
+                      <div className="grid grid-cols-12 border-b border-zinc-100 px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+                        <p className="col-span-5">{t("invoiceColumn")}</p>
+                        <p className="col-span-2">{t("amountColumn")}</p>
+                        <p className="col-span-2">{t("statusColumn")}</p>
+                        <p className="col-span-3 text-right">{t("receiptColumn")}</p>
+                      </div>
+                      <div className="divide-y divide-zinc-100">
+                        {paymentHistory.map((item) => (
+                          <div key={item.id} className="grid grid-cols-12 items-center px-4 py-4">
+                            <div className="col-span-5 flex items-center gap-3">
+                              <div className="rounded-full bg-primary/10 p-2 text-primary">
+                                <item.icon className="h-4 w-4" />
+                              </div>
+                              <div>
+                                <p className="font-semibold text-zinc-900">{item.title}</p>
+                                <p className="text-xs text-zinc-500">{item.subtitle}</p>
+                              </div>
+                            </div>
+                            <p className="col-span-2 text-base font-bold text-zinc-900">{item.amount}</p>
+                            <div className="col-span-2">
+                              <span
+                                className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                  item.status === "paid"
+                                    ? "bg-emerald-100 text-emerald-700"
+                                    : "bg-amber-100 text-amber-700"
+                                }`}
+                              >
+                                {item.status === "paid" ? t("statusPaid") : t("statusPending")}
+                              </span>
+                            </div>
+                            <div className="col-span-3 flex justify-end">
+                              <Button variant="ghost" className="gap-2 text-primary">
+                                <Download className="h-4 w-4" />
+                                PDF
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 lg:hidden">
+                      {paymentHistory.map((item) => (
+                        <article key={item.id} className="rounded-md border border-primary/10 bg-white p-4 shadow-sm">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3">
+                              <div className="rounded-full bg-primary/10 p-2 text-primary">
+                                <item.icon className="h-4 w-4" />
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-zinc-900">{item.title}</h4>
+                                <p className="text-xs text-zinc-500">{item.subtitle}</p>
+                              </div>
+                            </div>
+                            <p className="text-base font-extrabold text-zinc-900">{item.amount}</p>
+                          </div>
+                          <div className="mt-3 flex items-center justify-between">
+                            <span
+                              className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                item.status === "paid"
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : "bg-amber-100 text-amber-700"
+                              }`}
+                            >
+                              {item.status === "paid" ? t("statusPaid") : t("statusPending")}
+                            </span>
+                            <Button variant="ghost" size="sm" className="gap-2 text-primary">
+                              <Download className="h-4 w-4" />
+                              {t("downloadInvoice")}
+                            </Button>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+
+                  <section className="rounded-lg border border-primary/10 bg-white p-4 sm:p-5">
+                    <h3 className="text-base font-bold text-zinc-900">{t("billingSupportTitle")}</h3>
+                    <p className="mt-1 text-sm text-zinc-600">{t("billingSupportDescription")}</p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <Button variant="outline" className="rounded-md">
+                        {t("contactSupport")}
+                      </Button>
+                      <Button variant="ghost" className="rounded-md text-primary">
+                        {t("billingFaq")}
+                      </Button>
+                    </div>
+                  </section>
                 </div>
               )}
 
