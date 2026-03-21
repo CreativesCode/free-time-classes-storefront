@@ -40,5 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Copia temporal para @capacitor/assets (origen: public/images/Isotipo.svg)
+/assets/logo.svg
+
 # documentation
 docs/**
