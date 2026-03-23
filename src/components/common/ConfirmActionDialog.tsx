@@ -52,7 +52,7 @@ export default function ConfirmActionDialog({
     >
       <DialogContent
         className={cn(
-          "w-[calc(100%-2rem)] max-w-[620px] overflow-hidden rounded-3xl border border-violet-200/70 bg-white p-0 shadow-[0_30px_60px_-15px_rgba(58,38,75,0.20)]",
+          "w-[calc(100%-2rem)] max-w-[620px] overflow-y-auto overscroll-contain rounded-3xl border border-violet-200/70 bg-white p-0 shadow-[0_30px_60px_-15px_rgba(58,38,75,0.20)]",
           "[&>button]:top-5 [&>button]:right-5 [&>button]:text-violet-400 [&>button]:opacity-100 [&>button]:hover:text-violet-700",
           contentClassName
         )}

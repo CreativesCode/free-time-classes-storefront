@@ -508,7 +508,7 @@ export default function TutorCoursesManager({
           </DialogHeader>
 
           <form
-            className="space-y-4"
+            className="flex max-h-[calc(100dvh-13rem)] flex-col gap-4 overflow-y-auto pr-1 sm:max-h-[calc(100dvh-16rem)]"
             onSubmit={(e) => {
               e.preventDefault();
               void handleCreate();
@@ -666,7 +666,7 @@ export default function TutorCoursesManager({
 
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
-            <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 sm:justify-end">
+            <DialogFooter className="sticky bottom-0 z-10 -mx-1 mt-2 flex flex-col gap-2 border-t bg-background/95 px-1 pt-3 pb-1 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:flex-row sm:gap-0 sm:justify-end">
               <Button
                 type="button"
                 variant="outline"
@@ -705,7 +705,7 @@ export default function TutorCoursesManager({
           </DialogHeader>
 
           <form
-            className="space-y-4"
+            className="flex max-h-[calc(100dvh-13rem)] flex-col gap-4 overflow-y-auto pr-1 sm:max-h-[calc(100dvh-16rem)]"
             onSubmit={(e) => {
               e.preventDefault();
               void handleUpdate();
@@ -868,7 +868,7 @@ export default function TutorCoursesManager({
 
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
-            <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 sm:justify-end">
+            <DialogFooter className="sticky bottom-0 z-10 -mx-1 mt-2 flex flex-col gap-2 border-t bg-background/95 px-1 pt-3 pb-1 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:flex-row sm:gap-0 sm:justify-end">
               <Button
                 type="button"
                 variant="outline"
