@@ -501,19 +501,20 @@ export default function TutorCoursesManager({
           }
         }}
       >
-        <DialogContent className="sm:max-w-[650px]">
-          <DialogHeader>
+        <DialogContent className="flex max-h-[calc(100dvh-1rem)] flex-col overflow-hidden p-0 sm:max-w-[650px]">
+          <DialogHeader className="px-4 pt-6 sm:px-6">
             <DialogTitle>{t("createTitle")}</DialogTitle>
             <DialogDescription>{t("createDescription")}</DialogDescription>
           </DialogHeader>
 
           <form
-            className="flex max-h-[calc(100dvh-13rem)] flex-col gap-4 overflow-y-auto pr-1 sm:max-h-[calc(100dvh-16rem)]"
+            className="min-h-0 flex-1 overflow-y-auto overflow-x-visible px-4 pb-4 pt-1 sm:px-6"
             onSubmit={(e) => {
               e.preventDefault();
               void handleCreate();
             }}
           >
+            <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="course-title">{t("fieldTitle")}</Label>
               <Input
@@ -665,8 +666,9 @@ export default function TutorCoursesManager({
             </div>
 
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
+            </div>
 
-            <DialogFooter className="sticky bottom-0 z-10 -mx-1 mt-2 flex flex-col gap-2 border-t bg-background/95 px-1 pt-3 pb-1 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:flex-row sm:gap-0 sm:justify-end">
+            <DialogFooter className="sticky bottom-0 z-10 mt-3 flex flex-col gap-2 border-t bg-background/95 pt-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:flex-row sm:gap-0 sm:justify-end">
               <Button
                 type="button"
                 variant="outline"
@@ -698,19 +700,20 @@ export default function TutorCoursesManager({
           }
         }}
       >
-        <DialogContent className="sm:max-w-[650px]">
-          <DialogHeader>
+        <DialogContent className="flex max-h-[calc(100dvh-1rem)] flex-col overflow-hidden p-0 sm:max-w-[650px]">
+          <DialogHeader className="px-4 pt-6 sm:px-6">
             <DialogTitle>{t("editTitle")}</DialogTitle>
             <DialogDescription>{t("editDescription")}</DialogDescription>
           </DialogHeader>
 
           <form
-            className="flex max-h-[calc(100dvh-13rem)] flex-col gap-4 overflow-y-auto pr-1 sm:max-h-[calc(100dvh-16rem)]"
+            className="min-h-0 flex-1 overflow-y-auto overflow-x-visible px-4 pb-4 pt-1 sm:px-6"
             onSubmit={(e) => {
               e.preventDefault();
               void handleUpdate();
             }}
           >
+            <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="edit-course-title">{t("fieldTitle")}</Label>
               <Input
@@ -867,8 +870,9 @@ export default function TutorCoursesManager({
             </div>
 
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
+            </div>
 
-            <DialogFooter className="sticky bottom-0 z-10 -mx-1 mt-2 flex flex-col gap-2 border-t bg-background/95 px-1 pt-3 pb-1 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:flex-row sm:gap-0 sm:justify-end">
+            <DialogFooter className="sticky bottom-0 z-10 mt-3 flex flex-col gap-2 border-t bg-background/95 pt-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:flex-row sm:gap-0 sm:justify-end">
               <Button
                 type="button"
                 variant="outline"
