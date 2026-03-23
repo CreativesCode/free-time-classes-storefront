@@ -89,7 +89,7 @@ export default function LoginPage() {
 
   return (
     <div
-      className="relative flex min-h-[100dvh] flex-col items-center overflow-x-hidden bg-surface px-4 pt-[max(1.25rem,env(safe-area-inset-top,0px))] pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] font-sans max-md:justify-start max-md:pt-6 sm:px-5 md:justify-center md:px-10 md:py-12 lg:px-8 [background-image:radial-gradient(at_0%_0%,hsla(263,74%,85%,1)_0,transparent_50%),radial-gradient(at_100%_100%,hsla(263,74%,92%,1)_0,transparent_50%)] dark:bg-surface-dim dark:[background-image:radial-gradient(at_0%_0%,rgba(167,139,250,0.14)_0,transparent_45%),radial-gradient(at_100%_100%,rgba(112,42,225,0.1)_0,transparent_50%)]"
+      className="relative flex min-h-[100dvh] flex-col items-center overflow-x-hidden bg-surface px-4 pt-[max(1.25rem,env(safe-area-inset-top,0px))] pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] font-sans max-md:justify-start max-md:pt-[max(2rem,calc(env(safe-area-inset-top,0px)+1rem))] sm:px-5 md:justify-center md:px-10 md:py-12 lg:px-8 [background-image:radial-gradient(at_0%_0%,hsla(263,74%,85%,1)_0,transparent_50%),radial-gradient(at_100%_100%,hsla(263,74%,92%,1)_0,transparent_50%)] dark:bg-surface-dim dark:[background-image:radial-gradient(at_0%_0%,rgba(167,139,250,0.14)_0,transparent_45%),radial-gradient(at_100%_100%,rgba(112,42,225,0.1)_0,transparent_50%)]"
     >
       {/* Mobile: halo suave (sin orbes pesados) */}
       <div
