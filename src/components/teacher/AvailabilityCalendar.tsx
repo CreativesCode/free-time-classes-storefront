@@ -325,16 +325,19 @@ export default function AvailabilityCalendar({
         </div>
       </CardContent>
       <Dialog open={!!selectedLessonId} onOpenChange={handleCloseDialog}>
-        <DialogContent className="sm:max-w-[525px]">
-          <DialogHeader>
+        <DialogContent className="flex max-h-[calc(100dvh-1rem)] flex-col overflow-hidden p-0 sm:max-w-[525px]">
+          <DialogHeader className="px-4 pt-6 sm:px-6">
             <DialogTitle>{t("lessonDetails")}</DialogTitle>
           </DialogHeader>
           {lessonLoading ? (
-            <div className="flex justify-center py-4">
+            <div className="min-h-0 flex-1 px-4 pb-4 pt-1 sm:px-6">
+              <div className="flex justify-center py-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
+            </div>
           ) : selectedLesson ? (
-            <div className="space-y-4">
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-1 sm:px-6">
+              <div className="space-y-4">
               {selectedLesson.tutor?.user && (
                 <div>
                   <h3 className="font-semibold text-primary-800">
@@ -414,7 +417,7 @@ export default function AvailabilityCalendar({
                 </div>
               </div>
               {user?.email === selectedLesson.tutor?.user?.email && (
-                <div className="flex gap-2 float-right mt-4">
+                <div className="mt-2 flex justify-end gap-2 border-t pt-3">
                   <Button
                     variant="outline"
                     className="btn-secondary"
@@ -428,6 +431,7 @@ export default function AvailabilityCalendar({
                   </Button>
                 </div>
               )}
+              </div>
             </div>
           ) : null}
         </DialogContent>

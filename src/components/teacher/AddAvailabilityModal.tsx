@@ -134,16 +134,17 @@ export default function AddAvailabilityModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[525px]">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[calc(100dvh-1rem)] flex-col overflow-hidden p-0 sm:max-w-[525px]">
+        <DialogHeader className="px-4 pt-6 sm:px-6">
           <DialogTitle>{t("title")}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-1 sm:px-6">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                {error}
+              </div>
+            )}
 
           <div className="space-y-2">
             <Label htmlFor="subject">{t("subject")}</Label>
@@ -205,7 +206,8 @@ export default function AddAvailabilityModal({
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-4">
+          </div>
+          <div className="mt-2 flex shrink-0 justify-end gap-2 border-t bg-background px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-6">
             <Button
               type="button"
               variant="outline"

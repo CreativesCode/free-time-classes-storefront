@@ -508,13 +508,13 @@ export default function TutorCoursesManager({
           </DialogHeader>
 
           <form
-            className="min-h-0 flex-1 overflow-y-auto overflow-x-visible px-4 pb-4 pt-1 sm:px-6"
+            className="flex min-h-0 flex-1 flex-col"
             onSubmit={(e) => {
               e.preventDefault();
               void handleCreate();
             }}
           >
-            <div className="space-y-4">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overflow-x-visible px-4 pb-4 pt-1 sm:px-6">
             <div className="space-y-2">
               <Label htmlFor="course-title">{t("fieldTitle")}</Label>
               <Input
@@ -668,7 +668,7 @@ export default function TutorCoursesManager({
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
             </div>
 
-            <DialogFooter className="sticky bottom-0 z-10 mt-3 flex flex-col gap-2 border-t bg-background/95 pt-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:flex-row sm:gap-0 sm:justify-end">
+            <DialogFooter className="mt-2 flex shrink-0 flex-col gap-2 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:px-6">
               <Button
                 type="button"
                 variant="outline"
@@ -707,13 +707,13 @@ export default function TutorCoursesManager({
           </DialogHeader>
 
           <form
-            className="min-h-0 flex-1 overflow-y-auto overflow-x-visible px-4 pb-4 pt-1 sm:px-6"
+            className="flex min-h-0 flex-1 flex-col"
             onSubmit={(e) => {
               e.preventDefault();
               void handleUpdate();
             }}
           >
-            <div className="space-y-4">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overflow-x-visible px-4 pb-4 pt-1 sm:px-6">
             <div className="space-y-2">
               <Label htmlFor="edit-course-title">{t("fieldTitle")}</Label>
               <Input
@@ -872,7 +872,7 @@ export default function TutorCoursesManager({
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
             </div>
 
-            <DialogFooter className="sticky bottom-0 z-10 mt-3 flex flex-col gap-2 border-t bg-background/95 pt-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:flex-row sm:gap-0 sm:justify-end">
+            <DialogFooter className="mt-2 flex shrink-0 flex-col gap-2 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:px-6">
               <Button
                 type="button"
                 variant="outline"

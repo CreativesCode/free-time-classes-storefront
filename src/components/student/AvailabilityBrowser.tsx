@@ -399,12 +399,13 @@ export default function AvailabilityBrowser() {
         open={!!selectedLesson}
         onOpenChange={() => setSelectedLesson(null)}
       >
-        <DialogContent className="sm:max-w-[525px]">
-          <DialogHeader>
+        <DialogContent className="flex max-h-[calc(100dvh-1rem)] flex-col overflow-hidden p-0 sm:max-w-[525px]">
+          <DialogHeader className="px-4 pt-6 sm:px-6">
             <DialogTitle>{t("lessonDetails")}</DialogTitle>
           </DialogHeader>
           {selectedLesson && (
-            <div className="space-y-4">
+            <div className="flex min-h-0 flex-1 flex-col">
+              <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-1 sm:px-6">
               {/* Tutor info */}
               <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
                 <Avatar className="h-16 w-16">
@@ -465,8 +466,9 @@ export default function AvailabilityBrowser() {
                 </div>
               </div>
 
+              </div>
               {/* Book button */}
-              <div className="flex justify-end gap-2 pt-4 border-t">
+              <div className="mt-2 flex shrink-0 justify-end gap-2 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6">
                 <Button
                   variant="outline"
                   onClick={() => setSelectedLesson(null)}

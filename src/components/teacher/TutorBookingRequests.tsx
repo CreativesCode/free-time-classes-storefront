@@ -181,19 +181,21 @@ export default function TutorBookingRequests() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-[520px]">
-          <DialogHeader>
+        <DialogContent className="flex max-h-[calc(100dvh-1rem)] flex-col overflow-hidden p-0 sm:max-w-[520px]">
+          <DialogHeader className="px-4 pt-6 sm:px-6">
             <DialogTitle>{t("rejectDialogTitle")}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-2">
-            <Label>{t("rejectReasonLabel")}</Label>
-            <Input
-              value={rejectReason}
-              onChange={(event) => setRejectReason(event.target.value)}
-              placeholder={t("rejectReasonPlaceholder")}
-            />
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-1 sm:px-6">
+            <div className="space-y-2">
+              <Label>{t("rejectReasonLabel")}</Label>
+              <Input
+                value={rejectReason}
+                onChange={(event) => setRejectReason(event.target.value)}
+                placeholder={t("rejectReasonPlaceholder")}
+              />
+            </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="mt-2 flex shrink-0 flex-col gap-2 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:px-6">
             <Button
               variant="outline"
               onClick={() => setRejectTarget(null)}

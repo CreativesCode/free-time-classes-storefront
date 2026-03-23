@@ -90,8 +90,8 @@ export default function LeaveReviewModal(props: {
 
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent className="max-h-[92vh] w-[calc(100%-1rem)] overflow-y-auto rounded-3xl border-0 bg-white p-5 shadow-[0_28px_80px_rgba(112,42,225,0.22)] sm:max-w-[640px] sm:p-8 [&>button]:hidden">
-        <DialogHeader className="mb-1 text-left">
+      <DialogContent className="flex max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] flex-col overflow-hidden rounded-3xl border-0 bg-white p-0 shadow-[0_28px_80px_rgba(112,42,225,0.22)] sm:max-w-[640px] [&>button]:hidden">
+        <DialogHeader className="mb-1 px-5 pt-5 text-left sm:px-8 sm:pt-8">
           <div className="flex items-start justify-between gap-4">
             <div>
               <DialogTitle className="font-plus-jakarta text-xl font-extrabold tracking-tight text-zinc-900 sm:text-2xl">
@@ -104,8 +104,9 @@ export default function LeaveReviewModal(props: {
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 pt-2">
-          <div className="rounded-2xl bg-violet-50/70 p-4 sm:p-5">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 pb-4 pt-2 sm:px-8">
+            <div className="rounded-2xl bg-violet-50/70 p-4 sm:p-5">
             <div className="text-xs font-semibold uppercase tracking-[0.14em] text-violet-700">
               {t("reviewRating")}
             </div>
@@ -174,7 +175,8 @@ export default function LeaveReviewModal(props: {
             </div>
           </div>
 
-          <DialogFooter className="flex-col gap-3 sm:flex-row sm:justify-end sm:gap-3">
+          </div>
+          <DialogFooter className="mt-2 flex shrink-0 flex-col gap-3 border-t bg-white px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:gap-3 sm:px-8">
             <Button
               type="button"
               variant="ghost"
