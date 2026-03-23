@@ -197,16 +197,19 @@ export default function NavbarWrapper({
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* ── Top navbar ── */}
-      <nav className="sticky top-0 z-50 border-b border-primary/10 bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/65">
+      <nav
+        className="sticky top-0 z-50 border-b border-primary/10 bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/65"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
+      >
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-[72px] md:h-[76px]">
             {/* Left */}
             <div className="flex items-center space-x-8">
               <Link href={`/${locale}/`} className="flex items-center">
                 <Image
-                  src="/images/isotipo.svg"
+                  src="/images/Isotipo.svg"
                   alt="Free Time Classes Logo"
-                  className="h-16 w-auto"
+                  className="h-12 w-auto md:h-16"
                   width={50}
                   height={60}
                 />
