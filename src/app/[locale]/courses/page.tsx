@@ -184,7 +184,28 @@ export default function CoursesPage() {
 
         courseFilters.sort = debouncedQueryFilters.sort;
 
-        const data = await getCoursesWithRelations(courseFilters);
+        let data = await getCoursesWithRelations(courseFilters);
+
+        // Fallback for projects that still have catalog courses marked as inactive.
+        // We only relax this on the initial unfiltered load to avoid surprising filters.
+        const hasUserFilters =
+          !!debouncedQueryFilters.subject_id ||
+          !!debouncedQueryFilters.level ||
+          !!debouncedQueryFilters.search.trim() ||
+          !!debouncedQueryFilters.minPrice.trim() ||
+          !!debouncedQueryFilters.maxPrice.trim() ||
+          !!debouncedQueryFilters.minDuration.trim() ||
+          !!debouncedQueryFilters.maxDuration.trim() ||
+          debouncedQueryFilters.priceFreeOnly ||
+          debouncedQueryFilters.highRatingOnly ||
+          debouncedTutorSearch.trim().length > 0;
+
+        if (data.length === 0 && !hasUserFilters) {
+          const relaxedFilters: CourseFilters = { ...courseFilters };
+          delete relaxedFilters.is_active;
+          data = await getCoursesWithRelations(relaxedFilters);
+        }
+
         setCourses(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load courses");
@@ -195,7 +216,7 @@ export default function CoursesPage() {
     }
 
     void loadCourses();
-  }, [debouncedQueryFilters]);
+  }, [debouncedQueryFilters, debouncedTutorSearch]);
 
   const displayedCourses = useMemo(() => {
     const needle = debouncedTutorSearch.trim().toLowerCase();

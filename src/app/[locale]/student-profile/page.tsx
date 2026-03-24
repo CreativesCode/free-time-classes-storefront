@@ -25,13 +25,44 @@ import { useEffect, useState } from "react";
 import type { StudentProfile } from "@/types/student";
 import StudentBookingRequests from "@/components/student/StudentBookingRequests";
 import InternalMessagingPanel from "@/components/messages/InternalMessagingPanel";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+
+const STUDENT_PROFILE_TABS = [
+  "profile",
+  "availabilities",
+  "courses",
+  "requests",
+  "settings",
+  "messages",
+] as const;
+type StudentProfileTab = (typeof STUDENT_PROFILE_TABS)[number];
+
+function parseStudentProfileTab(sp: {
+  get(name: string): string | null;
+}): StudentProfileTab {
+  const raw = sp.get("tab");
+  if (
+    raw &&
+    (STUDENT_PROFILE_TABS as readonly string[]).includes(raw)
+  ) {
+    return raw as StudentProfileTab;
+  }
+  return "profile";
+}
 
 export default function StudentProfile() {
   const { user, isLoading } = useAuth();
   const t = useTranslations("studentProfile");
   const locale = useLocale();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState<StudentProfileTab>(() =>
+    parseStudentProfileTab(searchParams)
+  );
+
+  useEffect(() => {
+    setActiveTab(parseStudentProfileTab(searchParams));
+  }, [searchParams]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(
     null
@@ -109,7 +140,11 @@ export default function StudentProfile() {
       </div>
 
       {/* Main Content */}
-      <Tabs defaultValue="profile" className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as StudentProfileTab)}
+        className="space-y-4"
+      >
         <TabsList>
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <User className="h-4 w-4" />

@@ -459,7 +459,7 @@ export default function CourseDetailPage() {
                   size="lg"
                   className="mt-5 w-full rounded-full bg-primary-500 font-bold text-white shadow-lg shadow-primary-500/20 hover:bg-primary-600"
                 >
-                  <Link href={`/${locale}/student/profile?tab=availabilities`}>
+                  <Link href={`/${locale}/student-profile?tab=availabilities`}>
                     <Calendar className="mr-2 h-5 w-5" />
                     {t("bookClass")}
                   </Link>
@@ -491,7 +491,7 @@ export default function CourseDetailPage() {
             size="lg"
             className="flex-1 rounded-full bg-primary-500 font-bold text-white shadow-lg shadow-primary-500/20 hover:bg-primary-600"
           >
-            <Link href={`/${locale}/student/profile?tab=availabilities`}>
+            <Link href={`/${locale}/student-profile?tab=availabilities`}>
               <Calendar className="mr-2 h-5 w-5" />
               {t("bookClass")}
             </Link>
