@@ -97,17 +97,16 @@ export default function StudentProfile() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
   }
 
   if (!user) {
-    return null; // Middleware or UserContext will handle redirect
+    return null;
   }
 
-  // Get profile picture URL - if it's a path, construct the full URL, otherwise use as-is
   const profilePictureUrl =
     user.profile_picture && typeof user.profile_picture === "string"
       ? user.profile_picture.startsWith("http")
@@ -115,11 +114,20 @@ export default function StudentProfile() {
         : getPublicUrl("avatars", user.profile_picture)
       : null;
 
+  const tabItems = [
+    { value: "profile" as const, icon: User, label: t("profile") },
+    { value: "availabilities" as const, icon: Calendar, label: t("availabilities.tab") },
+    { value: "courses" as const, icon: BookOpen, label: t("courses") },
+    { value: "requests" as const, icon: ClipboardList, label: t("requests.tab") },
+    { value: "settings" as const, icon: Settings, label: t("settings") },
+    { value: "messages" as const, icon: MessageSquare, label: t("messaging.tab") },
+  ];
+
   return (
-    <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 py-8">
+    <div className="mx-auto w-full max-w-screen-2xl px-4 pb-24 pt-6 sm:px-6 md:pb-10 md:pt-8">
       {/* Profile Header */}
-      <div className="flex items-center space-x-6 mb-8">
-        <div className="relative h-24 w-24 rounded-full overflow-hidden bg-gray-100">
+      <div className="mb-6 flex flex-col items-center gap-4 text-center md:mb-8 md:flex-row md:items-center md:gap-6 md:text-left">
+        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full bg-violet-100 md:h-24 md:w-24">
           {profilePictureUrl ? (
             <Image
               src={profilePictureUrl}
@@ -128,14 +136,16 @@ export default function StudentProfile() {
               className="object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-primary-200 text-primary-800 text-3xl font-semibold">
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-500 to-violet-600 text-2xl font-bold text-white md:text-3xl">
               {user.username?.[0]?.toUpperCase() || "U"}
             </div>
           )}
         </div>
         <div>
-          <h1 className="text-2xl font-bold">{user.username}</h1>
-          <p className="text-gray-600">{user.email}</p>
+          <h1 className="text-xl font-extrabold tracking-tight text-foreground md:text-2xl">
+            {user.username}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">{user.email}</p>
         </div>
       </div>
 
@@ -145,83 +155,66 @@ export default function StudentProfile() {
         onValueChange={(v) => setActiveTab(v as StudentProfileTab)}
         className="space-y-4"
       >
-        <TabsList>
-          <TabsTrigger value="profile" className="flex items-center gap-2">
-            <User className="h-4 w-4" />
-            {t("profile")}
-          </TabsTrigger>
-          <TabsTrigger
-            value="availabilities"
-            className="flex items-center gap-2"
-          >
-            <Calendar className="h-4 w-4" />
-            {t("availabilities.tab")}
-          </TabsTrigger>
-          <TabsTrigger value="courses" className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4" />
-            {t("courses")}
-          </TabsTrigger>
-          <TabsTrigger value="requests" className="flex items-center gap-2">
-            <ClipboardList className="h-4 w-4" />
-            {t("requests.tab")}
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            {t("settings")}
-          </TabsTrigger>
-          <TabsTrigger value="messages" className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" />
-            {t("messaging.tab")}
-          </TabsTrigger>
+        <TabsList className="no-scrollbar flex w-full overflow-x-auto md:grid md:grid-cols-6">
+          {tabItems.map((tab) => (
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
+              className="flex shrink-0 items-center gap-2 px-3"
+            >
+              <tab.icon className="h-4 w-4" />
+              <span className="hidden sm:inline">{tab.label}</span>
+            </TabsTrigger>
+          ))}
         </TabsList>
 
         {/* Profile Tab */}
         <TabsContent value="profile" className="space-y-4">
-          <Card className="w-full">
+          <Card className="w-full border-border/60">
             <CardHeader>
               <CardTitle>{t("personalInformation")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t("name")}
                   </label>
-                  <p className="mt-1">{user.username}</p>
+                  <p className="mt-1 text-sm font-medium text-foreground">{user.username}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t("email")}
                   </label>
-                  <p className="mt-1">{user.email}</p>
+                  <p className="mt-1 text-sm font-medium text-foreground">{user.email}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t("phone")}
                   </label>
-                  <p className="mt-1">{user.phone || t("notProvided")}</p>
+                  <p className="mt-1 text-sm font-medium text-foreground">{user.phone || t("notProvided")}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t("country")}
                   </label>
-                  <p className="mt-1">{user.country || t("notProvided")}</p>
+                  <p className="mt-1 text-sm font-medium text-foreground">{user.country || t("notProvided")}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t("registrationDate")}
                   </label>
-                  <p className="mt-1">
+                  <p className="mt-1 text-sm font-medium text-foreground">
                     {user.created_at
                       ? new Date(user.created_at).toLocaleDateString()
                       : "-"}
                   </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t("lastUpdate")}
                   </label>
-                  <p className="mt-1">
+                  <p className="mt-1 text-sm font-medium text-foreground">
                     {user.updated_at
                       ? new Date(user.updated_at).toLocaleDateString()
                       : "-"}
@@ -229,39 +222,39 @@ export default function StudentProfile() {
                 </div>
               </div>
 
-              <div className="pt-4 border-t space-y-3">
+              <div className="space-y-3 border-t border-border/60 pt-4">
                 {studentProfileLoading ? (
-                  <div className="text-sm text-gray-500">{t("loading")}...</div>
+                  <div className="text-sm text-muted-foreground">{t("loading")}...</div>
                 ) : studentProfileError ? (
-                  <div className="text-sm text-destructive text-gray-700">
+                  <div className="text-sm text-destructive">
                     {studentProfileError}
                   </div>
                 ) : (
                   <>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
+                      <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                         {t("bio")}
                       </label>
-                      <p className="mt-1">
+                      <p className="mt-1 text-sm text-foreground">
                         {studentProfile?.bio || t("notProvided")}
                       </p>
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
+                      <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                         {t("learningGoals")}
                       </label>
-                      <p className="mt-1">
+                      <p className="mt-1 text-sm text-foreground">
                         {studentProfile?.learning_goals || t("notProvided")}
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div>
-                        <label className="text-sm font-medium text-gray-700">
+                        <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                           {t("languageLevel")}
                         </label>
-                        <p className="mt-1">
+                        <p className="mt-1 text-sm font-medium text-foreground">
                           {studentProfile?.language_level
                             ? (() => {
                                 switch (studentProfile.language_level) {
@@ -288,20 +281,20 @@ export default function StudentProfile() {
                       </div>
 
                       <div>
-                        <label className="text-sm font-medium text-gray-700">
+                        <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                           {t("timezone")}
                         </label>
-                        <p className="mt-1">
+                        <p className="mt-1 text-sm font-medium text-foreground">
                           {studentProfile?.timezone || t("notProvided")}
                         </p>
                       </div>
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
+                      <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                         {t("preferredCommunication")}
                       </label>
-                      <p className="mt-1 text-sm text-gray-700">
+                      <p className="mt-1 text-sm text-foreground">
                         {[
                           studentProfile?.prefers_audio_calls
                             ? t("prefersAudioCalls")
@@ -349,20 +342,20 @@ export default function StudentProfile() {
 
         {/* Settings Tab */}
         <TabsContent value="settings" className="space-y-4">
-          <Card className="w-full">
+          <Card className="w-full border-border/60">
             <CardHeader>
               <CardTitle>{t("accountSettings")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t("emailNotifications")}
                   </label>
                   <div className="mt-2">
                     <Button
                       variant="outline"
-                      className="w-full justify-start"
+                      className="w-full justify-start sm:w-auto"
                       onClick={() =>
                         router.push(`/${locale}/settings?tab=notifications`)
                       }
@@ -372,13 +365,13 @@ export default function StudentProfile() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t("changePassword")}
                   </label>
                   <div className="mt-2">
                     <Button
                       variant="outline"
-                      className="w-full justify-start"
+                      className="w-full justify-start sm:w-auto"
                       onClick={() => router.push(`/${locale}/settings?tab=account`)}
                     >
                       {t("updatePassword")}
@@ -386,13 +379,13 @@ export default function StudentProfile() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t("deleteAccount")}
                   </label>
                   <div className="mt-2">
                     <Button
                       variant="destructive"
-                      className="w-full justify-start"
+                      className="w-full justify-start sm:w-auto"
                       onClick={() => router.push(`/${locale}/settings?tab=account`)}
                     >
                       {t("deleteAccount")}

@@ -107,6 +107,23 @@ export default function BecomeTutorPage() {
             ))}
           </div>
 
+          {/* Mobile: compact horizontal steps */}
+          <div className="mt-6 flex gap-2 overflow-x-auto pb-2 md:hidden">
+            {steps.map((step, index) => (
+              <div
+                key={step.title}
+                className="flex min-w-[140px] flex-1 flex-col items-center gap-2 rounded-xl border border-border/50 bg-background/65 p-3 text-center backdrop-blur-sm"
+              >
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                  {index + 1}
+                </div>
+                <step.icon className="h-4 w-4 text-primary" />
+                <p className="text-xs font-semibold leading-tight">{step.title}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Tablet/Desktop: vertical steps */}
           <div className="mt-8 hidden gap-3 md:flex md:flex-col">
             {steps.map((step, index) => (
               <div

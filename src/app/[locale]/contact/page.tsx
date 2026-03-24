@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useLocale } from "@/i18n/translations";
 import {
   ArrowRight,
   BookOpen,
@@ -89,6 +92,8 @@ const faqItems = [
 ];
 
 export default function ContactPage() {
+  const locale = useLocale();
+
   return (
     <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-8 sm:px-6 md:pb-20 md:pt-12 lg:px-8 lg:pt-16">
       <section className="mb-10 md:mb-14 lg:mb-20">
@@ -170,7 +175,7 @@ export default function ContactPage() {
             Preguntas frecuentes
           </h2>
           <Link
-            href="/"
+            href={`/${locale}/contact`}
             className="text-sm font-semibold text-primary hover:underline"
           >
             Ver todo
@@ -226,7 +231,7 @@ export default function ContactPage() {
               Llamar ahora
             </a>
             <Link
-              href="/messages"
+              href={`/${locale}/messages`}
               className="inline-flex items-center justify-center gap-2 rounded-full border border-primary-foreground/30 px-6 py-3 text-sm font-bold text-primary-foreground transition hover:bg-primary-foreground/10 md:hidden"
             >
               Abrir chat
@@ -250,7 +255,7 @@ export default function ContactPage() {
             </p>
           </div>
           <Link
-            href="/"
+            href={`/${locale}/contact`}
             className="inline-flex h-11 items-center justify-center rounded-full border border-border px-5 text-sm font-semibold transition hover:bg-muted"
           >
             <LifeBuoy className="mr-2 h-4 w-4" />
@@ -269,7 +274,7 @@ export default function ContactPage() {
             panel.
           </p>
           <Link
-            href="/settings"
+            href={`/${locale}/settings`}
             className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary"
           >
             Revisar tickets
@@ -286,7 +291,7 @@ export default function ContactPage() {
             de tutor.
           </p>
           <Link
-            href="/tutor/dashboard"
+            href={`/${locale}/tutor/dashboard`}
             className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary"
           >
             Ir al panel tutor
