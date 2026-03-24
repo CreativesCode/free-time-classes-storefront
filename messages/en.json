@@ -187,6 +187,8 @@
     "favoriteAdded": "Tutor added to favorites",
     "favoriteRemoved": "Tutor removed from favorites",
     "favoriteToggleError": "Could not update favorites. Please try again.",
+    "joinVideoCall": "Join video call",
+    "noMeetLinkYet": "The tutor hasn't added the video call link yet.",
     "cancelConfirmed": "Cancel class",
     "cancelConfirmedLoading": "Cancelling class...",
     "cancelConfirmedSuccess": "Class cancelled successfully.",
@@ -527,7 +529,11 @@
       "confirmSuccess": "Request confirmed successfully.",
       "rejectSuccess": "Request rejected successfully.",
       "actionError": "Could not update the request.",
-      "loadError": "Could not load requests."
+      "loadError": "Could not load requests.",
+      "meetLinkLabel": "Video call link (optional)",
+      "meetLinkPlaceholder": "https://meet.google.com/... or Zoom, Teams, Jitsi...",
+      "meetLinkHint": "You can paste a Google Meet, Zoom, Teams or other service link.",
+      "confirmWithLink": "Accept with link"
     },
     "addAvailability": "Add Availability",
     "clearAll": "Clear All",
@@ -934,6 +940,9 @@
     "rejectSuccess": "Booking rejected.",
     "rejectError": "Could not reject the booking.",
     "loadingError": "Could not load pending bookings.",
+    "meetLinkLabel": "Video call link (optional)",
+    "meetLinkPlaceholder": "https://meet.google.com/... or Zoom, Teams, Jitsi...",
+    "meetLinkHint": "Paste a video call link for the class.",
     "rejectDialogTitle": "Reject booking",
     "rejectReason": "Reason",
     "notesOptional": "Notes (optional)",
@@ -1098,7 +1107,10 @@
     "notes": "Notes",
     "rejectionReason": "Rejection reason",
     "createdAt": "Created",
-    "leaveReview": "Leave a review"
+    "leaveReview": "Leave a review",
+    "videoCallLink": "Video call link",
+    "joinVideoCall": "Join video call",
+    "noMeetLink": "The tutor will add the link soon"
   },
   "messagesPage": {
     "title": "Messages",
@@ -1193,6 +1205,19 @@
     "lastReviews": "Latest Reviews",
     "noReviews": "No reviews yet",
     "goToTutorDashboard": "Go to Tutor Dashboard",
-    "goToStudentDashboard": "Go to Student Dashboard"
+    "goToStudentDashboard": "Go to Student Dashboard",
+    "joinClass": "Join",
+    "viewDetails": "Details",
+    "openVideoCall": "Open video call",
+    "noMeetLink": "Link pending",
+    "meetLinkCopied": "Link copied to clipboard",
+    "addMeetLink": "Add link",
+    "editMeetLink": "Edit link",
+    "meetLinkUpdated": "Video call link updated",
+    "meetLinkUpdateError": "Could not update the link",
+    "meetLinkSaving": "Saving...",
+    "videoCall": "Video call",
+    "resumeClass": "Resume class",
+    "upcomingClassMobile": "Next class"
   }
 }

@@ -187,6 +187,8 @@
     "favoriteAdded": "Tutor añadido a favoritos",
     "favoriteRemoved": "Tutor eliminado de favoritos",
     "favoriteToggleError": "No se pudo actualizar favoritos. Inténtalo de nuevo.",
+    "joinVideoCall": "Unirse a la videollamada",
+    "noMeetLinkYet": "El profesor aún no ha añadido el enlace de videollamada.",
     "cancelConfirmed": "Cancelar clase",
     "cancelConfirmedLoading": "Cancelando clase...",
     "cancelConfirmedSuccess": "Clase cancelada correctamente.",
@@ -526,7 +528,11 @@
       "confirmSuccess": "Solicitud confirmada correctamente.",
       "rejectSuccess": "Solicitud rechazada correctamente.",
       "actionError": "No se pudo actualizar la solicitud.",
-      "loadError": "No se pudieron cargar las solicitudes."
+      "loadError": "No se pudieron cargar las solicitudes.",
+      "meetLinkLabel": "Enlace de videollamada (opcional)",
+      "meetLinkPlaceholder": "https://meet.google.com/... o Zoom, Teams, Jitsi...",
+      "meetLinkHint": "Puedes pegar un enlace de Google Meet, Zoom, Teams u otro servicio.",
+      "confirmWithLink": "Aceptar con enlace"
     },
     "addAvailability": "Añadir Disponibilidad",
     "clearAll": "Limpiar Todo",
@@ -933,6 +939,9 @@
     "rejectSuccess": "Reserva rechazada.",
     "rejectError": "No se pudo rechazar la reserva.",
     "loadingError": "No se pudieron cargar las reservas.",
+    "meetLinkLabel": "Enlace de videollamada (opcional)",
+    "meetLinkPlaceholder": "https://meet.google.com/... o Zoom, Teams, Jitsi...",
+    "meetLinkHint": "Pega un enlace de videollamada para la clase.",
     "rejectDialogTitle": "Rechazar reserva",
     "rejectReason": "Motivo",
     "notesOptional": "Notas (opcional)",
@@ -1097,7 +1106,10 @@
     "notes": "Notas",
     "rejectionReason": "Motivo del rechazo",
     "createdAt": "Creada",
-    "leaveReview": "Dejar reseña"
+    "leaveReview": "Dejar reseña",
+    "videoCallLink": "Enlace de videollamada",
+    "joinVideoCall": "Unirse a la videollamada",
+    "noMeetLink": "El profesor añadirá el enlace próximamente"
   },
   "messagesPage": {
     "title": "Mensajes",
@@ -1192,6 +1204,19 @@
     "lastReviews": "Últimas Reseñas",
     "noReviews": "Sin reseñas aún",
     "goToTutorDashboard": "Ir al Panel de Profesor",
-    "goToStudentDashboard": "Ir al Panel de Estudiante"
+    "goToStudentDashboard": "Ir al Panel de Estudiante",
+    "joinClass": "Unirse",
+    "viewDetails": "Detalles",
+    "openVideoCall": "Abrir videollamada",
+    "noMeetLink": "Enlace pendiente",
+    "meetLinkCopied": "Enlace copiado al portapapeles",
+    "addMeetLink": "Añadir enlace",
+    "editMeetLink": "Editar enlace",
+    "meetLinkUpdated": "Enlace de videollamada actualizado",
+    "meetLinkUpdateError": "No se pudo actualizar el enlace",
+    "meetLinkSaving": "Guardando...",
+    "videoCall": "Videollamada",
+    "resumeClass": "Reanudar clase",
+    "upcomingClassMobile": "Siguiente clase"
   }
 }

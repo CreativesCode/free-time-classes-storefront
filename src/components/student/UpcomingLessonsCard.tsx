@@ -11,7 +11,7 @@ import { getLessonsWithRelations } from "@/lib/supabase/queries/lessons";
 import { getBookingsByStudent } from "@/lib/supabase/queries/bookings";
 import { getPublicUrl } from "@/lib/supabase/storage";
 import type { LessonWithRelations } from "@/types/lesson";
-import { Calendar, Clock, DollarSign, Star, StarOff } from "lucide-react";
+import { Calendar, Clock, DollarSign, Star, StarOff, Video, ExternalLink } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
@@ -317,9 +317,27 @@ export default function UpcomingLessonsCard() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex justify-end border-t pt-2">
+                  <div className="flex items-center justify-between border-t pt-2 gap-2">
+                    <div>
+                      {lesson.meet_link ? (
+                        <Button
+                          size="sm"
+                          className="gap-1.5 bg-violet-600 hover:bg-violet-700"
+                          onClick={() => window.open(lesson.meet_link!, "_blank")}
+                        >
+                          <Video className="h-4 w-4" />
+                          {t("joinVideoCall")}
+                          <ExternalLink className="h-3 w-3" />
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-slate-400 italic">
+                          {t("noMeetLinkYet")}
+                        </span>
+                      )}
+                    </div>
                     <Button
                       variant="destructive"
+                      size="sm"
                       disabled={cancelActionLoading === lesson.id}
                       onClick={() => void cancelConfirmedBooking(lesson.id)}
                     >

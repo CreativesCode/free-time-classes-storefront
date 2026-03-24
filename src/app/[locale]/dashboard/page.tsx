@@ -40,6 +40,7 @@ interface UpcomingLessonRaw {
   scheduled_date_time: string;
   duration_minutes: number;
   status: string;
+  meet_link: string | null;
   subject: { name: string }[] | { name: string } | null;
   tutor:
     | {
@@ -67,6 +68,7 @@ interface UpcomingLesson {
   subjectName: string | null;
   tutorUsername: string;
   tutorPicture: string | null;
+  meetLink: string | null;
 }
 
 interface DashboardStats {
@@ -112,7 +114,7 @@ export default function Dashboard() {
         supabase
           .from("lessons")
           .select(
-            "id, scheduled_date_time, duration_minutes, status, subject:subjects(name), tutor:tutor_profiles!lessons_tutor_id_fkey(id, user:users!tutor_profiles_id_fkey(username, profile_picture))"
+            "id, scheduled_date_time, duration_minutes, status, meet_link, subject:subjects(name), tutor:tutor_profiles!lessons_tutor_id_fkey(id, user:users!tutor_profiles_id_fkey(username, profile_picture))"
           )
           .eq("student_id", userId)
           .in("status", ["confirmed", "scheduled"])
@@ -153,6 +155,7 @@ export default function Dashboard() {
             subjectName: subj?.name ?? null,
             tutorUsername: tutUser?.username ?? "Tutor",
             tutorPicture: tutUser?.profile_picture ?? null,
+            meetLink: l.meet_link ?? null,
           };
         })
       );
@@ -606,17 +609,29 @@ export default function Dashboard() {
                               {lesson.duration_minutes} min
                             </p>
                           </div>
-                          <Button
-                            size="sm"
-                            className={
-                              isSoon
-                                ? "rounded-xl bg-[#702ae1] hover:bg-[#5f21c4]"
-                                : "rounded-xl bg-violet-100 text-violet-700 hover:bg-violet-200 dark:bg-slate-700 dark:text-slate-100"
-                            }
-                          >
-                            <Video className="mr-1 h-4 w-4" />
-                            {isSoon ? "Unirse" : "Detalles"}
-                          </Button>
+                          {lesson.meetLink ? (
+                            <Button
+                              size="sm"
+                              className={
+                                isSoon
+                                  ? "rounded-xl bg-[#702ae1] hover:bg-[#5f21c4]"
+                                  : "rounded-xl bg-violet-100 text-violet-700 hover:bg-violet-200 dark:bg-slate-700 dark:text-slate-100"
+                              }
+                              onClick={() => window.open(lesson.meetLink!, "_blank")}
+                            >
+                              <Video className="mr-1 h-4 w-4" />
+                              {isSoon ? t("joinClass") : t("openVideoCall")}
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="rounded-xl"
+                              onClick={() => router.push(`/${locale}/bookings`)}
+                            >
+                              {t("viewDetails")}
+                            </Button>
+                          )}
                         </div>
                       </div>
                     );

@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Video } from "lucide-react";
 
 type PendingBookingItem = {
   bookingId: number;
@@ -35,6 +36,8 @@ export default function TutorBookingRequests() {
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
   const [rejectTarget, setRejectTarget] = useState<PendingBookingItem | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [confirmTarget, setConfirmTarget] = useState<PendingBookingItem | null>(null);
+  const [meetLink, setMeetLink] = useState("");
 
   const loadPendingRequests = async () => {
     if (!user?.id) return;
@@ -67,7 +70,8 @@ export default function TutorBookingRequests() {
   const respond = async (
     bookingId: number,
     action: "confirm" | "reject",
-    reason?: string
+    reason?: string,
+    videoLink?: string
   ) => {
     setActionLoadingId(bookingId);
     try {
@@ -78,6 +82,7 @@ export default function TutorBookingRequests() {
           bookingId,
           action,
           ...(action === "reject" ? { reason: reason || "" } : {}),
+          ...(action === "confirm" && videoLink ? { meetLink: videoLink } : {}),
         }),
       });
       const result = (await response.json()) as { error?: string };
@@ -88,6 +93,8 @@ export default function TutorBookingRequests() {
       await loadPendingRequests();
       setRejectTarget(null);
       setRejectReason("");
+      setConfirmTarget(null);
+      setMeetLink("");
     } catch (error) {
       console.error("Error responding booking:", error);
       toast.error(error instanceof Error ? error.message : t("actionError"));
@@ -159,7 +166,10 @@ export default function TutorBookingRequests() {
                   </Button>
                   <Button
                     disabled={actionLoadingId === item.bookingId}
-                    onClick={() => void respond(item.bookingId, "confirm")}
+                    onClick={() => {
+                      setConfirmTarget(item);
+                      setMeetLink("");
+                    }}
                   >
                     {actionLoadingId === item.bookingId
                       ? t("acceptLoading")
@@ -211,6 +221,72 @@ export default function TutorBookingRequests() {
               disabled={actionLoadingId !== null}
             >
               {t("confirmReject")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!confirmTarget}
+        onOpenChange={(open) => {
+          if (!open && actionLoadingId === null) {
+            setConfirmTarget(null);
+            setMeetLink("");
+          }
+        }}
+      >
+        <DialogContent className="flex max-h-[calc(100dvh-1rem)] flex-col overflow-hidden p-0 sm:max-w-[520px]">
+          <DialogHeader className="px-4 pt-6 sm:px-6">
+            <DialogTitle>{t("accept")}</DialogTitle>
+          </DialogHeader>
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-1 sm:px-6">
+            <div className="space-y-3">
+              {confirmTarget && (
+                <div className="rounded-lg bg-violet-50 p-3 text-sm text-slate-700">
+                  <p className="font-semibold">{confirmTarget.subjectName ?? t("lessonUnknown")}</p>
+                  <p className="text-xs text-slate-500">
+                    {t("student")}: {confirmTarget.studentName ?? confirmTarget.studentId}
+                    {" · "}
+                    {confirmTarget.scheduledDateTime
+                      ? new Date(confirmTarget.scheduledDateTime).toLocaleString()
+                      : "—"}
+                  </p>
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Video className="h-4 w-4 text-violet-600" />
+                  {t("meetLinkLabel")}
+                </Label>
+                <Input
+                  type="url"
+                  value={meetLink}
+                  onChange={(event) => setMeetLink(event.target.value)}
+                  placeholder={t("meetLinkPlaceholder")}
+                />
+                <p className="text-xs text-slate-500">{t("meetLinkHint")}</p>
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="mt-2 flex shrink-0 flex-col gap-2 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:px-6">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setConfirmTarget(null);
+                setMeetLink("");
+              }}
+              disabled={actionLoadingId !== null}
+            >
+              {t("cancel")}
+            </Button>
+            <Button
+              onClick={() =>
+                confirmTarget &&
+                void respond(confirmTarget.bookingId, "confirm", undefined, meetLink)
+              }
+              disabled={actionLoadingId !== null}
+            >
+              {actionLoadingId !== null ? t("acceptLoading") : meetLink ? t("confirmWithLink") : t("accept")}
             </Button>
           </DialogFooter>
         </DialogContent>

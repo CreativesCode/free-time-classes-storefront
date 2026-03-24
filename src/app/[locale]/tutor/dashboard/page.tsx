@@ -42,6 +42,10 @@ import {
   ChevronDown,
   MessageSquare,
   Loader2,
+  Video,
+  Link as LinkIcon,
+  Copy,
+  ExternalLink,
 } from "lucide-react";
 
 type PendingBookingItem = {
@@ -55,6 +59,7 @@ interface TodayLesson {
   duration_minutes: number;
   price: number;
   status: string;
+  meet_link: string | null;
   subject: { name: string } | null;
   student: { id: string; user: { username: string } | null } | null;
 }
@@ -102,6 +107,10 @@ export default function TutorDashboardPage() {
   const [todayLessons, setTodayLessons] = useState<TodayLesson[]>([]);
   const [todayLoading, setTodayLoading] = useState(true);
   const [pendingOpen, setPendingOpen] = useState(true);
+  const [editingMeetLinkId, setEditingMeetLinkId] = useState<number | null>(null);
+  const [editingMeetLinkValue, setEditingMeetLinkValue] = useState("");
+  const [meetLinkSaving, setMeetLinkSaving] = useState(false);
+  const [confirmMeetLink, setConfirmMeetLink] = useState("");
 
   const loadPending = async () => {
     if (!user?.id) return;
@@ -191,7 +200,7 @@ export default function TutorDashboardPage() {
       const { data } = await supabase
         .from("lessons")
         .select(
-          "id, scheduled_date_time, duration_minutes, price, status, subject:subjects(name), student:student_profiles!lessons_student_id_fkey(id, user:users!student_profiles_id_fkey(username))"
+          "id, scheduled_date_time, duration_minutes, price, status, meet_link, subject:subjects(name), student:student_profiles!lessons_student_id_fkey(id, user:users!student_profiles_id_fkey(username))"
         )
         .eq("tutor_id", user.id)
         .in("status", ["confirmed", "scheduled"])
@@ -220,14 +229,25 @@ export default function TutorDashboardPage() {
     setRejectDialogOpen(true);
   };
 
-  const handleConfirm = async (booking: Booking) => {
+  const handleConfirm = async (booking: Booking, videoLink?: string) => {
     if (!user?.id) return;
     if (typeof booking.lesson_id !== "number") return;
 
     setActionLoadingBookingId(booking.id);
     try {
-      await updateBooking(booking.id, { status: "confirmed" });
+      const response = await fetch("/api/bookings/tutor/respond", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookingId: booking.id,
+          action: "confirm",
+          ...(videoLink ? { meetLink: videoLink } : {}),
+        }),
+      });
+      const result = (await response.json()) as { error?: string };
+      if (!response.ok) throw new Error(result.error || t("confirmError"));
 
+      setConfirmMeetLink("");
       toast.success(t("confirmSuccess"));
       await loadPending();
     } catch (e) {
@@ -235,6 +255,35 @@ export default function TutorDashboardPage() {
       toast.error(t("confirmError"));
     } finally {
       setActionLoadingBookingId(null);
+    }
+  };
+
+  const saveMeetLink = async (lessonId: number) => {
+    setMeetLinkSaving(true);
+    try {
+      const response = await fetch(`/api/lessons/${lessonId}/meet-link`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ meetLink: editingMeetLinkValue }),
+      });
+      const result = (await response.json()) as { error?: string };
+      if (!response.ok) throw new Error(result.error || td("meetLinkUpdateError"));
+
+      setTodayLessons((prev) =>
+        prev.map((l) =>
+          l.id === lessonId
+            ? { ...l, meet_link: editingMeetLinkValue.trim() || null }
+            : l
+        )
+      );
+      setEditingMeetLinkId(null);
+      setEditingMeetLinkValue("");
+      toast.success(td("meetLinkUpdated"));
+    } catch (e) {
+      console.error("Error saving meet link:", e);
+      toast.error(td("meetLinkUpdateError"));
+    } finally {
+      setMeetLinkSaving(false);
     }
   };
 
@@ -510,26 +559,39 @@ export default function TutorDashboardPage() {
                             </div>
                           </div>
 
-                          <div className="flex justify-end gap-2 border-t border-violet-100 pt-2">
-                            <Button
-                              variant="outline"
-                              className="border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
-                              onClick={() => openRejectDialog({ booking, lesson })}
-                              disabled={actionLoadingBookingId === booking.id}
-                            >
-                              {t("reject")}
-                            </Button>
-                            <Button
-                              className="bg-violet-600 hover:bg-violet-700"
-                              onClick={() => handleConfirm(booking)}
-                              disabled={actionLoadingBookingId === booking.id}
-                            >
-                              {actionLoadingBookingId === booking.id ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                t("accept")
-                              )}
-                            </Button>
+                          <div className="space-y-2 border-t border-violet-100 pt-2">
+                            <div className="flex items-center gap-2">
+                              <Video className="h-4 w-4 text-violet-500" />
+                              <Input
+                                type="url"
+                                className="h-8 flex-1 text-xs"
+                                placeholder={t("meetLinkPlaceholder")}
+                                value={confirmMeetLink}
+                                onChange={(e) => setConfirmMeetLink(e.target.value)}
+                              />
+                            </div>
+                            <p className="text-[11px] text-slate-500">{t("meetLinkHint")}</p>
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="outline"
+                                className="border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                                onClick={() => openRejectDialog({ booking, lesson })}
+                                disabled={actionLoadingBookingId === booking.id}
+                              >
+                                {t("reject")}
+                              </Button>
+                              <Button
+                                className="bg-violet-600 hover:bg-violet-700"
+                                onClick={() => handleConfirm(booking, confirmMeetLink)}
+                                disabled={actionLoadingBookingId === booking.id}
+                              >
+                                {actionLoadingBookingId === booking.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  t("accept")
+                                )}
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       );
@@ -599,12 +661,70 @@ export default function TutorDashboardPage() {
                             </p>
                             <p className="truncate text-sm text-slate-600">{studentName}</p>
                           </div>
-                          <Button
-                            variant={isCurrent ? "default" : "outline"}
-                            className={isCurrent ? "bg-violet-600 hover:bg-violet-700" : ""}
-                          >
-                            {isCurrent ? "Reanudar" : "Ver detalles"}
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            {lesson.meet_link ? (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="gap-1"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(lesson.meet_link!);
+                                    toast.success(td("meetLinkCopied"));
+                                  }}
+                                >
+                                  <Copy className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant={isCurrent ? "default" : "outline"}
+                                  className={`gap-1 ${isCurrent ? "bg-violet-600 hover:bg-violet-700" : ""}`}
+                                  onClick={() => window.open(lesson.meet_link!, "_blank")}
+                                >
+                                  <Video className="h-3.5 w-3.5" />
+                                  {isCurrent ? td("resumeClass") : td("openVideoCall")}
+                                </Button>
+                              </>
+                            ) : editingMeetLinkId === lesson.id ? (
+                              <div className="flex items-center gap-1.5">
+                                <Input
+                                  type="url"
+                                  className="h-8 w-48 text-xs"
+                                  value={editingMeetLinkValue}
+                                  onChange={(e) => setEditingMeetLinkValue(e.target.value)}
+                                  placeholder={t("meetLinkPlaceholder")}
+                                  autoFocus
+                                />
+                                <Button
+                                  size="sm"
+                                  disabled={meetLinkSaving}
+                                  onClick={() => void saveMeetLink(lesson.id)}
+                                >
+                                  {meetLinkSaving ? td("meetLinkSaving") : "OK"}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => setEditingMeetLinkId(null)}
+                                >
+                                  ✕
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1 text-violet-600"
+                                onClick={() => {
+                                  setEditingMeetLinkId(lesson.id);
+                                  setEditingMeetLinkValue(lesson.meet_link ?? "");
+                                }}
+                              >
+                                <LinkIcon className="h-3.5 w-3.5" />
+                                {td("addMeetLink")}
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );

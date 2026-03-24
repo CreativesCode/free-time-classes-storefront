@@ -21,6 +21,8 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
+  Video,
+  ExternalLink,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -47,6 +49,7 @@ interface Booking {
     duration_minutes: number;
     price: number;
     status: string;
+    meet_link?: string | null;
     subject?: { name: string } | null;
     tutor?: {
       id: string;
@@ -129,7 +132,7 @@ export default function BookingsPage() {
             `
             *,
             lesson:lessons(
-              id, scheduled_date_time, duration_minutes, price, status,
+              id, scheduled_date_time, duration_minutes, price, status, meet_link,
               subject:subjects(name),
               tutor:tutor_profiles!lessons_tutor_id_fkey(
                 id,
@@ -150,7 +153,7 @@ export default function BookingsPage() {
             `
             *,
             lesson:lessons(
-              id, scheduled_date_time, duration_minutes, price, status,
+              id, scheduled_date_time, duration_minutes, price, status, meet_link,
               subject:subjects(name),
               student:users!bookings_student_id_fkey(id, username, profile_picture)
             )
@@ -521,6 +524,29 @@ export default function BookingsPage() {
                     </p>
                   )}
                 </div>
+
+                {booking.status === "confirmed" && lesson?.meet_link && (
+                  <div className="mt-3 flex items-center gap-2 rounded-xl bg-violet-50 px-3 py-2">
+                    <Video className="h-4 w-4 shrink-0 text-violet-600" />
+                    <span className="flex-1 truncate text-xs text-violet-700">
+                      {t("videoCallLink")}
+                    </span>
+                    <Button
+                      size="sm"
+                      className="h-7 gap-1 rounded-full bg-violet-600 px-3 text-xs hover:bg-violet-700"
+                      onClick={() => window.open(lesson.meet_link!, "_blank")}
+                    >
+                      {t("joinVideoCall")}
+                      <ExternalLink className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
+
+                {booking.status === "confirmed" && !lesson?.meet_link && (
+                  <p className="mt-3 text-xs italic text-slate-400">
+                    {t("noMeetLink")}
+                  </p>
+                )}
 
                 <div className="mt-4 flex flex-wrap gap-2 pt-2">
                   {(booking.status === "pending" || booking.status === "confirmed") && (

@@ -6,6 +6,7 @@ type Body = {
   bookingId: number;
   action: "confirm" | "reject";
   reason?: string;
+  meetLink?: string;
 };
 
 export async function POST(request: NextRequest) {
@@ -90,6 +91,14 @@ export async function POST(request: NextRequest) {
           { error: updateError.message || "Failed to confirm booking." },
           { status: 400 }
         );
+      }
+
+      const meetLink = typeof body.meetLink === "string" ? body.meetLink.trim() : "";
+      if (meetLink && booking.lesson_id) {
+        await admin
+          .from("lessons")
+          .update({ meet_link: meetLink, updated_at: new Date().toISOString() })
+          .eq("id", booking.lesson_id);
       }
 
       return NextResponse.json({ ok: true }, { status: 200 });
