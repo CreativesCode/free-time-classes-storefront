@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import { createMeetEvent, hasGoogleConnection } from "@/lib/google-calendar";
 
 type Body = {
   bookingId: number;
@@ -93,15 +94,71 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const meetLink = typeof body.meetLink === "string" ? body.meetLink.trim() : "";
-      if (meetLink && booking.lesson_id) {
+      const manualMeetLink = typeof body.meetLink === "string" ? body.meetLink.trim() : "";
+      let finalMeetLink = manualMeetLink;
+      let googleEventId: string | null = null;
+
+      if (!manualMeetLink && booking.lesson_id) {
+        const googleConnected = await hasGoogleConnection(user.id);
+        if (googleConnected) {
+          const { data: lessonData } = await admin
+            .from("lessons")
+            .select("scheduled_date_time,duration_minutes,student_id,subject_id")
+            .eq("id", booking.lesson_id)
+            .single();
+
+          if (lessonData?.scheduled_date_time) {
+            let studentEmail = "";
+            if (lessonData.student_id) {
+              const { data: studentUser } = await admin
+                .from("users")
+                .select("email")
+                .eq("id", lessonData.student_id)
+                .single();
+              studentEmail = studentUser?.email ?? "";
+            }
+
+            const { data: subject } = await admin
+              .from("subjects")
+              .select("name")
+              .eq("id", lessonData.subject_id)
+              .single();
+
+            try {
+              const result = await createMeetEvent({
+                tutorId: user.id,
+                summary: `FreeTime Class: ${subject?.name ?? "Lesson"}`,
+                description: "Clase creada automáticamente desde FreeTime Classes",
+                startTime: lessonData.scheduled_date_time,
+                durationMinutes: lessonData.duration_minutes,
+                attendeeEmails: studentEmail ? [studentEmail] : [],
+              });
+
+              if (result) {
+                finalMeetLink = result.meetLink;
+                googleEventId = result.eventId;
+              }
+            } catch (meetErr) {
+              console.error("[bookings/tutor/respond] Google Meet auto-create failed:", meetErr);
+            }
+          }
+        }
+      }
+
+      if (booking.lesson_id && (finalMeetLink || googleEventId)) {
+        const lessonUpdate: Record<string, unknown> = {
+          updated_at: new Date().toISOString(),
+        };
+        if (finalMeetLink) lessonUpdate.meet_link = finalMeetLink;
+        if (googleEventId) lessonUpdate.google_event_id = googleEventId;
+
         await admin
           .from("lessons")
-          .update({ meet_link: meetLink, updated_at: new Date().toISOString() })
+          .update(lessonUpdate)
           .eq("id", booking.lesson_id);
       }
 
-      return NextResponse.json({ ok: true }, { status: 200 });
+      return NextResponse.json({ ok: true, meetLink: finalMeetLink || null }, { status: 200 });
     }
 
     // action === "reject"
@@ -121,11 +178,28 @@ export async function POST(request: NextRequest) {
     }
 
     if (booking.lesson_id) {
+      const { data: lessonToReject } = await admin
+        .from("lessons")
+        .select("google_event_id")
+        .eq("id", booking.lesson_id)
+        .single();
+
+      if (lessonToReject?.google_event_id) {
+        try {
+          const { deleteMeetEvent } = await import("@/lib/google-calendar");
+          await deleteMeetEvent(user.id, lessonToReject.google_event_id);
+        } catch (meetErr) {
+          console.error("[bookings/tutor/respond] Google event delete failed:", meetErr);
+        }
+      }
+
       await admin
         .from("lessons")
         .update({
           student_id: null,
           status: "available",
+          meet_link: null,
+          google_event_id: null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", booking.lesson_id);

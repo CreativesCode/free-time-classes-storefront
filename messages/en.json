@@ -891,7 +891,22 @@
     "paymentHistoryItem2Title": "Course purchase: Advanced UI",
     "paymentHistoryItem2Subtitle": "Paid on Oct 28, 2024 - Visa 8812",
     "paymentHistoryItem3Title": "1:1 mentorship session",
-    "paymentHistoryItem3Subtitle": "Processing charge - Sep 30, 2024 - Visa 8812"
+    "paymentHistoryItem3Subtitle": "Processing charge - Sep 30, 2024 - Visa 8812",
+    "googleCalendarTitle": "Google Calendar",
+    "googleCalendarDescription": "Connect your Google account to automatically create Google Meet events when you confirm bookings.",
+    "googleCalendarConnected": "Google account connected",
+    "googleCalendarConnectedHint": "Meet events will be automatically created when you confirm bookings.",
+    "googleCalendarNotConnected": "Not connected",
+    "googleCalendarConnect": "Connect Google Calendar",
+    "googleCalendarDisconnect": "Disconnect",
+    "googleCalendarDisconnecting": "Disconnecting...",
+    "googleCalendarConnecting": "Connecting...",
+    "googleCalendarSuccess": "Google account connected successfully",
+    "googleCalendarError": "Could not connect Google account",
+    "googleCalendarDisconnectError": "Could not disconnect Google account",
+    "googleCalendarDisconnected": "Google account disconnected",
+    "googleCalendarIntegrationsTitle": "Integrations",
+    "googleCalendarAutoMeetHint": "When you confirm a booking without a manual link, a Google Meet link will be automatically generated."
   },
   "becomeTutor": {
     "title": "Share Your Knowledge, Inspire Others",

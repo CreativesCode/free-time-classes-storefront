@@ -99,6 +99,18 @@ export default function Footer() {
             <Link href={`/${locale}/about`} className="text-lumina-body-sm text-white/65 transition-colors hover:text-white">
               {t("aboutUs")}
             </Link>
+            <Link
+              href={`/${locale}/privacy-policy`}
+              className="text-lumina-body-sm text-white/65 transition-colors hover:text-white"
+            >
+              Privacidad
+            </Link>
+            <Link
+              href={`/${locale}/terms-of-service`}
+              className="text-lumina-body-sm text-white/65 transition-colors hover:text-white"
+            >
+              Términos
+            </Link>
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import { deleteMeetEvent } from "@/lib/google-calendar";
 
 type Body = {
   bookingId: number;
@@ -134,11 +135,27 @@ export async function POST(request: NextRequest) {
     }
 
     if (booking.lesson_id) {
+      const { data: lessonToCancel } = await admin
+        .from("lessons")
+        .select("tutor_id,google_event_id")
+        .eq("id", booking.lesson_id)
+        .single();
+
+      if (lessonToCancel?.google_event_id && lessonToCancel.tutor_id) {
+        try {
+          await deleteMeetEvent(lessonToCancel.tutor_id, lessonToCancel.google_event_id);
+        } catch (meetErr) {
+          console.error("[bookings/student/cancel] Google event delete failed:", meetErr);
+        }
+      }
+
       await admin
         .from("lessons")
         .update({
           student_id: null,
           status: "available",
+          meet_link: null,
+          google_event_id: null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", booking.lesson_id);

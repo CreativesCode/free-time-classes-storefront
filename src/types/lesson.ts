@@ -16,6 +16,7 @@ export interface Lesson {
   duration_minutes: number; // int, check >= 30
   status: LessonStatus; // default 'available'
   meet_link?: string | null; // Video call URL set by tutor when confirming
+  google_event_id?: string | null; // Google Calendar event ID
   /** Set when this slot was generated from a recurring weekly rule */
   availability_rule_id?: string | null;
   created_at: string;

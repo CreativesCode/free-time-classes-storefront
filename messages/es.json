@@ -890,7 +890,22 @@
     "paymentHistoryItem2Title": "Compra de curso: UI avanzada",
     "paymentHistoryItem2Subtitle": "Pagado el 28 oct 2024 - Visa 8812",
     "paymentHistoryItem3Title": "Sesión 1:1 de mentoría",
-    "paymentHistoryItem3Subtitle": "Cobro en proceso - 30 sep 2024 - Visa 8812"
+    "paymentHistoryItem3Subtitle": "Cobro en proceso - 30 sep 2024 - Visa 8812",
+    "googleCalendarTitle": "Google Calendar",
+    "googleCalendarDescription": "Conecta tu cuenta de Google para crear automáticamente eventos de Google Meet cuando confirmes reservas.",
+    "googleCalendarConnected": "Cuenta de Google conectada",
+    "googleCalendarConnectedHint": "Los eventos de Meet se crearán automáticamente al confirmar reservas.",
+    "googleCalendarNotConnected": "No conectado",
+    "googleCalendarConnect": "Conectar Google Calendar",
+    "googleCalendarDisconnect": "Desconectar",
+    "googleCalendarDisconnecting": "Desconectando...",
+    "googleCalendarConnecting": "Conectando...",
+    "googleCalendarSuccess": "Cuenta de Google conectada correctamente",
+    "googleCalendarError": "No se pudo conectar la cuenta de Google",
+    "googleCalendarDisconnected": "Cuenta de Google desconectada",
+    "googleCalendarDisconnectError": "No se pudo desconectar la cuenta de Google",
+    "googleCalendarIntegrationsTitle": "Integraciones",
+    "googleCalendarAutoMeetHint": "Cuando confirmes una reserva sin enlace manual, se generará un enlace de Google Meet automáticamente."
   },
   "becomeTutor": {
     "title": "Comparte Tu Conocimiento, Inspira a Otros",
