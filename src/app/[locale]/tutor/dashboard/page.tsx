@@ -45,7 +45,6 @@ import {
   Video,
   Link as LinkIcon,
   Copy,
-  ExternalLink,
 } from "lucide-react";
 
 type PendingBookingItem = {
