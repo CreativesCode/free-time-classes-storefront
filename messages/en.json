@@ -88,7 +88,11 @@
     "messages": "Messages",
     "dashboard": "Dashboard",
     "menu": "Menu",
-    "home": "Home"
+    "home": "Home",
+    "theme": "Appearance",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeToggleAria": "Switch between light and dark mode"
   },
   "authCallback": {
     "verifyingTitle": "Verifying your account",

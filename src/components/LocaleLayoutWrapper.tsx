@@ -5,6 +5,7 @@ import { UserProvider } from "@/context/UserContext";
 import { AbstractIntlMessages, IntlProvider } from "next-intl";
 import { ReactNode } from "react";
 import NavbarWrapper from "./NavbarWrapper";
+import { ThemeProvider } from "./theme-provider";
 
 interface LocaleLayoutWrapperProps {
   children: ReactNode;
@@ -26,7 +27,14 @@ export default function LocaleLayoutWrapper({
           timeZone="Europe/Madrid"
           now={new Date()}
         >
-          <NavbarWrapper>{children}</NavbarWrapper>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <NavbarWrapper>{children}</NavbarWrapper>
+          </ThemeProvider>
         </IntlProvider>
       </AppProvider>
     </UserProvider>

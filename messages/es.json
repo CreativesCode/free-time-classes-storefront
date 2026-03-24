@@ -88,7 +88,11 @@
     "messages": "Mensajes",
     "dashboard": "Panel",
     "menu": "Menú",
-    "home": "Inicio"
+    "home": "Inicio",
+    "theme": "Apariencia",
+    "themeLight": "Claro",
+    "themeDark": "Oscuro",
+    "themeToggleAria": "Cambiar entre modo claro y oscuro"
   },
   "authCallback": {
     "verifyingTitle": "Verificando tu cuenta",
