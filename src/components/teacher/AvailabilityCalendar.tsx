@@ -1,7 +1,5 @@
 "use client";
 
-import AddAvailabilityModal from "@/components/teacher/AddAvailabilityModal";
-import ConfirmActionDialog from "@/components/common/ConfirmActionDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -25,11 +23,25 @@ import type { LessonWithRelations } from "@/types/lesson";
 import { DateSelectArg, DatesSetArg, EventClickArg } from "@fullcalendar/core";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import { Mail } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+
+const FullCalendar = dynamic(() => import("@fullcalendar/react"), {
+  ssr: false,
+});
+
+const AddAvailabilityModal = dynamic(
+  () => import("@/components/teacher/AddAvailabilityModal"),
+  { ssr: false }
+);
+
+const ConfirmActionDialog = dynamic(
+  () => import("@/components/common/ConfirmActionDialog"),
+  { ssr: false }
+);
 
 interface Event {
   id: string;
