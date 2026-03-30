@@ -1,11 +1,9 @@
-"use client";
-
-import { useTranslations, useLocale } from "next-intl";
+import { getLocale, getTranslations } from "next-intl/server";
 import Link from "next/link";
 
-export default function AboutPage() {
-  const t = useTranslations("aboutUs");
-  const locale = useLocale();
+export default async function AboutPage() {
+  const t = await getTranslations("aboutUs");
+  const locale = await getLocale();
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 pb-16 pt-8 sm:px-6 md:pb-20 md:pt-12 lg:px-8 lg:pt-16">

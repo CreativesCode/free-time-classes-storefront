@@ -1,7 +1,4 @@
-"use client";
-
 import Link from "next/link";
-import { useLocale } from "@/i18n/translations";
 import {
   ArrowRight,
   BookOpen,
@@ -91,8 +88,12 @@ const faqItems = [
   },
 ];
 
-export default function ContactPage() {
-  const locale = useLocale();
+export default async function ContactPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-8 sm:px-6 md:pb-20 md:pt-12 lg:px-8 lg:pt-16">
