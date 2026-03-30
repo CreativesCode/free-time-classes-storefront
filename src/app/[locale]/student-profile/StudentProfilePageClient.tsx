@@ -134,6 +134,7 @@ export default function StudentProfilePageClient() {
               alt="Profile"
               fill
               className="object-cover"
+              sizes="(max-width: 768px) 80px, 96px"
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-500 to-violet-600 text-2xl font-bold text-white md:text-3xl">

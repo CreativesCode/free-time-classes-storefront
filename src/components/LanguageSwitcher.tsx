@@ -35,6 +35,7 @@ export default function LanguageSwitcher() {
               alt={t("english")}
               width={20}
               height={20}
+              sizes="20px"
             />
           ) : (
             <Image
@@ -42,6 +43,7 @@ export default function LanguageSwitcher() {
               alt={t("spanish")}
               width={20}
               height={20}
+              sizes="20px"
             />
           )}
           <span className="sr-only">{t("switchLanguage")}</span>
@@ -58,6 +60,7 @@ export default function LanguageSwitcher() {
             width={20}
             height={20}
             className="mr-2"
+            sizes="20px"
           />
           {t("english")}
         </DropdownMenuItem>
@@ -71,6 +74,7 @@ export default function LanguageSwitcher() {
             width={20}
             height={20}
             className="mr-2"
+            sizes="20px"
           />
           {t("spanish")}
         </DropdownMenuItem>

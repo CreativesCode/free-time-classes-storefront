@@ -189,6 +189,7 @@ export default function EditProfileModal({
                   alt={t("profilePicturePreviewAlt")}
                   fill
                   className="object-cover"
+                  sizes="64px"
                 />
               </div>
             ) : null}

@@ -261,6 +261,7 @@ export default function UpcomingLessonsCard() {
                             alt={tutor?.username || "Tutor"}
                             fill
                             className="object-cover"
+                            sizes="48px"
                           />
                         ) : (
                           <div className="h-full w-full flex items-center justify-center text-primary-800 font-semibold">

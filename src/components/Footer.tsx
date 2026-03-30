@@ -83,6 +83,7 @@ export default function Footer() {
                     className="h-5 w-5"
                     width={20}
                     height={20}
+                    sizes="20px"
                   />
                 </Link>
               ))}

@@ -7,11 +7,15 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/config.ts");
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
-    unoptimized: true,
+    unoptimized: false,
     remotePatterns: [
       {
         protocol: "https" as const,
-        hostname: "**",
+        hostname: "lh3.googleusercontent.com",
+      },
+      {
+        protocol: "https" as const,
+        hostname: "*.supabase.co",
       },
     ],
   },

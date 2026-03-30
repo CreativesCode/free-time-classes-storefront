@@ -223,6 +223,7 @@ export default function NavbarWrapper({
                   className="h-12 w-auto md:h-16"
                   width={50}
                   height={60}
+                  sizes="50px"
                 />
               </Link>
 

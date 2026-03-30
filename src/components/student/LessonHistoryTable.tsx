@@ -296,6 +296,7 @@ export default function LessonHistoryTable() {
                                 alt={tutor?.username || "Tutor"}
                                 fill
                                 className="object-cover"
+                                sizes="40px"
                               />
                             ) : (
                               <div className="h-full w-full flex items-center justify-center text-primary-800 font-semibold">
