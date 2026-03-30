@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
     unoptimized: false,
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
         protocol: "https" as const,

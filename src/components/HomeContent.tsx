@@ -13,11 +13,11 @@ import { ArrowRight, PenLine, Sparkles, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 const HERO_IMAGE =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuA-suG9ePicD9pRoWWoqGUYODX8V76IyATi9xp1EweslzwNwQV7PlFVc8fihWdUqPjW48rToojtFNVt2m_097JRSUab-qRRGiwIy-3fddt8mjmOEdIIR2cISN8Lvn5xJX-mPcWf20XBPVHrlvOSUSJ2jr6XcF06u-zZMxOmOe-QTSHLKH2c_yPFw2gbvlUbGFmTsNAoNBB8aibcfXSgLop5si-vB1Rj6gnRMD9b2lAvz4HjP0bbO3tDjNFjf-BdzQz2_EldNI7bLj2s";
+  "/images/hero-desktop.jpg";
 
 /** stitch/landing_page_mobile — hero 4:3 + premium shadow */
 const HERO_IMAGE_MOBILE =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuCDVD9l-xBA82h-Rf76nfIrwI8tFtCdRTGkM6NePq3a2MdE_zKs8agL9a2Bzm0sMD2JiOQ1yRHzDSOizwKYkc5V-QlqcHa7FEdIMbv_qO2-T2cPCPOAAM89UpFCEHGKFbs9DHpVcjlhHGFqkoTZVue-Lt4n0ZDcLNd-7d3kHjPpTj_bcre6GFOwLMDKzGI_F9MS4aIkR1L9lKzEaxYvoYzusjSGbgB6gc_H_6dB5Fqo9dXRNSZ3ZsWqchYZgPXyGXprVGmMmtpxJ2ce";
+  "/images/hero-mobile.jpg";
 
 const BENTO_IMAGE =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuAlZdhg_FUs3dfDG2uOHXSPnVVJUxJ4TNF1NiAvDssDP9O8Vsb_iSKtwmxT3-wyDwNJqWG-OeU5S_Z_FLrp7JdsFW0xFty1CEu3wgURzoHowGi8NR582oLbjXrOtQ818NJrM13Lybnl3yZsATVNOTL1yg9-9ysVCLS1i3eG9Tupx6a2KzejzGQQz06KVOMXV1D_j5IyD4hzpno3GhF3J8XXCyhGtogqiTjKvnMmOH4MS6cfIpFklqjaZ1DOdkDDWgKkCTmkEgBrjo7F";
