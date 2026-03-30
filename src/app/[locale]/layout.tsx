@@ -25,9 +25,14 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <NextIntlClientProvider locale={locale} messages={messages}>
+    <NextIntlClientProvider
+      locale={locale}
+      messages={messages}
+      timeZone="Europe/Madrid"
+      now={new Date()}
+    >
       <TooltipProvider>
-        <LocaleLayoutWrapper messages={messages} locale={locale}>
+        <LocaleLayoutWrapper>
           {children}
           <FooterWrapper />
           <AppToaster />

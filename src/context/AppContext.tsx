@@ -18,6 +18,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import { useAuth } from "./UserContext";
@@ -150,65 +151,89 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCoursesFilters(filters || {});
   }, []);
 
-  const value = {
-    user: {
-      data: userData,
-      loading: userLoading,
-      error: userError,
-      setData: setUserData,
-      setLoading: setUserLoading,
-      setError: setUserError,
-      refetch: async () => {
-        // Refetch is handled by UserContext
-        return { data: userData };
+  const refetchUser = useCallback(async () => {
+    // Refetch is handled by UserContext
+    return { data: userData };
+  }, [userData]);
+
+  const refetchCourses = useCallback(async () => {
+    if (!coursesFilters) {
+      return { data: null };
+    }
+    try {
+      const data = await getCoursesWithRelations(coursesFilters);
+      setCoursesData(data);
+      return { data };
+    } catch (error) {
+      setCoursesError(error as Error);
+      return { data: null };
+    }
+  }, [coursesFilters]);
+
+  const refetchLessons = useCallback(async () => {
+    if (!lessonsFilters) {
+      return { data: null };
+    }
+    try {
+      const data = await getLessonsWithRelations(lessonsFilters);
+      setLessonsData(data);
+      return { data };
+    } catch (error) {
+      setLessonsError(error as Error);
+      return { data: null };
+    }
+  }, [lessonsFilters]);
+
+  const value = useMemo(
+    () => ({
+      user: {
+        data: userData,
+        loading: userLoading,
+        error: userError,
+        setData: setUserData,
+        setLoading: setUserLoading,
+        setError: setUserError,
+        refetch: refetchUser,
       },
-    },
-    courses: {
-      data: coursesData,
-      loading: coursesLoading,
-      error: coursesError,
-      setData: setCoursesData,
-      setLoading: setCoursesLoading,
-      setError: setCoursesError,
-      refetch: async () => {
-        if (!coursesFilters) {
-          return { data: null };
-        }
-        try {
-          const data = await getCoursesWithRelations(coursesFilters);
-          setCoursesData(data);
-          return { data };
-        } catch (error) {
-          setCoursesError(error as Error);
-          return { data: null };
-        }
+      courses: {
+        data: coursesData,
+        loading: coursesLoading,
+        error: coursesError,
+        setData: setCoursesData,
+        setLoading: setCoursesLoading,
+        setError: setCoursesError,
+        refetch: refetchCourses,
       },
-    },
-    lessons: {
-      data: lessonsData,
-      loading: lessonsLoading,
-      error: lessonsError,
-      setData: setLessonsData,
-      setLoading: setLessonsLoading,
-      setError: setLessonsError,
-      refetch: async () => {
-        if (!lessonsFilters) {
-          return { data: null };
-        }
-        try {
-          const data = await getLessonsWithRelations(lessonsFilters);
-          setLessonsData(data);
-          return { data };
-        } catch (error) {
-          setLessonsError(error as Error);
-          return { data: null };
-        }
+      lessons: {
+        data: lessonsData,
+        loading: lessonsLoading,
+        error: lessonsError,
+        setData: setLessonsData,
+        setLoading: setLessonsLoading,
+        setError: setLessonsError,
+        refetch: refetchLessons,
       },
-    },
-    lessonStatusChoices: LESSON_STATUS_CHOICES,
-    refreshLessons,
-    refreshCourses,
-  };
+      lessonStatusChoices: LESSON_STATUS_CHOICES,
+      refreshLessons,
+      refreshCourses,
+    }),
+    [
+      userData,
+      userLoading,
+      userError,
+      refetchUser,
+      coursesData,
+      coursesLoading,
+      coursesError,
+      refetchCourses,
+      lessonsData,
+      lessonsLoading,
+      lessonsError,
+      refetchLessons,
+      refreshLessons,
+      refreshCourses,
+    ]
+  );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

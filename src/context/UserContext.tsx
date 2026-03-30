@@ -3,7 +3,14 @@
 import { createClient } from "@/lib/supabase/client";
 import { getCurrentUser } from "@/lib/supabase/queries/users";
 import type { User } from "@/types/user";
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 interface UserContextType {
   user: User | null;
@@ -26,7 +33,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   // Initialize: Check for existing session
   useEffect(() => {
@@ -76,7 +83,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
   }, [supabase.auth]);
 
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     try {
       setError(null);
       setIsLoading(true);
@@ -105,62 +112,65 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [supabase]);
 
-  const register = async (
-    email: string,
-    password: string,
-    role: "student" | "tutor" | "both",
-    options?: { emailRedirectTo?: string }
-  ) => {
-    try {
-      setError(null);
-      setIsLoading(true);
+  const register = useCallback(
+    async (
+      email: string,
+      password: string,
+      role: "student" | "tutor" | "both",
+      options?: { emailRedirectTo?: string }
+    ) => {
+      try {
+        setError(null);
+        setIsLoading(true);
 
-      const isStudent = role === "student" || role === "both";
-      const isTutor = role === "tutor" || role === "both";
+        const isStudent = role === "student" || role === "both";
+        const isTutor = role === "tutor" || role === "both";
 
-      // Sign up with Supabase Auth
-      const { data, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: options?.emailRedirectTo,
-          data: {
-            is_student: isStudent,
-            is_tutor: isTutor,
+        // Sign up with Supabase Auth
+        const { data, error: authError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: options?.emailRedirectTo,
+            data: {
+              is_student: isStudent,
+              is_tutor: isTutor,
+            },
           },
-        },
-      });
+        });
 
-      if (authError) {
-        throw authError;
+        if (authError) {
+          throw authError;
+        }
+
+        if (!data.user) {
+          throw new Error("Registration failed: No user data returned");
+        }
+
+        // If email confirmation is enabled, Supabase returns no session.
+        // In that case, we should not attempt DB writes (RLS will block unauthenticated users).
+        // The DB rows should be created by a trigger using auth.users metadata.
+        if (!data.session) {
+          return "email_confirmation_required";
+        }
+
+        // Get the updated user data
+        const userData = await getCurrentUser();
+        setUser(userData);
+        return "signed_in";
+      } catch (error) {
+        setError(error as Error);
+        throw error;
+      } finally {
+        setIsLoading(false);
       }
+    },
+    [supabase]
+  );
 
-      if (!data.user) {
-        throw new Error("Registration failed: No user data returned");
-      }
-
-      // If email confirmation is enabled, Supabase returns no session.
-      // In that case, we should not attempt DB writes (RLS will block unauthenticated users).
-      // The DB rows should be created by a trigger using auth.users metadata.
-      if (!data.session) {
-        return "email_confirmation_required";
-      }
-
-      // Get the updated user data
-      const userData = await getCurrentUser();
-      setUser(userData);
-      return "signed_in";
-    } catch (error) {
-      setError(error as Error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       setError(null);
       setIsLoading(true);
@@ -184,21 +194,24 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [supabase]);
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     try {
       const userData = await getCurrentUser();
       setUser(userData);
     } catch (error) {
       setError(error as Error);
     }
-  };
+  }, []);
+
+  const value = useMemo(
+    () => ({ user, login, register, logout, refreshUser, isLoading, error }),
+    [user, login, register, logout, refreshUser, isLoading, error]
+  );
 
   return (
-    <UserContext.Provider
-      value={{ user, login, register, logout, refreshUser, isLoading, error }}
-    >
+    <UserContext.Provider value={value}>
       {children}
     </UserContext.Provider>
   );
