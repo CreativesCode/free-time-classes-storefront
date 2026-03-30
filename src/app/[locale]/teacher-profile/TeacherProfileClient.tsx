@@ -51,13 +51,11 @@ export type TeacherProfilePageUser = {
 };
 
 export default function TeacherProfileClient({
-  locale,
   teacherUser,
   initialTutorProfile,
   initialSubjects,
   initialCourses,
 }: {
-  locale: string;
   teacherUser: TeacherProfilePageUser;
   initialTutorProfile: TutorProfile | null;
   initialSubjects: Subject[];

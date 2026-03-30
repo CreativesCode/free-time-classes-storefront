@@ -131,7 +131,6 @@ export default async function TeacherProfilePage({
 
   return (
     <TeacherProfileClient
-      locale={locale}
       teacherUser={teacherUser}
       initialTutorProfile={initialTutorProfile}
       initialSubjects={initialSubjects}

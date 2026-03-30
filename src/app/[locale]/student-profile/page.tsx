@@ -1,5 +1,12 @@
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import StudentProfilePageClient from "./StudentProfilePageClient";
+
+import { createClient } from "@/lib/supabase/server";
+import type { StudentProfile } from "@/types/student";
+
+import StudentProfilePageClient, {
+  type StudentProfilePageUser,
+} from "./StudentProfilePageClient";
 
 function StudentProfileFallback() {
   return (
@@ -9,10 +16,67 @@ function StudentProfileFallback() {
   );
 }
 
-export default function StudentProfilePage() {
+export default async function StudentProfilePage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const supabase = await createClient();
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+
+  if (!authUser) {
+    redirect(`/${locale}/login`);
+  }
+
+  const { data: userRow, error: userRowError } = await supabase
+    .from("users")
+    .select(
+      "id, username, email, phone, country, profile_picture, is_student, created_at, updated_at"
+    )
+    .eq("id", authUser.id)
+    .single();
+
+  if (userRowError || !userRow) {
+    redirect(`/${locale}/login`);
+  }
+
+  if (!userRow.is_student) {
+    redirect(`/${locale}/dashboard`);
+  }
+
+  const pageUser: StudentProfilePageUser = {
+    id: userRow.id,
+    username: userRow.username,
+    email: userRow.email,
+    phone: userRow.phone ?? null,
+    country: userRow.country ?? null,
+    profile_picture: userRow.profile_picture ?? null,
+    created_at: userRow.created_at,
+    updated_at: userRow.updated_at,
+  };
+
+  const { data: profileRow, error: profileError } = await supabase
+    .from("student_profiles")
+    .select("*")
+    .eq("id", authUser.id)
+    .maybeSingle();
+
+  if (profileError) {
+    console.error("student_profiles fetch:", profileError);
+  }
+
+  const initialStudentProfile = (profileRow as StudentProfile | null) ?? null;
+
   return (
     <Suspense fallback={<StudentProfileFallback />}>
-      <StudentProfilePageClient />
+      <StudentProfilePageClient
+        locale={locale}
+        pageUser={pageUser}
+        initialStudentProfile={initialStudentProfile}
+      />
     </Suspense>
   );
 }

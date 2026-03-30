@@ -108,7 +108,10 @@ export default async function TutorDashboardPage({
       .in("id", lessonIds);
 
     lessonById = new Map(
-      ((pendingLessons ?? []) as LessonWithRelations[]).map((lesson) => [lesson.id, lesson])
+      ((pendingLessons ?? []) as unknown as LessonWithRelations[]).map((lesson) => [
+        lesson.id,
+        lesson,
+      ])
     );
   }
 
@@ -131,7 +134,7 @@ export default async function TutorDashboardPage({
     earningsThisMonth,
   };
 
-  const todayLessons = (todayLessonsRes.data ?? []) as TodayLesson[];
+  const todayLessons = (todayLessonsRes.data ?? []) as unknown as TodayLesson[];
 
   return (
     <TutorDashboardClient

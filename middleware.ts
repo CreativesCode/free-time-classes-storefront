@@ -89,6 +89,22 @@ export default async function middleware(req: NextRequest) {
     : routing.defaultLocale;
   const pathnameWithoutLocale = pathname.replace(new RegExp(`^/${locale}`), "") || "/";
 
+  const isAuthPage =
+    pathnameWithoutLocale === "/login" || pathnameWithoutLocale === "/register";
+
+  // Check if the current path is a protected route
+  const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
+    pathnameWithoutLocale === route || pathnameWithoutLocale.startsWith(`${route}/`)
+  );
+
+  const needsSupabaseAuth = isProtectedRoute || isAuthPage;
+
+  // Public routes: only internationalization (no Supabase session work on the Edge).
+  // Trade-off: auth cookie refresh runs on the next protected or auth-page hit (acceptable for most SPAs).
+  if (!needsSupabaseAuth) {
+    return intlMiddleware(req);
+  }
+
   // Create Supabase client for middleware
   let response = NextResponse.next({
     request: {
@@ -147,14 +163,6 @@ export default async function middleware(req: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession();
 
-  const isAuthPage =
-    pathnameWithoutLocale === "/login" || pathnameWithoutLocale === "/register";
-
-  // Check if the current path is a protected route
-  const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
-    pathnameWithoutLocale === route || pathnameWithoutLocale.startsWith(`${route}/`)
-  );
-
   // Redirect to login if accessing protected routes without session
   if (!session && isProtectedRoute) {
     const redirectUrl = new URL(`/${locale}/login`, req.url);
@@ -193,14 +201,14 @@ export default async function middleware(req: NextRequest) {
   return intlMiddleware(req);
 }
 
+const localeDelimiter = routing.locales.join("|");
+
 export const config = {
   matcher: [
-    // Match all pathnames except for:
-    // - API routes
-    // - _next (Next.js internals)
-    // - _static (inside /public)
-    // - _vercel (Vercel internals)
-    // - Static files (images, fonts, etc.)
-    "/((?!api|_next/static|_next/image|_vercel|.*\\..*|favicon.ico).*)",
+    "/",
+    // Home per locale, e.g. /en
+    `/(${localeDelimiter})`,
+    // Rest of app, e.g. /en/dashboard (aligns with next-intl + localePrefix: "always")
+    `/(${localeDelimiter})/:path*`,
   ],
 };

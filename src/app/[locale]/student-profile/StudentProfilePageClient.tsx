@@ -8,9 +8,7 @@ import FavoriteTutorsList from "@/components/student/FavoriteTutorsList";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/context/UserContext";
 import { getPublicUrl } from "@/lib/supabase/storage";
-import { getStudentProfileWithUser } from "@/lib/supabase/queries/students";
 import {
   BookOpen,
   Calendar,
@@ -19,13 +17,24 @@ import {
   Settings,
   User,
 } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import type { StudentProfile } from "@/types/student";
 import StudentBookingRequests from "@/components/student/StudentBookingRequests";
 import InternalMessagingPanel from "@/components/messages/InternalMessagingPanel";
 import { useRouter, useSearchParams } from "next/navigation";
+
+export type StudentProfilePageUser = {
+  id: string;
+  username: string;
+  email: string;
+  phone: string | null;
+  country: string | null;
+  profile_picture: string | null;
+  created_at: string;
+  updated_at: string;
+};
 
 const STUDENT_PROFILE_TABS = [
   "profile",
@@ -50,10 +59,16 @@ function parseStudentProfileTab(sp: {
   return "profile";
 }
 
-export default function StudentProfilePageClient() {
-  const { user, isLoading } = useAuth();
+export default function StudentProfilePageClient({
+  locale,
+  pageUser,
+  initialStudentProfile,
+}: {
+  locale: string;
+  pageUser: StudentProfilePageUser;
+  initialStudentProfile: StudentProfile | null;
+}) {
   const t = useTranslations("studentProfile");
-  const locale = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<StudentProfileTab>(() =>
@@ -65,53 +80,18 @@ export default function StudentProfilePageClient() {
   }, [searchParams]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(
-    null
+    initialStudentProfile
   );
-  const [studentProfileLoading, setStudentProfileLoading] = useState(false);
-  const [studentProfileError, setStudentProfileError] = useState<string | null>(
-    null
-  );
-
-  const refreshStudentProfile = async () => {
-    if (!user?.id) return;
-
-    setStudentProfileLoading(true);
-    setStudentProfileError(null);
-    try {
-      const data = await getStudentProfileWithUser(user.id);
-      setStudentProfile(data);
-    } catch (e) {
-      console.error("Error loading student profile:", e);
-      setStudentProfileError(
-        e instanceof Error ? e.message : "Failed to load student profile"
-      );
-    } finally {
-      setStudentProfileLoading(false);
-    }
-  };
 
   useEffect(() => {
-    void refreshStudentProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null;
-  }
+    setStudentProfile(initialStudentProfile);
+  }, [initialStudentProfile]);
 
   const profilePictureUrl =
-    user.profile_picture && typeof user.profile_picture === "string"
-      ? user.profile_picture.startsWith("http")
-        ? user.profile_picture
-        : getPublicUrl("avatars", user.profile_picture)
+    pageUser.profile_picture && typeof pageUser.profile_picture === "string"
+      ? pageUser.profile_picture.startsWith("http")
+        ? pageUser.profile_picture
+        : getPublicUrl("avatars", pageUser.profile_picture)
       : null;
 
   const tabItems = [
@@ -138,15 +118,15 @@ export default function StudentProfilePageClient() {
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-500 to-violet-600 text-2xl font-bold text-white md:text-3xl">
-              {user.username?.[0]?.toUpperCase() || "U"}
+              {pageUser.username?.[0]?.toUpperCase() || "U"}
             </div>
           )}
         </div>
         <div>
           <h1 className="text-xl font-extrabold tracking-tight text-foreground md:text-2xl">
-            {user.username}
+            {pageUser.username}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">{user.email}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{pageUser.email}</p>
         </div>
       </div>
 
@@ -181,33 +161,33 @@ export default function StudentProfilePageClient() {
                   <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t("name")}
                   </label>
-                  <p className="mt-1 text-sm font-medium text-foreground">{user.username}</p>
+                  <p className="mt-1 text-sm font-medium text-foreground">{pageUser.username}</p>
                 </div>
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t("email")}
                   </label>
-                  <p className="mt-1 text-sm font-medium text-foreground">{user.email}</p>
+                  <p className="mt-1 text-sm font-medium text-foreground">{pageUser.email}</p>
                 </div>
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t("phone")}
                   </label>
-                  <p className="mt-1 text-sm font-medium text-foreground">{user.phone || t("notProvided")}</p>
+                  <p className="mt-1 text-sm font-medium text-foreground">{pageUser.phone || t("notProvided")}</p>
                 </div>
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t("country")}
                   </label>
-                  <p className="mt-1 text-sm font-medium text-foreground">{user.country || t("notProvided")}</p>
+                  <p className="mt-1 text-sm font-medium text-foreground">{pageUser.country || t("notProvided")}</p>
                 </div>
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {t("registrationDate")}
                   </label>
                   <p className="mt-1 text-sm font-medium text-foreground">
-                    {user.created_at
-                      ? new Date(user.created_at).toLocaleDateString()
+                    {pageUser.created_at
+                      ? new Date(pageUser.created_at).toLocaleDateString()
                       : "-"}
                   </p>
                 </div>
@@ -216,22 +196,14 @@ export default function StudentProfilePageClient() {
                     {t("lastUpdate")}
                   </label>
                   <p className="mt-1 text-sm font-medium text-foreground">
-                    {user.updated_at
-                      ? new Date(user.updated_at).toLocaleDateString()
+                    {pageUser.updated_at
+                      ? new Date(pageUser.updated_at).toLocaleDateString()
                       : "-"}
                   </p>
                 </div>
               </div>
 
               <div className="space-y-3 border-t border-border/60 pt-4">
-                {studentProfileLoading ? (
-                  <div className="text-sm text-muted-foreground">{t("loading")}...</div>
-                ) : studentProfileError ? (
-                  <div className="text-sm text-destructive">
-                    {studentProfileError}
-                  </div>
-                ) : (
-                  <>
                     <div>
                       <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                         {t("bio")}
@@ -311,8 +283,6 @@ export default function StudentProfilePageClient() {
                           .join(", ") || t("notProvided")}
                       </p>
                     </div>
-                  </>
-                )}
               </div>
 
               <Button className="mt-4" onClick={() => setIsEditModalOpen(true)}>
@@ -408,7 +378,7 @@ export default function StudentProfilePageClient() {
         onClose={() => setIsEditModalOpen(false)}
         studentProfile={studentProfile}
         onUpdated={() => {
-          void refreshStudentProfile();
+          router.refresh();
         }}
       />
     </div>
