@@ -3,6 +3,15 @@ import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js
 import { createClient } from "@/lib/supabase/server";
 import { createMeetEvent, hasGoogleConnection } from "@/lib/google-calendar";
 
+const noStoreJson = (body: unknown, init?: ResponseInit) =>
+  NextResponse.json(body, {
+    ...init,
+    headers: {
+      ...(init?.headers ?? {}),
+      "Cache-Control": "no-store",
+    },
+  });
+
 type Body = {
   bookingId: number;
   action: "confirm" | "reject";
@@ -18,10 +27,10 @@ export async function POST(request: NextRequest) {
     const action = body.action;
 
     if (!Number.isInteger(bookingId) || bookingId <= 0) {
-      return NextResponse.json({ error: "Invalid bookingId." }, { status: 400 });
+      return noStoreJson({ error: "Invalid bookingId." }, { status: 400 });
     }
     if (action !== "confirm" && action !== "reject") {
-      return NextResponse.json({ error: "Invalid action." }, { status: 400 });
+      return noStoreJson({ error: "Invalid action." }, { status: 400 });
     }
 
     const supabase = await createClient();
@@ -31,7 +40,7 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+      return noStoreJson({ error: "Unauthorized." }, { status: 401 });
     }
 
     const { data: profile, error: profileError } = await supabase
@@ -41,13 +50,13 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (profileError || !profile?.is_tutor) {
-      return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+      return noStoreJson({ error: "Forbidden." }, { status: 403 });
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!supabaseUrl || !serviceRoleKey) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: "Server misconfigured: missing Supabase env vars." },
         { status: 500 }
       );
@@ -64,15 +73,15 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (bookingError || !booking) {
-      return NextResponse.json({ error: "Booking not found." }, { status: 404 });
+      return noStoreJson({ error: "Booking not found." }, { status: 404 });
     }
 
     if (booking.tutor_id !== user.id) {
-      return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+      return noStoreJson({ error: "Forbidden." }, { status: 403 });
     }
 
     if (booking.status !== "pending") {
-      return NextResponse.json(
+      return noStoreJson(
         { error: "Only pending bookings can be updated." },
         { status: 409 }
       );
@@ -88,7 +97,7 @@ export async function POST(request: NextRequest) {
         .eq("id", bookingId);
 
       if (updateError) {
-        return NextResponse.json(
+        return noStoreJson(
           { error: updateError.message || "Failed to confirm booking." },
           { status: 400 }
         );
@@ -158,7 +167,7 @@ export async function POST(request: NextRequest) {
           .eq("id", booking.lesson_id);
       }
 
-      return NextResponse.json({ ok: true, meetLink: finalMeetLink || null }, { status: 200 });
+      return noStoreJson({ ok: true, meetLink: finalMeetLink || null }, { status: 200 });
     }
 
     // action === "reject"
@@ -171,7 +180,7 @@ export async function POST(request: NextRequest) {
       .eq("id", bookingId);
 
     if (rejectError) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: rejectError.message || "Failed to reject booking." },
         { status: 400 }
       );
@@ -205,10 +214,10 @@ export async function POST(request: NextRequest) {
         .eq("id", booking.lesson_id);
     }
 
-    return NextResponse.json({ ok: true }, { status: 200 });
+    return noStoreJson({ ok: true }, { status: 200 });
   } catch (err) {
     console.error("[bookings/tutor/respond] error:", err);
-    return NextResponse.json({ error: "Unexpected server error." }, { status: 500 });
+    return noStoreJson({ error: "Unexpected server error." }, { status: 500 });
   }
 }
 

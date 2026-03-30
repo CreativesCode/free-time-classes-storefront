@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 
+const noStoreJson = (body: unknown, init?: ResponseInit) =>
+  NextResponse.json(body, {
+    ...init,
+    headers: {
+      ...(init?.headers ?? {}),
+      "Cache-Control": "no-store",
+    },
+  });
+
 type Body = {
   tutorId: string;
   name: string;
@@ -15,7 +24,7 @@ export async function POST(
     const name = (body.name || "").trim();
 
     if (!tutorId || !name) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: "Missing tutorId or subject name." },
         { status: 400 }
       );
@@ -29,7 +38,7 @@ export async function POST(
     if (!serviceRoleKey) missing.push("SUPABASE_SERVICE_ROLE_KEY");
 
     if (missing.length > 0) {
-      return NextResponse.json(
+      return noStoreJson(
         {
           error: `Server misconfigured: missing ${missing.join(", ")}.`,
         },
@@ -51,7 +60,7 @@ export async function POST(
       .single();
 
     if (createError || !createdSubject) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: createError?.message || "Failed to create subject." },
         { status: 400 }
       );
@@ -62,19 +71,19 @@ export async function POST(
       .insert({ tutor_id: tutorId, subject_id: createdSubject.id });
 
     if (linkError) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: linkError.message || "Failed to assign subject." },
         { status: 400 }
       );
     }
 
-    return NextResponse.json(
+    return noStoreJson(
       { createdSubjectId: createdSubject.id },
       { status: 200 }
     );
   } catch (err) {
     console.error("[subjects/create] error:", err);
-    return NextResponse.json(
+    return noStoreJson(
       { error: "Unexpected server error." },
       { status: 500 }
     );

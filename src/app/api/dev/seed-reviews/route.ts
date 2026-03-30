@@ -2,10 +2,19 @@ import { NextResponse } from "next/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 
+const noStoreJson = (body: unknown, init?: ResponseInit) =>
+  NextResponse.json(body, {
+    ...init,
+    headers: {
+      ...(init?.headers ?? {}),
+      "Cache-Control": "no-store",
+    },
+  });
+
 export async function POST() {
   try {
     if (process.env.NODE_ENV === "production") {
-      return NextResponse.json({ error: "Not available in production." }, { status: 404 });
+      return noStoreJson({ error: "Not available in production." }, { status: 404 });
     }
 
     const supabase = await createClient();
@@ -15,13 +24,13 @@ export async function POST() {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+      return noStoreJson({ error: "Unauthorized." }, { status: 401 });
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!supabaseUrl || !serviceRoleKey) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: "Server misconfigured: missing Supabase env vars." },
         { status: 500 }
       );
@@ -49,7 +58,7 @@ export async function POST() {
       .limit(1);
 
     if (subjectsError || !subjects || subjects.length === 0) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: "No hay materias disponibles en `subjects`." },
         { status: 400 }
       );
@@ -75,7 +84,7 @@ export async function POST() {
       .single();
 
     if (lessonError || !lesson) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: lessonError?.message || "No se pudo crear la lección demo." },
         { status: 400 }
       );
@@ -98,7 +107,7 @@ export async function POST() {
       .single();
 
     if (bookingError || !booking) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: bookingError?.message || "No se pudo crear la reserva demo." },
         { status: 400 }
       );
@@ -121,13 +130,13 @@ export async function POST() {
       .single();
 
     if (reviewError || !review) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: reviewError?.message || "No se pudo crear la reseña demo." },
         { status: 400 }
       );
     }
 
-    return NextResponse.json(
+    return noStoreJson(
       {
         ok: true,
         lessonId: lesson.id,
@@ -139,7 +148,7 @@ export async function POST() {
     );
   } catch (err) {
     console.error("[dev/seed-reviews] error:", err);
-    return NextResponse.json({ error: "Unexpected server error." }, { status: 500 });
+    return noStoreJson({ error: "Unexpected server error." }, { status: 500 });
   }
 }
 

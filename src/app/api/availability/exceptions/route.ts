@@ -12,6 +12,15 @@ import {
 } from "@/lib/availability/ruleExpansion";
 import type { AvailabilityException } from "@/types/availability";
 
+const noStoreJson = (body: unknown, init?: ResponseInit) =>
+  NextResponse.json(body, {
+    ...init,
+    headers: {
+      ...(init?.headers ?? {}),
+      "Cache-Control": "no-store",
+    },
+  });
+
 type BlockedBody = {
   type: "blocked";
   exception_date: string;
@@ -97,7 +106,7 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+      return noStoreJson({ error: "Unauthorized." }, { status: 401 });
     }
 
     const { data: profile, error: profileError } = await supabase
@@ -107,14 +116,14 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (profileError || !profile?.is_tutor) {
-      return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+      return noStoreJson({ error: "Forbidden." }, { status: 403 });
     }
 
     const body = (await request.json()) as Partial<Body>;
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!supabaseUrl || !serviceRoleKey) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: "Server misconfigured: missing Supabase env vars." },
         { status: 500 }
       );
@@ -128,13 +137,13 @@ export async function POST(request: NextRequest) {
       const exceptionDate =
         typeof body.exception_date === "string" ? body.exception_date : "";
       if (!/^\d{4}-\d{2}-\d{2}$/.test(exceptionDate)) {
-        return NextResponse.json({ error: "Invalid exception_date." }, { status: 400 });
+        return noStoreJson({ error: "Invalid exception_date." }, { status: 400 });
       }
 
       const st = normalizeTime(body.start_time);
       const et = normalizeTime(body.end_time);
       if ((st == null) !== (et == null)) {
-        return NextResponse.json(
+        return noStoreJson(
           { error: "Provide both start_time and end_time, or neither for full day." },
           { status: 400 }
         );
@@ -154,7 +163,7 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (insErr || !inserted) {
-        return NextResponse.json(
+        return noStoreJson(
           { error: insErr?.message || "Could not save exception." },
           { status: 400 }
         );
@@ -173,7 +182,7 @@ export async function POST(request: NextRequest) {
           dayEnd
         );
         if (clearResult.error) {
-          return NextResponse.json({ error: clearResult.error }, { status: 400 });
+          return noStoreJson({ error: clearResult.error }, { status: 400 });
         }
       } else if (st && et) {
         const { data: lessons, error: lessonsError } = await admin
@@ -185,7 +194,7 @@ export async function POST(request: NextRequest) {
           .lt("scheduled_date_time", dayEnd);
 
         if (lessonsError) {
-          return NextResponse.json(
+          return noStoreJson(
             { error: "Could not load lessons to clear." },
             { status: 400 }
           );
@@ -236,7 +245,7 @@ export async function POST(request: NextRequest) {
             .in("status", ["pending", "confirmed"]);
 
           if (bookingsError) {
-            return NextResponse.json(
+            return noStoreJson(
               { error: "Could not verify bookings." },
               { status: 400 }
             );
@@ -252,7 +261,7 @@ export async function POST(request: NextRequest) {
               .delete()
               .in("id", toDelete);
             if (delErr) {
-              return NextResponse.json(
+              return noStoreJson(
                 { error: delErr.message || "Could not remove slots." },
                 { status: 400 }
               );
@@ -261,7 +270,7 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      return NextResponse.json({ id: inserted.id }, { status: 200 });
+      return noStoreJson({ id: inserted.id }, { status: 200 });
     }
 
     if (body.type === "extra") {
@@ -283,7 +292,7 @@ export async function POST(request: NextRequest) {
         !et ||
         !/^\d{4}-\d{2}-\d{2}$/.test(exceptionDate)
       ) {
-        return NextResponse.json({ error: "Invalid extra exception payload." }, { status: 400 });
+        return noStoreJson({ error: "Invalid extra exception payload." }, { status: 400 });
       }
 
       const { data: inserted, error: insErr } = await admin
@@ -303,7 +312,7 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (insErr || !inserted) {
-        return NextResponse.json(
+        return noStoreJson(
           { error: insErr?.message || "Could not save exception." },
           { status: 400 }
         );
@@ -326,7 +335,7 @@ export async function POST(request: NextRequest) {
         .lt("scheduled_date_time", endStr);
 
       if (existingError) {
-        return NextResponse.json(
+        return noStoreJson(
           { error: "Could not check existing slots." },
           { status: 400 }
         );
@@ -361,22 +370,22 @@ export async function POST(request: NextRequest) {
       if (rows.length > 0) {
         const { error: insLessonsErr } = await admin.from("lessons").insert(rows);
         if (insLessonsErr) {
-          return NextResponse.json(
+          return noStoreJson(
             { error: insLessonsErr.message || "Could not create extra slots." },
             { status: 400 }
           );
         }
       }
 
-      return NextResponse.json(
+      return noStoreJson(
         { id: inserted.id, slotsCreated: rows.length },
         { status: 200 }
       );
     }
 
-    return NextResponse.json({ error: "Invalid type." }, { status: 400 });
+    return noStoreJson({ error: "Invalid type." }, { status: 400 });
   } catch (err) {
     console.error("[availability/exceptions POST] error:", err);
-    return NextResponse.json({ error: "Unexpected server error." }, { status: 500 });
+    return noStoreJson({ error: "Unexpected server error." }, { status: 500 });
   }
 }

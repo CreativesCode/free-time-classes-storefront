@@ -2,6 +2,15 @@ import { NextResponse } from "next/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 
+const noStoreJson = (body: unknown, init?: ResponseInit) =>
+  NextResponse.json(body, {
+    ...init,
+    headers: {
+      ...(init?.headers ?? {}),
+      "Cache-Control": "no-store",
+    },
+  });
+
 export async function POST() {
   try {
     const supabase = await createClient();
@@ -12,14 +21,14 @@ export async function POST() {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+      return noStoreJson({ error: "Unauthorized." }, { status: 401 });
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !serviceRoleKey) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: "Server misconfigured: missing Supabase env vars." },
         { status: 500 }
       );
@@ -34,16 +43,16 @@ export async function POST() {
     );
 
     if (deleteError) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: deleteError.message || "Failed to delete account." },
         { status: 400 }
       );
     }
 
-    return NextResponse.json({ ok: true }, { status: 200 });
+    return noStoreJson({ ok: true }, { status: 200 });
   } catch (err) {
     console.error("[settings/delete-account] error:", err);
-    return NextResponse.json(
+    return noStoreJson(
       { error: "Unexpected server error." },
       { status: 500 }
     );

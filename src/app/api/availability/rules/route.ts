@@ -12,6 +12,15 @@ import type {
   TutorAvailabilityRule,
 } from "@/types/availability";
 
+const noStoreJson = (body: unknown, init?: ResponseInit) =>
+  NextResponse.json(body, {
+    ...init,
+    headers: {
+      ...(init?.headers ?? {}),
+      "Cache-Control": "no-store",
+    },
+  });
+
 type CreateBody = {
   day_of_week: number;
   start_time: string;
@@ -48,7 +57,7 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+      return noStoreJson({ error: "Unauthorized." }, { status: 401 });
     }
 
     const { data: profile, error: profileError } = await supabase
@@ -58,7 +67,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (profileError || !profile?.is_tutor) {
-      return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+      return noStoreJson({ error: "Forbidden." }, { status: 403 });
     }
 
     const body = (await request.json()) as Partial<CreateBody>;
@@ -82,13 +91,13 @@ export async function POST(request: NextRequest) {
       !startTime ||
       !endTime
     ) {
-      return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
+      return noStoreJson({ error: "Invalid payload." }, { status: 400 });
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!supabaseUrl || !serviceRoleKey) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: "Server misconfigured: missing Supabase env vars." },
         { status: 500 }
       );
@@ -121,7 +130,7 @@ export async function POST(request: NextRequest) {
       isMissingColumnInSchemaCache(insertRuleError, "subject_id") ||
       isMissingColumnInSchemaCache(insertRuleError, "price")
     ) {
-      return NextResponse.json(
+      return noStoreJson(
         {
           error:
             "Supabase schema desactualizado. Aplica la migración 004_tutor_availability_exceptions.sql y recarga el schema cache de PostgREST.",
@@ -131,7 +140,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (insertRuleError || !ruleRow) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: insertRuleError?.message || "Could not save rule." },
         { status: 400 }
       );
@@ -145,7 +154,7 @@ export async function POST(request: NextRequest) {
       .eq("tutor_id", user.id);
 
     if (exError) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: "Could not load exceptions." },
         { status: 400 }
       );
@@ -169,7 +178,7 @@ export async function POST(request: NextRequest) {
       .lt("scheduled_date_time", endStr);
 
     if (existingError) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: "Could not check existing slots." },
         { status: 400 }
       );
@@ -209,7 +218,7 @@ export async function POST(request: NextRequest) {
         const { error: insErr } = await admin.from("lessons").insert(part);
         if (insErr) {
           await admin.from("tutor_availability").delete().eq("id", rule.id);
-          return NextResponse.json(
+          return noStoreJson(
             { error: insErr.message || "Could not generate slots." },
             { status: 400 }
           );
@@ -217,7 +226,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json(
+    return noStoreJson(
       {
         ruleId: rule.id,
         slotsCreated: rows.length,
@@ -228,6 +237,6 @@ export async function POST(request: NextRequest) {
     );
   } catch (err) {
     console.error("[availability/rules POST] error:", err);
-    return NextResponse.json({ error: "Unexpected server error." }, { status: 500 });
+    return noStoreJson({ error: "Unexpected server error." }, { status: 500 });
   }
 }

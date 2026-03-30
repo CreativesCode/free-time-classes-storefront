@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+const noStoreJson = (body: unknown, init?: ResponseInit) =>
+  NextResponse.json(body, {
+    ...init,
+    headers: {
+      ...(init?.headers ?? {}),
+      "Cache-Control": "no-store",
+    },
+  });
+
 export async function POST(_request: NextRequest) {
   void _request; // Explicitly mark as used; not needed for this endpoint
   try {
@@ -11,7 +20,7 @@ export async function POST(_request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+      return noStoreJson({ error: "Unauthorized." }, { status: 401 });
     }
 
     const [{ data: userRow, error: userRowError }, { data: student }, { data: tutor }] =
@@ -34,7 +43,7 @@ export async function POST(_request: NextRequest) {
       ]);
 
     if (userRowError) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: userRowError.message || "Failed to load user data." },
         { status: 400 }
       );
@@ -61,7 +70,7 @@ export async function POST(_request: NextRequest) {
     );
   } catch (err) {
     console.error("[settings/export-data] error:", err);
-    return NextResponse.json(
+    return noStoreJson(
       { error: "Unexpected server error." },
       { status: 500 }
     );

@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+const noStoreJson = (body: unknown, init?: ResponseInit) =>
+  NextResponse.json(body, {
+    ...init,
+    headers: {
+      ...(init?.headers ?? {}),
+      "Cache-Control": "no-store",
+    },
+  });
+
 type Body = {
   password: string;
 };
@@ -11,7 +20,7 @@ export async function POST(request: NextRequest) {
     const password = typeof body.password === "string" ? body.password.trim() : "";
 
     if (password.length < 6) {
-      return NextResponse.json({ error: "Invalid password." }, { status: 400 });
+      return noStoreJson({ error: "Invalid password." }, { status: 400 });
     }
 
     const supabase = await createClient();
@@ -21,7 +30,7 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+      return noStoreJson({ error: "Unauthorized." }, { status: 401 });
     }
 
     const { data, error } = await supabase.auth.updateUser({
@@ -29,13 +38,13 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: error.message || "Failed to update password." },
         { status: 400 }
       );
     }
 
-    return NextResponse.json(
+    return noStoreJson(
       {
         ok: true,
         user: {
@@ -47,7 +56,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (err) {
     console.error("[settings/update-password] error:", err);
-    return NextResponse.json(
+    return noStoreJson(
       { error: "Unexpected server error." },
       { status: 500 }
     );

@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 
+const noStoreJson = (body: unknown, init?: ResponseInit) =>
+  NextResponse.json(body, {
+    ...init,
+    headers: {
+      ...(init?.headers ?? {}),
+      "Cache-Control": "no-store",
+    },
+  });
+
 type Body = {
   lessonId: number;
 };
@@ -13,7 +22,7 @@ export async function POST(request: NextRequest) {
       typeof body.lessonId === "number" ? body.lessonId : Number(body.lessonId);
 
     if (!Number.isInteger(lessonId) || lessonId <= 0) {
-      return NextResponse.json({ error: "Invalid lessonId." }, { status: 400 });
+      return noStoreJson({ error: "Invalid lessonId." }, { status: 400 });
     }
 
     const supabase = await createClient();
@@ -23,7 +32,7 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+      return noStoreJson({ error: "Unauthorized." }, { status: 401 });
     }
 
     const { data: profile, error: profileError } = await supabase
@@ -33,13 +42,13 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (profileError || !profile?.is_student) {
-      return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+      return noStoreJson({ error: "Forbidden." }, { status: 403 });
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!supabaseUrl || !serviceRoleKey) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: "Server misconfigured: missing Supabase env vars." },
         { status: 500 }
       );
@@ -56,11 +65,11 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (lessonError || !lesson) {
-      return NextResponse.json({ error: "Lesson not found." }, { status: 404 });
+      return noStoreJson({ error: "Lesson not found." }, { status: 404 });
     }
 
     if (lesson.status !== "available" || lesson.student_id) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: "This slot is no longer available." },
         { status: 409 }
       );
@@ -80,7 +89,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (updateError || !updatedLesson) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: "This slot is no longer available." },
         { status: 409 }
       );
@@ -109,16 +118,16 @@ export async function POST(request: NextRequest) {
         })
         .eq("id", updatedLesson.id);
 
-      return NextResponse.json(
+      return noStoreJson(
         { error: bookingError?.message || "Failed to create booking." },
         { status: 400 }
       );
     }
 
-    return NextResponse.json({ bookingId: booking.id }, { status: 200 });
+    return noStoreJson({ bookingId: booking.id }, { status: 200 });
   } catch (err) {
     console.error("[bookings/request] error:", err);
-    return NextResponse.json({ error: "Unexpected server error." }, { status: 500 });
+    return noStoreJson({ error: "Unexpected server error." }, { status: 500 });
   }
 }
 

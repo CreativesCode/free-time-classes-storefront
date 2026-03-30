@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 
+const noStoreJson = (body: unknown, init?: ResponseInit) =>
+  NextResponse.json(body, {
+    ...init,
+    headers: {
+      ...(init?.headers ?? {}),
+      "Cache-Control": "no-store",
+    },
+  });
+
 type Body = {
   profile_visibility: "public" | "booking_only";
 };
@@ -15,7 +24,7 @@ export async function POST(request: NextRequest) {
         : null;
 
     if (!profile_visibility) {
-      return NextResponse.json({ error: "Invalid profile_visibility." }, { status: 400 });
+      return noStoreJson({ error: "Invalid profile_visibility." }, { status: 400 });
     }
 
     const supabase = await createClient();
@@ -25,7 +34,7 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+      return noStoreJson({ error: "Unauthorized." }, { status: 401 });
     }
 
     // Update with a server client to avoid any client-side RLS surprises.
@@ -33,7 +42,7 @@ export async function POST(request: NextRequest) {
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !serviceRoleKey) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: "Server misconfigured: missing Supabase env vars." },
         { status: 500 }
       );
@@ -52,19 +61,19 @@ export async function POST(request: NextRequest) {
       .eq("id", user.id);
 
     if (updateError) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: updateError.message || "Failed to update privacy settings." },
         { status: 400 }
       );
     }
 
-    return NextResponse.json(
+    return noStoreJson(
       { ok: true, profile_visibility },
       { status: 200 }
     );
   } catch (err) {
     console.error("[settings/update-privacy] error:", err);
-    return NextResponse.json(
+    return noStoreJson(
       { error: "Unexpected server error." },
       { status: 500 }
     );

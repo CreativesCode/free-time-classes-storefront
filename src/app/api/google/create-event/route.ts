@@ -3,6 +3,15 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { createMeetEvent } from "@/lib/google-calendar";
 
+const noStoreJson = (body: unknown, init?: ResponseInit) =>
+  NextResponse.json(body, {
+    ...init,
+    headers: {
+      ...(init?.headers ?? {}),
+      "Cache-Control": "no-store",
+    },
+  });
+
 type Body = {
   lessonId: number;
 };
@@ -13,7 +22,7 @@ export async function POST(request: NextRequest) {
     const lessonId = Number(body.lessonId);
 
     if (!Number.isInteger(lessonId) || lessonId <= 0) {
-      return NextResponse.json({ error: "Invalid lessonId." }, { status: 400 });
+      return noStoreJson({ error: "Invalid lessonId." }, { status: 400 });
     }
 
     const supabase = await createClient();
@@ -23,13 +32,13 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+      return noStoreJson({ error: "Unauthorized." }, { status: 401 });
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!supabaseUrl || !serviceRoleKey) {
-      return NextResponse.json({ error: "Server misconfigured." }, { status: 500 });
+      return noStoreJson({ error: "Server misconfigured." }, { status: 500 });
     }
 
     const admin = createSupabaseAdminClient(supabaseUrl, serviceRoleKey, {
@@ -43,19 +52,19 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (lessonError || !lesson) {
-      return NextResponse.json({ error: "Lesson not found." }, { status: 404 });
+      return noStoreJson({ error: "Lesson not found." }, { status: 404 });
     }
 
     if (lesson.tutor_id !== user.id) {
-      return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+      return noStoreJson({ error: "Forbidden." }, { status: 403 });
     }
 
     if (lesson.google_event_id) {
-      return NextResponse.json({ error: "Event already exists for this lesson." }, { status: 409 });
+      return noStoreJson({ error: "Event already exists for this lesson." }, { status: 409 });
     }
 
     if (!lesson.scheduled_date_time) {
-      return NextResponse.json({ error: "Lesson has no scheduled date." }, { status: 400 });
+      return noStoreJson({ error: "Lesson has no scheduled date." }, { status: 400 });
     }
 
     let studentEmail = "";
@@ -84,7 +93,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!result) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: "Google Calendar not connected or token expired." },
         { status: 400 }
       );
@@ -99,7 +108,7 @@ export async function POST(request: NextRequest) {
       })
       .eq("id", lessonId);
 
-    return NextResponse.json({
+    return noStoreJson({
       ok: true,
       eventId: result.eventId,
       meetLink: result.meetLink,
@@ -107,6 +116,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (err) {
     console.error("[google/create-event] error:", err);
-    return NextResponse.json({ error: "Unexpected server error." }, { status: 500 });
+    return noStoreJson({ error: "Unexpected server error." }, { status: 500 });
   }
 }

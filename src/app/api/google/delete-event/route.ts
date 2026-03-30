@@ -3,6 +3,15 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { deleteMeetEvent } from "@/lib/google-calendar";
 
+const noStoreJson = (body: unknown, init?: ResponseInit) =>
+  NextResponse.json(body, {
+    ...init,
+    headers: {
+      ...(init?.headers ?? {}),
+      "Cache-Control": "no-store",
+    },
+  });
+
 type Body = {
   lessonId: number;
 };
@@ -13,7 +22,7 @@ export async function DELETE(request: NextRequest) {
     const lessonId = Number(body.lessonId);
 
     if (!Number.isInteger(lessonId) || lessonId <= 0) {
-      return NextResponse.json({ error: "Invalid lessonId." }, { status: 400 });
+      return noStoreJson({ error: "Invalid lessonId." }, { status: 400 });
     }
 
     const supabase = await createClient();
@@ -23,13 +32,13 @@ export async function DELETE(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+      return noStoreJson({ error: "Unauthorized." }, { status: 401 });
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!supabaseUrl || !serviceRoleKey) {
-      return NextResponse.json({ error: "Server misconfigured." }, { status: 500 });
+      return noStoreJson({ error: "Server misconfigured." }, { status: 500 });
     }
 
     const admin = createSupabaseAdminClient(supabaseUrl, serviceRoleKey, {
@@ -43,15 +52,15 @@ export async function DELETE(request: NextRequest) {
       .single();
 
     if (lessonError || !lesson) {
-      return NextResponse.json({ error: "Lesson not found." }, { status: 404 });
+      return noStoreJson({ error: "Lesson not found." }, { status: 404 });
     }
 
     if (lesson.tutor_id !== user.id) {
-      return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+      return noStoreJson({ error: "Forbidden." }, { status: 403 });
     }
 
     if (!lesson.google_event_id) {
-      return NextResponse.json({ error: "No Google event to delete." }, { status: 404 });
+      return noStoreJson({ error: "No Google event to delete." }, { status: 404 });
     }
 
     const deleted = await deleteMeetEvent(user.id, lesson.google_event_id);
@@ -64,9 +73,9 @@ export async function DELETE(request: NextRequest) {
       })
       .eq("id", lessonId);
 
-    return NextResponse.json({ ok: true, deleted });
+    return noStoreJson({ ok: true, deleted });
   } catch (err) {
     console.error("[google/delete-event] error:", err);
-    return NextResponse.json({ error: "Unexpected server error." }, { status: 500 });
+    return noStoreJson({ error: "Unexpected server error." }, { status: 500 });
   }
 }

@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 
+const noStoreJson = (body: unknown, init?: ResponseInit) =>
+  NextResponse.json(body, {
+    ...init,
+    headers: {
+      ...(init?.headers ?? {}),
+      "Cache-Control": "no-store",
+    },
+  });
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -10,7 +19,7 @@ export async function PATCH(
     const { id: rawId } = await params;
     const lessonId = Number(rawId);
     if (!Number.isInteger(lessonId) || lessonId <= 0) {
-      return NextResponse.json({ error: "Invalid lesson id." }, { status: 400 });
+      return noStoreJson({ error: "Invalid lesson id." }, { status: 400 });
     }
 
     const body = (await request.json()) as { meetLink?: string };
@@ -23,13 +32,13 @@ export async function PATCH(
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+      return noStoreJson({ error: "Unauthorized." }, { status: 401 });
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!supabaseUrl || !serviceRoleKey) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: "Server misconfigured." },
         { status: 500 }
       );
@@ -46,11 +55,11 @@ export async function PATCH(
       .single();
 
     if (lessonError || !lesson) {
-      return NextResponse.json({ error: "Lesson not found." }, { status: 404 });
+      return noStoreJson({ error: "Lesson not found." }, { status: 404 });
     }
 
     if (lesson.tutor_id !== user.id) {
-      return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+      return noStoreJson({ error: "Forbidden." }, { status: 403 });
     }
 
     const { error: updateError } = await admin
@@ -62,15 +71,15 @@ export async function PATCH(
       .eq("id", lessonId);
 
     if (updateError) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: updateError.message || "Failed to update meet link." },
         { status: 400 }
       );
     }
 
-    return NextResponse.json({ ok: true }, { status: 200 });
+    return noStoreJson({ ok: true }, { status: 200 });
   } catch (err) {
     console.error("[lessons/meet-link] error:", err);
-    return NextResponse.json({ error: "Unexpected server error." }, { status: 500 });
+    return noStoreJson({ error: "Unexpected server error." }, { status: 500 });
   }
 }

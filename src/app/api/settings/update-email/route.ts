@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+const noStoreJson = (body: unknown, init?: ResponseInit) =>
+  NextResponse.json(body, {
+    ...init,
+    headers: {
+      ...(init?.headers ?? {}),
+      "Cache-Control": "no-store",
+    },
+  });
+
 type Body = {
   email: string;
 };
@@ -15,7 +24,7 @@ export async function POST(request: NextRequest) {
     const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
 
     if (!isValidEmail(email)) {
-      return NextResponse.json({ error: "Invalid email." }, { status: 400 });
+      return noStoreJson({ error: "Invalid email." }, { status: 400 });
     }
 
     const supabase = await createClient();
@@ -25,7 +34,7 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+      return noStoreJson({ error: "Unauthorized." }, { status: 401 });
     }
 
     const { data, error } = await supabase.auth.updateUser({
@@ -33,7 +42,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) {
-      return NextResponse.json(
+      return noStoreJson(
         { error: error.message || "Failed to update email." },
         { status: 400 }
       );
@@ -50,14 +59,14 @@ export async function POST(request: NextRequest) {
         .eq("id", user.id);
 
       if (publicUserError) {
-        return NextResponse.json(
+        return noStoreJson(
           { error: publicUserError.message || "Failed to sync public user email." },
           { status: 400 }
         );
       }
     }
 
-    return NextResponse.json(
+    return noStoreJson(
       {
         ok: true,
         user: {
@@ -70,7 +79,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (err) {
     console.error("[settings/update-email] error:", err);
-    return NextResponse.json(
+    return noStoreJson(
       { error: "Unexpected server error." },
       { status: 500 }
     );
