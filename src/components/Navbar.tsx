@@ -1,13 +1,13 @@
 "use client";
 
-import { useApp } from "@/context/AppContext";
+import { useUserApp } from "@/context/AppContext";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 const Navbar = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const { user } = useApp();
+  const user = useUserApp();
 
   // Don't show navbar on login or register pages
   if (pathname === "/login" || pathname === "/register") {

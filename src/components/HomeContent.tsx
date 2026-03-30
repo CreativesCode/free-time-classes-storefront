@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { useApp } from "@/context/AppContext";
+import { useCoursesApp } from "@/context/AppContext";
 import {
   getTutorProfileWithUser,
   getTutorSubjectDetails,
@@ -36,15 +36,15 @@ export default function HomeContent() {
   const t = useTranslations("home");
   const locale = useLocale();
 
-  const { courses, refreshCourses } = useApp();
+  const courses = useCoursesApp();
   const [featuredTeachers, setFeaturedTeachers] = useState<FeaturedTeacher[]>(
     []
   );
   const [, setFeaturedLoading] = useState(false);
 
   useEffect(() => {
-    refreshCourses({ is_active: true });
-  }, [refreshCourses]);
+    courses.refreshCourses({ is_active: true });
+  }, [courses.refreshCourses]);
 
   const popularCourses = useMemo(() => {
     const data = courses.data ?? [];

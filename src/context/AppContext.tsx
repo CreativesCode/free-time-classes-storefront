@@ -50,7 +50,23 @@ interface AppContextType {
   refreshCourses: (filters?: CourseFilters) => void;
 }
 
-const AppContext = createContext<AppContextType | null>(null);
+const UserAppContext = createContext<BaseContextType<User> | null>(null);
+const CoursesAppContext = createContext<
+  | (BaseContextType<CourseWithRelations[]> & {
+      refreshCourses: (filters?: CourseFilters) => void;
+    })
+  | null
+>(null);
+const LessonsAppContext = createContext<
+  | (BaseContextType<LessonWithRelations[]> & {
+      lessonStatusChoices: LessonStatusChoice[];
+      refreshLessons: (
+        dateRange: { start: Date; end: Date },
+        status?: LessonStatus
+      ) => void;
+    })
+  | null
+>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   // Use UserContext for user data
@@ -184,66 +200,111 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [lessonsFilters]);
 
-  const value = useMemo(
+  const userValue = useMemo(
     () => ({
-      user: {
-        data: userData,
-        loading: userLoading,
-        error: userError,
-        setData: setUserData,
-        setLoading: setUserLoading,
-        setError: setUserError,
-        refetch: refetchUser,
-      },
-      courses: {
-        data: coursesData,
-        loading: coursesLoading,
-        error: coursesError,
-        setData: setCoursesData,
-        setLoading: setCoursesLoading,
-        setError: setCoursesError,
-        refetch: refetchCourses,
-      },
-      lessons: {
-        data: lessonsData,
-        loading: lessonsLoading,
-        error: lessonsError,
-        setData: setLessonsData,
-        setLoading: setLessonsLoading,
-        setError: setLessonsError,
-        refetch: refetchLessons,
-      },
-      lessonStatusChoices: LESSON_STATUS_CHOICES,
-      refreshLessons,
+      data: userData,
+      loading: userLoading,
+      error: userError,
+      setData: setUserData,
+      setLoading: setUserLoading,
+      setError: setUserError,
+      refetch: refetchUser,
+    }),
+    [userData, userLoading, userError, refetchUser]
+  );
+
+  const coursesValue = useMemo(
+    () => ({
+      data: coursesData,
+      loading: coursesLoading,
+      error: coursesError,
+      setData: setCoursesData,
+      setLoading: setCoursesLoading,
+      setError: setCoursesError,
+      refetch: refetchCourses,
       refreshCourses,
     }),
     [
-      userData,
-      userLoading,
-      userError,
-      refetchUser,
       coursesData,
       coursesLoading,
       coursesError,
       refetchCourses,
+      refreshCourses,
+    ]
+  );
+
+  const lessonsValue = useMemo(
+    () => ({
+      data: lessonsData,
+      loading: lessonsLoading,
+      error: lessonsError,
+      setData: setLessonsData,
+      setLoading: setLessonsLoading,
+      setError: setLessonsError,
+      refetch: refetchLessons,
+      lessonStatusChoices: LESSON_STATUS_CHOICES,
+      refreshLessons,
+    }),
+    [
       lessonsData,
       lessonsLoading,
       lessonsError,
       refetchLessons,
       refreshLessons,
-      refreshCourses,
     ]
   );
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  return (
+    <UserAppContext.Provider value={userValue}>
+      <CoursesAppContext.Provider value={coursesValue}>
+        <LessonsAppContext.Provider value={lessonsValue}>
+          {children}
+        </LessonsAppContext.Provider>
+      </CoursesAppContext.Provider>
+    </UserAppContext.Provider>
+  );
+}
+
+export function useUserApp() {
+  const context = useContext(UserAppContext);
+  if (!context) {
+    throw new Error("useUserApp must be used within an AppProvider");
+  }
+  return context;
+}
+
+export function useCoursesApp() {
+  const context = useContext(CoursesAppContext);
+  if (!context) {
+    throw new Error("useCoursesApp must be used within an AppProvider");
+  }
+  return context;
+}
+
+export function useLessonsApp() {
+  const context = useContext(LessonsAppContext);
+  if (!context) {
+    throw new Error("useLessonsApp must be used within an AppProvider");
+  }
+  return context;
 }
 
 export function useApp() {
-  const context = useContext(AppContext);
-  if (!context) {
-    throw new Error("useApp must be used within an AppProvider");
-  }
-  return context;
+  const user = useUserApp();
+  const courses = useCoursesApp();
+  const lessons = useLessonsApp();
+
+  return useMemo(
+    () => ({
+      user,
+      courses,
+      lessons,
+      lessonStatusChoices: lessons.lessonStatusChoices,
+      refreshLessons: lessons.refreshLessons,
+      refreshCourses: courses.refreshCourses,
+    }),
+    [user, courses, lessons]
+  );
 }
 
 // Helper hook to use specific context data
