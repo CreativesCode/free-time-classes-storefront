@@ -6,9 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { useTranslations, useLocale } from "@/i18n/translations";
 import { getPublicUrl } from "@/lib/supabase/storage";

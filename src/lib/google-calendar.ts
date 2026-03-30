@@ -1,4 +1,3 @@
-import { google } from "googleapis";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 
 function getAdminClient() {
@@ -17,7 +16,7 @@ function getOAuth2Client() {
     throw new Error("Missing Google OAuth env vars (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI)");
   }
 
-  return new google.auth.OAuth2(clientId, clientSecret, redirectUri);
+  return { clientId, clientSecret, redirectUri };
 }
 
 const SCOPES = [
@@ -25,27 +24,66 @@ const SCOPES = [
 ];
 
 export function getGoogleAuthUrl(userId: string): string {
-  const oAuth2Client = getOAuth2Client();
-  return oAuth2Client.generateAuthUrl({
+  const { clientId, redirectUri } = getOAuth2Client();
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: "code",
     access_type: "offline",
     prompt: "consent",
-    scope: SCOPES,
+    scope: SCOPES.join(" "),
     state: userId,
   });
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 }
 
 export async function exchangeCodeForTokens(code: string) {
-  const oAuth2Client = getOAuth2Client();
-  const { tokens } = await oAuth2Client.getToken(code);
-  return tokens;
+  const { clientId, clientSecret, redirectUri } = getOAuth2Client();
+  const body = new URLSearchParams({
+    code,
+    client_id: clientId,
+    client_secret: clientSecret,
+    redirect_uri: redirectUri,
+    grant_type: "authorization_code",
+  });
+  const response = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to exchange OAuth code: ${response.status} ${errorText}`);
+  }
+
+  return (await response.json()) as {
+    access_token?: string;
+    refresh_token?: string;
+    expiry_date?: number;
+    expires_in?: number;
+    scope?: string;
+  };
 }
 
 export async function saveGoogleTokens(
   userId: string,
-  tokens: { access_token?: string | null; refresh_token?: string | null; expiry_date?: number | null; scope?: string | null }
+  tokens: {
+    access_token?: string | null;
+    refresh_token?: string | null;
+    expiry_date?: number | null;
+    expires_in?: number | null;
+    scope?: string | null;
+  }
 ) {
   const admin = getAdminClient();
   const now = new Date().toISOString();
+  const calculatedExpiryIso =
+    tokens.expiry_date != null
+      ? new Date(tokens.expiry_date).toISOString()
+      : tokens.expires_in != null
+        ? new Date(Date.now() + tokens.expires_in * 1000).toISOString()
+        : now;
 
   const { error } = await admin
     .from("google_tokens")
@@ -54,9 +92,7 @@ export async function saveGoogleTokens(
         user_id: userId,
         access_token: tokens.access_token ?? "",
         refresh_token: tokens.refresh_token ?? "",
-        token_expiry: tokens.expiry_date
-          ? new Date(tokens.expiry_date).toISOString()
-          : now,
+        token_expiry: calculatedExpiryIso,
         scope: tokens.scope ?? SCOPES.join(" "),
         updated_at: now,
       },
@@ -92,23 +128,48 @@ export async function deleteGoogleTokens(userId: string) {
   await admin.from("google_tokens").delete().eq("user_id", userId);
 }
 
-async function getAuthenticatedClient(userId: string) {
+async function refreshAccessToken(refreshToken: string) {
+  const { clientId, clientSecret } = getOAuth2Client();
+  const body = new URLSearchParams({
+    client_id: clientId,
+    client_secret: clientSecret,
+    refresh_token: refreshToken,
+    grant_type: "refresh_token",
+  });
+  const response = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to refresh Google access token: ${response.status} ${errorText}`);
+  }
+
+  return (await response.json()) as {
+    access_token: string;
+    expires_in?: number;
+    scope?: string;
+  };
+}
+
+async function getValidAccessToken(userId: string) {
   const stored = await getGoogleTokens(userId);
   if (!stored) return null;
-
-  const oAuth2Client = getOAuth2Client();
-  oAuth2Client.setCredentials({
-    access_token: stored.access_token,
-    refresh_token: stored.refresh_token,
-    expiry_date: new Date(stored.token_expiry).getTime(),
-  });
 
   const isExpired = new Date(stored.token_expiry).getTime() < Date.now() + 60_000;
   if (isExpired && stored.refresh_token) {
     try {
-      const { credentials } = await oAuth2Client.refreshAccessToken();
-      await saveGoogleTokens(userId, credentials);
-      oAuth2Client.setCredentials(credentials);
+      const refreshed = await refreshAccessToken(stored.refresh_token);
+      const expiryDate = Date.now() + (refreshed.expires_in ?? 3600) * 1000;
+      await saveGoogleTokens(userId, {
+        access_token: refreshed.access_token,
+        refresh_token: stored.refresh_token,
+        expiry_date: expiryDate,
+        scope: refreshed.scope ?? stored.scope ?? SCOPES.join(" "),
+      });
+      return refreshed.access_token;
     } catch (err) {
       console.error("[google-calendar] Failed to refresh token:", err);
       await deleteGoogleTokens(userId);
@@ -116,7 +177,7 @@ async function getAuthenticatedClient(userId: string) {
     }
   }
 
-  return oAuth2Client;
+  return stored.access_token;
 }
 
 export interface CreateMeetEventParams {
@@ -137,47 +198,63 @@ export interface MeetEventResult {
 export async function createMeetEvent(
   params: CreateMeetEventParams
 ): Promise<MeetEventResult | null> {
-  const auth = await getAuthenticatedClient(params.tutorId);
-  if (!auth) return null;
-
-  const calendar = google.calendar({ version: "v3", auth });
+  const accessToken = await getValidAccessToken(params.tutorId);
+  if (!accessToken) return null;
   const start = new Date(params.startTime);
   const end = new Date(start.getTime() + params.durationMinutes * 60_000);
 
-  const event = await calendar.events.insert({
-    calendarId: "primary",
-    conferenceDataVersion: 1,
-    sendUpdates: "all",
-    requestBody: {
-      summary: params.summary,
-      description: params.description ?? "",
-      start: {
-        dateTime: start.toISOString(),
-        timeZone: "UTC",
+  const response = await fetch(
+    "https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1&sendUpdates=all",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
       },
-      end: {
-        dateTime: end.toISOString(),
-        timeZone: "UTC",
-      },
-      attendees: params.attendeeEmails.map((email) => ({ email })),
-      conferenceData: {
-        createRequest: {
-          requestId: `ftc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-          conferenceSolutionKey: { type: "hangoutsMeet" },
+      body: JSON.stringify({
+        summary: params.summary,
+        description: params.description ?? "",
+        start: {
+          dateTime: start.toISOString(),
+          timeZone: "UTC",
         },
-      },
-    },
-  });
+        end: {
+          dateTime: end.toISOString(),
+          timeZone: "UTC",
+        },
+        attendees: params.attendeeEmails.map((email) => ({ email })),
+        conferenceData: {
+          createRequest: {
+            requestId: `ftc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            conferenceSolutionKey: { type: "hangoutsMeet" },
+          },
+        },
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("[google-calendar] Failed to create event:", response.status, errorText);
+    return null;
+  }
+
+  const event = (await response.json()) as {
+    id?: string;
+    hangoutLink?: string;
+    htmlLink?: string;
+    conferenceData?: { entryPoints?: Array<{ entryPointType?: string; uri?: string }> };
+  };
 
   const meetLink =
-    event.data.conferenceData?.entryPoints?.find(
+    event.conferenceData?.entryPoints?.find(
       (ep) => ep.entryPointType === "video"
-    )?.uri ?? event.data.hangoutLink ?? "";
+    )?.uri ?? event.hangoutLink ?? "";
 
   return {
-    eventId: event.data.id ?? "",
+    eventId: event.id ?? "",
     meetLink,
-    htmlLink: event.data.htmlLink ?? "",
+    htmlLink: event.htmlLink ?? "",
   };
 }
 
@@ -185,17 +262,22 @@ export async function deleteMeetEvent(
   tutorId: string,
   eventId: string
 ): Promise<boolean> {
-  const auth = await getAuthenticatedClient(tutorId);
-  if (!auth) return false;
-
-  const calendar = google.calendar({ version: "v3", auth });
+  const accessToken = await getValidAccessToken(tutorId);
+  if (!accessToken) return false;
 
   try {
-    await calendar.events.delete({
-      calendarId: "primary",
-      eventId,
-      sendUpdates: "all",
-    });
+    const response = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(eventId)}?sendUpdates=all`,
+      {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }
+    );
+    if (!response.ok && response.status !== 404) {
+      const errorText = await response.text();
+      console.error("[google-calendar] Failed to delete event:", response.status, errorText);
+      return false;
+    }
     return true;
   } catch (err) {
     console.error("[google-calendar] Failed to delete event:", err);
