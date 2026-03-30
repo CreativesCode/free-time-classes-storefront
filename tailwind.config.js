@@ -36,7 +36,6 @@ module.exports = {
           "system-ui",
           "sans-serif",
         ],
-        poppins: ["var(--font-poppins)", "sans-serif"],
       },
 
       /**
