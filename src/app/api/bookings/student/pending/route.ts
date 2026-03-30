@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 
+const PRIVATE_READ_CACHE_CONTROL =
+  "private, max-age=30, stale-while-revalidate=120";
+
 type PendingRequestItem = {
   bookingId: number;
   tutorId: string;
@@ -55,7 +58,13 @@ export async function GET() {
       (booking) => typeof booking.lesson_id === "number"
     );
     if (pendingBookings.length === 0) {
-      return NextResponse.json({ items: [] as PendingRequestItem[] }, { status: 200 });
+      return NextResponse.json(
+        { items: [] as PendingRequestItem[] },
+        {
+          status: 200,
+          headers: { "Cache-Control": PRIVATE_READ_CACHE_CONTROL },
+        }
+      );
     }
 
     const lessonIds = pendingBookings.map((booking) => booking.lesson_id as number);
@@ -109,7 +118,13 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json({ items }, { status: 200 });
+    return NextResponse.json(
+      { items },
+      {
+        status: 200,
+        headers: { "Cache-Control": PRIVATE_READ_CACHE_CONTROL },
+      }
+    );
   } catch (err) {
     console.error("[bookings/student/pending] error:", err);
     return NextResponse.json({ error: "Unexpected server error." }, { status: 500 });

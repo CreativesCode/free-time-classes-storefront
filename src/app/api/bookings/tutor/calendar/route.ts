@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 
+const PRIVATE_READ_CACHE_CONTROL =
+  "private, max-age=30, stale-while-revalidate=120";
+
 type CalendarItem = {
   lessonId: number;
   subjectName: string | null;
@@ -72,7 +75,13 @@ export async function GET(request: NextRequest) {
     }
 
     if (!lessons || lessons.length === 0) {
-      return NextResponse.json({ items: [] as CalendarItem[] }, { status: 200 });
+      return NextResponse.json(
+        { items: [] as CalendarItem[] },
+        {
+          status: 200,
+          headers: { "Cache-Control": PRIVATE_READ_CACHE_CONTROL },
+        }
+      );
     }
 
     const lessonIds = lessons.map((lesson) => lesson.id);
@@ -126,7 +135,13 @@ export async function GET(request: NextRequest) {
       bookingStatus: pickBookingStatus(lesson.id),
     }));
 
-    return NextResponse.json({ items }, { status: 200 });
+    return NextResponse.json(
+      { items },
+      {
+        status: 200,
+        headers: { "Cache-Control": PRIVATE_READ_CACHE_CONTROL },
+      }
+    );
   } catch (err) {
     console.error("[bookings/tutor/calendar] error:", err);
     return NextResponse.json({ error: "Unexpected server error." }, { status: 500 });

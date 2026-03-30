@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 
+const PRIVATE_READ_CACHE_CONTROL =
+  "private, max-age=30, stale-while-revalidate=120";
+
 function getLocalNowForTimestampFilter(): string {
   const now = new Date();
   const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
@@ -89,7 +92,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ items: data || [] }, { status: 200 });
+    return NextResponse.json(
+      { items: data || [] },
+      {
+        status: 200,
+        headers: { "Cache-Control": PRIVATE_READ_CACHE_CONTROL },
+      }
+    );
   } catch (err) {
     console.error("[lessons/available] error:", err);
     return NextResponse.json({ error: "Unexpected server error." }, { status: 500 });
