@@ -95,13 +95,6 @@ module.exports = {
         border: "hsl(var(--border))",
         input:  "hsl(var(--input))",
         ring:   "hsl(var(--ring))",
-        chart: {
-          1: "hsl(var(--chart-1))",
-          2: "hsl(var(--chart-2))",
-          3: "hsl(var(--chart-3))",
-          4: "hsl(var(--chart-4))",
-          5: "hsl(var(--chart-5))",
-        },
 
         /* Lumina semantic tokens — RGB channels (supports /opacity) ──── */
 
@@ -251,19 +244,11 @@ module.exports = {
         "lumina":       "0 8px 24px rgba(58, 38, 75, 0.06)",
         "lumina-lg":    "0 20px 40px rgba(58, 38, 75, 0.06)",
         "lumina-modal": "0 20px 60px rgba(58, 38, 75, 0.08)",
-        // Primary glow (for chips, active states)
-        "glow-primary":    "0 0 20px rgba(112, 42, 225, 0.30)",
-        "glow-primary-sm": "0 0  8px rgba(112, 42, 225, 0.20)",
-        "glow-primary-xs": "0 0  4px rgba(112, 42, 225, 0.15)",
-        // Dark mode equivalents
-        "glow-violet":     "0 0 20px rgba(167, 139, 250, 0.30)",
-        "glow-violet-sm":  "0 0  8px rgba(167, 139, 250, 0.20)",
       },
 
       /* ── Backdrop Blur ───────────────────────────────────────────────── */
       backdropBlur: {
         "lumina":    "24px",
-        "lumina-lg": "40px",
       },
 
       /* ── Letter Spacing — editorial tight for display text ──────────── */
