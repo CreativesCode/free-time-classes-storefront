@@ -1,7 +1,6 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { useCoursesApp } from "@/context/AppContext";
 import {
   getTutorProfileWithUser,
   getTutorSubjectDetails,
@@ -32,22 +31,22 @@ type FeaturedTeacher = {
   profilePicture: string;
 };
 
-export default function HomeContent() {
+interface HomeContentProps {
+  initialCourses: CourseWithRelations[];
+}
+
+export default function HomeContent({ initialCourses }: HomeContentProps) {
   const t = useTranslations("home");
   const locale = useLocale();
 
-  const courses = useCoursesApp();
+  const [courses] = useState<CourseWithRelations[]>(initialCourses);
   const [featuredTeachers, setFeaturedTeachers] = useState<FeaturedTeacher[]>(
     []
   );
   const [, setFeaturedLoading] = useState(false);
 
-  useEffect(() => {
-    courses.refreshCourses({ is_active: true });
-  }, [courses.refreshCourses]);
-
   const popularCourses = useMemo(() => {
-    const data = courses.data ?? [];
+    const data = courses;
 
     const mapCourseLevelLabel = (
       level: CourseWithRelations["level"] | null | undefined
@@ -65,11 +64,11 @@ export default function HomeContent() {
       level: mapCourseLevelLabel(course.level),
       students: course.enrolled_students_count ?? course.max_students ?? 0,
     }));
-  }, [courses.data, t]);
+  }, [courses, t]);
 
   const tutorIds = useMemo(() => {
     const ids: string[] = [];
-    for (const course of courses.data ?? []) {
+    for (const course of courses) {
       const tutorId = course.tutor?.id;
       if (!tutorId) continue;
       if (ids.includes(tutorId)) continue;
@@ -77,7 +76,7 @@ export default function HomeContent() {
       if (ids.length >= 3) break;
     }
     return ids;
-  }, [courses.data]);
+  }, [courses]);
 
   useEffect(() => {
     let cancelled = false;
@@ -103,7 +102,7 @@ export default function HomeContent() {
             const profilePicture =
               profile?.user.profile_picture ?? "/images/default-avatar.png";
 
-            const coursesCount = (courses.data ?? []).filter(
+            const coursesCount = courses.filter(
               (c) => c.tutor?.id === tutorId
             ).length;
 
@@ -131,7 +130,7 @@ export default function HomeContent() {
     return () => {
       cancelled = true;
     };
-  }, [tutorIds, courses.data]);
+  }, [tutorIds, courses]);
 
   const bentoAvatars = featuredTeachers.slice(0, 3);
 
