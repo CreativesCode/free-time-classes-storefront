@@ -1,16 +1,12 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import {
-  getTutorProfileWithUser,
-  getTutorSubjectDetails,
-} from "@/lib/supabase/queries/tutors";
-import type { CourseWithRelations } from "@/types/course";
+import type { HomeCourseCard, HomeFeaturedTeacher } from "@/types/home";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, PenLine, Sparkles, Users } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 
 const HERO_IMAGE =
   "/images/hero-desktop.jpg";
@@ -19,37 +15,25 @@ const HERO_IMAGE =
 const HERO_IMAGE_MOBILE =
   "/images/hero-mobile.jpg";
 
-const BENTO_IMAGE =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuAlZdhg_FUs3dfDG2uOHXSPnVVJUxJ4TNF1NiAvDssDP9O8Vsb_iSKtwmxT3-wyDwNJqWG-OeU5S_Z_FLrp7JdsFW0xFty1CEu3wgURzoHowGi8NR582oLbjXrOtQ818NJrM13Lybnl3yZsATVNOTL1yg9-9ysVCLS1i3eG9Tupx6a2KzejzGQQz06KVOMXV1D_j5IyD4hzpno3GhF3J8XXCyhGtogqiTjKvnMmOH4MS6cfIpFklqjaZ1DOdkDDWgKkCTmkEgBrjo7F";
-
-type FeaturedTeacher = {
-  id: string;
-  name: string;
-  specialty: string;
-  yearsOfExperience: number;
-  coursesCount: number;
-  profilePicture: string;
-};
+const BENTO_IMAGE = "/images/bento-network.jpg";
 
 interface HomeContentProps {
-  initialCourses: CourseWithRelations[];
+  initialCourses: HomeCourseCard[];
+  initialFeaturedTeachers: HomeFeaturedTeacher[];
 }
 
-export default function HomeContent({ initialCourses }: HomeContentProps) {
+export default function HomeContent({
+  initialCourses,
+  initialFeaturedTeachers,
+}: HomeContentProps) {
   const t = useTranslations("home");
   const locale = useLocale();
 
-  const [courses] = useState<CourseWithRelations[]>(initialCourses);
-  const [featuredTeachers, setFeaturedTeachers] = useState<FeaturedTeacher[]>(
-    []
-  );
-  const [, setFeaturedLoading] = useState(false);
-
   const popularCourses = useMemo(() => {
-    const data = courses;
+    const data = initialCourses;
 
     const mapCourseLevelLabel = (
-      level: CourseWithRelations["level"] | null | undefined
+      level: HomeCourseCard["level"] | null | undefined
     ) => {
       if (level === "advanced") return t("advanced");
       if (level === "intermediate") return t("intermediate");
@@ -64,75 +48,9 @@ export default function HomeContent({ initialCourses }: HomeContentProps) {
       level: mapCourseLevelLabel(course.level),
       students: course.enrolled_students_count ?? course.max_students ?? 0,
     }));
-  }, [courses, t]);
+  }, [initialCourses, t]);
 
-  const tutorIds = useMemo(() => {
-    const ids: string[] = [];
-    for (const course of courses) {
-      const tutorId = course.tutor?.id;
-      if (!tutorId) continue;
-      if (ids.includes(tutorId)) continue;
-      ids.push(tutorId);
-      if (ids.length >= 3) break;
-    }
-    return ids;
-  }, [courses]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadFeaturedTeachers() {
-      if (tutorIds.length === 0) {
-        setFeaturedTeachers([]);
-        return;
-      }
-
-      setFeaturedLoading(true);
-      try {
-        const data = await Promise.all(
-          tutorIds.map(async (tutorId) => {
-            const [profile, subjects] = await Promise.all([
-              getTutorProfileWithUser(tutorId),
-              getTutorSubjectDetails(tutorId),
-            ]);
-
-            const name = profile?.user.username ?? "Profesor";
-            const yearsOfExperience = profile?.years_of_experience ?? 0;
-            const specialty = subjects?.[0]?.name ?? "—";
-            const profilePicture =
-              profile?.user.profile_picture ?? "/images/default-avatar.png";
-
-            const coursesCount = courses.filter(
-              (c) => c.tutor?.id === tutorId
-            ).length;
-
-            return {
-              id: tutorId,
-              name,
-              specialty,
-              yearsOfExperience,
-              coursesCount,
-              profilePicture,
-            } satisfies FeaturedTeacher;
-          })
-        );
-
-        if (!cancelled) {
-          setFeaturedTeachers(data);
-        }
-      } finally {
-        if (!cancelled) setFeaturedLoading(false);
-      }
-    }
-
-    void loadFeaturedTeachers();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [tutorIds, courses]);
-
-  const bentoAvatars = featuredTeachers.slice(0, 3);
+  const bentoAvatars = initialFeaturedTeachers.slice(0, 3);
 
   return (
     <div className="min-h-[100dvh] bg-background text-on-surface antialiased overflow-x-hidden selection:bg-primary-container/30 selection:text-on-primary-container">
@@ -194,6 +112,7 @@ export default function HomeContent({ initialCourses }: HomeContentProps) {
                   role="presentation"
                   className="object-cover"
                   sizes="(max-width: 1024px) 45vw, 42vw"
+                  priority
                 />
               </div>
               <div className="absolute -top-10 -right-10 w-64 h-64 bg-primary-container/20 rounded-full blur-3xl -z-10 pointer-events-none hidden md:block" />
@@ -383,7 +302,7 @@ export default function HomeContent({ initialCourses }: HomeContentProps) {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 lg:gap-10">
-            {featuredTeachers.map((teacher) => (
+            {initialFeaturedTeachers.map((teacher) => (
               <Link
                 key={teacher.id}
                 href={`/${locale}/tutors`}

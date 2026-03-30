@@ -1,7 +1,4 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -12,14 +9,10 @@ import {
   GraduationCap,
   DollarSign,
   Calendar,
-  Loader2,
   AlertCircle,
 } from "lucide-react";
 
-import { useTranslations, useLocale } from "@/i18n/translations";
-import { getCourseWithRelations } from "@/lib/supabase/queries/courses";
-import { getTutorProfileWithUser } from "@/lib/supabase/queries/tutors";
-import { getReviewsByTutor } from "@/lib/supabase/queries/reviews";
+import { createPublicServerClient } from "@/lib/supabase/server-public";
 import { getPublicUrl } from "@/lib/supabase/storage";
 import { getAvatarColor } from "@/lib/utils";
 
@@ -41,6 +34,8 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar";
+
+type Translator = Awaited<ReturnType<typeof getTranslations>>;
 
 function StarRating({ rating, size = 16 }: { rating: number; size?: number }) {
   return (
@@ -90,67 +85,111 @@ function TutorAvatar({
   );
 }
 
-export default function CourseDetailPage() {
-  const params = useParams();
-  const id = params.id as string;
-  const t = useTranslations("courseDetail");
-  const locale = useLocale();
+export default async function CourseDetailPage({
+  params,
+}: {
+  params: Promise<{ locale: string; id: string }>;
+}) {
+  const { locale, id } = await params;
+  const t = await getTranslations("courseDetail");
+  const supabase = createPublicServerClient();
 
-  const [course, setCourse] = useState<CourseWithRelations | null>(null);
-  const [tutorProfile, setTutorProfile] = useState<
-    (TutorProfile & { user: User }) | null
-  >(null);
-  const [reviews, setReviews] = useState<ReviewWithStudent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  let error = false;
+  let course: CourseWithRelations | null = null;
+  let tutorProfile: (TutorProfile & { user: User }) | null = null;
+  let reviews: ReviewWithStudent[] = [];
 
-  useEffect(() => {
-    if (!id) return;
+  try {
+    const { data: courseData, error: courseError } = await supabase
+      .from("courses")
+      .select(
+        `
+        *,
+        tutor_profile:tutor_profiles!courses_tutor_id_fkey (
+          id,
+          user:users!tutor_profiles_id_fkey (
+            id,
+            username,
+            email,
+            profile_picture
+          )
+        ),
+        subject:subjects (
+          id,
+          name,
+          description,
+          icon
+        )
+      `
+      )
+      .eq("id", id)
+      .single();
 
-    let cancelled = false;
-
-    async function load() {
-      try {
-        setLoading(true);
-        setError(false);
-
-        const courseData = await getCourseWithRelations(id);
-        if (cancelled) return;
-        if (!courseData) {
-          setCourse(null);
-          setLoading(false);
-          return;
-        }
-
-        setCourse(courseData);
-
-        const [profile, tutorReviews] = await Promise.all([
-          getTutorProfileWithUser(courseData.tutor_id),
-          getReviewsByTutor(courseData.tutor_id, 10),
-        ]);
-
-        if (cancelled) return;
-        setTutorProfile(profile);
-        setReviews(tutorReviews);
-      } catch {
-        if (!cancelled) setError(true);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+    if (courseError && courseError.code !== "PGRST116") {
+      throw courseError;
     }
 
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
+    if (courseData) {
+      const row = courseData as CourseWithRelations & {
+        tutor_profile?: {
+          user?: {
+            id: string;
+            username: string;
+            email: string;
+            profile_picture?: string | null;
+          } | null;
+        } | null;
+      };
 
-  if (loading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary-500" />
-      </div>
-    );
+      course = {
+        ...row,
+        tutor: row.tutor_profile?.user ?? null,
+      };
+
+      const [{ data: profileData, error: profileError }, { data: reviewsData, error: reviewsError }] =
+        await Promise.all([
+          supabase
+            .from("tutor_profiles")
+            .select(
+              `
+              *,
+              user:users!tutor_profiles_id_fkey (*)
+            `
+            )
+            .eq("id", course.tutor_id)
+            .single(),
+          supabase
+            .from("reviews")
+            .select(
+              `
+              *,
+              student:student_profiles!reviews_student_id_fkey(
+                id,
+                user:users!student_profiles_id_fkey(
+                  id,
+                  username,
+                  profile_picture
+                )
+              )
+            `
+            )
+            .eq("tutor_id", course.tutor_id)
+            .order("created_at", { ascending: false })
+            .limit(10),
+        ]);
+
+      if (profileError && profileError.code !== "PGRST116") {
+        throw profileError;
+      }
+      if (reviewsError) {
+        throw reviewsError;
+      }
+
+      tutorProfile = (profileData as (TutorProfile & { user: User }) | null) ?? null;
+      reviews = (reviewsData as ReviewWithStudent[] | null) ?? [];
+    }
+  } catch {
+    error = true;
   }
 
   if (error) {
@@ -516,7 +555,7 @@ function TutorCard({
   tutorUser,
   tutorDisplayName,
 }: {
-  t: ReturnType<typeof useTranslations>;
+  t: Translator;
   locale: string;
   tutorProfile: (TutorProfile & { user: User }) | null;
   tutorUser:

@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,9 +26,28 @@ import {
   Bell,
   Flame,
   Video,
-  Star,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+
+const DashboardDeferredRecommended = dynamic(
+  () => import("./DashboardDeferredRecommended"),
+  {
+    loading: () => (
+      <div className="min-h-[220px] animate-pulse rounded-3xl border border-violet-100/70 bg-white/50 dark:border-slate-800 dark:bg-slate-900/40" />
+    ),
+  }
+);
+
+const DashboardDeferredSidebar = dynamic(
+  () => import("./DashboardDeferredSidebar"),
+  {
+    loading: () => (
+      <div className="space-y-6">
+        <div className="min-h-[320px] animate-pulse rounded-3xl border border-violet-100/70 bg-white/50 dark:border-slate-800 dark:bg-slate-900/40" />
+      </div>
+    ),
+  }
+);
 
 interface DashboardUser {
   id: string;
@@ -124,50 +144,6 @@ export default function DashboardClient({
       icon: Calendar,
       bgLight: "bg-amber-50 dark:bg-amber-950/40",
       textColor: "text-amber-600 dark:text-amber-400",
-    },
-  ];
-
-  const quickActions = [
-    {
-      label: t("findTutor"),
-      icon: Search,
-      href: `/${locale}/tutors`,
-      gradient: "from-pink-500 to-rose-500",
-    },
-    {
-      label: t("browseCourses"),
-      icon: GraduationCap,
-      href: `/${locale}/courses`,
-      gradient: "from-indigo-500 to-blue-500",
-    },
-    {
-      label: t("myBookings"),
-      icon: Calendar,
-      href: `/${locale}/bookings`,
-      gradient: "from-emerald-500 to-teal-500",
-    },
-    {
-      label: t("myMessages"),
-      icon: MessageSquare,
-      href: `/${locale}/messages`,
-      gradient: "from-orange-500 to-amber-500",
-    },
-  ];
-
-  const recommendedCourses = [
-    {
-      title: "UX Research: Desde Cero",
-      category: "Diseno",
-      rating: "4.9",
-      duration: "24h",
-      href: `/${locale}/courses`,
-    },
-    {
-      title: "Estrategias de Growth",
-      category: "Negocios",
-      rating: "4.7",
-      duration: "18h",
-      href: `/${locale}/courses`,
     },
   ];
 
@@ -489,101 +465,11 @@ export default function DashboardClient({
               </CardContent>
             </Card>
 
-            <Card className="rounded-3xl border-violet-100/70 bg-white/85 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-lg font-bold text-slate-900 dark:text-white">
-                    Recomendados para ti
-                  </p>
-                  <Button
-                    variant="ghost"
-                    className="text-violet-700 dark:text-violet-300"
-                    onClick={() => router.push(`/${locale}/courses`)}
-                  >
-                    Ver todo
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                {recommendedCourses.map((course) => (
-                  <button
-                    key={course.title}
-                    type="button"
-                    onClick={() => router.push(course.href)}
-                    className="rounded-2xl border border-violet-100 bg-white p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
-                  >
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-violet-600">
-                      {course.category}
-                    </p>
-                    <p className="mt-1 text-base font-bold text-slate-900 dark:text-white">
-                      {course.title}
-                    </p>
-                    <div className="mt-3 flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-                      <span className="inline-flex items-center gap-1">
-                        <Star className="h-3.5 w-3.5" />
-                        {course.rating}
-                      </span>
-                      <span>{course.duration}</span>
-                    </div>
-                  </button>
-                ))}
-              </CardContent>
-            </Card>
+            <DashboardDeferredRecommended />
           </div>
 
           <div className="space-y-6 lg:col-span-4">
-            <Card className="rounded-3xl border-violet-100/70 bg-white/85 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
-              <CardHeader className="pb-2">
-                <p className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
-                  <TrendingUp className="h-5 w-5 text-violet-600" />
-                  {t("quickActions")}
-                </p>
-              </CardHeader>
-              <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                {quickActions.map((action) => (
-                  <button
-                    key={action.label}
-                    type="button"
-                    onClick={() => router.push(action.href)}
-                    className="group flex items-center gap-3 rounded-2xl bg-[#faf5ff] p-3 text-left transition hover:bg-violet-100 dark:bg-slate-800/50 dark:hover:bg-slate-700/70"
-                  >
-                    <div
-                      className={`rounded-xl bg-gradient-to-br p-2 ${action.gradient}`}
-                    >
-                      <action.icon className="h-4 w-4 text-white" />
-                    </div>
-                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                      {action.label}
-                    </span>
-                    <ArrowRight className="ml-auto h-4 w-4 text-slate-400 opacity-0 transition-opacity group-hover:opacity-100" />
-                  </button>
-                ))}
-              </CardContent>
-            </Card>
-
-            {user.is_tutor && (
-              <Card className="overflow-hidden rounded-3xl border-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white shadow-lg">
-                <CardContent className="space-y-3 p-5">
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-xl bg-white/20 p-2.5">
-                      <GraduationCap className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="font-semibold">{t("tutorDashboard")}</p>
-                      <p className="text-xs text-white/85">
-                        {t("goToTutorDashboard")}
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    className="w-full rounded-xl bg-white/20 text-white hover:bg-white/30"
-                    onClick={() => router.push(`/${locale}/tutor/dashboard`)}
-                  >
-                    {t("goToTutorDashboard")}
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+            <DashboardDeferredSidebar isTutor={user.is_tutor} />
           </div>
         </section>
 

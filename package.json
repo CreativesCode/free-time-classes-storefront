@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "analyze": "cross-env ANALYZE=true next build",
     "assets:mobile": "node scripts/sync-mobile-assets.mjs",
     "build:mobile": "next build && npm run assets:mobile && npx cap sync",
     "open:ios": "npx cap open ios",
@@ -47,12 +48,14 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^15.2.8",
     "@capacitor/assets": "^3.0.5",
     "@eslint/eslintrc": "^3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.20",
+    "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "^15.2.8",
     "postcss": "^8.4.31",

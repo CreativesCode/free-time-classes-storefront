@@ -1,6 +1,7 @@
 import HomeContent from "@/components/HomeContent";
+import { fetchHomeFeaturedTeachers } from "@/lib/supabase/server-queries/home-featured-teachers";
 import { createPublicServerClient } from "@/lib/supabase/server-public";
-import type { CourseWithRelations } from "@/types/course";
+import type { HomeCourseCard, HomeFeaturedTeacher } from "@/types/home";
 import { unstable_cache } from "next/cache";
 import { Suspense } from "react";
 
@@ -15,51 +16,69 @@ function HomeFallback() {
 }
 
 async function HomePageContent() {
-  const courses = await getHomeCoursesCached();
+  const { courses, featuredTeachers } = await getHomePageDataCached();
 
-  return <HomeContent initialCourses={courses} />;
+  return (
+    <HomeContent
+      initialCourses={courses}
+      initialFeaturedTeachers={featuredTeachers}
+    />
+  );
 }
 
-const getHomeCoursesCached = unstable_cache(
-  async (): Promise<CourseWithRelations[]> => {
+const getHomePageDataCached = unstable_cache(
+  async (): Promise<{
+    courses: HomeCourseCard[];
+    featuredTeachers: HomeFeaturedTeacher[];
+  }> => {
     const supabase = createPublicServerClient();
     const { data } = await supabase
       .from("courses")
       .select(
         `
-      *,
+      id,
+      title,
+      description,
+      level,
+      max_students,
       tutor_profile:tutor_profiles!courses_tutor_id_fkey (
         id,
         user:users!tutor_profiles_id_fkey (
           id,
-          username,
-          email,
-          profile_picture
+          username
         )
-      ),
-      subject:subjects (
-        id,
-        name,
-        description,
-        icon
       )
     `
       )
       .eq("is_active", true)
       .order("created_at", { ascending: false });
 
-    return ((data ?? []) as Array<
-      CourseWithRelations & {
-        tutor_profile?: {
-          user?: CourseWithRelations["tutor"] | null;
-        } | null;
-      }
-    >).map((row) => ({
-      ...row,
+    const courses: HomeCourseCard[] = ((data ?? []) as Array<{
+      id: string;
+      title: string;
+      description: string;
+      level: HomeCourseCard["level"];
+      max_students: number;
+      tutor_profile?: {
+        user?: { id: string; username: string } | null;
+      } | null;
+    }>).map((row) => ({
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      level: row.level,
+      max_students: row.max_students,
       tutor: row.tutor_profile?.user ?? null,
     }));
+
+    const featuredTeachers = await fetchHomeFeaturedTeachers(
+      supabase,
+      courses
+    );
+
+    return { courses, featuredTeachers };
   },
-  ["public-home-courses-v1"],
+  ["public-home-page-v2"],
   { revalidate: 3600, tags: ["courses", "home"] }
 );
 
