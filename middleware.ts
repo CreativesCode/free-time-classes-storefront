@@ -29,6 +29,25 @@ const PROTECTED_ROUTES = [
 const STUDENT_ONLY_ROUTES = ["/student-profile"];
 const TUTOR_ONLY_ROUTES = ["/teacher-profile", "/tutor/dashboard", "/courses/create"];
 
+function readBooleanClaim(value: unknown): boolean {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") return value.toLowerCase() === "true";
+  if (typeof value === "number") return value === 1;
+  return false;
+}
+
+function getRoleClaims(session: {
+  user: { user_metadata?: Record<string, unknown>; app_metadata?: Record<string, unknown> };
+}): { isStudent: boolean; isTutor: boolean } {
+  const userMetadata = session.user.user_metadata ?? {};
+  const appMetadata = session.user.app_metadata ?? {};
+
+  return {
+    isStudent: readBooleanClaim(userMetadata.is_student ?? appMetadata.is_student),
+    isTutor: readBooleanClaim(userMetadata.is_tutor ?? appMetadata.is_tutor),
+  };
+}
+
 // Create the next-intl middleware
 const intlMiddleware = createMiddleware({
   // A list of all locales that are supported
@@ -145,18 +164,7 @@ export default async function middleware(req: NextRequest) {
 
   // Enforce role-based access for protected sections
   if (session && isProtectedRoute) {
-    const { data: profile, error } = await supabase
-      .from("users")
-      .select("is_student, is_tutor")
-      .eq("id", session.user.id)
-      .single();
-
-    // If role profile can't be resolved, treat as unauthorized and send to login
-    if (error || !profile) {
-      const redirectUrl = new URL(`/${locale}/login`, req.url);
-      redirectUrl.searchParams.set("redirect", pathname);
-      return NextResponse.redirect(redirectUrl);
-    }
+    const { isStudent, isTutor } = getRoleClaims(session);
 
     const needsStudentRole = STUDENT_ONLY_ROUTES.some(
       (route) =>
@@ -169,7 +177,7 @@ export default async function middleware(req: NextRequest) {
         pathnameWithoutLocale.startsWith(`${route}/`)
     );
 
-    if ((needsStudentRole && !profile.is_student) || (needsTutorRole && !profile.is_tutor)) {
+    if ((needsStudentRole && !isStudent) || (needsTutorRole && !isTutor)) {
       const redirectUrl = new URL(`/${locale}/login`, req.url);
       redirectUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(redirectUrl);
