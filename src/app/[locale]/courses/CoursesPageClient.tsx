@@ -2,15 +2,19 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   getCourseCoverPublicUrl,
   getPublicUrl,
 } from "@/lib/supabase/storage";
-import {
-  getCoursesWithRelations,
-  type CourseFilters,
-} from "@/lib/supabase/queries/courses";
+import type { CourseFilters } from "@/lib/supabase/queries/courses";
 import type { CourseWithRelations } from "@/types/course";
 import type { Subject } from "@/types/subject";
 import { getAvatarColor } from "@/lib/utils";
@@ -31,7 +35,11 @@ import Link from "next/link";
 type CourseLevel = NonNullable<CourseFilters["level"]>;
 
 const SCROLL_CHIPS =
-  "flex gap-2 md:gap-3 overflow-x-auto pb-2 pt-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden";
+  "flex min-w-0 w-full gap-1.5 md:gap-2 overflow-x-auto overscroll-x-contain py-0.5 ps-2.5 pe-2.5 scroll-pl-2.5 scroll-pr-2.5 md:pb-1 md:[scrollbar-width:thin] max-md:[scrollbar-width:none] max-md:[-ms-overflow-style:none] max-md:[&::-webkit-scrollbar]:hidden";
+
+/** Level + price + rating: one wrapped row, compact */
+const WRAP_CHIPS =
+  "flex min-w-0 w-full flex-wrap items-center gap-1.5 md:gap-2 py-0.5";
 
 function courseCoverGradient(id: string): string {
   const palettes = [
@@ -203,12 +211,27 @@ export default function CoursesPageClient({
 
         courseFilters.sort = debouncedQueryFilters.sort;
 
-        let data = await getCoursesWithRelations(courseFilters);
+        async function loadViaCatalog(filters: CourseFilters) {
+          const res = await fetch("/api/catalog/courses", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ filters }),
+          });
+          if (!res.ok) {
+            const errBody = (await res.json().catch(() => null)) as {
+              error?: string;
+            } | null;
+            throw new Error(errBody?.error ?? res.statusText);
+          }
+          return (await res.json()) as CourseWithRelations[];
+        }
+
+        let data = await loadViaCatalog(courseFilters);
 
         if (data.length === 0) {
           const relaxedFilters: CourseFilters = { ...courseFilters };
           delete relaxedFilters.is_active;
-          data = await getCoursesWithRelations(relaxedFilters);
+          data = await loadViaCatalog(relaxedFilters);
         }
 
         setCourses(data);
@@ -240,6 +263,28 @@ export default function CoursesPageClient({
     };
   }, [tCat]);
 
+  const sortOptions = useMemo(
+    () =>
+      (
+        [
+          ["created_desc", tAvail("sortNewest")],
+          ["price_asc", tAvail("sortPriceAsc")],
+          ["price_desc", tAvail("sortPriceDesc")],
+          ["duration_asc", tAvail("sortDurationAsc")],
+          ["duration_desc", tAvail("sortDurationDesc")],
+        ] as const
+      ).map(([value, label]) => ({ value, label })),
+    [tAvail]
+  );
+
+  const currentSortLabel = useMemo(() => {
+    return (
+      sortOptions.find((o) => o.value === queryFilters.sort)?.label ??
+      sortOptions[0]?.label ??
+      ""
+    );
+  }, [sortOptions, queryFilters.sort]);
+
   function resetFilters() {
     setQueryFilters({
       search: "",
@@ -258,9 +303,9 @@ export default function CoursesPageClient({
 
   function chipBase(active: boolean) {
     return [
-      "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-all md:px-5 md:py-2.5",
+      "inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition-all md:px-3.5 md:py-1.5",
       active
-        ? "bg-primary text-on-primary shadow-lg shadow-primary/20 scale-[1.02]"
+        ? "bg-primary text-on-primary shadow-md shadow-primary/15"
         : "bg-surface-container-high text-on-surface hover:bg-surface-container-highest dark:bg-surface-container-high/80",
     ].join(" ");
   }
@@ -287,8 +332,8 @@ export default function CoursesPageClient({
           </p>
         </header>
 
-        <div className="sticky top-16 z-30 -mx-4 border-b border-outline-variant/15 bg-surface/85 px-4 py-4 backdrop-blur-md dark:bg-background/80 sm:-mx-6 sm:px-6 lg:top-20 lg:-mx-8 lg:px-8">
-          <div className="flex flex-col gap-4 md:gap-5">
+        <div className="sticky top-16 z-30 -mx-4 min-w-0 border-b border-outline-variant/15 bg-surface/85 px-4 py-3 backdrop-blur-md dark:bg-background/80 sm:-mx-6 sm:px-6 lg:top-20 lg:-mx-8 lg:px-8">
+          <div className="flex min-w-0 flex-col gap-2 md:gap-2.5">
             <div className="relative w-full max-w-3xl">
               <Search
                 className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-on-surface-variant"
@@ -312,7 +357,7 @@ export default function CoursesPageClient({
                   setQueryFilters((p) => ({ ...p, subject_id: "" }))
                 }
               >
-                <Sparkles className="h-4 w-4 opacity-90" aria-hidden />
+                <Sparkles className="h-3.5 w-3.5 opacity-90" aria-hidden />
                 {tCat("chipAllSubjects")}
               </button>
               {subjects.map((s) => (
@@ -334,8 +379,8 @@ export default function CoursesPageClient({
               ))}
             </div>
 
-            <div className={SCROLL_CHIPS}>
-              <span className="self-center pr-1 text-xs font-bold uppercase tracking-wider text-on-surface-variant max-md:hidden">
+            <div className={WRAP_CHIPS}>
+              <span className="self-center pr-1 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant max-md:hidden md:text-[11px]">
                 {tCat("filterLevel")}
               </span>
               <button
@@ -359,8 +404,8 @@ export default function CoursesPageClient({
                   </button>
                 )
               )}
-              <span className="mx-1 hidden h-6 w-px shrink-0 bg-outline-variant/40 md:block" />
-              <span className="self-center pr-1 text-xs font-bold uppercase tracking-wider text-on-surface-variant max-md:hidden">
+              <span className="mx-0.5 hidden h-5 w-px shrink-0 bg-outline-variant/40 md:block" />
+              <span className="self-center pr-1 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant max-md:hidden md:text-[11px]">
                 {tCat("filterPrice")}
               </span>
               <button
@@ -381,8 +426,8 @@ export default function CoursesPageClient({
               >
                 {tCat("chipPriceFree")}
               </button>
-              <span className="mx-1 hidden h-6 w-px shrink-0 bg-outline-variant/40 md:block" />
-              <span className="self-center pr-1 text-xs font-bold uppercase tracking-wider text-on-surface-variant max-md:hidden">
+              <span className="mx-0.5 hidden h-5 w-px shrink-0 bg-outline-variant/40 md:block" />
+              <span className="self-center pr-1 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant max-md:hidden md:text-[11px]">
                 {tCat("filterRating")}
               </span>
               <button
@@ -435,7 +480,7 @@ export default function CoursesPageClient({
             </div>
 
             {showAdvanced ? (
-              <div className="grid grid-cols-1 gap-4 rounded-xl border border-outline-variant/20 bg-surface-container-lowest/60 p-4 dark:bg-surface-container-lowest/20 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 rounded border border-outline-variant/20 bg-surface-container-lowest/60 p-4 dark:bg-surface-container-lowest/20 md:grid-cols-2 lg:grid-cols-4">
                 <div className="space-y-2 lg:col-span-2">
                   <label className="text-lumina-body-sm font-medium text-on-surface-variant">
                     {tAvail("tutorNamePlaceholder")}
@@ -520,26 +565,49 @@ export default function CoursesPageClient({
                   <label className="text-lumina-body-sm font-medium text-on-surface-variant">
                     {tCat("sortLabel")}
                   </label>
-                  <select
-                    value={queryFilters.sort}
-                    onChange={(e) =>
-                      setQueryFilters((p) => ({
-                        ...p,
-                        sort: e.target.value as CourseSort,
-                      }))
-                    }
-                    className="h-10 w-full rounded-md border border-outline-variant/30 bg-surface-container-lowest px-3 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  >
-                    <option value="created_desc">{tAvail("sortNewest")}</option>
-                    <option value="price_asc">{tAvail("sortPriceAsc")}</option>
-                    <option value="price_desc">{tAvail("sortPriceDesc")}</option>
-                    <option value="duration_asc">
-                      {tAvail("sortDurationAsc")}
-                    </option>
-                    <option value="duration_desc">
-                      {tAvail("sortDurationDesc")}
-                    </option>
-                  </select>
+                  <DropdownMenu modal={false}>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        aria-haspopup="menu"
+                        className="h-10 w-full justify-between rounded-lg border-outline-variant/30 bg-surface-container-lowest px-3 text-left text-sm font-normal text-on-surface shadow-sm hover:bg-surface-container-high dark:bg-surface-container-lowest dark:hover:bg-surface-container-high/80"
+                      >
+                        <span className="truncate">{currentSortLabel}</span>
+                        <ChevronDown
+                          className="h-4 w-4 shrink-0 opacity-70"
+                          aria-hidden
+                        />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="start"
+                      sideOffset={6}
+                      className="z-50 min-w-[var(--radix-dropdown-menu-trigger-width)] overflow-hidden rounded-lg border border-outline-variant/25 bg-surface-container-lowest p-0 text-on-surface shadow-lg dark:border-outline-variant/30 dark:bg-surface-container-high"
+                    >
+                      <div className="max-h-72 overflow-y-auto">
+                        <DropdownMenuRadioGroup
+                          value={queryFilters.sort}
+                          onValueChange={(v) =>
+                            setQueryFilters((p) => ({
+                              ...p,
+                              sort: v as CourseSort,
+                            }))
+                          }
+                        >
+                          {sortOptions.map(({ value, label }) => (
+                            <DropdownMenuRadioItem
+                              key={value}
+                              value={value}
+                              className="cursor-pointer rounded-none py-2 pl-8 pr-3 text-sm text-on-surface focus:bg-primary/10 focus:text-on-surface data-[state=checked]:bg-primary/15 data-[state=checked]:font-semibold"
+                            >
+                              {label}
+                            </DropdownMenuRadioItem>
+                          ))}
+                        </DropdownMenuRadioGroup>
+                      </div>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             ) : null}
@@ -602,13 +670,14 @@ export default function CoursesPageClient({
                     const grad = courseCoverGradient(course.id);
                     const coverUrl = getCourseCoverPublicUrl(course.cover_image);
                     const href = `/${locale}/courses/${course.id}`;
+                    const bookHref = `${href}?book=1`;
 
                     return (
                       <article
                         key={course.id}
                         className="group flex flex-col overflow-hidden rounded-xl bg-surface-container-lowest shadow-lumina-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-lumina-lg max-md:active:scale-[0.98] md:max-lg:hover:scale-[1.02] md:max-lg:hover:translate-y-0"
                       >
-                        <Link href={href} className="flex flex-1 flex-col">
+                        <Link href={href} className="flex min-h-0 flex-1 flex-col">
                           <div
                             className={`relative h-56 overflow-hidden md:h-72 lg:h-56 ${
                               coverUrl ? "" : `bg-gradient-to-br ${grad}`
@@ -682,6 +751,30 @@ export default function CoursesPageClient({
                               </span>
                             </div>
 
+                            <div className="mb-3 flex min-w-0 items-center gap-2.5 lg:mb-4">
+                              <Avatar className="h-8 w-8 shrink-0 border border-primary/20 md:max-lg:h-9 md:max-lg:w-9">
+                                {profilePicture ? (
+                                  <AvatarImage
+                                    src={profilePicture}
+                                    alt={tutor?.username ?? "Tutor"}
+                                  />
+                                ) : null}
+                                <AvatarFallback
+                                  className="text-xs text-white"
+                                  style={{
+                                    backgroundColor: getAvatarColor(
+                                      tutor?.username ?? ""
+                                    ),
+                                  }}
+                                >
+                                  {firstChar}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="min-w-0 truncate text-sm font-semibold text-on-surface">
+                                {tutor?.username ?? "—"}
+                              </span>
+                            </div>
+
                             <p className="mb-6 line-clamp-2 text-sm leading-relaxed text-on-surface-variant md:max-lg:mb-4 md:max-lg:text-base">
                               {course.description}
                             </p>
@@ -689,60 +782,45 @@ export default function CoursesPageClient({
                               {course.duration_minutes ?? 0} {tAvail("minutes")}
                             </p>
 
-                            <div className="mt-auto flex items-center justify-between gap-3">
-                              <div className="flex min-w-0 items-center gap-3">
-                                <Avatar className="h-8 w-8 shrink-0 border border-primary/20 md:max-lg:h-9 md:max-lg:w-9">
-                                  {profilePicture ? (
-                                    <AvatarImage
-                                      src={profilePicture}
-                                      alt={tutor?.username ?? "Tutor"}
-                                    />
-                                  ) : null}
-                                  <AvatarFallback
-                                    className="text-xs text-white"
-                                    style={{
-                                      backgroundColor: getAvatarColor(
-                                        tutor?.username ?? ""
-                                      ),
-                                    }}
-                                  >
-                                    {firstChar}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <span className="truncate text-xs font-semibold text-on-surface-variant md:max-lg:text-sm md:max-lg:text-on-background">
-                                  {tutor?.username ?? "—"}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1 text-on-surface-variant md:hidden">
-                                <span className="text-[10px] font-bold">
-                                  {course.duration_minutes ?? 0}{" "}
-                                  {tAvail("minutes")}
-                                </span>
-                              </div>
-                              <span className="hidden text-xs text-on-surface-variant lg:inline">
+                            <div className="mt-auto flex w-full items-center justify-end gap-2">
+                              <span className="mr-auto text-[10px] font-bold text-on-surface-variant md:hidden">
+                                {course.duration_minutes ?? 0}{" "}
+                                {tAvail("minutes")}
+                              </span>
+                              <span className="hidden shrink-0 text-xs font-medium text-on-surface-variant lg:inline-flex">
                                 {levelLabel(course.level)}
-                              </span>
-                            </div>
-
-                            <div className="mt-4 hidden md:max-lg:block">
-                              <span className="inline-flex w-full items-center justify-center rounded-full bg-primary py-2.5 text-sm font-bold text-on-primary shadow-lg shadow-primary/20">
-                                {tCat("enrollNow")}
-                              </span>
-                            </div>
-
-                            <div className="mt-4 hidden items-center justify-between border-t border-outline-variant/10 pt-4 lg:flex">
-                              <span className="text-lumina-body-sm text-on-surface-variant">
-                                {tCat("maxStudents", {
-                                  count: course.max_students,
-                                })}
-                              </span>
-                              <span className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-primary text-on-primary shadow-md transition-transform group-hover:scale-110">
-                                <Plus className="h-5 w-5" aria-hidden />
-                                <span className="sr-only">{tCat("viewCourse")}</span>
                               </span>
                             </div>
                           </div>
                         </Link>
+
+                        <div className="flex flex-col px-6 pb-6 pt-0 md:max-lg:px-8 md:max-lg:pb-8">
+                          <Link
+                            href={bookHref}
+                            className="mt-4 hidden md:max-lg:block"
+                          >
+                            <span className="inline-flex w-full items-center justify-center rounded-full bg-primary py-2.5 text-sm font-bold text-on-primary shadow-lg shadow-primary/20">
+                              {tCat("enrollNow")}
+                            </span>
+                          </Link>
+
+                          <div className="mt-4 hidden items-center justify-between border-t border-outline-variant/10 pt-4 lg:flex">
+                            <span className="text-lumina-body-sm text-on-surface-variant">
+                              {tCat("maxStudents", {
+                                count: course.max_students,
+                              })}
+                            </span>
+                            <Link
+                              href={bookHref}
+                              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary text-on-primary shadow-md transition-transform group-hover:scale-110"
+                            >
+                              <Plus className="h-5 w-5" aria-hidden />
+                              <span className="sr-only">
+                                {tCat("goBookCourse")}
+                              </span>
+                            </Link>
+                          </div>
+                        </div>
                       </article>
                     );
                   })}

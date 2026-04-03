@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { resolveCourseTutorUser } from "@/lib/supabase/course-tutor";
 import { createClient } from "@/lib/supabase/server";
 import type { Course, CourseWithRelations } from "@/types/course";
 
@@ -72,7 +73,7 @@ export default async function TutorCoursesCreatePage({
     >;
     initialCourses = rows.map((row) => ({
       ...row,
-      tutor: row.tutor_profile?.user ?? null,
+      tutor: resolveCourseTutorUser(row.tutor_profile),
     })) as CourseWithRelations[];
   }
 

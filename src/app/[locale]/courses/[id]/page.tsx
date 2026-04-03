@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import {
   ArrowLeft,
   Clock,
@@ -13,7 +14,8 @@ import {
   AlertCircle,
 } from "lucide-react";
 
-import { createPublicServerClient } from "@/lib/supabase/server-public";
+import { resolveCourseTutorUser } from "@/lib/supabase/course-tutor";
+import { createCatalogServerClient } from "@/lib/supabase/server-public";
 import { getCourseCoverPublicUrl, getPublicUrl } from "@/lib/supabase/storage";
 import { getAvatarColor } from "@/lib/utils";
 
@@ -22,6 +24,7 @@ import type { TutorProfile } from "@/types/tutor";
 import type { User } from "@/types/user";
 import type { ReviewWithStudent } from "@/types/review";
 
+import CourseBookingFocus from "@/components/courses/CourseBookingFocus";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -93,7 +96,7 @@ export default async function CourseDetailPage({
 }) {
   const { locale, id } = await params;
   const t = await getTranslations("courseDetail");
-  const supabase = createPublicServerClient();
+  const supabase = createCatalogServerClient();
 
   let error = false;
   let course: CourseWithRelations | null = null;
@@ -144,7 +147,7 @@ export default async function CourseDetailPage({
 
       course = {
         ...row,
-        tutor: row.tutor_profile?.user ?? null,
+        tutor: resolveCourseTutorUser(row.tutor_profile),
       };
 
       const [{ data: profileData, error: profileError }, { data: reviewsData, error: reviewsError }] =
@@ -245,6 +248,9 @@ export default async function CourseDetailPage({
 
   return (
     <div className="pb-24 md:pb-28 lg:pb-10">
+      <Suspense fallback={null}>
+        <CourseBookingFocus />
+      </Suspense>
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary-500/10 via-violet-400/10 to-fuchsia-300/10" />
         <div className="absolute -left-20 top-8 h-44 w-44 rounded-full bg-primary-400/20 blur-3xl" />
@@ -500,7 +506,10 @@ export default async function CourseDetailPage({
 
         <aside className="hidden lg:col-span-4 lg:block">
           <div className="sticky top-24 space-y-6">
-            <Card className="overflow-hidden border-violet-200/70 bg-white shadow-[0_20px_50px_rgba(112,42,225,0.08)]">
+            <Card
+              data-book-cta-desktop
+              className="scroll-mt-28 overflow-hidden border-violet-200/70 bg-white shadow-[0_20px_50px_rgba(112,42,225,0.08)]"
+            >
               <div className="bg-gradient-to-br from-primary-500 via-violet-500 to-fuchsia-500 p-6 text-white">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/80">
                   {t("pricePerSession")}
@@ -552,7 +561,10 @@ export default async function CourseDetailPage({
         </aside>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-violet-100/70 bg-white/90 p-4 backdrop-blur-xl lg:hidden">
+      <div
+        data-book-cta-mobile
+        className="fixed inset-x-0 bottom-0 z-50 scroll-mt-28 border-t border-violet-100/70 bg-white/90 p-4 backdrop-blur-xl lg:hidden"
+      >
         <div className="mx-auto flex max-w-2xl items-center gap-4">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">

@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
+import { createCatalogServerClient } from "@/lib/supabase/server-public";
 import { createClient } from "@/lib/supabase/server";
 import DashboardClient from "./DashboardClient";
+import { resolveCourseTutorUser } from "@/lib/supabase/course-tutor";
 import type { DashboardRecommendedCourse } from "./DashboardDeferredRecommended";
 
 interface UpcomingLessonRaw {
@@ -67,6 +69,8 @@ export default async function DashboardPage({
     .eq("id", authUser.id)
     .single();
 
+  const catalog = createCatalogServerClient();
+
   const [completedRes, pendingRes, upcomingRes, recommendedRes] = await Promise.all([
     supabase
       .from("lessons")
@@ -91,10 +95,21 @@ export default async function DashboardPage({
       .order("scheduled_date_time", { ascending: true })
       .limit(3),
 
-    supabase
+    catalog
       .from("courses")
       .select(
-        "id, title, cover_image, rating, duration_minutes, subject:subjects(name)"
+        `
+        id,
+        title,
+        cover_image,
+        rating,
+        duration_minutes,
+        subject:subjects(name),
+        tutor_profile:tutor_profiles!courses_tutor_id_fkey (
+          id,
+          user:users!tutor_profiles_id_fkey (id, username)
+        )
+      `
       )
       .eq("is_active", true)
       .order("created_at", { ascending: false })
@@ -123,6 +138,9 @@ export default async function DashboardPage({
     rating: number | null;
     duration_minutes: number;
     subject?: { name: string } | { name: string }[] | null;
+    tutor_profile?: {
+      user?: { username: string } | { username: string }[] | null;
+    } | null;
   }>;
 
   const recommendedCourses: DashboardRecommendedCourse[] = rawRecommended.map(
@@ -131,6 +149,8 @@ export default async function DashboardPage({
       const subjectName = Array.isArray(subj)
         ? subj[0]?.name
         : subj?.name ?? null;
+      const tutorUser = resolveCourseTutorUser(row.tutor_profile);
+      const tutorName = tutorUser?.username?.trim() || null;
       return {
         id: row.id,
         title: row.title,
@@ -138,6 +158,7 @@ export default async function DashboardPage({
         rating: row.rating ?? null,
         duration_minutes: row.duration_minutes,
         subjectName,
+        tutorName,
       };
     }
   );

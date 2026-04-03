@@ -1,6 +1,7 @@
 import HomeContent from "@/components/HomeContent";
+import { resolveCourseTutorUser } from "@/lib/supabase/course-tutor";
 import { fetchHomeFeaturedTeachers } from "@/lib/supabase/server-queries/home-featured-teachers";
-import { createPublicServerClient } from "@/lib/supabase/server-public";
+import { createCatalogServerClient } from "@/lib/supabase/server-public";
 import type { HomeCourseCard, HomeFeaturedTeacher } from "@/types/home";
 import { unstable_cache } from "next/cache";
 import { Suspense } from "react";
@@ -31,8 +32,8 @@ const getHomePageDataCached = unstable_cache(
     courses: HomeCourseCard[];
     featuredTeachers: HomeFeaturedTeacher[];
   }> => {
-    const supabase = createPublicServerClient();
-    const { data } = await supabase
+    const catalog = createCatalogServerClient();
+    const { data } = await catalog
       .from("courses")
       .select(
         `
@@ -71,13 +72,10 @@ const getHomePageDataCached = unstable_cache(
       level: row.level,
       max_students: row.max_students,
       cover_image: row.cover_image ?? null,
-      tutor: row.tutor_profile?.user ?? null,
+      tutor: resolveCourseTutorUser(row.tutor_profile),
     }));
 
-    const featuredTeachers = await fetchHomeFeaturedTeachers(
-      supabase,
-      courses
-    );
+    const featuredTeachers = await fetchHomeFeaturedTeachers(catalog, courses);
 
     return { courses, featuredTeachers };
   },

@@ -1,6 +1,10 @@
 import type { CourseWithRelations } from "@/types/course";
 import type { Subject } from "@/types/subject";
-import { createPublicServerClient } from "@/lib/supabase/server-public";
+import { resolveCourseTutorUser } from "@/lib/supabase/course-tutor";
+import {
+  createCatalogServerClient,
+  createPublicServerClient,
+} from "@/lib/supabase/server-public";
 import { unstable_cache } from "next/cache";
 import { Suspense } from "react";
 import CoursesPageClient from "./CoursesPageClient";
@@ -32,9 +36,10 @@ const getCoursesPageDataCached = unstable_cache(
     initialCourses: CourseWithRelations[];
   }> => {
     const supabase = createPublicServerClient();
+    const catalog = createCatalogServerClient();
     const [{ data: subjectsData }, { data: coursesData }] = await Promise.all([
       supabase.from("subjects").select("*").order("name", { ascending: true }),
-      supabase
+      catalog
         .from("courses")
         .select(
           `
@@ -68,7 +73,7 @@ const getCoursesPageDataCached = unstable_cache(
       }
     >).map((row) => ({
       ...row,
-      tutor: row.tutor_profile?.user ?? null,
+      tutor: resolveCourseTutorUser(row.tutor_profile),
     }));
 
     return {

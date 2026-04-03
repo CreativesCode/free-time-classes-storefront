@@ -19,6 +19,7 @@ export type DashboardRecommendedCourse = {
   rating: number | null;
   duration_minutes: number;
   subjectName: string | null;
+  tutorName: string | null;
 };
 
 export default function DashboardDeferredRecommended({
@@ -90,12 +91,19 @@ export default function DashboardDeferredRecommended({
                   <p className="line-clamp-2 text-base font-bold text-slate-900 dark:text-white">
                     {course.title}
                   </p>
-                  <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-                    <span className="inline-flex items-center gap-1">
-                      <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                      {rating.toFixed(1)}
-                    </span>
-                    <span>{durationLabel}</span>
+                  <div className="space-y-1.5">
+                    {course.tutorName ? (
+                      <p className="text-xs font-medium text-slate-700 dark:text-slate-200">
+                        {course.tutorName}
+                      </p>
+                    ) : null}
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+                      <span className="inline-flex items-center gap-1">
+                        <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                        {rating.toFixed(1)}
+                      </span>
+                      <span>{durationLabel}</span>
+                    </div>
                   </div>
                 </div>
               </button>

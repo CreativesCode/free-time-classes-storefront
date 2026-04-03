@@ -1,7 +1,9 @@
 import type { Course, CourseWithRelations } from "@/types/course";
+import { resolveCourseTutorUser } from "@/lib/supabase/course-tutor";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "../client";
 
-const supabase = createClient();
+const browserClient = createClient();
 
 export interface CourseFilters {
   tutor_id?: string;
@@ -30,7 +32,7 @@ export interface CourseFilters {
  * Get all courses with optional filters
  */
 export async function getCourses(filters?: CourseFilters): Promise<Course[]> {
-  let query = supabase.from("courses").select("*");
+  let query = browserClient.from("courses").select("*");
 
   if (filters?.tutor_id) {
     query = query.eq("tutor_id", filters.tutor_id);
@@ -95,9 +97,10 @@ export async function getCourses(filters?: CourseFilters): Promise<Course[]> {
  * Get courses with relations (tutor, subject)
  */
 export async function getCoursesWithRelations(
-  filters?: CourseFilters
+  filters?: CourseFilters,
+  client: SupabaseClient = browserClient
 ): Promise<CourseWithRelations[]> {
-  let query = supabase.from("courses").select(
+  let query = client.from("courses").select(
     `
       *,
       tutor_profile:tutor_profiles!courses_tutor_id_fkey (
@@ -190,7 +193,7 @@ export async function getCoursesWithRelations(
 
   return rows.map((row) => ({
     ...row,
-    tutor: row.tutor_profile?.user ?? null,
+    tutor: resolveCourseTutorUser(row.tutor_profile),
   })) as CourseWithRelations[];
 }
 
@@ -198,7 +201,7 @@ export async function getCoursesWithRelations(
  * Get course by ID
  */
 export async function getCourse(id: string): Promise<Course | null> {
-  const { data, error } = await supabase
+  const { data, error } = await browserClient
     .from("courses")
     .select("*")
     .eq("id", id)
@@ -220,7 +223,7 @@ export async function getCourse(id: string): Promise<Course | null> {
 export async function getCourseWithRelations(
   id: string
 ): Promise<CourseWithRelations | null> {
-  const { data, error } = await supabase
+  const { data, error } = await browserClient
     .from("courses")
     .select(
       `
@@ -266,7 +269,7 @@ export async function getCourseWithRelations(
 
   return {
     ...row,
-    tutor: row.tutor_profile?.user ?? null,
+    tutor: resolveCourseTutorUser(row.tutor_profile),
   } as CourseWithRelations;
 }
 
@@ -276,7 +279,7 @@ export async function getCourseWithRelations(
 export async function createCourse(
   courseData: Omit<Course, "id" | "created_at" | "updated_at">
 ): Promise<Course> {
-  const { data, error } = await supabase
+  const { data, error } = await browserClient
     .from("courses")
     .insert(courseData)
     .select()
@@ -296,7 +299,7 @@ export async function updateCourse(
   id: string,
   updates: Partial<Omit<Course, "id" | "created_at">>
 ): Promise<Course> {
-  const { data, error } = await supabase
+  const { data, error } = await browserClient
     .from("courses")
     .update({ ...updates, updated_at: new Date().toISOString() })
     .eq("id", id)
@@ -314,7 +317,7 @@ export async function updateCourse(
  * Delete course
  */
 export async function deleteCourse(id: string): Promise<void> {
-  const { error } = await supabase.from("courses").delete().eq("id", id);
+  const { error } = await browserClient.from("courses").delete().eq("id", id);
 
   if (error) {
     throw error;
