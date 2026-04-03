@@ -27,6 +27,10 @@ import {
   getCoursesByTutor,
   updateCourse,
 } from "@/lib/supabase/queries/courses";
+import {
+  getCourseCoverPublicUrl,
+  uploadCourseCover,
+} from "@/lib/supabase/storage";
 import { getSubjects } from "@/lib/supabase/queries/subjects";
 import type { CourseWithRelations } from "@/types/course";
 import type { Subject } from "@/types/subject";
@@ -34,11 +38,19 @@ import {
   BookOpen,
   CheckCircle2,
   Clock3,
+  ImageIcon,
   Sparkles,
   Star,
   Users,
 } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+
+const MAX_COURSE_COVER_BYTES = 5 * 1024 * 1024;
+
+function revokeBlobUrl(url: string | null) {
+  if (url?.startsWith("blob:")) URL.revokeObjectURL(url);
+}
 
 type CourseLevel = "beginner" | "intermediate" | "advanced" | "";
 
@@ -144,6 +156,14 @@ export default function TutorCoursesManager({
   const [createForm, setCreateForm] = useState<CourseFormState>(emptyCourseForm);
   const [editForm, setEditForm] = useState<CourseFormState>(emptyCourseForm);
 
+  const [createCoverFile, setCreateCoverFile] = useState<File | null>(null);
+  const [createCoverPreview, setCreateCoverPreview] = useState<string | null>(
+    null
+  );
+  const [editCoverFile, setEditCoverFile] = useState<File | null>(null);
+  const [editCoverPreview, setEditCoverPreview] = useState<string | null>(null);
+  const [editRemoveCover, setEditRemoveCover] = useState(false);
+
   useEffect(() => {
     setCourses(initialCourses ?? []);
   }, [initialCourses]);
@@ -187,11 +207,86 @@ export default function TutorCoursesManager({
     return new Map(subjects.map((s) => [s.id, s.name]));
   }, [subjects]);
 
+  const courseBeingEdited = useMemo(
+    () => courses.find((c) => c.id === editCourseId) ?? null,
+    [courses, editCourseId]
+  );
+
+  const editCoverDisplayUrl =
+    editCoverPreview ??
+    (!editRemoveCover
+      ? getCourseCoverPublicUrl(courseBeingEdited?.cover_image)
+      : null);
+
   const resetCreateForm = () => setCreateForm(emptyCourseForm);
   const resetEditForm = () => setEditForm(emptyCourseForm);
 
+  const clearCreateCover = () => {
+    setCreateCoverFile(null);
+    setCreateCoverPreview((prev) => {
+      revokeBlobUrl(prev);
+      return null;
+    });
+  };
+
+  const resetEditCoverState = () => {
+    setEditCoverFile(null);
+    setEditCoverPreview((prev) => {
+      revokeBlobUrl(prev);
+      return null;
+    });
+    setEditRemoveCover(false);
+  };
+
+  const onCreateCoverFileSelected = (file: File | null) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError(t("validationCoverNotImage"));
+      return;
+    }
+    if (file.size > MAX_COURSE_COVER_BYTES) {
+      setError(t("validationCoverTooLarge"));
+      return;
+    }
+    setError(null);
+    setCreateCoverFile(file);
+    setCreateCoverPreview((prev) => {
+      revokeBlobUrl(prev);
+      return URL.createObjectURL(file);
+    });
+  };
+
+  const onEditCoverFileSelected = (file: File | null) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError(t("validationCoverNotImage"));
+      return;
+    }
+    if (file.size > MAX_COURSE_COVER_BYTES) {
+      setError(t("validationCoverTooLarge"));
+      return;
+    }
+    setError(null);
+    setEditRemoveCover(false);
+    setEditCoverFile(file);
+    setEditCoverPreview((prev) => {
+      revokeBlobUrl(prev);
+      return URL.createObjectURL(file);
+    });
+  };
+
+  const markEditCoverRemoved = () => {
+    setEditCoverFile(null);
+    setEditCoverPreview((prev) => {
+      revokeBlobUrl(prev);
+      return null;
+    });
+    setEditRemoveCover(true);
+  };
+
   const openEditForCourse = (course: CourseWithRelations) => {
     setError(null);
+    resetEditCoverState();
     setEditCourseId(course.id);
     setEditForm({
       title: course.title ?? "",
@@ -242,14 +337,27 @@ export default function TutorCoursesManager({
 
     setIsSaving(true);
     try {
-      await withTimeout(
+      const created = await withTimeout(
         createCourse(courseFormToCourseInsertPayload(tutorId, createForm)),
         30000,
         t("timeoutError")
       );
+      if (createCoverFile) {
+        const path = await withTimeout(
+          uploadCourseCover(created.id, createCoverFile),
+          30000,
+          t("timeoutError")
+        );
+        await withTimeout(
+          updateCourse(created.id, { cover_image: path }),
+          30000,
+          t("timeoutError")
+        );
+      }
       await refreshCourses();
       setCreateOpen(false);
       resetCreateForm();
+      clearCreateCover();
       setPublishedSuccessOpen(true);
     } catch (err) {
       console.error("Error creating course:", err);
@@ -271,15 +379,24 @@ export default function TutorCoursesManager({
 
     setIsSaving(true);
     try {
-      await withTimeout(
-        updateCourse(editCourseId, courseFormToCourseUpdatePayload(editForm)),
-        30000,
-        t("timeoutError")
-      );
+      const baseUpdates = courseFormToCourseUpdatePayload(editForm);
+      let updates = { ...baseUpdates };
+      if (editRemoveCover) {
+        updates = { ...updates, cover_image: null };
+      } else if (editCoverFile) {
+        const path = await withTimeout(
+          uploadCourseCover(editCourseId, editCoverFile),
+          30000,
+          t("timeoutError")
+        );
+        updates = { ...updates, cover_image: path };
+      }
+      await withTimeout(updateCourse(editCourseId, updates), 30000, t("timeoutError"));
       await refreshCourses();
       setEditOpen(false);
       setEditCourseId(null);
       resetEditForm();
+      resetEditCoverState();
     } catch (err) {
       console.error("Error updating course:", err);
       setError(err instanceof Error ? err.message : t("updateError"));
@@ -380,11 +497,30 @@ export default function TutorCoursesManager({
               </div>
             ) : (
               <div className="space-y-3">
-                {courses.map((course) => (
+                {courses.map((course) => {
+                  const listCoverUrl = getCourseCoverPublicUrl(course.cover_image);
+                  return (
                   <article
                     key={course.id}
-                    className="rounded-xl border border-violet-100 bg-white p-5 shadow-sm sm:p-6"
+                    className="overflow-hidden rounded-xl border border-violet-100 bg-white shadow-sm"
                   >
+                    <div className="flex flex-col sm:flex-row">
+                      <div className="relative h-36 w-full shrink-0 bg-gradient-to-br from-primary/85 via-violet-500/85 to-fuchsia-500/85 sm:h-auto sm:min-h-[132px] sm:w-40 md:w-44">
+                        {listCoverUrl ? (
+                          <Image
+                            src={listCoverUrl}
+                            alt=""
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 640px) 100vw, 176px"
+                          />
+                        ) : (
+                          <div className="flex h-full min-h-[9rem] items-center justify-center sm:min-h-[132px]">
+                            <ImageIcon className="h-12 w-12 text-white/45" aria-hidden />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex min-w-0 flex-1 flex-col gap-4 p-5 sm:p-6">
                     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                       <div className="min-w-0 flex-1 space-y-2">
                         <h3 className="truncate text-base font-bold text-primary-950 sm:text-lg">
@@ -436,8 +572,11 @@ export default function TutorCoursesManager({
                         </Button>
                       </div>
                     </div>
+                      </div>
+                    </div>
                   </article>
-                ))}
+                );
+                })}
               </div>
             )}
           </CardContent>
@@ -446,7 +585,18 @@ export default function TutorCoursesManager({
         <aside className="xl:col-span-4">
           <div className="sticky top-24 space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 xl:grid-cols-1">
             <div className="overflow-hidden rounded-xl border border-violet-100 bg-white shadow-sm">
-              <div className="h-28 bg-gradient-to-br from-primary via-violet-500 to-fuchsia-500 md:h-32" />
+              <div className="relative h-28 bg-gradient-to-br from-primary via-violet-500 to-fuchsia-500 md:h-32">
+                {createCoverPreview ? (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={createCoverPreview}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  </>
+                ) : null}
+              </div>
               <div className="space-y-4 p-5">
                 <div className="flex items-center justify-between">
                   <span className="rounded-md bg-violet-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-violet-700">
@@ -498,6 +648,7 @@ export default function TutorCoursesManager({
           if (!open) {
             setError(null);
             resetCreateForm();
+            clearCreateCover();
           }
         }}
       >
@@ -542,6 +693,46 @@ export default function TutorCoursesManager({
                 disabled={isSaving}
                 required
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="course-cover">{t("fieldCoverImage")}</Label>
+              <p className="text-xs text-gray-500">{t("fieldCoverImageHint")}</p>
+              <div className="flex flex-wrap items-center gap-3">
+                <Input
+                  id="course-cover"
+                  type="file"
+                  accept="image/*"
+                  disabled={isSaving}
+                  className="cursor-pointer text-sm file:mr-3"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null;
+                    e.target.value = "";
+                    onCreateCoverFileSelected(file);
+                  }}
+                />
+                {createCoverPreview ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={isSaving}
+                    onClick={clearCreateCover}
+                  >
+                    {t("removeCover")}
+                  </Button>
+                ) : null}
+              </div>
+              {createCoverPreview ? (
+                <div className="relative mt-2 aspect-[16/9] max-h-36 w-full overflow-hidden rounded-lg border border-violet-100 bg-violet-50">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={createCoverPreview}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              ) : null}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -697,6 +888,7 @@ export default function TutorCoursesManager({
             setError(null);
             setEditCourseId(null);
             resetEditForm();
+            resetEditCoverState();
           }
         }}
       >
@@ -744,6 +936,53 @@ export default function TutorCoursesManager({
                 disabled={isSaving}
                 required
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-course-cover">{t("fieldCoverImage")}</Label>
+              <p className="text-xs text-gray-500">{t("fieldCoverImageHint")}</p>
+              <div className="flex flex-wrap items-center gap-3">
+                <Input
+                  id="edit-course-cover"
+                  type="file"
+                  accept="image/*"
+                  disabled={isSaving}
+                  className="cursor-pointer text-sm file:mr-3"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null;
+                    e.target.value = "";
+                    onEditCoverFileSelected(file);
+                  }}
+                />
+                {editCoverDisplayUrl && !editRemoveCover ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={isSaving}
+                    onClick={markEditCoverRemoved}
+                  >
+                    {t("removeCover")}
+                  </Button>
+                ) : null}
+              </div>
+              {editRemoveCover ? (
+                <p className="text-xs text-amber-700">{t("coverWillBeRemoved")}</p>
+              ) : null}
+              {editCoverDisplayUrl ? (
+                <div className="relative mt-2 aspect-[16/9] max-h-36 w-full overflow-hidden rounded-lg border border-violet-100 bg-violet-50">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={editCoverDisplayUrl}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="mt-2 flex aspect-[16/9] max-h-36 w-full items-center justify-center rounded-lg border border-dashed border-violet-200 bg-violet-50/50 text-gray-400">
+                  <ImageIcon className="h-10 w-10" aria-hidden />
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

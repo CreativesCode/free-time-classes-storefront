@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import DashboardClient from "./DashboardClient";
+import type { DashboardRecommendedCourse } from "./DashboardDeferredRecommended";
 
 interface UpcomingLessonRaw {
   id: string;
@@ -66,7 +67,7 @@ export default async function DashboardPage({
     .eq("id", authUser.id)
     .single();
 
-  const [completedRes, pendingRes, upcomingRes] = await Promise.all([
+  const [completedRes, pendingRes, upcomingRes, recommendedRes] = await Promise.all([
     supabase
       .from("lessons")
       .select("id, duration_minutes, tutor_id")
@@ -89,6 +90,15 @@ export default async function DashboardPage({
       .gte("scheduled_date_time", new Date().toISOString())
       .order("scheduled_date_time", { ascending: true })
       .limit(3),
+
+    supabase
+      .from("courses")
+      .select(
+        "id, title, cover_image, rating, duration_minutes, subject:subjects(name)"
+      )
+      .eq("is_active", true)
+      .order("created_at", { ascending: false })
+      .limit(6),
   ]);
 
   const completed = completedRes.data ?? [];
@@ -106,6 +116,32 @@ export default async function DashboardPage({
   };
 
   const rawLessons = (upcomingRes.data ?? []) as UpcomingLessonRaw[];
+  const rawRecommended = (recommendedRes.data ?? []) as Array<{
+    id: string;
+    title: string;
+    cover_image: string | null;
+    rating: number | null;
+    duration_minutes: number;
+    subject?: { name: string } | { name: string }[] | null;
+  }>;
+
+  const recommendedCourses: DashboardRecommendedCourse[] = rawRecommended.map(
+    (row) => {
+      const subj = row.subject;
+      const subjectName = Array.isArray(subj)
+        ? subj[0]?.name
+        : subj?.name ?? null;
+      return {
+        id: row.id,
+        title: row.title,
+        cover_image: row.cover_image ?? null,
+        rating: row.rating ?? null,
+        duration_minutes: row.duration_minutes,
+        subjectName,
+      };
+    }
+  );
+
   const upcomingLessons: UpcomingLesson[] = rawLessons.map((l) => {
     const subj = Array.isArray(l.subject) ? l.subject[0] : l.subject;
     const tut = Array.isArray(l.tutor) ? l.tutor[0] : l.tutor;
@@ -132,6 +168,7 @@ export default async function DashboardPage({
       }}
       stats={stats}
       upcomingLessons={upcomingLessons}
+      recommendedCourses={recommendedCourses}
     />
   );
 }

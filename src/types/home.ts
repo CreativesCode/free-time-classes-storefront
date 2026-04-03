@@ -3,7 +3,7 @@ import type { Course } from "./course";
 /** Curso mínimo para la home (tarjetas populares + derivación de tutores destacados). */
 export type HomeCourseCard = Pick<
   Course,
-  "id" | "title" | "description" | "level" | "max_students"
+  "id" | "title" | "description" | "level" | "max_students" | "cover_image"
 > & {
   tutor?: { id: string; username: string } | null;
   enrolled_students_count?: number;

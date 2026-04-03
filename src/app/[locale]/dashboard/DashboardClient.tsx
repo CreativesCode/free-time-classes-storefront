@@ -29,6 +29,8 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+import type { DashboardRecommendedCourse } from "./DashboardDeferredRecommended";
+
 const DashboardDeferredRecommended = dynamic(
   () => import("./DashboardDeferredRecommended"),
   {
@@ -78,12 +80,14 @@ interface DashboardClientProps {
   user: DashboardUser;
   stats: DashboardStats;
   upcomingLessons: UpcomingLesson[];
+  recommendedCourses: DashboardRecommendedCourse[];
 }
 
 export default function DashboardClient({
   user,
   stats,
   upcomingLessons,
+  recommendedCourses,
 }: DashboardClientProps) {
   const router = useRouter();
   const locale = useLocale();
@@ -465,7 +469,7 @@ export default function DashboardClient({
               </CardContent>
             </Card>
 
-            <DashboardDeferredRecommended />
+            <DashboardDeferredRecommended courses={recommendedCourses} />
           </div>
 
           <div className="space-y-6 lg:col-span-4">

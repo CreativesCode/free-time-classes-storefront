@@ -41,6 +41,7 @@ const getHomePageDataCached = unstable_cache(
       description,
       level,
       max_students,
+      cover_image,
       tutor_profile:tutor_profiles!courses_tutor_id_fkey (
         id,
         user:users!tutor_profiles_id_fkey (
@@ -59,6 +60,7 @@ const getHomePageDataCached = unstable_cache(
       description: string;
       level: HomeCourseCard["level"];
       max_students: number;
+      cover_image?: string | null;
       tutor_profile?: {
         user?: { id: string; username: string } | null;
       } | null;
@@ -68,6 +70,7 @@ const getHomePageDataCached = unstable_cache(
       description: row.description,
       level: row.level,
       max_students: row.max_students,
+      cover_image: row.cover_image ?? null,
       tutor: row.tutor_profile?.user ?? null,
     }));
 

@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -13,7 +14,7 @@ import {
 } from "lucide-react";
 
 import { createPublicServerClient } from "@/lib/supabase/server-public";
-import { getPublicUrl } from "@/lib/supabase/storage";
+import { getCourseCoverPublicUrl, getPublicUrl } from "@/lib/supabase/storage";
 import { getAvatarColor } from "@/lib/utils";
 
 import type { CourseWithRelations } from "@/types/course";
@@ -240,6 +241,7 @@ export default async function CourseDetailPage({
     year: "numeric",
   });
   const coursePrice = Number(course.price_per_session).toFixed(2);
+  const coverUrl = getCourseCoverPublicUrl(course.cover_image);
 
   return (
     <div className="pb-24 md:pb-28 lg:pb-10">
@@ -308,11 +310,44 @@ export default async function CourseDetailPage({
 
             <div className="lg:col-span-5">
               <div className="relative overflow-hidden rounded-2xl border border-white/70 bg-white shadow-[0_20px_60px_rgba(112,42,225,0.12)]">
-                <div className="aspect-[4/3] bg-gradient-to-br from-primary-500 via-violet-500 to-fuchsia-500 p-6 text-white">
-                  <p className="text-xs uppercase tracking-[0.18em] text-white/80">{t("aboutCourse")}</p>
-                  <p className="mt-3 line-clamp-4 text-sm leading-relaxed text-white/95">
-                    {course.description}
-                  </p>
+                <div
+                  className={`relative aspect-[4/3] overflow-hidden ${
+                    coverUrl
+                      ? ""
+                      : "bg-gradient-to-br from-primary-500 via-violet-500 to-fuchsia-500 p-6 text-white"
+                  }`}
+                >
+                  {coverUrl ? (
+                    <>
+                      <Image
+                        src={coverUrl}
+                        alt=""
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 1024px) 100vw, 40vw"
+                        priority
+                      />
+                      <div
+                        className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/45 to-black/25"
+                        aria-hidden
+                      />
+                      <div className="relative z-10 flex h-full flex-col justify-end p-6 text-white">
+                        <p className="text-xs uppercase tracking-[0.18em] text-white/85">
+                          {t("aboutCourse")}
+                        </p>
+                        <p className="mt-3 line-clamp-4 text-sm leading-relaxed text-white/95">
+                          {course.description}
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-xs uppercase tracking-[0.18em] text-white/80">{t("aboutCourse")}</p>
+                      <p className="mt-3 line-clamp-4 text-sm leading-relaxed text-white/95">
+                        {course.description}
+                      </p>
+                    </>
+                  )}
                 </div>
                 <div className="grid grid-cols-3 gap-2 p-3 text-center">
                   <div className="rounded-xl bg-slate-50 p-3">

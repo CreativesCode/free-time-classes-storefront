@@ -123,3 +123,43 @@ export function getPublicUrl(bucket: string, path: string): string {
 
   return publicUrl;
 }
+
+/**
+ * Resuelve la portada de un curso: URL absoluta o ruta en bucket course_covers.
+ */
+export function getCourseCoverPublicUrl(
+  pathOrUrl: string | null | undefined
+): string | null {
+  if (pathOrUrl == null || typeof pathOrUrl !== "string") return null;
+  const trimmed = pathOrUrl.trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+  return getPublicUrl("course_covers", trimmed);
+}
+
+/**
+ * Sube la imagen de portada del curso (el curso ya debe existir; RLS exige tutor titular).
+ */
+export async function uploadCourseCover(
+  courseId: string,
+  file: File
+): Promise<string> {
+  const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
+  const filePath = `${courseId}/${Date.now()}.${fileExt}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("course_covers")
+    .upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type || "image/jpeg",
+    });
+
+  if (uploadError) {
+    throw uploadError;
+  }
+
+  return filePath;
+}

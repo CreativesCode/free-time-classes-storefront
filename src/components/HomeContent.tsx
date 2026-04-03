@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import type { HomeCourseCard, HomeFeaturedTeacher } from "@/types/home";
+import { getCourseCoverPublicUrl } from "@/lib/supabase/storage";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
@@ -47,6 +48,7 @@ export default function HomeContent({
       teacher: course.tutor?.username ?? "—",
       level: mapCourseLevelLabel(course.level),
       students: course.enrolled_students_count ?? course.max_students ?? 0,
+      coverUrl: getCourseCoverPublicUrl(course.cover_image),
     }));
   }, [initialCourses, t]);
 
@@ -360,7 +362,19 @@ export default function HomeContent({
                   href={`/${locale}/courses/${course.id}`}
                   className="group block h-full"
                 >
-                  <article className="h-full bg-surface-container-lowest dark:bg-zinc-900/60 rounded-xl p-6 md:p-8 shadow-lumina-sm hover:shadow-lumina transition-all duration-300 hover:-translate-y-1 border border-outline-variant/10 flex flex-col">
+                  <article className="h-full bg-surface-container-lowest dark:bg-zinc-900/60 rounded-xl overflow-hidden shadow-lumina-sm hover:shadow-lumina transition-all duration-300 hover:-translate-y-1 border border-outline-variant/10 flex flex-col">
+                    <div className="relative h-44 w-full shrink-0 bg-gradient-to-br from-primary/80 via-violet-600/70 to-fuchsia-600/80 md:h-48">
+                      {course.coverUrl ? (
+                        <Image
+                          src={course.coverUrl}
+                          alt=""
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, 33vw"
+                        />
+                      ) : null}
+                    </div>
+                    <div className="flex flex-1 flex-col p-6 md:p-8">
                     <h3 className="text-xl md:text-2xl font-bold mb-3 text-lumina-text-strong dark:text-zinc-50 group-hover:text-primary transition-colors">
                       {course.title}
                     </h3>
@@ -385,6 +399,7 @@ export default function HomeContent({
                           {course.students} {t("students")}
                         </span>
                       </div>
+                    </div>
                     </div>
                   </article>
                 </Link>

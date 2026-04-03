@@ -3,7 +3,10 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getPublicUrl } from "@/lib/supabase/storage";
+import {
+  getCourseCoverPublicUrl,
+  getPublicUrl,
+} from "@/lib/supabase/storage";
 import {
   getCoursesWithRelations,
   type CourseFilters,
@@ -22,6 +25,7 @@ import {
   Sparkles,
   Star,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 type CourseLevel = NonNullable<CourseFilters["level"]>;
@@ -596,6 +600,7 @@ export default function CoursesPageClient({
                     const bestseller = rating >= 4.5 && reviews >= 3;
                     const popular = rating >= 4 && !bestseller;
                     const grad = courseCoverGradient(course.id);
+                    const coverUrl = getCourseCoverPublicUrl(course.cover_image);
                     const href = `/${locale}/courses/${course.id}`;
 
                     return (
@@ -605,14 +610,32 @@ export default function CoursesPageClient({
                       >
                         <Link href={href} className="flex flex-1 flex-col">
                           <div
-                            className={`relative h-56 overflow-hidden md:h-72 lg:h-56 bg-gradient-to-br ${grad}`}
+                            className={`relative h-56 overflow-hidden md:h-72 lg:h-56 ${
+                              coverUrl ? "" : `bg-gradient-to-br ${grad}`
+                            }`}
                           >
+                            {coverUrl ? (
+                              <>
+                                <Image
+                                  src={coverUrl}
+                                  alt=""
+                                  fill
+                                  className="object-cover"
+                                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                />
+                                <div
+                                  className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-black/10"
+                                  aria-hidden
+                                />
+                              </>
+                            ) : (
                             <div
                               className="absolute inset-0 opacity-40 mix-blend-overlay"
                               style={{
                                 backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
                               }}
                             />
+                            )}
                             {bestseller ? (
                               <span className="absolute bottom-4 left-4 rounded-md bg-tertiary-container px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-on-tertiary-container shadow-md lg:bottom-auto lg:left-4 lg:top-4 lg:rounded-full lg:text-xs">
                                 {tCat("bestseller")}

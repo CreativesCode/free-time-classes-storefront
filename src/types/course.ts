@@ -7,6 +7,8 @@ export interface Course {
   description: string;
   tutor_id: string; // References users(id)
   subject_id?: number | null; // References subjects(id)
+  /** Ruta en el bucket course_covers (p. ej. {id}/archivo.jpg) o URL absoluta legacy */
+  cover_image?: string | null;
   price_per_session: number; // numeric(10,2)
   duration_minutes: number; // Integer - total course duration in minutes
   max_students: number; // Integer
