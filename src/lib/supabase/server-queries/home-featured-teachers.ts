@@ -1,6 +1,27 @@
 import type { HomeFeaturedTeacher } from "@/types/home";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+const DEFAULT_AVATAR = "/images/default-avatar.png";
+
+function resolveFeaturedTeacherAvatarUrl(
+  supabase: SupabaseClient,
+  pic: string | null | undefined
+): string {
+  if (pic == null || typeof pic !== "string") return DEFAULT_AVATAR;
+  const trimmed = pic.trim();
+  if (!trimmed) return DEFAULT_AVATAR;
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+  if (trimmed.startsWith("/")) {
+    return trimmed;
+  }
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("avatars").getPublicUrl(trimmed);
+  return publicUrl;
+}
+
 function collectTutorIds(
   courses: Array<{ tutor?: { id: string } | null }>,
   max = 3
@@ -68,7 +89,10 @@ export async function fetchHomeFeaturedTeachers(
         specialty,
         yearsOfExperience: profile?.years_of_experience ?? 0,
         coursesCount,
-        profilePicture: user?.profile_picture ?? "/images/default-avatar.png",
+        profilePicture: resolveFeaturedTeacherAvatarUrl(
+          supabase,
+          user?.profile_picture
+        ),
       } satisfies HomeFeaturedTeacher;
     })
   );

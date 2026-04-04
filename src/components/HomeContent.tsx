@@ -2,7 +2,10 @@
 
 import { Badge } from "@/components/ui/badge";
 import type { HomeCourseCard, HomeFeaturedTeacher } from "@/types/home";
-import { getCourseCoverPublicUrl } from "@/lib/supabase/storage";
+import {
+  getCourseCoverPublicUrl,
+  getPublicUrl,
+} from "@/lib/supabase/storage";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
@@ -17,6 +20,17 @@ const HERO_IMAGE_MOBILE =
   "/images/hero-mobile.jpg";
 
 const BENTO_IMAGE = "/images/bento-network.jpg";
+
+/** Rutas de Storage (p. ej. `uuid.jpg`) no son válidas para `next/image`; fuerza URL pública. */
+function resolveHomeAvatarSrc(pic: string): string {
+  const trimmed = pic.trim();
+  if (!trimmed) return "/images/default-avatar.png";
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+  if (trimmed.startsWith("/")) return trimmed;
+  return getPublicUrl("avatars", trimmed);
+}
 
 interface HomeContentProps {
   initialCourses: HomeCourseCard[];
@@ -52,7 +66,16 @@ export default function HomeContent({
     }));
   }, [initialCourses, t]);
 
-  const bentoAvatars = initialFeaturedTeachers.slice(0, 3);
+  const featuredTeachers = useMemo(
+    () =>
+      initialFeaturedTeachers.map((teacher) => ({
+        ...teacher,
+        profilePicture: resolveHomeAvatarSrc(teacher.profilePicture),
+      })),
+    [initialFeaturedTeachers]
+  );
+
+  const bentoAvatars = featuredTeachers.slice(0, 3);
 
   return (
     <div className="min-h-[100dvh] bg-background text-on-surface antialiased overflow-x-hidden selection:bg-primary-container/30 selection:text-on-primary-container">
@@ -304,7 +327,7 @@ export default function HomeContent({
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 lg:gap-10">
-            {initialFeaturedTeachers.map((teacher) => (
+            {featuredTeachers.map((teacher) => (
               <Link
                 key={teacher.id}
                 href={`/${locale}/tutors`}

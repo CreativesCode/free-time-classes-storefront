@@ -79,7 +79,7 @@ const getHomePageDataCached = unstable_cache(
 
     return { courses, featuredTeachers };
   },
-  ["public-home-page-v2"],
+  ["public-home-page-v3"],
   { revalidate: 3600, tags: ["courses", "home"] }
 );
 
