@@ -14,7 +14,6 @@ import { SelectMenu } from "@/components/ui/select-menu";
 import { useAuth } from "@/context/UserContext";
 import { useTranslations } from "@/i18n/translations";
 import { toast } from "sonner";
-import { getSubjects } from "@/lib/supabase/queries/subjects";
 import type { LessonWithRelations } from "@/types/lesson";
 import type { Subject } from "@/types/subject";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -115,8 +114,18 @@ export default function AvailabilityBrowser(props: AvailabilityBrowserProps) {
     if (scopeToCourse) return;
     async function loadSubjects() {
       try {
-        const data = await getSubjects();
-        setSubjects(data);
+        const response = await fetch("/api/subjects", {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
+        });
+        const result = (await response.json().catch(() => null)) as
+          | { items?: Subject[]; error?: string }
+          | null;
+        if (!response.ok) {
+          throw new Error(result?.error || "Failed to load subjects.");
+        }
+        setSubjects(result?.items ?? []);
       } catch (err) {
         console.error("Error loading subjects:", err);
       }
