@@ -19,7 +19,7 @@ import { COUNTRIES } from "@/lib/constants/countries";
 import { updateUser } from "@/lib/supabase/queries/users";
 import { getPublicUrl, uploadAvatar } from "@/lib/supabase/storage";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 interface EditProfileModalProps {
@@ -47,6 +47,7 @@ export default function EditProfileModal({
   });
 
   const [loading, setLoading] = useState(false);
+  const dialogBodyScrollRef = useRef<HTMLDivElement>(null);
 
   const countryMenuOptions = useMemo(
     () => [
@@ -142,7 +143,10 @@ export default function EditProfileModal({
           <DialogDescription>{t("editProfileDescription")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-1 sm:px-6">
+          <div
+            ref={dialogBodyScrollRef}
+            className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-1 sm:px-6"
+          >
             <div className="space-y-2">
             <Label htmlFor="username">{t("name")}</Label>
             <Input
@@ -176,6 +180,7 @@ export default function EditProfileModal({
               }
               options={countryMenuOptions}
               aria-label={t("country")}
+              nestedScrollParentRef={dialogBodyScrollRef}
               triggerClassName="h-10 rounded-md border border-input bg-background shadow-sm hover:bg-accent/40"
             />
           </div>

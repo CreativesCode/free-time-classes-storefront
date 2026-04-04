@@ -124,6 +124,8 @@
     "phone": "Teléfono",
     "country": "País",
     "selectCountry": "Selecciona un país",
+    "selectSearchPlaceholder": "Buscar…",
+    "selectNoResults": "Ningún resultado",
     "countryPlaceholder": "España",
     "namePlaceholder": "Ingresa tu nombre completo",
     "profilePicture": "URL de la foto de perfil",

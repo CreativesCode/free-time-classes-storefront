@@ -15,7 +15,7 @@ import { useTranslations } from "@/i18n/translations";
 import { createLesson } from "@/lib/supabase/queries/lessons";
 import { getSubjects } from "@/lib/supabase/queries/subjects";
 import type { Subject } from "@/types/subject";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 interface AddAvailabilityModalProps {
   isOpen: boolean;
@@ -56,6 +56,7 @@ export default function AddAvailabilityModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const dialogBodyScrollRef = useRef<HTMLDivElement>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -158,7 +159,10 @@ export default function AddAvailabilityModal({
           <DialogTitle>{t("title")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-1 sm:px-6">
+          <div
+            ref={dialogBodyScrollRef}
+            className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-1 sm:px-6"
+          >
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
                 {error}
@@ -174,6 +178,7 @@ export default function AddAvailabilityModal({
               options={subjectMenuOptions}
               disabled={loading}
               aria-label={t("subject")}
+              nestedScrollParentRef={dialogBodyScrollRef}
               triggerClassName="h-10 rounded-md border border-gray-300 bg-white shadow-sm hover:bg-gray-50/90"
             />
           </div>
@@ -200,6 +205,7 @@ export default function AddAvailabilityModal({
               options={durationMenuOptions}
               disabled={loading}
               aria-label={t("duration")}
+              nestedScrollParentRef={dialogBodyScrollRef}
               triggerClassName="h-10 rounded-md border border-gray-300 bg-white shadow-sm hover:bg-gray-50/90"
             />
           </div>

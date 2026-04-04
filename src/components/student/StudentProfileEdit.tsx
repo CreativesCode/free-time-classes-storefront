@@ -21,7 +21,7 @@ import { useAuth } from "@/context/UserContext";
 import { useTranslations } from "@/i18n/translations";
 import { toast } from "sonner";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { StudentProfile } from "@/types/student";
 
 type LanguageLevel = NonNullable<StudentProfile["language_level"]>;
@@ -99,6 +99,7 @@ export default function StudentProfileEdit({
 
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const dialogBodyScrollRef = useRef<HTMLDivElement>(null);
 
   const [formData, setFormData] = useState({
     username: "",
@@ -233,7 +234,10 @@ export default function StudentProfileEdit({
         </DialogHeader>
 
         <form onSubmit={handleSave} className="flex min-h-0 flex-1 flex-col">
-          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 pb-4 pt-1 sm:px-6">
+          <div
+            ref={dialogBodyScrollRef}
+            className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 pb-4 pt-1 sm:px-6"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="username">{t("name")}</Label>
@@ -267,6 +271,10 @@ export default function StudentProfileEdit({
                 }
                 options={countryMenuOptions}
                 aria-label={t("country")}
+                searchable
+                searchPlaceholder={t("selectSearchPlaceholder")}
+                emptySearchMessage={t("selectNoResults")}
+                nestedScrollParentRef={dialogBodyScrollRef}
                 triggerClassName="h-10 rounded-md border border-input bg-background shadow-sm hover:bg-accent/40"
               />
             </div>
@@ -281,6 +289,10 @@ export default function StudentProfileEdit({
                 }
                 options={timezoneMenuOptions}
                 aria-label={t("timezone")}
+                searchable
+                searchPlaceholder={t("selectSearchPlaceholder")}
+                emptySearchMessage={t("selectNoResults")}
+                nestedScrollParentRef={dialogBodyScrollRef}
                 triggerClassName="h-10 rounded-md border border-input bg-background shadow-sm hover:bg-accent/40"
               />
             </div>
@@ -324,6 +336,7 @@ export default function StudentProfileEdit({
                 }
                 options={languageLevelMenuOptions}
                 aria-label={t("languageLevel")}
+                nestedScrollParentRef={dialogBodyScrollRef}
                 triggerClassName="h-10 rounded-md border border-input bg-background shadow-sm hover:bg-accent/40"
               />
             </div>

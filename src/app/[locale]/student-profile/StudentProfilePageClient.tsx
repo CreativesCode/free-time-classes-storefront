@@ -136,12 +136,12 @@ export default function StudentProfilePageClient({
         onValueChange={(v) => setActiveTab(v as StudentProfileTab)}
         className="space-y-4"
       >
-        <TabsList className="no-scrollbar flex w-full overflow-x-auto md:grid md:grid-cols-6">
+        <TabsList className="no-scrollbar flex h-auto min-h-10 w-full gap-1 overflow-x-auto md:grid md:grid-cols-6">
           {tabItems.map((tab) => (
             <TabsTrigger
               key={tab.value}
               value={tab.value}
-              className="flex shrink-0 items-center gap-2 px-3"
+              className="flex min-h-9 shrink-0 items-center gap-2 rounded-md px-3 py-2"
             >
               <tab.icon className="h-4 w-4" />
               <span className="hidden sm:inline">{tab.label}</span>

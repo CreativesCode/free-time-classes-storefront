@@ -45,7 +45,7 @@ import {
   Users,
 } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const MAX_COURSE_COVER_BYTES = 5 * 1024 * 1024;
 
@@ -164,6 +164,9 @@ export default function TutorCoursesManager({
   const [editCoverFile, setEditCoverFile] = useState<File | null>(null);
   const [editCoverPreview, setEditCoverPreview] = useState<string | null>(null);
   const [editRemoveCover, setEditRemoveCover] = useState(false);
+
+  const createDialogBodyScrollRef = useRef<HTMLDivElement>(null);
+  const editDialogBodyScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setCourses(initialCourses ?? []);
@@ -687,7 +690,10 @@ export default function TutorCoursesManager({
               void handleCreate();
             }}
           >
-            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overflow-x-visible px-4 pb-4 pt-1 sm:px-6">
+            <div
+              ref={createDialogBodyScrollRef}
+              className="min-h-0 flex-1 space-y-4 overflow-y-auto overflow-x-visible px-4 pb-4 pt-1 sm:px-6"
+            >
             <div className="space-y-2">
               <Label htmlFor="course-title">{t("fieldTitle")}</Label>
               <Input
@@ -769,6 +775,7 @@ export default function TutorCoursesManager({
                   options={subjectSelectOptions}
                   disabled={isSaving}
                   aria-label={t("fieldSubject")}
+                  nestedScrollParentRef={createDialogBodyScrollRef}
                   triggerClassName={courseFormSelectTrigger}
                 />
               </div>
@@ -787,6 +794,7 @@ export default function TutorCoursesManager({
                   options={courseLevelSelectOptions}
                   disabled={isSaving}
                   aria-label={t("fieldLevel")}
+                  nestedScrollParentRef={createDialogBodyScrollRef}
                   triggerClassName={courseFormSelectTrigger}
                 />
               </div>
@@ -916,7 +924,10 @@ export default function TutorCoursesManager({
               void handleUpdate();
             }}
           >
-            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overflow-x-visible px-4 pb-4 pt-1 sm:px-6">
+            <div
+              ref={editDialogBodyScrollRef}
+              className="min-h-0 flex-1 space-y-4 overflow-y-auto overflow-x-visible px-4 pb-4 pt-1 sm:px-6"
+            >
             <div className="space-y-2">
               <Label htmlFor="edit-course-title">{t("fieldTitle")}</Label>
               <Input
@@ -1008,6 +1019,7 @@ export default function TutorCoursesManager({
                   options={subjectSelectOptions}
                   disabled={isSaving}
                   aria-label={t("fieldSubject")}
+                  nestedScrollParentRef={editDialogBodyScrollRef}
                   triggerClassName={courseFormSelectTrigger}
                 />
               </div>
@@ -1026,6 +1038,7 @@ export default function TutorCoursesManager({
                   options={courseLevelSelectOptions}
                   disabled={isSaving}
                   aria-label={t("fieldLevel")}
+                  nestedScrollParentRef={editDialogBodyScrollRef}
                   triggerClassName={courseFormSelectTrigger}
                 />
               </div>

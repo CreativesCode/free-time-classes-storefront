@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -113,6 +113,7 @@ export default function TutorDashboardClient({
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectTarget, setRejectTarget] = useState<PendingBookingItem | null>(null);
   const [rejectReason, setRejectReason] = useState<BookingRejectionReason>("tutor unavailable");
+  const rejectDialogBodyScrollRef = useRef<HTMLDivElement>(null);
 
   const rejectReasonOptions = useMemo(
     () =>
@@ -1054,7 +1055,10 @@ export default function TutorDashboardClient({
 
           {rejectTarget ? (
             <div className="flex min-h-0 flex-1 flex-col">
-              <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-1 sm:px-6">
+              <div
+                ref={rejectDialogBodyScrollRef}
+                className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-1 sm:px-6"
+              >
               <div className="space-y-2">
                 <Label htmlFor="reject-reason">{t("rejectReason")}</Label>
                 <SelectMenu
@@ -1066,6 +1070,7 @@ export default function TutorDashboardClient({
                   options={rejectReasonOptions}
                   disabled={actionLoadingBookingId === rejectTarget.booking.id}
                   aria-label={t("rejectReason")}
+                  nestedScrollParentRef={rejectDialogBodyScrollRef}
                   triggerClassName="h-10 rounded-md border border-gray-300 bg-white shadow-sm hover:bg-gray-50/90"
                 />
               </div>
