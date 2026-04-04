@@ -49,10 +49,17 @@ export default function LanguageSwitcher() {
           <span className="sr-only">{t("switchLanguage")}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent
+        align="end"
+        className="rounded-sm p-0.5 shadow-md"
+      >
         <DropdownMenuItem
           onClick={() => handleLocaleChange("en")}
-          className={locale === "en" ? "bg-accent" : ""}
+          className={
+            locale === "en"
+              ? "rounded-sm bg-accent"
+              : "rounded-sm"
+          }
         >
           <Image
             src="/images/flags/united_states.svg"
@@ -66,7 +73,11 @@ export default function LanguageSwitcher() {
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => handleLocaleChange("es")}
-          className={locale === "es" ? "bg-accent" : ""}
+          className={
+            locale === "es"
+              ? "rounded-sm bg-accent"
+              : "rounded-sm"
+          }
         >
           <Image
             src="/images/flags/spain.svg"
