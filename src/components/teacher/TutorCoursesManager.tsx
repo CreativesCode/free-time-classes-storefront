@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SelectMenu } from "@/components/ui/select-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslations } from "@/i18n/translations";
 import {
@@ -206,6 +207,27 @@ export default function TutorCoursesManager({
   const subjectNameById = useMemo(() => {
     return new Map(subjects.map((s) => [s.id, s.name]));
   }, [subjects]);
+
+  const subjectSelectOptions = useMemo(
+    () => [
+      { value: "", label: t("fieldSubjectSelect") },
+      ...subjects.map((s) => ({ value: String(s.id), label: s.name })),
+    ],
+    [subjects, t]
+  );
+
+  const courseLevelSelectOptions = useMemo(
+    () => [
+      { value: "", label: t("level.none") },
+      { value: "beginner", label: t("level.beginner") },
+      { value: "intermediate", label: t("level.intermediate") },
+      { value: "advanced", label: t("level.advanced") },
+    ],
+    [t]
+  );
+
+  const courseFormSelectTrigger =
+    "h-10 rounded-md border border-gray-300 bg-white shadow-sm hover:bg-gray-50/90 disabled:opacity-50";
 
   const courseBeingEdited = useMemo(
     () => courses.find((c) => c.id === editCourseId) ?? null,
@@ -738,46 +760,35 @@ export default function TutorCoursesManager({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="course-subject">{t("fieldSubject")}</Label>
-                <select
+                <SelectMenu
                   id="course-subject"
                   value={createForm.subject_id}
-                  onChange={(e) =>
-                    setCreateForm((p) => ({ ...p, subject_id: e.target.value }))
+                  onValueChange={(subject_id) =>
+                    setCreateForm((p) => ({ ...p, subject_id }))
                   }
+                  options={subjectSelectOptions}
                   disabled={isSaving}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="">{t("fieldSubjectSelect")}</option>
-                  {subjects.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
+                  aria-label={t("fieldSubject")}
+                  triggerClassName={courseFormSelectTrigger}
+                />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="course-level">{t("fieldLevel")}</Label>
-                <select
+                <SelectMenu
                   id="course-level"
                   value={createForm.level}
-                  onChange={(e) =>
+                  onValueChange={(level) =>
                     setCreateForm((p) => ({
                       ...p,
-                      level: e.target.value as CourseLevel,
+                      level: level as CourseLevel,
                     }))
                   }
+                  options={courseLevelSelectOptions}
                   disabled={isSaving}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="">{t("level.none")}</option>
-                  <option value="beginner">{t("level.beginner")}</option>
-                  <option value="intermediate">
-                    {t("level.intermediate")}
-                  </option>
-                  <option value="advanced">{t("level.advanced")}</option>
-                </select>
+                  aria-label={t("fieldLevel")}
+                  triggerClassName={courseFormSelectTrigger}
+                />
               </div>
             </div>
 
@@ -988,46 +999,35 @@ export default function TutorCoursesManager({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="edit-course-subject">{t("fieldSubject")}</Label>
-                <select
+                <SelectMenu
                   id="edit-course-subject"
                   value={editForm.subject_id}
-                  onChange={(e) =>
-                    setEditForm((p) => ({ ...p, subject_id: e.target.value }))
+                  onValueChange={(subject_id) =>
+                    setEditForm((p) => ({ ...p, subject_id }))
                   }
+                  options={subjectSelectOptions}
                   disabled={isSaving}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="">{t("fieldSubjectSelect")}</option>
-                  {subjects.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
+                  aria-label={t("fieldSubject")}
+                  triggerClassName={courseFormSelectTrigger}
+                />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="edit-course-level">{t("fieldLevel")}</Label>
-                <select
+                <SelectMenu
                   id="edit-course-level"
                   value={editForm.level}
-                  onChange={(e) =>
+                  onValueChange={(level) =>
                     setEditForm((p) => ({
                       ...p,
-                      level: e.target.value as CourseLevel,
+                      level: level as CourseLevel,
                     }))
                   }
+                  options={courseLevelSelectOptions}
                   disabled={isSaving}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="">{t("level.none")}</option>
-                  <option value="beginner">{t("level.beginner")}</option>
-                  <option value="intermediate">
-                    {t("level.intermediate")}
-                  </option>
-                  <option value="advanced">{t("level.advanced")}</option>
-                </select>
+                  aria-label={t("fieldLevel")}
+                  triggerClassName={courseFormSelectTrigger}
+                />
               </div>
             </div>
 

@@ -6,8 +6,23 @@ import { useAuth } from "@/context/UserContext";
 import { Eye, EyeOff } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
+
+function getSafeRedirectNext(locale: string, raw: string | null): string | null {
+  if (!raw) return null;
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(raw);
+  } catch {
+    return null;
+  }
+  if (!decoded.startsWith("/")) return null;
+  if (decoded.includes("//")) return null;
+  if (decoded.includes("\\")) return null;
+  if (!decoded.startsWith(`/${locale}/`)) return null;
+  return decoded;
+}
 
 const inputClassName =
   "h-14 rounded-md border-0 bg-surface-container-highest px-5 text-lumina-body-lg text-on-surface shadow-none placeholder:text-outline transition-all focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 md:px-6";
@@ -21,6 +36,11 @@ export default function LoginClient({ locale }: { locale: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login, user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const safeNext = useMemo(
+    () => getSafeRedirectNext(locale, searchParams.get("next")),
+    [locale, searchParams]
+  );
   const t = useTranslations("login");
   const tAuth = useTranslations("auth");
   const [shouldRedirectAfterLogin, setShouldRedirectAfterLogin] =
@@ -32,6 +52,10 @@ export default function LoginClient({ locale }: { locale: string }) {
     if (!shouldRedirectAfterLogin) return;
     if (!user) return;
 
+    if (user.is_student && safeNext) {
+      router.push(safeNext);
+      return;
+    }
     if (user.is_student && user.is_tutor) {
       router.push(`/${locale}/dashboard`);
     } else if (user.is_tutor) {
@@ -39,7 +63,7 @@ export default function LoginClient({ locale }: { locale: string }) {
     } else {
       router.push(`/${locale}/student-profile`);
     }
-  }, [shouldRedirectAfterLogin, user, router, locale]);
+  }, [shouldRedirectAfterLogin, user, router, locale, safeNext]);
 
   const validateEmail = (value: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

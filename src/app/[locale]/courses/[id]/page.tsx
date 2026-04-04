@@ -25,6 +25,7 @@ import type { User } from "@/types/user";
 import type { ReviewWithStudent } from "@/types/review";
 
 import CourseBookingFocus from "@/components/courses/CourseBookingFocus";
+import CourseBookingSection from "@/components/courses/CourseBookingSection";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -251,127 +252,111 @@ export default async function CourseDetailPage({
       <Suspense fallback={null}>
         <CourseBookingFocus />
       </Suspense>
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-500/10 via-violet-400/10 to-fuchsia-300/10" />
-        <div className="absolute -left-20 top-8 h-44 w-44 rounded-full bg-primary-400/20 blur-3xl" />
-        <div className="absolute -right-24 top-12 h-56 w-56 rounded-full bg-fuchsia-300/30 blur-3xl" />
-        <div className="relative mx-auto max-w-7xl px-4 pb-8 pt-6 sm:px-6 md:pb-10 lg:px-8 lg:pt-10">
+      <section className="border-b border-slate-200/60 bg-gradient-to-b from-slate-50/90 via-white to-white">
+        <div className="relative mx-auto max-w-7xl px-4 pb-8 pt-6 sm:px-6 md:pb-10 lg:px-8 lg:pt-8">
           <Link
             href={`/${locale}/courses`}
-            className="inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/80 px-4 py-2 text-xs font-semibold text-slate-700 backdrop-blur transition hover:bg-white sm:text-sm"
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200/90 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 sm:text-sm"
           >
             <ArrowLeft className="h-4 w-4" />
             {t("backToCourses")}
           </Link>
 
-          <div className="mt-5 grid items-end gap-8 md:mt-8 lg:grid-cols-12">
-            <div className="space-y-4 md:space-y-6 lg:col-span-7">
-              <div className="flex flex-wrap items-center gap-2">
-                {course.subject && (
-                  <Badge className="rounded-full bg-primary-100 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-primary-700 hover:bg-primary-100">
-                    {course.subject.name}
-                  </Badge>
-                )}
-                {course.level && (
-                  <Badge
-                    variant="outline"
-                    className={`rounded-full bg-white/70 px-3 py-1 text-[11px] font-bold uppercase tracking-wider ${levelColors[course.level] ?? ""}`}
-                  >
-                    {t(`level.${course.level}`)}
-                  </Badge>
-                )}
-                {!course.is_active && (
-                  <Badge variant="destructive" className="rounded-full text-[11px] uppercase">
-                    {t("inactive")}
-                  </Badge>
-                )}
+          <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-100 shadow-[0_12px_40px_-12px_rgba(15,23,42,0.18)] ring-1 ring-slate-900/5">
+            <div className="relative h-44 w-full sm:h-52 md:h-60 lg:h-[17rem]">
+              {coverUrl ? (
+                <>
+                  <Image
+                    src={coverUrl}
+                    alt={course.title}
+                    fill
+                    className="object-cover object-center"
+                    sizes="(max-width: 1280px) 100vw, 1280px"
+                    priority
+                  />
+                  <div
+                    className="absolute inset-0 bg-gradient-to-tr from-slate-950/25 via-transparent to-violet-600/10"
+                    aria-hidden
+                  />
+                  <div
+                    className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-slate-950/35 to-transparent"
+                    aria-hidden
+                  />
+                </>
+              ) : (
+                <div className="flex h-full flex-col items-center justify-center bg-gradient-to-br from-primary-500 via-violet-500 to-fuchsia-500 px-6 text-center text-white">
+                  <BookOpen className="h-14 w-14 opacity-90 sm:h-16 sm:w-16" aria-hidden />
+                  <p className="mt-4 max-w-md text-sm font-medium leading-relaxed text-white/95 sm:text-base">
+                    {course.title}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-6 space-y-4 md:mt-8 md:space-y-5">
+            <div className="flex flex-wrap items-center gap-2">
+              {course.subject && (
+                <Badge className="rounded-full bg-primary-100 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-primary-700 hover:bg-primary-100">
+                  {course.subject.name}
+                </Badge>
+              )}
+              {course.level && (
+                <Badge
+                  variant="outline"
+                  className={`rounded-full border-slate-200 bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-wider shadow-sm ${levelColors[course.level] ?? ""}`}
+                >
+                  {t(`level.${course.level}`)}
+                </Badge>
+              )}
+              {!course.is_active && (
+                <Badge variant="destructive" className="rounded-full text-[11px] uppercase">
+                  {t("inactive")}
+                </Badge>
+              )}
+            </div>
+
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl md:text-5xl lg:text-[2.75rem] lg:leading-[1.1]">
+              {course.title}
+            </h1>
+
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-medium text-slate-600">
+              {ratingValue > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <StarRating rating={ratingValue} size={14} />
+                  <span className="font-semibold text-slate-900">{ratingValue.toFixed(1)}</span>
+                  {totalReviews > 0 && (
+                    <span>
+                      ({totalReviews} {t("reviews")})
+                    </span>
+                  )}
+                </div>
+              )}
+              <div className="flex items-center gap-1.5">
+                <Clock className="h-4 w-4 text-primary-500" />
+                {course.duration_minutes} {t("minutes")}
               </div>
-
-              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl md:text-5xl lg:text-6xl">
-                {course.title}
-              </h1>
-
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-medium text-slate-600">
-                {ratingValue > 0 && (
-                  <div className="flex items-center gap-1.5">
-                    <StarRating rating={ratingValue} size={14} />
-                    <span className="font-semibold text-slate-900">{ratingValue.toFixed(1)}</span>
-                    {totalReviews > 0 && (
-                      <span>
-                        ({totalReviews} {t("reviews")})
-                      </span>
-                    )}
-                  </div>
-                )}
-                <div className="flex items-center gap-1.5">
-                  <Clock className="h-4 w-4 text-primary-500" />
-                  {course.duration_minutes} {t("minutes")}
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Users className="h-4 w-4 text-primary-500" />
-                  {t("maxStudents", { count: course.max_students })}
-                </div>
+              <div className="flex items-center gap-1.5">
+                <Users className="h-4 w-4 text-primary-500" />
+                {t("maxStudents", { count: course.max_students })}
               </div>
             </div>
 
-            <div className="lg:col-span-5">
-              <div className="relative overflow-hidden rounded-2xl border border-white/70 bg-white shadow-[0_20px_60px_rgba(112,42,225,0.12)]">
-                <div
-                  className={`relative aspect-[4/3] overflow-hidden ${
-                    coverUrl
-                      ? ""
-                      : "bg-gradient-to-br from-primary-500 via-violet-500 to-fuchsia-500 p-6 text-white"
-                  }`}
-                >
-                  {coverUrl ? (
-                    <>
-                      <Image
-                        src={coverUrl}
-                        alt=""
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 1024px) 100vw, 40vw"
-                        priority
-                      />
-                      <div
-                        className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/45 to-black/25"
-                        aria-hidden
-                      />
-                      <div className="relative z-10 flex h-full flex-col justify-end p-6 text-white">
-                        <p className="text-xs uppercase tracking-[0.18em] text-white/85">
-                          {t("aboutCourse")}
-                        </p>
-                        <p className="mt-3 line-clamp-4 text-sm leading-relaxed text-white/95">
-                          {course.description}
-                        </p>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-xs uppercase tracking-[0.18em] text-white/80">{t("aboutCourse")}</p>
-                      <p className="mt-3 line-clamp-4 text-sm leading-relaxed text-white/95">
-                        {course.description}
-                      </p>
-                    </>
-                  )}
-                </div>
-                <div className="grid grid-cols-3 gap-2 p-3 text-center">
-                  <div className="rounded-xl bg-slate-50 p-3">
-                    <Clock className="mx-auto h-4 w-4 text-primary-500" />
-                    <p className="mt-1 text-sm font-bold text-slate-900">{course.duration_minutes}</p>
-                    <p className="text-[10px] uppercase tracking-wider text-slate-500">{t("minutes")}</p>
-                  </div>
-                  <div className="rounded-xl bg-slate-50 p-3">
-                    <Users className="mx-auto h-4 w-4 text-primary-500" />
-                    <p className="mt-1 text-sm font-bold text-slate-900">{course.max_students}</p>
-                    <p className="text-[10px] uppercase tracking-wider text-slate-500">{t("maxStudentsLabel")}</p>
-                  </div>
-                  <div className="rounded-xl bg-slate-50 p-3">
-                    <Calendar className="mx-auto h-4 w-4 text-primary-500" />
-                    <p className="mt-1 text-sm font-bold text-slate-900">{createdAt}</p>
-                    <p className="text-[10px] uppercase tracking-wider text-slate-500">{t("createdAt")}</p>
-                  </div>
-                </div>
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              <div className="rounded-xl border border-slate-200/80 bg-white p-3 text-center shadow-sm">
+                <Clock className="mx-auto h-4 w-4 text-primary-500" />
+                <p className="mt-1 text-sm font-bold text-slate-900">{course.duration_minutes}</p>
+                <p className="text-[10px] uppercase tracking-wider text-slate-500">{t("minutes")}</p>
+              </div>
+              <div className="rounded-xl border border-slate-200/80 bg-white p-3 text-center shadow-sm">
+                <Users className="mx-auto h-4 w-4 text-primary-500" />
+                <p className="mt-1 text-sm font-bold text-slate-900">{course.max_students}</p>
+                <p className="text-[10px] uppercase tracking-wider text-slate-500">{t("maxStudentsLabel")}</p>
+              </div>
+              <div className="rounded-xl border border-slate-200/80 bg-white p-3 text-center shadow-sm">
+                <Calendar className="mx-auto h-4 w-4 text-primary-500" />
+                <p className="mt-1 text-sm font-bold text-slate-900">{createdAt}</p>
+                <p className="text-[10px] uppercase tracking-wider text-slate-500">{t("createdAt")}</p>
               </div>
             </div>
           </div>
@@ -426,6 +411,13 @@ export default async function CourseDetailPage({
               </div>
             </CardContent>
           </Card>
+
+          <CourseBookingSection
+            locale={locale}
+            coursePath={`/${locale}/courses/${id}`}
+            tutorId={course.tutor_id}
+            subjectId={course.subject_id}
+          />
 
           <div className="lg:hidden">
             <TutorCard
@@ -542,10 +534,10 @@ export default async function CourseDetailPage({
                   size="lg"
                   className="mt-5 w-full rounded-full bg-primary-500 font-bold text-white shadow-lg shadow-primary-500/20 hover:bg-primary-600"
                 >
-                  <Link href={`/${locale}/student-profile?tab=availabilities`}>
+                  <a href="#course-booking" className="inline-flex items-center justify-center">
                     <Calendar className="mr-2 h-5 w-5" />
                     {t("bookClass")}
-                  </Link>
+                  </a>
                 </Button>
               </CardContent>
             </Card>
@@ -577,10 +569,10 @@ export default async function CourseDetailPage({
             size="lg"
             className="flex-1 rounded-full bg-primary-500 font-bold text-white shadow-lg shadow-primary-500/20 hover:bg-primary-600"
           >
-            <Link href={`/${locale}/student-profile?tab=availabilities`}>
+            <a href="#course-booking" className="inline-flex items-center justify-center">
               <Calendar className="mr-2 h-5 w-5" />
               {t("bookClass")}
-            </Link>
+            </a>
           </Button>
         </div>
         <div className="mx-auto mt-2 max-w-2xl">

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 import { createClient } from "@/lib/supabase/server";
 
@@ -31,5 +32,15 @@ export default async function LoginPage({
     redirect(`/${locale}/student-profile`);
   }
 
-  return <LoginClient locale={locale} />;
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[100dvh] items-center justify-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
+      }
+    >
+      <LoginClient locale={locale} />
+    </Suspense>
+  );
 }

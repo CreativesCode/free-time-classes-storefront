@@ -1,7 +1,7 @@
 import { defineRouting } from "next-intl/routing";
 
 export const routing = defineRouting({
-  // A list of all locales that are supported
+  // A list of all locales that are supported (keep middleware.ts matcher in sync)
   locales: ["en", "es"],
 
   // Used when no locale matches
@@ -27,6 +27,7 @@ export const routing = defineRouting({
     "/courses/[id]/lessons": "/courses/[id]/lessons",
     "/courses/[id]/lessons/[lessonId]": "/courses/[id]/lessons/[lessonId]",
     "/tutors": "/tutors",
+    "/tutors/[id]": "/tutors/[id]",
     "/become-tutor": "/become-tutor",
     "/bookings": "/bookings",
     "/messages": "/messages",

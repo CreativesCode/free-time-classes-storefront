@@ -9,12 +9,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SelectMenu } from "@/components/ui/select-menu";
 import { useAuth } from "@/context/UserContext";
 import { useTranslations } from "@/i18n/translations";
 import { createLesson } from "@/lib/supabase/queries/lessons";
 import { getSubjects } from "@/lib/supabase/queries/subjects";
 import type { Subject } from "@/types/subject";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface AddAvailabilityModalProps {
   isOpen: boolean;
@@ -132,6 +133,24 @@ export default function AddAvailabilityModal({
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const subjectMenuOptions = useMemo(
+    () => [
+      { value: "", label: t("selectSubject") },
+      ...subjects.map((s) => ({ value: String(s.id), label: s.name })),
+    ],
+    [subjects, t]
+  );
+
+  const durationMenuOptions = useMemo(
+    () => [
+      { value: "30", label: `30 ${t("minutes")}` },
+      { value: "60", label: `60 ${t("minutes")}` },
+      { value: "90", label: `90 ${t("minutes")}` },
+      { value: "120", label: `120 ${t("minutes")}` },
+    ],
+    [t]
+  );
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="flex max-h-[calc(100dvh-1rem)] flex-col overflow-hidden p-0 sm:max-w-[525px]">
@@ -148,20 +167,15 @@ export default function AddAvailabilityModal({
 
           <div className="space-y-2">
             <Label htmlFor="subject">{t("subject")}</Label>
-            <select
+            <SelectMenu
               id="subject"
               value={formData.subject_id}
-              onChange={(e) => handleChange("subject_id", e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-            >
-              <option value="">{t("selectSubject")}</option>
-              {subjects.map((subject) => (
-                <option key={subject.id} value={subject.id}>
-                  {subject.name}
-                </option>
-              ))}
-            </select>
+              onValueChange={(v) => handleChange("subject_id", v)}
+              options={subjectMenuOptions}
+              disabled={loading}
+              aria-label={t("subject")}
+              triggerClassName="h-10 rounded-md border border-gray-300 bg-white shadow-sm hover:bg-gray-50/90"
+            />
           </div>
 
           <div className="space-y-2">
@@ -179,18 +193,15 @@ export default function AddAvailabilityModal({
 
           <div className="space-y-2">
             <Label htmlFor="duration">{t("duration")}</Label>
-            <select
+            <SelectMenu
               id="duration"
               value={formData.duration_minutes}
-              onChange={(e) => handleChange("duration_minutes", e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-            >
-              <option value="30">30 {t("minutes")}</option>
-              <option value="60">60 {t("minutes")}</option>
-              <option value="90">90 {t("minutes")}</option>
-              <option value="120">120 {t("minutes")}</option>
-            </select>
+              onValueChange={(v) => handleChange("duration_minutes", v)}
+              options={durationMenuOptions}
+              disabled={loading}
+              aria-label={t("duration")}
+              triggerClassName="h-10 rounded-md border border-gray-300 bg-white shadow-sm hover:bg-gray-50/90"
+            />
           </div>
 
           <div className="space-y-2">

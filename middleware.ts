@@ -201,14 +201,15 @@ export default async function middleware(req: NextRequest) {
   return intlMiddleware(req);
 }
 
-const localeDelimiter = routing.locales.join("|");
-
+/**
+ * Next.js parses `config.matcher` at compile time — it must be string literals,
+ * not built from `routing.locales.join()` (that triggers "Unable to parse config export").
+ * When adding a locale, update this pattern to match `routing.locales` in src/i18n/routing.ts.
+ */
 export const config = {
   matcher: [
     "/",
-    // Home per locale, e.g. /en
-    `/(${localeDelimiter})`,
-    // Rest of app, e.g. /en/dashboard (aligns with next-intl + localePrefix: "always")
-    `/(${localeDelimiter})/:path*`,
+    "/(en|es)",
+    "/(en|es)/:path*",
   ],
 };

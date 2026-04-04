@@ -1,13 +1,32 @@
 "use client";
 
+import { SelectMenu } from "@/components/ui/select-menu";
 import { useUserApp } from "@/context/AppContext";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 
 const Navbar = () => {
   const pathname = usePathname();
   const router = useRouter();
   const user = useUserApp();
+  const [lang, setLang] = useState("en");
+  const [currency, setCurrency] = useState("usd");
+
+  const langOptions = useMemo(
+    () => [
+      { value: "en", label: "English" },
+      { value: "es", label: "Español" },
+    ],
+    []
+  );
+  const currencyOptions = useMemo(
+    () => [
+      { value: "usd", label: "USD" },
+      { value: "eur", label: "EUR" },
+    ],
+    []
+  );
 
   // Don't show navbar on login or register pages
   if (pathname === "/login" || pathname === "/register") {
@@ -53,14 +72,24 @@ const Navbar = () => {
           {/* Right side buttons */}
           <div className="flex items-center space-x-4">
             <div className="hidden md:flex items-center space-x-2">
-              <select className="bg-transparent border-none text-sm text-gray-600 focus:outline-none cursor-pointer">
-                <option value="en">English</option>
-                <option value="es">Español</option>
-              </select>
-              <select className="bg-transparent border-none text-sm text-gray-600 focus:outline-none cursor-pointer">
-                <option value="usd">USD</option>
-                <option value="eur">EUR</option>
-              </select>
+              <SelectMenu
+                fullWidth={false}
+                value={lang}
+                onValueChange={setLang}
+                options={langOptions}
+                aria-label="Language"
+                triggerClassName="h-9 min-w-[5.5rem] border-0 bg-transparent px-2 text-sm font-normal text-gray-600 shadow-none hover:bg-gray-100/80"
+                contentClassName="min-w-[8rem]"
+              />
+              <SelectMenu
+                fullWidth={false}
+                value={currency}
+                onValueChange={setCurrency}
+                options={currencyOptions}
+                aria-label="Currency"
+                triggerClassName="h-9 min-w-[4rem] border-0 bg-transparent px-2 text-sm font-normal text-gray-600 shadow-none hover:bg-gray-100/80"
+                contentClassName="min-w-[6rem]"
+              />
             </div>
             {user.data ? (
               <div className="flex items-center space-x-4">

@@ -9,6 +9,29 @@ import { useSearchParams } from "next/navigation";
 export default function CourseBookingFocus() {
   const searchParams = useSearchParams();
   const ran = useRef(false);
+  const hashRan = useRef(false);
+
+  /** After login with ?next=...#course-booking, client navigation may not scroll to the hash. */
+  useEffect(() => {
+    if (hashRan.current) return;
+    if (typeof window === "undefined") return;
+    if (window.location.hash !== "#course-booking") return;
+    hashRan.current = true;
+
+    function scrollBooking() {
+      document
+        .querySelector("[data-course-booking]")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    scrollBooking();
+    const t1 = window.setTimeout(scrollBooking, 120);
+    const t2 = window.setTimeout(scrollBooking, 400);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, []);
 
   useEffect(() => {
     if (ran.current) return;
@@ -17,6 +40,11 @@ export default function CourseBookingFocus() {
 
     const mq = window.matchMedia("(min-width: 1024px)");
     function scrollTarget() {
+      const booking = document.querySelector("[data-course-booking]");
+      if (booking) {
+        booking.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
       const desktop = document.querySelector("[data-book-cta-desktop]");
       const mobile = document.querySelector("[data-book-cta-mobile]");
       const el = mq.matches ? desktop ?? mobile : mobile ?? desktop;

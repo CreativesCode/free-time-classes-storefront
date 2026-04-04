@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SelectMenu } from "@/components/ui/select-menu";
 import { useAuth } from "@/context/UserContext";
 import { useTranslations } from "@/i18n/translations";
 import { toast } from "sonner";
@@ -22,20 +23,35 @@ import { getAvatarColor } from "@/lib/utils";
 import { Calendar, Clock, DollarSign, Filter, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
-async function fetchAvailableLessons(subjectId: string): Promise<LessonWithRelations[]> {
+export type AvailabilityBrowserProps = {
+  /** When set, API returns only this tutor's open slots (e.g. from a course page). */
+  fixedTutorId?: string | null;
+  /** Pre-fill subject filter (and API filter when > 0). */
+  initialSubjectId?: number | null;
+  /** Hide subject/tutor filters; still allow text search within loaded slots. */
+  scopeToCourse?: boolean;
+  /** Overrides the default list card title (e.g. course detail heading). */
+  listTitle?: string;
+};
+
+async function fetchAvailableLessons(
+  subjectId: string,
+  tutorId: string | null | undefined
+): Promise<LessonWithRelations[]> {
   const params = new URLSearchParams();
   if (subjectId) {
     params.set("subjectId", subjectId);
   }
+  if (tutorId) {
+    params.set("tutorId", tutorId);
+  }
 
-  const response = await fetch(
-    `/api/lessons/available${params.toString() ? `?${params.toString()}` : ""}`,
-    {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
-    }
-  );
+  const qs = params.toString();
+  const response = await fetch(`/api/lessons/available${qs ? `?${qs}` : ""}`, {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  });
 
   const result = (await response.json().catch(() => null)) as
     | { items?: LessonWithRelations[]; error?: string }
@@ -48,7 +64,13 @@ async function fetchAvailableLessons(subjectId: string): Promise<LessonWithRelat
   return result?.items || [];
 }
 
-export default function AvailabilityBrowser() {
+export default function AvailabilityBrowser(props: AvailabilityBrowserProps) {
+  const {
+    fixedTutorId = null,
+    initialSubjectId = null,
+    scopeToCourse = false,
+    listTitle,
+  } = props;
   const t = useTranslations("studentProfile.availabilities");
   const { user } = useAuth();
   const [availabilities, setAvailabilities] = useState<LessonWithRelations[]>([]);
@@ -61,10 +83,13 @@ export default function AvailabilityBrowser() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [bookingFeedback, setBookingFeedback] = useState<string | null>(null);
 
+  const initialSubject =
+    initialSubjectId != null && initialSubjectId > 0 ? String(initialSubjectId) : "";
+
   // Filter state
   const [filters, setFilters] = useState({
     search: "",
-    subject_id: "",
+    subject_id: initialSubject,
     tutor_name: "",
   });
   const [debouncedFilters, setDebouncedFilters] = useState(filters);
@@ -77,8 +102,17 @@ export default function AvailabilityBrowser() {
     return () => window.clearTimeout(timeoutId);
   }, [filters]);
 
-  // Load subjects from database
+  const subjectFilterOptions = useMemo(
+    () => [
+      { value: "", label: t("allSubjects") },
+      ...subjects.map((s) => ({ value: String(s.id), label: s.name })),
+    ],
+    [subjects, t]
+  );
+
+  // Load subjects from database (not needed when scoped to one course)
   useEffect(() => {
+    if (scopeToCourse) return;
     async function loadSubjects() {
       try {
         const data = await getSubjects();
@@ -88,7 +122,7 @@ export default function AvailabilityBrowser() {
       }
     }
     loadSubjects();
-  }, []);
+  }, [scopeToCourse]);
 
   // Load availabilities
   useEffect(() => {
@@ -96,9 +130,10 @@ export default function AvailabilityBrowser() {
       try {
         setLoading(true);
         setLoadError(null);
-        // Load available lessons from DB. We filter by subject in the query
-        // to avoid fetching everything and only filtering on the client.
-        const data = await fetchAvailableLessons(debouncedFilters.subject_id);
+        const data = await fetchAvailableLessons(
+          debouncedFilters.subject_id,
+          fixedTutorId ?? undefined
+        );
         setAvailabilities(data);
       } catch (error) {
         console.error("Error loading availabilities:", error);
@@ -110,7 +145,7 @@ export default function AvailabilityBrowser() {
     }
 
     void loadAvailabilities();
-  }, [debouncedFilters.subject_id, t]);
+  }, [debouncedFilters.subject_id, fixedTutorId, t]);
 
   const filteredAvailabilities = useMemo(() => {
     let filtered = [...availabilities];
@@ -179,7 +214,10 @@ export default function AvailabilityBrowser() {
       setAvailabilities((prev) => prev.filter((lesson) => lesson.id !== lessonId));
 
       // Reload availabilities
-      const data = await fetchAvailableLessons(debouncedFilters.subject_id);
+      const data = await fetchAvailableLessons(
+        debouncedFilters.subject_id,
+        fixedTutorId ?? undefined
+      );
       setAvailabilities(data);
       setSelectedLesson(null);
       setBookingFeedback(t("bookingRequested"));
@@ -218,20 +256,22 @@ export default function AvailabilityBrowser() {
   return (
     <div className="space-y-6">
       {/* Header with search and filters */}
-      <Card className="w-full">
+      <Card className="w-full rounded-lg">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <CardTitle className="text-primary-800">
-              {t("title")}
+              {listTitle ?? t("title")}
             </CardTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              {t("filters")}
-            </Button>
+            {!scopeToCourse && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                {t("filters")}
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -249,27 +289,20 @@ export default function AvailabilityBrowser() {
           </div>
 
           {/* Filters */}
-          {showFilters && (
+          {!scopeToCourse && showFilters && (
             <div className="grid gap-4 md:grid-cols-2 border-t pt-4">
               <div className="space-y-2">
-                <Label>{t("subject")}</Label>
-                <select
+                <Label htmlFor="avail-filter-subject">{t("subject")}</Label>
+                <SelectMenu
+                  id="avail-filter-subject"
                   value={filters.subject_id}
-                  onChange={(e) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      subject_id: e.target.value,
-                    }))
+                  onValueChange={(subject_id) =>
+                    setFilters((prev) => ({ ...prev, subject_id }))
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="">{t("allSubjects")}</option>
-                  {subjects.map((subject) => (
-                    <option key={subject.id} value={subject.id}>
-                      {subject.name}
-                    </option>
-                  ))}
-                </select>
+                  options={subjectFilterOptions}
+                  aria-label={t("subject")}
+                  triggerClassName="h-10 rounded-md border border-gray-300 bg-white shadow-sm hover:bg-gray-50/90"
+                />
               </div>
 
               <div className="space-y-2">
@@ -314,13 +347,13 @@ export default function AvailabilityBrowser() {
 
       {/* Availabilities grid */}
       {isUpdatingResults ? (
-        <Card className="w-full">
+        <Card className="w-full rounded-lg">
           <CardContent className="py-12 text-center text-gray-500">
             {t("loadingResults")}
           </CardContent>
         </Card>
       ) : filteredAvailabilities.length === 0 ? (
-        <Card className="w-full">
+        <Card className="w-full rounded-lg">
           <CardContent className="py-12 text-center text-gray-500">
             {hasActiveFilters ? t("noFilteredAvailabilities") : t("noAvailabilities")}
           </CardContent>
@@ -330,7 +363,7 @@ export default function AvailabilityBrowser() {
           {filteredAvailabilities.map((lesson) => (
             <Card
               key={lesson.id}
-              className="w-full hover:shadow-lg transition-shadow cursor-pointer"
+              className="w-full cursor-pointer rounded-lg transition-shadow hover:shadow-lg"
               onClick={() => setSelectedLesson(lesson)}
             >
               <CardContent className="p-4 space-y-3">
@@ -385,7 +418,7 @@ export default function AvailabilityBrowser() {
                   </div>
                 </div>
 
-                <Button className="w-full" size="sm">
+                <Button className="w-full rounded" size="sm">
                   {t("viewDetails")}
                 </Button>
               </CardContent>

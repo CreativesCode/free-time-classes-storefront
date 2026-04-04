@@ -11,12 +11,13 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SelectMenu } from "@/components/ui/select-menu";
 import { useLocale, useTranslations } from "@/i18n/translations";
 import { createClient } from "@/lib/supabase/client";
 import { getSubjects } from "@/lib/supabase/queries/subjects";
 import type { AvailabilityException, TutorAvailabilityRule } from "@/types/availability";
 import type { Subject } from "@/types/subject";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 interface RecurringAvailabilityManagerProps {
@@ -146,6 +147,36 @@ export default function RecurringAvailabilityManager({
     subjects.find((s) => s.id === id)?.name ?? `#${id}`;
 
   const weekdayLabel = (d: number) => t(`weekdays.${d}`);
+
+  const weekdayMenuOptions = useMemo(
+    () =>
+      [0, 1, 2, 3, 4, 5, 6].map((d) => ({
+        value: String(d),
+        label: t(`weekdays.${d}`),
+      })),
+    [t]
+  );
+
+  const subjectMenuOptions = useMemo(
+    () => [
+      { value: "", label: t("selectSubject") },
+      ...subjects.map((s) => ({ value: String(s.id), label: s.name })),
+    ],
+    [subjects, t]
+  );
+
+  const durationMenuOptions = useMemo(
+    () => [
+      { value: "30", label: `30 ${t("minutes")}` },
+      { value: "60", label: `60 ${t("minutes")}` },
+      { value: "90", label: `90 ${t("minutes")}` },
+      { value: "120", label: `120 ${t("minutes")}` },
+    ],
+    [t]
+  );
+
+  const raSelectTrigger =
+    "h-10 rounded-md border border-input bg-background shadow-sm hover:bg-accent/40";
 
   const submitRule = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -378,20 +409,17 @@ export default function RecurringAvailabilityManager({
           <form onSubmit={submitRule} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="ra-day">{t("weekday")}</Label>
-              <select
+              <SelectMenu
                 id="ra-day"
                 value={ruleForm.day_of_week}
-                onChange={(e) =>
-                  setRuleForm((p) => ({ ...p, day_of_week: e.target.value }))
+                onValueChange={(day_of_week) =>
+                  setRuleForm((p) => ({ ...p, day_of_week }))
                 }
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                {[0, 1, 2, 3, 4, 5, 6].map((d) => (
-                  <option key={d} value={d}>
-                    {weekdayLabel(d)}
-                  </option>
-                ))}
-              </select>
+                options={weekdayMenuOptions}
+                disabled={ruleSaving}
+                aria-label={t("weekday")}
+                triggerClassName={raSelectTrigger}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="ra-start">{t("windowStart")}</Label>
@@ -419,38 +447,31 @@ export default function RecurringAvailabilityManager({
             </div>
             <div className="space-y-2 sm:col-span-2 lg:col-span-1">
               <Label htmlFor="ra-subject">{t("subject")}</Label>
-              <select
+              <SelectMenu
                 id="ra-subject"
                 value={ruleForm.subject_id}
-                onChange={(e) =>
-                  setRuleForm((p) => ({ ...p, subject_id: e.target.value }))
+                onValueChange={(subject_id) =>
+                  setRuleForm((p) => ({ ...p, subject_id }))
                 }
-                required
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                <option value="">{t("selectSubject")}</option>
-                {subjects.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
+                options={subjectMenuOptions}
+                disabled={ruleSaving}
+                aria-label={t("subject")}
+                triggerClassName={raSelectTrigger}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="ra-dur">{t("slotDuration")}</Label>
-              <select
+              <SelectMenu
                 id="ra-dur"
                 value={ruleForm.duration_minutes}
-                onChange={(e) =>
-                  setRuleForm((p) => ({ ...p, duration_minutes: e.target.value }))
+                onValueChange={(duration_minutes) =>
+                  setRuleForm((p) => ({ ...p, duration_minutes }))
                 }
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                <option value="30">30 {t("minutes")}</option>
-                <option value="60">60 {t("minutes")}</option>
-                <option value="90">90 {t("minutes")}</option>
-                <option value="120">120 {t("minutes")}</option>
-              </select>
+                options={durationMenuOptions}
+                disabled={ruleSaving}
+                aria-label={t("slotDuration")}
+                triggerClassName={raSelectTrigger}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="ra-price">{t("price")}</Label>
@@ -627,41 +648,34 @@ export default function RecurringAvailabilityManager({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="ex-sub">{t("subject")}</Label>
-                <select
+                <SelectMenu
                   id="ex-sub"
                   value={extraForm.subject_id}
-                  onChange={(e) =>
-                    setExtraForm((p) => ({ ...p, subject_id: e.target.value }))
+                  onValueChange={(subject_id) =>
+                    setExtraForm((p) => ({ ...p, subject_id }))
                   }
-                  required
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                >
-                  <option value="">{t("selectSubject")}</option>
-                  {subjects.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
+                  options={subjectMenuOptions}
+                  disabled={extraSaving}
+                  aria-label={t("subject")}
+                  triggerClassName={raSelectTrigger}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="ex-dur">{t("slotDuration")}</Label>
-                <select
+                <SelectMenu
                   id="ex-dur"
                   value={extraForm.duration_minutes}
-                  onChange={(e) =>
+                  onValueChange={(duration_minutes) =>
                     setExtraForm((p) => ({
                       ...p,
-                      duration_minutes: e.target.value,
+                      duration_minutes,
                     }))
                   }
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                >
-                  <option value="30">30 {t("minutes")}</option>
-                  <option value="60">60 {t("minutes")}</option>
-                  <option value="90">90 {t("minutes")}</option>
-                  <option value="120">120 {t("minutes")}</option>
-                </select>
+                  options={durationMenuOptions}
+                  disabled={extraSaving}
+                  aria-label={t("slotDuration")}
+                  triggerClassName={raSelectTrigger}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="ex-price">{t("price")}</Label>

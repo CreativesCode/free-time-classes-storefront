@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SelectMenu } from "@/components/ui/select-menu";
 // import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/UserContext";
 import { useTranslations } from "@/i18n/translations";
@@ -16,7 +19,7 @@ import { COUNTRIES } from "@/lib/constants/countries";
 import { updateUser } from "@/lib/supabase/queries/users";
 import { getPublicUrl, uploadAvatar } from "@/lib/supabase/storage";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 interface EditProfileModalProps {
@@ -44,6 +47,14 @@ export default function EditProfileModal({
   });
 
   const [loading, setLoading] = useState(false);
+
+  const countryMenuOptions = useMemo(
+    () => [
+      { value: "", label: t("selectCountry") },
+      ...COUNTRIES.map((c) => ({ value: c, label: c })),
+    ],
+    [t]
+  );
 
   // Update form data when user data changes
   useEffect(() => {
@@ -157,20 +168,16 @@ export default function EditProfileModal({
 
           <div className="space-y-2">
             <Label htmlFor="country">{t("country")}</Label>
-            <select
+            <SelectMenu
               id="country"
-              name="country"
               value={formData.country}
-              onChange={handleChange}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              <option value="">{t("selectCountry")}</option>
-              {COUNTRIES.map((country) => (
-                <option key={country} value={country}>
-                  {country}
-                </option>
-              ))}
-            </select>
+              onValueChange={(country) =>
+                setFormData((prev) => ({ ...prev, country }))
+              }
+              options={countryMenuOptions}
+              aria-label={t("country")}
+              triggerClassName="h-10 rounded-md border border-input bg-background shadow-sm hover:bg-accent/40"
+            />
           </div>
 
           <div className="space-y-2">

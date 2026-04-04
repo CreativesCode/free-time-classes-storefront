@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { SelectMenu } from "@/components/ui/select-menu";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/context/UserContext";
@@ -112,6 +113,15 @@ export default function TutorDashboardClient({
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectTarget, setRejectTarget] = useState<PendingBookingItem | null>(null);
   const [rejectReason, setRejectReason] = useState<BookingRejectionReason>("tutor unavailable");
+
+  const rejectReasonOptions = useMemo(
+    () =>
+      REJECTION_REASONS.map((r) => ({
+        value: r.value,
+        label: t(`rejectionReasons.${r.translationKey}`),
+      })),
+    [t]
+  );
 
   const [stats, setStats] = useState<DashboardStats>(
     initialData?.stats ?? {
@@ -1046,18 +1056,18 @@ export default function TutorDashboardClient({
             <div className="flex min-h-0 flex-1 flex-col">
               <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-1 sm:px-6">
               <div className="space-y-2">
-                <Label>{t("rejectReason")}</Label>
-                <select
+                <Label htmlFor="reject-reason">{t("rejectReason")}</Label>
+                <SelectMenu
+                  id="reject-reason"
                   value={rejectReason}
-                  onChange={(e) => setRejectReason(e.target.value as BookingRejectionReason)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  {REJECTION_REASONS.map((r) => (
-                    <option key={r.value} value={r.value}>
-                      {t(`rejectionReasons.${r.translationKey}`)}
-                    </option>
-                  ))}
-                </select>
+                  onValueChange={(v) =>
+                    setRejectReason(v as BookingRejectionReason)
+                  }
+                  options={rejectReasonOptions}
+                  disabled={actionLoadingBookingId === rejectTarget.booking.id}
+                  aria-label={t("rejectReason")}
+                  triggerClassName="h-10 rounded-md border border-gray-300 bg-white shadow-sm hover:bg-gray-50/90"
+                />
               </div>
 
               <div className="space-y-2">

@@ -1,5 +1,5 @@
 import type { Subject } from "@/types/subject";
-import { createPublicServerClient } from "@/lib/supabase/server-public";
+import { createCatalogServerClient } from "@/lib/supabase/server-public";
 import { unstable_cache } from "next/cache";
 import { Suspense } from "react";
 import TutorsPageClient, { type EnrichedTutor } from "./TutorsPageClient";
@@ -46,57 +46,107 @@ async function TutorsPageContent() {
 
 const getTutorsPageDataCached = unstable_cache(
   async (): Promise<{ initialTutors: EnrichedTutor[]; subjectsData: Subject[] }> => {
-    const supabase = createPublicServerClient();
-    const [{ data: subjectsData }, { data: profilesData }] = await Promise.all([
-      supabase.from("subjects").select("*").order("name", { ascending: true }),
-      supabase
-        .from("tutor_profiles")
-        .select(
-          `
+    const supabase = createCatalogServerClient();
+    const [{ data: subjectsData }, { data: courseRows, error: coursesError }] =
+      await Promise.all([
+        supabase.from("subjects").select("*").order("name", { ascending: true }),
+        supabase
+          .from("courses")
+          .select("tutor_id, price_per_session")
+          .eq("is_active", true),
+      ]);
+
+    if (coursesError && process.env.NODE_ENV === "development") {
+      console.error("[tutors page] courses:", coursesError.message, coursesError);
+    }
+
+    const courseCountByTutor = new Map<string, number>();
+    const minCoursePriceByTutor = new Map<string, number>();
+    for (const row of courseRows ?? []) {
+      const tid = row.tutor_id as string | null | undefined;
+      if (!tid) continue;
+      courseCountByTutor.set(tid, (courseCountByTutor.get(tid) ?? 0) + 1);
+      const raw = row.price_per_session as number | string | null | undefined;
+      const price = typeof raw === "number" ? raw : parseFloat(String(raw ?? ""));
+      if (Number.isFinite(price)) {
+        const prev = minCoursePriceByTutor.get(tid);
+        if (prev == null || price < prev) minCoursePriceByTutor.set(tid, price);
+      }
+    }
+
+    const tutorIdsWithCourses = [...courseCountByTutor.keys()];
+
+    if (tutorIdsWithCourses.length === 0) {
+      return {
+        initialTutors: [],
+        subjectsData: (subjectsData ?? []) as Subject[],
+      };
+    }
+
+    const [{ data: profilesData, error: profilesError }, { data: subjectLinks, error: tsError }] =
+      await Promise.all([
+        supabase
+          .from("tutor_profiles")
+          .select(
+            `
         *,
         user:users!tutor_profiles_id_fkey (
           id, username, email, profile_picture, country
         )
       `
-        )
-        .eq("is_active", true)
-        .order("rating", { ascending: false }),
-    ]);
+          )
+          .in("id", tutorIdsWithCourses)
+          .order("rating", { ascending: false }),
+        supabase
+          .from("tutor_subjects")
+          .select("tutor_id, subject:subjects(id, name)")
+          .in("tutor_id", tutorIdsWithCourses),
+      ]);
 
-    const profiles = (profilesData ?? []) as TutorProfile[];
+    if (profilesError && process.env.NODE_ENV === "development") {
+      console.error("[tutors page] tutor_profiles:", profilesError.message, profilesError);
+    }
+    if (tsError && process.env.NODE_ENV === "development") {
+      console.error("[tutors page] tutor_subjects:", tsError.message, tsError);
+    }
 
-    const initialTutors: EnrichedTutor[] = await Promise.all(
-      profiles.map(async (tutor) => {
-        const [subjectsResult, coursesResult] = await Promise.all([
-          supabase
-            .from("tutor_subjects")
-            .select("subject:subjects(id, name)")
-            .eq("tutor_id", tutor.id),
-          supabase
-            .from("courses")
-            .select("id", { count: "exact", head: true })
-            .eq("tutor_id", tutor.id)
-            .eq("is_active", true),
-        ]);
+    type ProfileRow = TutorProfile & { years_of_experience?: number | null };
+    const profiles = (profilesData ?? []) as ProfileRow[];
 
-        const subjectsList = (subjectsResult.data ?? [])
-          .map((row: Record<string, unknown>) => row.subject as { id: number; name: string } | null)
-          .filter(Boolean) as { id: number; name: string }[];
+    const subjectListsByTutorId = new Map<string, { id: number; name: string }[]>();
 
-        return {
-          ...tutor,
-          subjects: subjectsList,
-          coursesCount: coursesResult.count ?? 0,
-        };
-      })
-    );
+    for (const row of subjectLinks ?? []) {
+      const tid = row.tutor_id as string | null | undefined;
+      if (!tid) continue;
+      const raw = row.subject as
+        | { id: number; name: string }
+        | { id: number; name: string }[]
+        | null
+        | undefined;
+      const sub = raw == null ? null : Array.isArray(raw) ? raw[0] : raw;
+      if (!sub) continue;
+      const list = subjectListsByTutorId.get(tid) ?? [];
+      if (!list.some((s) => s.id === sub.id)) {
+        list.push(sub);
+      }
+      subjectListsByTutorId.set(tid, list);
+    }
+
+    const initialTutors: EnrichedTutor[] = profiles.map((tutor) => ({
+      ...tutor,
+      experience_years:
+        tutor.experience_years ?? tutor.years_of_experience ?? null,
+      subjects: subjectListsByTutorId.get(tutor.id) ?? [],
+      coursesCount: courseCountByTutor.get(tutor.id) ?? 0,
+      min_course_price: minCoursePriceByTutor.get(tutor.id) ?? null,
+    }));
 
     return {
       initialTutors,
       subjectsData: (subjectsData ?? []) as Subject[],
     };
   },
-  ["public-tutors-page-v1"],
+  ["public-tutors-page-v4"],
   { revalidate: 3600, tags: ["tutors", "subjects", "courses"] }
 );
 

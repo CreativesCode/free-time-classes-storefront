@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SelectMenu } from "@/components/ui/select-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { COUNTRIES } from "@/lib/constants/countries";
 import { getPublicUrl, uploadAvatar } from "@/lib/supabase/storage";
@@ -68,6 +69,33 @@ export default function StudentProfileEdit({
   const t = useTranslations("studentProfile");
 
   const timezones = useMemo(() => getTimezones(), []);
+
+  const countryMenuOptions = useMemo(
+    () => [
+      { value: "", label: t("selectCountry") },
+      ...COUNTRIES.map((c) => ({ value: c, label: c })),
+    ],
+    [t]
+  );
+
+  const timezoneMenuOptions = useMemo(
+    () => [
+      { value: "", label: t("notProvided") },
+      ...timezones.map((tz) => ({ value: tz, label: tz })),
+    ],
+    [t, timezones]
+  );
+
+  const languageLevelMenuOptions = useMemo(
+    () => [
+      { value: "", label: t("notProvided") },
+      ...LANGUAGE_LEVEL_OPTIONS.map((o) => ({
+        value: o.value,
+        label: t(o.tKey),
+      })),
+    ],
+    [t]
+  );
 
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -231,38 +259,30 @@ export default function StudentProfileEdit({
 
             <div className="space-y-2">
               <Label htmlFor="country">{t("country")}</Label>
-              <select
+              <SelectMenu
                 id="country"
-                name="country"
                 value={formData.country}
-                onChange={handleInputChange}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                <option value="">{t("selectCountry")}</option>
-                {COUNTRIES.map((country) => (
-                  <option key={country} value={country}>
-                    {country}
-                  </option>
-                ))}
-              </select>
+                onValueChange={(country) =>
+                  setFormData((prev) => ({ ...prev, country }))
+                }
+                options={countryMenuOptions}
+                aria-label={t("country")}
+                triggerClassName="h-10 rounded-md border border-input bg-background shadow-sm hover:bg-accent/40"
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="timezone">{t("timezone")}</Label>
-              <select
+              <SelectMenu
                 id="timezone"
-                name="timezone"
                 value={formData.timezone}
-                onChange={handleInputChange}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                <option value="">{t("notProvided")}</option>
-                {timezones.map((tz) => (
-                  <option key={tz} value={tz}>
-                    {tz}
-                  </option>
-                ))}
-              </select>
+                onValueChange={(timezone) =>
+                  setFormData((prev) => ({ ...prev, timezone }))
+                }
+                options={timezoneMenuOptions}
+                aria-label={t("timezone")}
+                triggerClassName="h-10 rounded-md border border-input bg-background shadow-sm hover:bg-accent/40"
+              />
             </div>
           </div>
 
@@ -293,20 +313,19 @@ export default function StudentProfileEdit({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="languageLevel">{t("languageLevel")}</Label>
-              <select
+              <SelectMenu
                 id="languageLevel"
-                name="languageLevel"
                 value={formData.languageLevel}
-                onChange={handleInputChange}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                <option value="">{t("notProvided")}</option>
-                {LANGUAGE_LEVEL_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {t(opt.tKey)}
-                  </option>
-                ))}
-              </select>
+                onValueChange={(languageLevel) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    languageLevel: languageLevel as "" | LanguageLevel,
+                  }))
+                }
+                options={languageLevelMenuOptions}
+                aria-label={t("languageLevel")}
+                triggerClassName="h-10 rounded-md border border-input bg-background shadow-sm hover:bg-accent/40"
+              />
             </div>
 
             <div className="space-y-2">

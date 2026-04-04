@@ -40,6 +40,11 @@ export async function GET(request: NextRequest) {
         ? Number(subjectIdParam)
         : null;
 
+    const tutorIdParam = request.nextUrl.searchParams.get("tutorId")?.trim() ?? "";
+    const tutorUuidRe =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const tutorId = tutorUuidRe.test(tutorIdParam) ? tutorIdParam : null;
+
     const admin = createSupabaseAdminClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false },
     });
@@ -79,6 +84,10 @@ export async function GET(request: NextRequest) {
 
     if (Number.isInteger(subjectId) && subjectId && subjectId > 0) {
       query = query.eq("subject_id", subjectId);
+    }
+
+    if (tutorId) {
+      query = query.eq("tutor_id", tutorId);
     }
 
     const { data, error } = await query.order("scheduled_date_time", {
