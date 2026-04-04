@@ -79,9 +79,9 @@ export default function HomeContent({
 
   return (
     <div className="min-h-[100dvh] bg-background text-on-surface antialiased overflow-x-hidden selection:bg-primary-container/30 selection:text-on-primary-container">
-      <main className="pt-20 pb-10 md:pb-0 md:pt-24">
+      <main className="pt-6 pb-10 md:pb-0 md:pt-8 lg:pt-10">
         {/* Hero — mobile: stitch/landing_page_mobile; desktop: landing_page_desktop */}
-        <section className="relative px-5 py-12 sm:px-6 md:px-10 lg:px-8 md:py-20 lg:py-24 xl:py-32 max-w-screen-2xl mx-auto overflow-hidden">
+        <section className="relative px-5 pt-4 pb-10 sm:px-6 sm:pt-5 md:px-10 md:pt-8 md:pb-16 lg:px-8 lg:pt-10 lg:pb-20 xl:pt-12 xl:pb-24 max-w-screen-2xl mx-auto overflow-hidden">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-8 lg:gap-12 items-center">
             <div className="md:col-span-7 z-10 md:max-w-xl lg:max-w-none md:mx-auto lg:mx-0 md:text-center lg:text-left max-md:space-y-4">
               <span className="inline-block px-4 py-1.5 text-xs md:text-lumina-body font-semibold tracking-wide md:tracking-overline uppercase bg-primary-container/30 text-on-primary-container md:text-primary-dim rounded-full">

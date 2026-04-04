@@ -271,11 +271,11 @@ export default function NavbarWrapper({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
-                      className="w-56"
+                      className="w-56 rounded-sm p-0.5 shadow-md"
                       align="end"
                       forceMount
                     >
-                      <DropdownMenuLabel className="font-normal">
+                      <DropdownMenuLabel className="rounded-sm font-normal">
                         <div className="flex flex-col space-y-1">
                           <p className="text-sm font-medium leading-none">
                             {user.username}
@@ -286,33 +286,33 @@ export default function NavbarWrapper({
                         </div>
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
+                      <DropdownMenuItem asChild className="rounded-sm">
                         <Link href={profileHref}>{t("profile")}</Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
+                      <DropdownMenuItem asChild className="rounded-sm">
                         <Link
                           href={`/${locale}/${user.is_tutor ? "tutor/dashboard" : "dashboard"}`}
                         >
                           {t("dashboard")}
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
+                      <DropdownMenuItem asChild className="rounded-sm">
                         <Link href={`/${locale}/bookings`}>
                           {t("bookings")}
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
+                      <DropdownMenuItem asChild className="rounded-sm">
                         <Link href={`/${locale}/messages`}>
                           {t("messages")}
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
+                      <DropdownMenuItem asChild className="rounded-sm">
                         <Link href={`/${locale}/settings`}>
                           {t("settings")}
                         </Link>
                       </DropdownMenuItem>
                       {user.is_tutor && (
-                        <DropdownMenuItem asChild>
+                        <DropdownMenuItem asChild className="rounded-sm">
                           <Link href={`/${locale}/tutor/dashboard`}>
                             <GraduationCap className="mr-2 h-4 w-4" />
                             {t("tutorDashboard")}
@@ -321,6 +321,7 @@ export default function NavbarWrapper({
                       )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
+                        className="rounded-sm"
                         onClick={handleLogout}
                         disabled={isLoggingOut}
                       >
