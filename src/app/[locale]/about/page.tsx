@@ -1,15 +1,31 @@
-import { getLocale, getTranslations } from "next-intl/server";
-import Link from "next/link";
+import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
+import type { Metadata } from "next";
+import { Link } from "@/i18n/navigation";
 
-export default async function AboutPage() {
+type Props = { params: Promise<{ locale: string }> };
+
+export async function generateMetadata({
+  params,
+}: Props): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "aboutUs" });
+  return {
+    title: t("metaTitle"),
+    description: t("metaDescription"),
+  };
+}
+
+export default async function AboutPage({ params }: Props) {
+  const { locale } = await params;
+  unstable_setRequestLocale(locale);
+
   const t = await getTranslations("aboutUs");
-  const locale = await getLocale();
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 pb-16 pt-8 sm:px-6 md:pb-20 md:pt-12 lg:px-8 lg:pt-16">
       <header className="mb-8 text-center md:mb-12">
         <p className="mb-3 inline-flex rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-xs font-semibold tracking-wide text-primary">
-          FreeTime Classes
+          {t("badge")}
         </p>
         <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl md:text-5xl">
           {t("title")}
@@ -80,7 +96,7 @@ export default async function AboutPage() {
               {t("joinUs.description")}
             </p>
             <Link
-              href={`/${locale}/register`}
+              href="/register"
               className="mt-6 inline-flex items-center justify-center rounded-full bg-background px-8 py-3 text-sm font-bold text-primary transition hover:bg-background/90"
             >
               {t("joinUs.cta")}

@@ -455,6 +455,9 @@
     "intermediate": "Intermediate"
   },
   "aboutUs": {
+    "metaTitle": "About us — Free Time Classes",
+    "metaDescription": "Our mission, vision and values. Connect with teachers and students and learn on your schedule.",
+    "badge": "FreeTime Classes",
     "title": "About Free Time Classes",
     "mission": {
       "title": "Our Mission",
