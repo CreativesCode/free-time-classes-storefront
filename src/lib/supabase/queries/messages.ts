@@ -75,113 +75,50 @@ export async function searchMessagingUsers(
   return (data || []) as MessageContact[];
 }
 
-export async function getUserConversations(
-  userId: string
-): Promise<ConversationListItem[]> {
-  const { data: ownParticipants, error: ownParticipantsError } = await supabase
-    .from("conversation_participants")
-    .select("conversation_id, last_read_at, conversations(id, updated_at)")
-    .eq("user_id", userId);
+type InboxRpcRow = {
+  id: number;
+  other_user: MessageContact;
+  last_message_content: string | null;
+  last_message_created_at: string | null;
+  unread_count: number;
+  updated_at: string;
+};
 
-  if (ownParticipantsError) throw ownParticipantsError;
-
-  const conversationIds = (ownParticipants || []).map((p) => p.conversation_id);
-  if (conversationIds.length === 0) return [];
-
-  const { data: allParticipants, error: allParticipantsError } = await supabase
-    .from("conversation_participants")
-    .select("conversation_id, user_id")
-    .in("conversation_id", conversationIds)
-    .neq("user_id", userId);
-
-  if (allParticipantsError) throw allParticipantsError;
-
-  const otherUserByConversation = new Map<number, string>();
-  const otherUserIds = new Set<string>();
-  for (const p of allParticipants || []) {
-    if (p.user_id) {
-      otherUserByConversation.set(p.conversation_id, p.user_id);
-      otherUserIds.add(p.user_id);
-    }
+/**
+ * Loads direct conversations for the current session user.
+ * Uses DB RPC (list_my_conversation_inbox): tutors cannot SELECT student rows in public.users
+ * under RLS (only is_tutor profiles are publicly readable), so the old client-side join dropped
+ * every thread for tutors when the other party was a student.
+ */
+export async function getUserConversations(userId: string): Promise<ConversationListItem[]> {
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+  if (!authUser?.id || authUser.id !== userId) {
+    return [];
   }
 
-  const { data: otherUsers, error: otherUsersError } = await supabase
-    .from("users")
-    .select("id, username, email, profile_picture")
-    .in("id", Array.from(otherUserIds));
+  const { data, error } = await supabase.rpc("list_my_conversation_inbox");
+  if (error) throw error;
 
-  if (otherUsersError) throw otherUsersError;
-
-  const userById = new Map<string, MessageContact>(
-    (otherUsers || []).map((u) => [u.id, u as MessageContact])
-  );
-
-  const { data: messages, error: messagesError } = await supabase
-    .from("messages")
-    .select("id, conversation_id, content, created_at")
-    .in("conversation_id", conversationIds)
-    .order("created_at", { ascending: false });
-
-  if (messagesError) throw messagesError;
-
-  const lastMessageByConversation = new Map<
-    number,
-    { content: string; created_at: string }
-  >();
-  for (const msg of messages || []) {
-    if (!lastMessageByConversation.has(msg.conversation_id)) {
-      lastMessageByConversation.set(msg.conversation_id, {
-        content: msg.content,
-        created_at: msg.created_at,
-      });
-    }
+  const raw = data as InboxRpcRow[] | null;
+  if (!raw || !Array.isArray(raw)) {
+    return [];
   }
 
-  const unreadByConversation = new Map<number, number>();
-  const readAtByConversation = new Map<number, string | null>();
-  for (const p of ownParticipants || []) {
-    readAtByConversation.set(p.conversation_id, p.last_read_at || null);
-  }
-  for (const msg of messages || []) {
-    const lastReadAt = readAtByConversation.get(msg.conversation_id);
-    if (!lastReadAt || new Date(msg.created_at) > new Date(lastReadAt)) {
-      unreadByConversation.set(
-        msg.conversation_id,
-        (unreadByConversation.get(msg.conversation_id) || 0) + 1
-      );
-    }
-  }
-
-  const rows: ConversationListItem[] = [];
-  for (const p of ownParticipants || []) {
-    const conversation = Array.isArray(p.conversations)
-      ? p.conversations[0]
-      : p.conversations;
-    const otherUserId = otherUserByConversation.get(p.conversation_id);
-    if (!otherUserId) continue;
-    const otherUser = userById.get(otherUserId);
-    if (!otherUser) continue;
-
-    const lastMessage = lastMessageByConversation.get(p.conversation_id);
-    rows.push({
-      id: p.conversation_id,
-      other_user: otherUser,
-      last_message_content: lastMessage?.content || null,
-      last_message_created_at: lastMessage?.created_at || null,
-      unread_count: unreadByConversation.get(p.conversation_id) || 0,
-      updated_at: conversation?.updated_at || new Date().toISOString(),
-    });
-  }
-
-  return rows.sort((a, b) => {
-    const aTime = new Date(
-      a.last_message_created_at || a.updated_at
-    ).getTime();
-    const bTime = new Date(
-      b.last_message_created_at || b.updated_at
-    ).getTime();
-    return bTime - aTime;
-  });
+  return raw.map((row) => ({
+    id: row.id,
+    other_user: {
+      id: row.other_user.id,
+      username: row.other_user.username,
+      email: row.other_user.email,
+      profile_picture: row.other_user.profile_picture ?? null,
+    },
+    last_message_content: row.last_message_content,
+    last_message_created_at: row.last_message_created_at,
+    unread_count: row.unread_count ?? 0,
+    updated_at: row.updated_at,
+  }));
 }
 
 export async function getOrCreateDirectConversationId(

@@ -12,6 +12,10 @@ import {
 } from "lucide-react";
 
 import { createCatalogServerClient } from "@/lib/supabase/server-public";
+import {
+  fetchTutorReviewStatsMap,
+  mergeTutorProfileReviewStats,
+} from "@/lib/supabase/tutor-review-stats";
 import { getCourseCoverPublicUrl, getPublicUrl } from "@/lib/supabase/storage";
 import { getAvatarColor } from "@/lib/utils";
 import type { TutorProfile } from "@/types/tutor";
@@ -160,7 +164,11 @@ export default async function TutorPublicProfilePage({
     notFound();
   }
 
-  const profile = profileData as TutorRow;
+  const tutorReviewStats = await fetchTutorReviewStatsMap(supabase, [id]);
+  const profile = mergeTutorProfileReviewStats(
+    profileData as TutorRow,
+    tutorReviewStats
+  );
 
   const [subjectsResult, coursesResult] = await Promise.all([
     supabase

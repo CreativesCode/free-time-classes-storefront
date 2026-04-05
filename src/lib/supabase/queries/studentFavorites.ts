@@ -1,6 +1,7 @@
 import type { TutorProfile } from "@/types/tutor";
 import type { User } from "@/types/user";
 import { createClient } from "../client";
+import { fetchTutorReviewStatsMap, mergeTutorProfileReviewStats } from "../tutor-review-stats";
 import { getTutorProfileWithUser } from "./tutors";
 
 const supabase = createClient();
@@ -78,12 +79,14 @@ export async function getFavoriteTutorsWithProfile(
   studentId: string
 ): Promise<FavoriteTutorWithProfile[]> {
   const tutorIds = await getFavoriteTutorIds(studentId);
+  const reviewStats = await fetchTutorReviewStatsMap(supabase, tutorIds);
   const out: FavoriteTutorWithProfile[] = [];
 
   for (const favoriteTutorId of tutorIds) {
     const tutor = await getTutorProfileWithUser(favoriteTutorId);
     if (tutor) {
-      out.push({ ...tutor, favoriteTutorId });
+      const merged = mergeTutorProfileReviewStats(tutor, reviewStats);
+      out.push({ ...merged, favoriteTutorId });
     }
   }
 

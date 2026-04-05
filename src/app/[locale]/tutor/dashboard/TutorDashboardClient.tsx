@@ -19,6 +19,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/context/UserContext";
 import { useTranslations, useLocale } from "@/i18n/translations";
 import { createClient } from "@/lib/supabase/client";
+import { fetchTutorReviewStatsMap } from "@/lib/supabase/tutor-review-stats";
 import { getAvatarColor } from "@/lib/utils";
 import {
   createBookingRejection,
@@ -180,7 +181,7 @@ export default function TutorDashboardClient({
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-      const [lessonsRes, profileRes, pendingRes] = await Promise.all([
+      const [lessonsRes, profileRes, pendingRes, reviewStatsMap] = await Promise.all([
         supabase
           .from("lessons")
           .select("price, duration_minutes")
@@ -197,15 +198,18 @@ export default function TutorDashboardClient({
           .select("id", { count: "exact", head: true })
           .eq("tutor_id", effectiveUser.id)
           .eq("status", "pending"),
+        fetchTutorReviewStatsMap(supabase, [effectiveUser.id]),
       ]);
 
       const monthLessons = lessonsRes.data ?? [];
       const totalEarnings = monthLessons.reduce((sum, l) => sum + (l.price ?? 0), 0);
+      const fromReviews = reviewStatsMap?.get(effectiveUser.id);
 
       setStats({
         classesThisMonth: monthLessons.length,
         pendingRequests: pendingRes.count ?? 0,
-        avgRating: profileRes.data?.rating ?? null,
+        avgRating:
+          fromReviews?.rating ?? profileRes.data?.rating ?? null,
         earningsThisMonth: totalEarnings,
       });
     } catch (e) {

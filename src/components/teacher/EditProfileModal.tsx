@@ -12,11 +12,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SelectMenu } from "@/components/ui/select-menu";
-// import { Textarea } from "@/components/ui/textarea";
+import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/UserContext";
 import { useTranslations } from "@/i18n/translations";
 import { COUNTRIES } from "@/lib/constants/countries";
+import { updateTutorProfile } from "@/lib/supabase/queries/tutors";
 import { updateUser } from "@/lib/supabase/queries/users";
+import type { TutorProfile } from "@/types/tutor";
 import { getPublicUrl, uploadAvatar } from "@/lib/supabase/storage";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -25,17 +27,31 @@ import { toast } from "sonner";
 interface EditProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Mismo `id` que `tutor_profiles` (FK a `users`). */
+  tutorId: string;
+  initialBio?: string | null;
+  initialYearsOfExperience?: number | null;
+  initialCertifications?: string | null;
+  onTutorProfileUpdated?: (updates: Partial<TutorProfile>) => void;
 }
 
 interface FormData {
   username: string;
   phone: string;
   country: string;
+  bio: string;
+  yearsOfExperience: string;
+  certifications: string;
 }
 
 export default function EditProfileModal({
   isOpen,
   onClose,
+  tutorId,
+  initialBio = "",
+  initialYearsOfExperience,
+  initialCertifications,
+  onTutorProfileUpdated,
 }: EditProfileModalProps) {
   const { user, refreshUser } = useAuth();
   const t = useTranslations("teacherProfile");
@@ -44,6 +60,9 @@ export default function EditProfileModal({
     username: user?.username || "",
     phone: user?.phone || "",
     country: user?.country || "",
+    bio: initialBio ?? "",
+    yearsOfExperience: initialYearsOfExperience != null ? String(initialYearsOfExperience) : "",
+    certifications: initialCertifications ?? "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -63,8 +82,11 @@ export default function EditProfileModal({
       username: user?.username || "",
       phone: user?.phone || "",
       country: user?.country || "",
+      bio: initialBio ?? "",
+      yearsOfExperience: initialYearsOfExperience != null ? String(initialYearsOfExperience) : "",
+      certifications: initialCertifications ?? "",
     });
-  }, [user]);
+  }, [user, initialBio, initialYearsOfExperience, initialCertifications]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,6 +110,16 @@ export default function EditProfileModal({
         ...formDataToUpdate,
         profile_picture: profilePicture,
       });
+      const bioValue = formData.bio.trim() || null;
+      const yearsValue = formData.yearsOfExperience ? parseInt(formData.yearsOfExperience, 10) : null;
+      const certificationsValue = formData.certifications.trim() || null;
+      const tutorUpdates: Partial<TutorProfile> = {
+        bio: bioValue,
+        years_of_experience: Number.isNaN(yearsValue) ? null : yearsValue,
+        certifications: certificationsValue,
+      };
+      await updateTutorProfile(tutorId, tutorUpdates);
+      onTutorProfileUpdated?.(tutorUpdates);
       await refreshUser();
       toast.success(t("profileUpdated"));
       setAvatarFile(null);
@@ -181,7 +213,22 @@ export default function EditProfileModal({
               options={countryMenuOptions}
               aria-label={t("country")}
               nestedScrollParentRef={dialogBodyScrollRef}
+              searchable
+              searchPlaceholder={t("countrySearchPlaceholder")}
+              emptySearchMessage={t("countrySearchEmpty")}
               triggerClassName="h-10 rounded-md border border-input bg-background shadow-sm hover:bg-accent/40"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="bio">{t("bio")}</Label>
+            <Textarea
+              id="bio"
+              name="bio"
+              value={formData.bio}
+              onChange={handleChange}
+              placeholder={t("bioPlaceholder")}
+              className="min-h-[100px] resize-y"
             />
           </div>
 
@@ -207,39 +254,31 @@ export default function EditProfileModal({
             ) : null}
           </div>
 
-          {/* <div className="space-y-2">
-            <Label htmlFor="specialties">{t("specialties")}</Label>
+          <div className="space-y-2">
+            <Label htmlFor="yearsOfExperience">{t("experience")}</Label>
             <Input
-              id="specialties"
-              name="specialties"
-              value={formData.specialties}
-              onChange={handleChange}
-              placeholder={t("specialtiesPlaceholder")}
-            />
-          </div> */}
-
-          {/* <div className="space-y-2">
-            <Label htmlFor="experience">{t("experience")}</Label>
-            <Input
-              id="experience"
-              name="experience"
-              value={formData.experience}
+              id="yearsOfExperience"
+              name="yearsOfExperience"
+              type="number"
+              min="0"
+              max="99"
+              value={formData.yearsOfExperience}
               onChange={handleChange}
               placeholder={t("experiencePlaceholder")}
             />
-          </div> */}
+          </div>
 
-          {/* <div className="space-y-2">
-            <Label htmlFor="bio">{t("bio")}</Label>
+          <div className="space-y-2">
+            <Label htmlFor="certifications">{t("certifications")}</Label>
             <Textarea
-              id="bio"
-              name="bio"
-              value={formData.bio}
+              id="certifications"
+              name="certifications"
+              value={formData.certifications}
               onChange={handleChange}
-              placeholder={t("bioPlaceholder")}
-              className="min-h-[100px]"
+              placeholder={t("certificationsPlaceholder")}
+              className="min-h-[80px] resize-y"
             />
-          </div> */}
+          </div>
 
           </div>
           <DialogFooter className="mt-2 flex shrink-0 flex-col gap-2 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:px-6">

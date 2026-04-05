@@ -87,15 +87,15 @@ export default function TutorReviewsSection() {
   }
 
   return (
-    <Card className="w-full">
+    <Card className="w-full rounded-md border border-violet-100 bg-white/80 shadow-none">
       <CardHeader>
         <CardTitle>{t("reviewsTitle")}</CardTitle>
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="py-6 text-sm text-gray-500">Cargando...</div>
+          <div className="py-6 text-sm text-slate-500">Cargando...</div>
         ) : reviews.length === 0 ? (
-          <div className="py-6 text-sm text-gray-500">{t("noReviews")}</div>
+          <div className="py-6 text-sm text-slate-500">{t("noReviews")}</div>
         ) : (
           <div className="space-y-3">
             {reviews.map((review) => {
@@ -106,7 +106,7 @@ export default function TutorReviewsSection() {
               return (
                 <div
                   key={review.id}
-                  className="border rounded-lg p-4 space-y-3"
+                  className="space-y-3 rounded-md border border-violet-100 bg-white/80 p-4"
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div className="font-medium text-gray-900">{studentName}</div>

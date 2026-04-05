@@ -16,6 +16,10 @@ import {
 
 import { resolveCourseTutorUser } from "@/lib/supabase/course-tutor";
 import { createCatalogServerClient } from "@/lib/supabase/server-public";
+import {
+  fetchTutorReviewStatsMap,
+  mergeTutorProfileReviewStats,
+} from "@/lib/supabase/tutor-review-stats";
 import { getCourseCoverPublicUrl, getPublicUrl } from "@/lib/supabase/storage";
 import { getAvatarColor } from "@/lib/utils";
 
@@ -191,6 +195,15 @@ export default async function CourseDetailPage({
       }
 
       tutorProfile = (profileData as (TutorProfile & { user: User }) | null) ?? null;
+      if (tutorProfile) {
+        const tutorReviewStats = await fetchTutorReviewStatsMap(supabase, [
+          course.tutor_id,
+        ]);
+        tutorProfile = mergeTutorProfileReviewStats(
+          tutorProfile,
+          tutorReviewStats
+        );
+      }
       reviews = (reviewsData as ReviewWithStudent[] | null) ?? [];
     }
   } catch {

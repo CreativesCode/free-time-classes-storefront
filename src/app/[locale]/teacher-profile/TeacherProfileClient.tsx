@@ -149,7 +149,7 @@ export default function TeacherProfileClient({
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-3 md:mt-8 md:grid-cols-4">
-          <div className="rounded-2xl border border-violet-100 bg-white/80 p-4">
+          <div className="rounded-md border border-violet-100 bg-white/80 p-4">
             <p className="text-[11px] uppercase tracking-wider text-slate-500">
               {t("rating")}
             </p>
@@ -157,7 +157,7 @@ export default function TeacherProfileClient({
               {(tutorProfile?.rating ?? 0).toFixed(1)}
             </p>
           </div>
-          <div className="rounded-2xl border border-violet-100 bg-white/80 p-4">
+          <div className="rounded-md border border-violet-100 bg-white/80 p-4">
             <p className="text-[11px] uppercase tracking-wider text-slate-500">
               {t("totalReviews")}
             </p>
@@ -165,7 +165,7 @@ export default function TeacherProfileClient({
               {tutorProfile?.total_reviews ?? 0}
             </p>
           </div>
-          <div className="rounded-2xl border border-violet-100 bg-white/80 p-4">
+          <div className="rounded-md border border-violet-100 bg-white/80 p-4">
             <p className="text-[11px] uppercase tracking-wider text-slate-500">
               {t("experience")}
             </p>
@@ -176,7 +176,7 @@ export default function TeacherProfileClient({
               </span>
             </p>
           </div>
-          <div className="rounded-2xl border border-violet-100 bg-white/80 p-4">
+          <div className="rounded-md border border-violet-100 bg-white/80 p-4">
             <p className="text-[11px] uppercase tracking-wider text-slate-500">
               {t("courses")}
             </p>
@@ -187,6 +187,13 @@ export default function TeacherProfileClient({
 
       <EditProfileModal
         isOpen={isEditModalOpen}
+        tutorId={teacherUser.id}
+        initialBio={tutorProfile?.bio ?? ""}
+        initialYearsOfExperience={tutorProfile?.years_of_experience ?? null}
+        initialCertifications={tutorProfile?.certifications ?? null}
+        onTutorProfileUpdated={(updates) =>
+          setTutorProfile((prev) => (prev ? { ...prev, ...updates } : prev))
+        }
         onClose={() => {
           setIsEditModalOpen(false);
           router.refresh();
@@ -295,14 +302,22 @@ export default function TeacherProfileClient({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="rounded-2xl border border-violet-100 bg-violet-50/50 p-4">
+                <div className="rounded-md border border-violet-100 bg-white/80 p-4">
                   <h3 className="font-semibold text-slate-800">{t("bio")}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-slate-600">
                     {bioText}
                   </p>
                 </div>
+                {tutorProfile?.certifications ? (
+                  <div className="rounded-md border border-violet-100 bg-white/80 p-4">
+                    <h3 className="font-semibold text-slate-800">{t("certifications")}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-600 whitespace-pre-line">
+                      {tutorProfile.certifications}
+                    </p>
+                  </div>
+                ) : null}
                 <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-2xl border border-violet-100 p-4">
+                  <div className="rounded-md border border-violet-100 bg-white/80 p-4">
                     <p className="text-xs uppercase tracking-wider text-slate-500">
                       {t("hourlyRate")}
                     </p>
@@ -312,7 +327,7 @@ export default function TeacherProfileClient({
                         : t("notProvided")}
                     </p>
                   </div>
-                  <div className="rounded-2xl border border-violet-100 p-4">
+                  <div className="rounded-md border border-violet-100 bg-white/80 p-4">
                     <p className="text-xs uppercase tracking-wider text-slate-500">
                       {t("rating")}
                     </p>
@@ -320,7 +335,7 @@ export default function TeacherProfileClient({
                       {tutorProfile?.rating ?? 0}
                     </p>
                   </div>
-                  <div className="rounded-2xl border border-violet-100 p-4">
+                  <div className="rounded-md border border-violet-100 bg-white/80 p-4">
                     <p className="text-xs uppercase tracking-wider text-slate-500">
                       {t("totalReviews")}
                     </p>

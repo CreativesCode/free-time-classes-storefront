@@ -28,11 +28,11 @@ import {
   getCoursesByTutor,
   updateCourse,
 } from "@/lib/supabase/queries/courses";
+import { getSubjects } from "@/lib/supabase/queries/subjects";
 import {
   getCourseCoverPublicUrl,
   uploadCourseCover,
 } from "@/lib/supabase/storage";
-import { getSubjects } from "@/lib/supabase/queries/subjects";
 import type { CourseWithRelations } from "@/types/course";
 import type { Subject } from "@/types/subject";
 import {
@@ -461,30 +461,29 @@ export default function TutorCoursesManager({
         <div className="relative flex flex-col gap-6">
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-700">
-              Curriculum Builder
+              {t("heroEyebrow")}
             </p>
             <h2 className="text-2xl font-extrabold tracking-tight text-primary-950 sm:text-3xl lg:text-4xl">
-              Disena tu proximo curso
+              {t("heroTitle")}
             </h2>
             <p className="max-w-2xl text-sm text-gray-600 sm:text-base">
-              Configura los detalles de tu clase y publica una experiencia premium
-              para tus estudiantes.
+              {t("heroDescription")}
             </p>
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="rounded-xl border border-white/70 bg-white/80 p-5 backdrop-blur">
-              <p className="text-xs uppercase tracking-wide text-gray-500">Cursos totales</p>
+              <p className="text-xs uppercase tracking-wide text-gray-500">{t("statTotalCourses")}</p>
               <p className="mt-2 text-2xl font-bold text-primary-900">{courses.length}</p>
             </div>
             <div className="rounded-xl border border-white/70 bg-white/80 p-5 backdrop-blur">
-              <p className="text-xs uppercase tracking-wide text-gray-500">Publicados</p>
+              <p className="text-xs uppercase tracking-wide text-gray-500">{t("statPublished")}</p>
               <p className="mt-2 text-2xl font-bold text-primary-900">{totalPublished}</p>
             </div>
             <div className="rounded-xl border border-white/70 bg-white/80 p-5 backdrop-blur">
-              <p className="text-xs uppercase tracking-wide text-gray-500">Estado</p>
+              <p className="text-xs uppercase tracking-wide text-gray-500">{t("statStatus")}</p>
               <p className="mt-2 text-sm font-semibold text-primary-900">
-                {isLoadingCatalog ? t("loading") : "Listo para crear"}
+                {isLoadingCatalog ? t("loading") : t("readyToCreate")}
               </p>
             </div>
           </div>
@@ -525,82 +524,82 @@ export default function TutorCoursesManager({
                 {courses.map((course) => {
                   const listCoverUrl = getCourseCoverPublicUrl(course.cover_image);
                   return (
-                  <article
-                    key={course.id}
-                    className="overflow-hidden rounded-xl border border-violet-100 bg-white shadow-sm"
-                  >
-                    <div className="flex flex-col sm:flex-row">
-                      <div className="relative h-36 w-full shrink-0 bg-gradient-to-br from-primary/85 via-violet-500/85 to-fuchsia-500/85 sm:h-auto sm:min-h-[132px] sm:w-40 md:w-44">
-                        {listCoverUrl ? (
-                          <Image
-                            src={listCoverUrl}
-                            alt=""
-                            fill
-                            className="object-cover"
-                            sizes="(max-width: 640px) 100vw, 176px"
-                          />
-                        ) : (
-                          <div className="flex h-full min-h-[9rem] items-center justify-center sm:min-h-[132px]">
-                            <ImageIcon className="h-12 w-12 text-white/45" aria-hidden />
+                    <article
+                      key={course.id}
+                      className="overflow-hidden rounded-xl border border-violet-100 bg-white shadow-sm"
+                    >
+                      <div className="flex flex-col sm:flex-row">
+                        <div className="relative h-36 w-full shrink-0 bg-gradient-to-br from-primary/85 via-violet-500/85 to-fuchsia-500/85 sm:h-auto sm:min-h-[132px] sm:w-40 md:w-44">
+                          {listCoverUrl ? (
+                            <Image
+                              src={listCoverUrl}
+                              alt=""
+                              fill
+                              className="object-cover"
+                              sizes="(max-width: 640px) 100vw, 176px"
+                            />
+                          ) : (
+                            <div className="flex h-full min-h-[9rem] items-center justify-center sm:min-h-[132px]">
+                              <ImageIcon className="h-12 w-12 text-white/45" aria-hidden />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex min-w-0 flex-1 flex-col gap-4 p-5 sm:p-6">
+                          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                            <div className="min-w-0 flex-1 space-y-2">
+                              <h3 className="truncate text-base font-bold text-primary-950 sm:text-lg">
+                                {course.title}
+                              </h3>
+                              <p className="text-sm text-gray-600">
+                                {subjectNameById.get(course.subject_id ?? -1) ?? "—"} ·{" "}
+                                {course.duration_minutes ?? 60} min · ${course.price_per_session} ·{" "}
+                                {getLevelLabel(course.level)}
+                              </p>
+                              <div className="mt-1 flex items-center gap-1 text-sm text-gray-700">
+                                <Star className="h-4 w-4 text-primary-600" fill="currentColor" />
+                                <span>{(course.rating ?? 0).toFixed(1)}</span>
+                                <span className="text-gray-500">
+                                  ({course.total_reviews ?? 0} {t("reviewsLabel")})
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-2">
+                              <Badge
+                                className={
+                                  course.is_active
+                                    ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100"
+                                    : "bg-gray-200 text-gray-700 hover:bg-gray-200"
+                                }
+                              >
+                                {course.is_active ? t("active") : t("inactive")}
+                              </Badge>
+
+                              <Button
+                                type="button"
+                                variant="outline"
+                                disabled={isSaving}
+                                onClick={() => openEditForCourse(course)}
+                                className="rounded-full"
+                              >
+                                {t("edit")}
+                              </Button>
+
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                disabled={isSaving}
+                                onClick={() => void handleDelete(course.id)}
+                                className="rounded-full"
+                              >
+                                {t("delete")}
+                              </Button>
+                            </div>
                           </div>
-                        )}
-                      </div>
-                      <div className="flex min-w-0 flex-1 flex-col gap-4 p-5 sm:p-6">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                      <div className="min-w-0 flex-1 space-y-2">
-                        <h3 className="truncate text-base font-bold text-primary-950 sm:text-lg">
-                          {course.title}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          {subjectNameById.get(course.subject_id ?? -1) ?? "—"} ·{" "}
-                          {course.duration_minutes ?? 60} min · ${course.price_per_session} ·{" "}
-                          {getLevelLabel(course.level)}
-                        </p>
-                        <div className="mt-1 flex items-center gap-1 text-sm text-gray-700">
-                          <Star className="h-4 w-4 text-primary-600" fill="currentColor" />
-                          <span>{(course.rating ?? 0).toFixed(1)}</span>
-                          <span className="text-gray-500">
-                            ({course.total_reviews ?? 0} {t("reviewsLabel")})
-                          </span>
                         </div>
                       </div>
-
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge
-                          className={
-                            course.is_active
-                              ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100"
-                              : "bg-gray-200 text-gray-700 hover:bg-gray-200"
-                          }
-                        >
-                          {course.is_active ? t("active") : t("inactive")}
-                        </Badge>
-
-                        <Button
-                          type="button"
-                          variant="outline"
-                          disabled={isSaving}
-                          onClick={() => openEditForCourse(course)}
-                          className="rounded-full"
-                        >
-                          {t("edit")}
-                        </Button>
-
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          disabled={isSaving}
-                          onClick={() => void handleDelete(course.id)}
-                          className="rounded-full"
-                        >
-                          {t("delete")}
-                        </Button>
-                      </div>
-                    </div>
-                      </div>
-                    </div>
-                  </article>
-                );
+                    </article>
+                  );
                 })}
               </div>
             )}
@@ -694,188 +693,188 @@ export default function TutorCoursesManager({
               ref={createDialogBodyScrollRef}
               className="min-h-0 flex-1 space-y-4 overflow-y-auto overflow-x-visible px-4 pb-4 pt-1 sm:px-6"
             >
-            <div className="space-y-2">
-              <Label htmlFor="course-title">{t("fieldTitle")}</Label>
-              <Input
-                id="course-title"
-                value={createForm.title}
-                onChange={(e) =>
-                  setCreateForm((p) => ({ ...p, title: e.target.value }))
-                }
-                placeholder={t("fieldTitlePlaceholder")}
-                disabled={isSaving}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="course-description">{t("fieldDescription")}</Label>
-              <Textarea
-                id="course-description"
-                value={createForm.description}
-                onChange={(e) =>
-                  setCreateForm((p) => ({ ...p, description: e.target.value }))
-                }
-                placeholder={t("fieldDescriptionPlaceholder")}
-                className="min-h-[110px]"
-                disabled={isSaving}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="course-cover">{t("fieldCoverImage")}</Label>
-              <p className="text-xs text-gray-500">{t("fieldCoverImageHint")}</p>
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="course-title">{t("fieldTitle")}</Label>
                 <Input
-                  id="course-cover"
-                  type="file"
-                  accept="image/*"
+                  id="course-title"
+                  value={createForm.title}
+                  onChange={(e) =>
+                    setCreateForm((p) => ({ ...p, title: e.target.value }))
+                  }
+                  placeholder={t("fieldTitlePlaceholder")}
                   disabled={isSaving}
-                  className="cursor-pointer text-sm file:mr-3"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0] ?? null;
-                    e.target.value = "";
-                    onCreateCoverFileSelected(file);
-                  }}
+                  required
                 />
-                {createCoverPreview ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="course-description">{t("fieldDescription")}</Label>
+                <Textarea
+                  id="course-description"
+                  value={createForm.description}
+                  onChange={(e) =>
+                    setCreateForm((p) => ({ ...p, description: e.target.value }))
+                  }
+                  placeholder={t("fieldDescriptionPlaceholder")}
+                  className="min-h-[110px]"
+                  disabled={isSaving}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="course-cover">{t("fieldCoverImage")}</Label>
+                <p className="text-xs text-gray-500">{t("fieldCoverImageHint")}</p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Input
+                    id="course-cover"
+                    type="file"
+                    accept="image/*"
                     disabled={isSaving}
-                    onClick={clearCreateCover}
-                  >
-                    {t("removeCover")}
-                  </Button>
+                    className="cursor-pointer text-sm file:mr-3"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] ?? null;
+                      e.target.value = "";
+                      onCreateCoverFileSelected(file);
+                    }}
+                  />
+                  {createCoverPreview ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={isSaving}
+                      onClick={clearCreateCover}
+                    >
+                      {t("removeCover")}
+                    </Button>
+                  ) : null}
+                </div>
+                {createCoverPreview ? (
+                  <div className="relative mt-2 aspect-[16/9] max-h-36 w-full overflow-hidden rounded-lg border border-violet-100 bg-violet-50">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={createCoverPreview}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
                 ) : null}
               </div>
-              {createCoverPreview ? (
-                <div className="relative mt-2 aspect-[16/9] max-h-36 w-full overflow-hidden rounded-lg border border-violet-100 bg-violet-50">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={createCoverPreview}
-                    alt=""
-                    className="h-full w-full object-cover"
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="course-subject">{t("fieldSubject")}</Label>
+                  <SelectMenu
+                    id="course-subject"
+                    value={createForm.subject_id}
+                    onValueChange={(subject_id) =>
+                      setCreateForm((p) => ({ ...p, subject_id }))
+                    }
+                    options={subjectSelectOptions}
+                    disabled={isSaving}
+                    aria-label={t("fieldSubject")}
+                    nestedScrollParentRef={createDialogBodyScrollRef}
+                    triggerClassName={courseFormSelectTrigger}
                   />
                 </div>
-              ) : null}
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="course-subject">{t("fieldSubject")}</Label>
-                <SelectMenu
-                  id="course-subject"
-                  value={createForm.subject_id}
-                  onValueChange={(subject_id) =>
-                    setCreateForm((p) => ({ ...p, subject_id }))
-                  }
-                  options={subjectSelectOptions}
+                <div className="space-y-2">
+                  <Label htmlFor="course-level">{t("fieldLevel")}</Label>
+                  <SelectMenu
+                    id="course-level"
+                    value={createForm.level}
+                    onValueChange={(level) =>
+                      setCreateForm((p) => ({
+                        ...p,
+                        level: level as CourseLevel,
+                      }))
+                    }
+                    options={courseLevelSelectOptions}
+                    disabled={isSaving}
+                    aria-label={t("fieldLevel")}
+                    nestedScrollParentRef={createDialogBodyScrollRef}
+                    triggerClassName={courseFormSelectTrigger}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="course-price">{t("fieldPrice")}</Label>
+                  <Input
+                    id="course-price"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={createForm.price}
+                    onChange={(e) =>
+                      setCreateForm((p) => ({ ...p, price: e.target.value }))
+                    }
+                    disabled={isSaving}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="course-duration">{t("fieldDurationMinutes")}</Label>
+                  <Input
+                    id="course-duration"
+                    type="number"
+                    step="1"
+                    min="30"
+                    value={createForm.duration_minutes}
+                    onChange={(e) =>
+                      setCreateForm((p) => ({
+                        ...p,
+                        duration_minutes: e.target.value,
+                      }))
+                    }
+                    disabled={isSaving}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="course-max">{t("fieldMaxStudents")}</Label>
+                  <Input
+                    id="course-max"
+                    type="number"
+                    step="1"
+                    min="1"
+                    value={createForm.max_students}
+                    onChange={(e) =>
+                      setCreateForm((p) => ({
+                        ...p,
+                        max_students: e.target.value,
+                      }))
+                    }
+                    disabled={isSaving}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <Label htmlFor="course-active">{t("fieldStatus")}</Label>
+                  <p className="text-xs text-gray-500">
+                    {createForm.is_active ? t("activeHint") : t("inactiveHint")}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant={createForm.is_active ? "default" : "outline"}
                   disabled={isSaving}
-                  aria-label={t("fieldSubject")}
-                  nestedScrollParentRef={createDialogBodyScrollRef}
-                  triggerClassName={courseFormSelectTrigger}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="course-level">{t("fieldLevel")}</Label>
-                <SelectMenu
-                  id="course-level"
-                  value={createForm.level}
-                  onValueChange={(level) =>
-                    setCreateForm((p) => ({
-                      ...p,
-                      level: level as CourseLevel,
-                    }))
+                  onClick={() =>
+                    setCreateForm((p) => ({ ...p, is_active: !p.is_active }))
                   }
-                  options={courseLevelSelectOptions}
-                  disabled={isSaving}
-                  aria-label={t("fieldLevel")}
-                  nestedScrollParentRef={createDialogBodyScrollRef}
-                  triggerClassName={courseFormSelectTrigger}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="course-price">{t("fieldPrice")}</Label>
-                <Input
-                  id="course-price"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={createForm.price}
-                  onChange={(e) =>
-                    setCreateForm((p) => ({ ...p, price: e.target.value }))
-                  }
-                  disabled={isSaving}
-                  required
-                />
+                >
+                  {createForm.is_active ? t("active") : t("inactive")}
+                </Button>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="course-duration">{t("fieldDurationMinutes")}</Label>
-                <Input
-                  id="course-duration"
-                  type="number"
-                  step="1"
-                  min="30"
-                  value={createForm.duration_minutes}
-                  onChange={(e) =>
-                    setCreateForm((p) => ({
-                      ...p,
-                      duration_minutes: e.target.value,
-                    }))
-                  }
-                  disabled={isSaving}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="course-max">{t("fieldMaxStudents")}</Label>
-                <Input
-                  id="course-max"
-                  type="number"
-                  step="1"
-                  min="1"
-                  value={createForm.max_students}
-                  onChange={(e) =>
-                    setCreateForm((p) => ({
-                      ...p,
-                      max_students: e.target.value,
-                    }))
-                  }
-                  disabled={isSaving}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between gap-4">
-              <div className="space-y-1">
-                <Label htmlFor="course-active">{t("fieldStatus")}</Label>
-                <p className="text-xs text-gray-500">
-                  {createForm.is_active ? t("activeHint") : t("inactiveHint")}
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant={createForm.is_active ? "default" : "outline"}
-                disabled={isSaving}
-                onClick={() =>
-                  setCreateForm((p) => ({ ...p, is_active: !p.is_active }))
-                }
-              >
-                {createForm.is_active ? t("active") : t("inactive")}
-              </Button>
-            </div>
-
-            {error ? <p className="text-sm text-destructive">{error}</p> : null}
+              {error ? <p className="text-sm text-destructive">{error}</p> : null}
             </div>
 
             <DialogFooter className="mt-2 flex shrink-0 flex-col gap-2 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:px-6">
@@ -928,200 +927,200 @@ export default function TutorCoursesManager({
               ref={editDialogBodyScrollRef}
               className="min-h-0 flex-1 space-y-4 overflow-y-auto overflow-x-visible px-4 pb-4 pt-1 sm:px-6"
             >
-            <div className="space-y-2">
-              <Label htmlFor="edit-course-title">{t("fieldTitle")}</Label>
-              <Input
-                id="edit-course-title"
-                value={editForm.title}
-                onChange={(e) =>
-                  setEditForm((p) => ({ ...p, title: e.target.value }))
-                }
-                disabled={isSaving}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit-course-description">
-                {t("fieldDescription")}
-              </Label>
-              <Textarea
-                id="edit-course-description"
-                value={editForm.description}
-                onChange={(e) =>
-                  setEditForm((p) => ({
-                    ...p,
-                    description: e.target.value,
-                  }))
-                }
-                className="min-h-[110px]"
-                disabled={isSaving}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit-course-cover">{t("fieldCoverImage")}</Label>
-              <p className="text-xs text-gray-500">{t("fieldCoverImageHint")}</p>
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="edit-course-title">{t("fieldTitle")}</Label>
                 <Input
-                  id="edit-course-cover"
-                  type="file"
-                  accept="image/*"
+                  id="edit-course-title"
+                  value={editForm.title}
+                  onChange={(e) =>
+                    setEditForm((p) => ({ ...p, title: e.target.value }))
+                  }
                   disabled={isSaving}
-                  className="cursor-pointer text-sm file:mr-3"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0] ?? null;
-                    e.target.value = "";
-                    onEditCoverFileSelected(file);
-                  }}
+                  required
                 />
-                {editCoverDisplayUrl && !editRemoveCover ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={isSaving}
-                    onClick={markEditCoverRemoved}
-                  >
-                    {t("removeCover")}
-                  </Button>
-                ) : null}
               </div>
-              {editRemoveCover ? (
-                <p className="text-xs text-amber-700">{t("coverWillBeRemoved")}</p>
-              ) : null}
-              {editCoverDisplayUrl ? (
-                <div className="relative mt-2 aspect-[16/9] max-h-36 w-full overflow-hidden rounded-lg border border-violet-100 bg-violet-50">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={editCoverDisplayUrl}
-                    alt=""
-                    className="h-full w-full object-cover"
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-course-description">
+                  {t("fieldDescription")}
+                </Label>
+                <Textarea
+                  id="edit-course-description"
+                  value={editForm.description}
+                  onChange={(e) =>
+                    setEditForm((p) => ({
+                      ...p,
+                      description: e.target.value,
+                    }))
+                  }
+                  className="min-h-[110px]"
+                  disabled={isSaving}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-course-cover">{t("fieldCoverImage")}</Label>
+                <p className="text-xs text-gray-500">{t("fieldCoverImageHint")}</p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Input
+                    id="edit-course-cover"
+                    type="file"
+                    accept="image/*"
+                    disabled={isSaving}
+                    className="cursor-pointer text-sm file:mr-3"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] ?? null;
+                      e.target.value = "";
+                      onEditCoverFileSelected(file);
+                    }}
+                  />
+                  {editCoverDisplayUrl && !editRemoveCover ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={isSaving}
+                      onClick={markEditCoverRemoved}
+                    >
+                      {t("removeCover")}
+                    </Button>
+                  ) : null}
+                </div>
+                {editRemoveCover ? (
+                  <p className="text-xs text-amber-700">{t("coverWillBeRemoved")}</p>
+                ) : null}
+                {editCoverDisplayUrl ? (
+                  <div className="relative mt-2 aspect-[16/9] max-h-36 w-full overflow-hidden rounded-lg border border-violet-100 bg-violet-50">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={editCoverDisplayUrl}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="mt-2 flex aspect-[16/9] max-h-36 w-full items-center justify-center rounded-lg border border-dashed border-violet-200 bg-violet-50/50 text-gray-400">
+                    <ImageIcon className="h-10 w-10" aria-hidden />
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-course-subject">{t("fieldSubject")}</Label>
+                  <SelectMenu
+                    id="edit-course-subject"
+                    value={editForm.subject_id}
+                    onValueChange={(subject_id) =>
+                      setEditForm((p) => ({ ...p, subject_id }))
+                    }
+                    options={subjectSelectOptions}
+                    disabled={isSaving}
+                    aria-label={t("fieldSubject")}
+                    nestedScrollParentRef={editDialogBodyScrollRef}
+                    triggerClassName={courseFormSelectTrigger}
                   />
                 </div>
-              ) : (
-                <div className="mt-2 flex aspect-[16/9] max-h-36 w-full items-center justify-center rounded-lg border border-dashed border-violet-200 bg-violet-50/50 text-gray-400">
-                  <ImageIcon className="h-10 w-10" aria-hidden />
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-course-level">{t("fieldLevel")}</Label>
+                  <SelectMenu
+                    id="edit-course-level"
+                    value={editForm.level}
+                    onValueChange={(level) =>
+                      setEditForm((p) => ({
+                        ...p,
+                        level: level as CourseLevel,
+                      }))
+                    }
+                    options={courseLevelSelectOptions}
+                    disabled={isSaving}
+                    aria-label={t("fieldLevel")}
+                    nestedScrollParentRef={editDialogBodyScrollRef}
+                    triggerClassName={courseFormSelectTrigger}
+                  />
                 </div>
-              )}
-            </div>
+              </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-course-subject">{t("fieldSubject")}</Label>
-                <SelectMenu
-                  id="edit-course-subject"
-                  value={editForm.subject_id}
-                  onValueChange={(subject_id) =>
-                    setEditForm((p) => ({ ...p, subject_id }))
-                  }
-                  options={subjectSelectOptions}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-course-price">{t("fieldPrice")}</Label>
+                  <Input
+                    id="edit-course-price"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={editForm.price}
+                    onChange={(e) =>
+                      setEditForm((p) => ({ ...p, price: e.target.value }))
+                    }
+                    disabled={isSaving}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-course-duration">
+                    {t("fieldDurationMinutes")}
+                  </Label>
+                  <Input
+                    id="edit-course-duration"
+                    type="number"
+                    step="1"
+                    min="30"
+                    value={editForm.duration_minutes}
+                    onChange={(e) =>
+                      setEditForm((p) => ({
+                        ...p,
+                        duration_minutes: e.target.value,
+                      }))
+                    }
+                    disabled={isSaving}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-course-max">{t("fieldMaxStudents")}</Label>
+                  <Input
+                    id="edit-course-max"
+                    type="number"
+                    step="1"
+                    min="1"
+                    value={editForm.max_students}
+                    onChange={(e) =>
+                      setEditForm((p) => ({
+                        ...p,
+                        max_students: e.target.value,
+                      }))
+                    }
+                    disabled={isSaving}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <Label htmlFor="edit-course-active">{t("fieldStatus")}</Label>
+                  <p className="text-xs text-gray-500">
+                    {editForm.is_active ? t("activeHint") : t("inactiveHint")}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant={editForm.is_active ? "default" : "outline"}
                   disabled={isSaving}
-                  aria-label={t("fieldSubject")}
-                  nestedScrollParentRef={editDialogBodyScrollRef}
-                  triggerClassName={courseFormSelectTrigger}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="edit-course-level">{t("fieldLevel")}</Label>
-                <SelectMenu
-                  id="edit-course-level"
-                  value={editForm.level}
-                  onValueChange={(level) =>
-                    setEditForm((p) => ({
-                      ...p,
-                      level: level as CourseLevel,
-                    }))
+                  onClick={() =>
+                    setEditForm((p) => ({ ...p, is_active: !p.is_active }))
                   }
-                  options={courseLevelSelectOptions}
-                  disabled={isSaving}
-                  aria-label={t("fieldLevel")}
-                  nestedScrollParentRef={editDialogBodyScrollRef}
-                  triggerClassName={courseFormSelectTrigger}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-course-price">{t("fieldPrice")}</Label>
-                <Input
-                  id="edit-course-price"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={editForm.price}
-                  onChange={(e) =>
-                    setEditForm((p) => ({ ...p, price: e.target.value }))
-                  }
-                  disabled={isSaving}
-                  required
-                />
+                >
+                  {editForm.is_active ? t("active") : t("inactive")}
+                </Button>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="edit-course-duration">
-                  {t("fieldDurationMinutes")}
-                </Label>
-                <Input
-                  id="edit-course-duration"
-                  type="number"
-                  step="1"
-                  min="30"
-                  value={editForm.duration_minutes}
-                  onChange={(e) =>
-                    setEditForm((p) => ({
-                      ...p,
-                      duration_minutes: e.target.value,
-                    }))
-                  }
-                  disabled={isSaving}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="edit-course-max">{t("fieldMaxStudents")}</Label>
-                <Input
-                  id="edit-course-max"
-                  type="number"
-                  step="1"
-                  min="1"
-                  value={editForm.max_students}
-                  onChange={(e) =>
-                    setEditForm((p) => ({
-                      ...p,
-                      max_students: e.target.value,
-                    }))
-                  }
-                  disabled={isSaving}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between gap-4">
-              <div className="space-y-1">
-                <Label htmlFor="edit-course-active">{t("fieldStatus")}</Label>
-                <p className="text-xs text-gray-500">
-                  {editForm.is_active ? t("activeHint") : t("inactiveHint")}
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant={editForm.is_active ? "default" : "outline"}
-                disabled={isSaving}
-                onClick={() =>
-                  setEditForm((p) => ({ ...p, is_active: !p.is_active }))
-                }
-              >
-                {editForm.is_active ? t("active") : t("inactive")}
-              </Button>
-            </div>
-
-            {error ? <p className="text-sm text-destructive">{error}</p> : null}
+              {error ? <p className="text-sm text-destructive">{error}</p> : null}
             </div>
 
             <DialogFooter className="mt-2 flex shrink-0 flex-col gap-2 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:px-6">

@@ -277,7 +277,8 @@
       "noMessagesYet": "No messages yet.",
       "messagePlaceholder": "Write a message...",
       "sending": "Sending...",
-      "send": "Send"
+      "send": "Send",
+      "notAuthenticated": "You must be logged in to use messaging."
     }
   },
 
@@ -556,15 +557,20 @@
     "dateOfBirth": "Date of Birth",
     "country": "Country",
     "selectCountry": "Select a country",
+    "countrySearchPlaceholder": "Search country…",
+    "countrySearchEmpty": "No countries match your search",
     "uploadNewPhoto": "Upload new photo",
     "profilePicturePreviewAlt": "Profile picture preview",
     "invalidImageType": "Please select a valid image file",
     "bio": "Bio",
     "bioPlaceholder": "Tell us about yourself and your teaching experience",
     "experiencePlaceholder": "e.g., 5 years",
+    "certifications": "Certifications",
+    "certificationsPlaceholder": "e.g., TEFL, Cambridge CELTA, Master's in Education...",
     "save": "Save Changes",
     "saving": "Saving...",
     "cancel": "Cancel",
+    "loading": "Loading...",
     "profileUpdated": "Profile updated successfully",
     "updateError": "Failed to update profile",
     "loadError": "Failed to load teacher profile",
@@ -614,6 +620,13 @@
       "deleted": "Subject deleted successfully."
     },
     "coursesManager": {
+      "heroEyebrow": "Curriculum builder",
+      "heroTitle": "Design your next course",
+      "heroDescription": "Configure your class details and publish a premium experience for your students.",
+      "statTotalCourses": "Total courses",
+      "statPublished": "Published",
+      "statStatus": "Status",
+      "readyToCreate": "Ready to create",
       "title": "Your Courses",
       "description": "Create and manage the courses shown on your public profile.",
       "loading": "Loading...",
@@ -803,7 +816,8 @@
       "noMessagesYet": "No messages yet.",
       "messagePlaceholder": "Write a message...",
       "sending": "Sending...",
-      "send": "Send"
+      "send": "Send",
+      "notAuthenticated": "You must be logged in to use messaging."
     }
   },
   "settingsPage": {
@@ -1211,7 +1225,8 @@
       "noMessagesYet": "No messages yet.",
       "messagePlaceholder": "Write a message...",
       "sending": "Sending...",
-      "send": "Send"
+      "send": "Send",
+      "notAuthenticated": "You must be logged in to use messaging."
     }
   },
   "notificationsPage": {

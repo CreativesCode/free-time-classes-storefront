@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { fetchTutorReviewStatsMap } from "@/lib/supabase/tutor-review-stats";
 import TutorDashboardClient from "./TutorDashboardClient";
 import type { Booking } from "@/types/booking";
 import type { LessonWithRelations } from "@/types/lesson";
@@ -127,10 +128,13 @@ export default async function TutorDashboardPage({
     0
   );
 
+  const reviewStatsMap = await fetchTutorReviewStatsMap(supabase, [user.id]);
+  const fromReviews = reviewStatsMap?.get(user.id);
   const stats: DashboardStats = {
     classesThisMonth,
     pendingRequests: pendingCountRes.count ?? pendingItems.length,
-    avgRating: tutorProfileRes.data?.rating ?? null,
+    avgRating:
+      fromReviews?.rating ?? tutorProfileRes.data?.rating ?? null,
     earningsThisMonth,
   };
 

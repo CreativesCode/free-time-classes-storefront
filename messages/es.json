@@ -277,7 +277,8 @@
       "noMessagesYet": "Aún no hay mensajes.",
       "messagePlaceholder": "Escribe un mensaje...",
       "sending": "Enviando...",
-      "send": "Enviar"
+      "send": "Enviar",
+      "notAuthenticated": "Debes iniciar sesión para usar la mensajería."
     }
   },
   "navigation": {
@@ -555,15 +556,20 @@
     "dateOfBirth": "Fecha de Nacimiento",
     "country": "País",
     "selectCountry": "Selecciona un país",
+    "countrySearchPlaceholder": "Buscar país…",
+    "countrySearchEmpty": "Ningún país coincide con tu búsqueda",
     "uploadNewPhoto": "Subir nueva foto",
     "profilePicturePreviewAlt": "Vista previa de la foto de perfil",
     "invalidImageType": "Selecciona un archivo de imagen válido",
     "bio": "Biografía",
     "bioPlaceholder": "Cuéntanos sobre ti y tu experiencia docente",
     "experiencePlaceholder": "ej., 5 años",
+    "certifications": "Certificaciones",
+    "certificationsPlaceholder": "ej., TEFL, Cambridge CELTA, Máster en Educación...",
     "save": "Guardar Cambios",
     "saving": "Guardando...",
     "cancel": "Cancelar",
+    "loading": "Cargando...",
     "profileUpdated": "Perfil actualizado con éxito",
     "updateError": "Error al actualizar el perfil",
     "loadError": "No se pudo cargar el perfil del profesor",
@@ -613,6 +619,13 @@
       "deleted": "Materia eliminada correctamente."
     },
     "coursesManager": {
+      "heroEyebrow": "Diseño curricular",
+      "heroTitle": "Diseña tu próximo curso",
+      "heroDescription": "Configura los detalles de tu clase y publica una experiencia premium para tus estudiantes.",
+      "statTotalCourses": "Cursos totales",
+      "statPublished": "Publicados",
+      "statStatus": "Estado",
+      "readyToCreate": "Listo para crear",
       "title": "Tus Cursos",
       "description": "Crea y administra los cursos que se muestran en tu perfil público.",
       "loading": "Cargando...",
@@ -802,7 +815,8 @@
       "noMessagesYet": "Aún no hay mensajes.",
       "messagePlaceholder": "Escribe un mensaje...",
       "sending": "Enviando...",
-      "send": "Enviar"
+      "send": "Enviar",
+      "notAuthenticated": "Debes iniciar sesión para usar la mensajería."
     }
   },
   "settingsPage": {
@@ -1210,7 +1224,8 @@
       "noMessagesYet": "Aún no hay mensajes.",
       "messagePlaceholder": "Escribe un mensaje...",
       "sending": "Enviando...",
-      "send": "Enviar"
+      "send": "Enviar",
+      "notAuthenticated": "Debes iniciar sesión para usar la mensajería."
     }
   },
   "notificationsPage": {

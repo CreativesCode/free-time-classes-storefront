@@ -2,6 +2,10 @@ import { redirect } from "next/navigation";
 
 import { resolveCourseTutorUser } from "@/lib/supabase/course-tutor";
 import { createClient } from "@/lib/supabase/server";
+import {
+  fetchTutorReviewStatsMap,
+  mergeTutorProfileReviewStats,
+} from "@/lib/supabase/tutor-review-stats";
 import type { Course, CourseWithRelations } from "@/types/course";
 import type { Subject } from "@/types/subject";
 import type { TutorProfile } from "@/types/tutor";
@@ -104,7 +108,14 @@ export default async function TeacherProfilePage({
       .order("created_at", { ascending: false }),
   ]);
 
-  const initialTutorProfile = (profileRes.data ?? null) as TutorProfile | null;
+  let initialTutorProfile = (profileRes.data ?? null) as TutorProfile | null;
+  if (initialTutorProfile) {
+    const reviewStats = await fetchTutorReviewStatsMap(supabase, [authUser.id]);
+    initialTutorProfile = mergeTutorProfileReviewStats(
+      initialTutorProfile,
+      reviewStats
+    );
+  }
   const initialSubjects = subjectsRes.error
     ? []
     : flattenTutorSubjects(subjectsRes.data);

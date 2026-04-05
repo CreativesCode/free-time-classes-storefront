@@ -16,7 +16,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+const MESSAGING_LOAD_TIMEOUT_MS = 45_000;
 import { toast } from "sonner";
 import { ArrowLeft, MessageCircle, Search, SendHorizontal } from "lucide-react";
 
@@ -45,6 +47,9 @@ export default function InternalMessagingPanel({
   const locale = useLocale();
   const t = useTranslations(namespace);
   const tm = useTranslations(`${namespace}.messaging`);
+  const tmRef = useRef(tm);
+  tmRef.current = tm;
+  const loadRequestIdRef = useRef(0);
 
   const [loading, setLoading] = useState(true);
   const [conversations, setConversations] = useState<ConversationListItem[]>([]);
@@ -127,22 +132,31 @@ export default function InternalMessagingPanel({
   const hasConversationData = conversations.length > 0 || contacts.length > 0;
 
   useEffect(() => {
+    const requestId = ++loadRequestIdRef.current;
     let cancelled = false;
+
     async function loadInitial() {
       if (authLoading) return;
       if (!user?.id) {
-        if (!cancelled) setLoading(false);
+        if (!cancelled && loadRequestIdRef.current === requestId) setLoading(false);
         return;
       }
       try {
         setLoading(true);
-        const [list, bookingContacts, favoriteContacts, pendingContacts] = await Promise.all([
+        const loadPromise = Promise.all([
           getUserConversations(user.id),
           getMessagingContacts(user.id),
           getFavoriteMessagingContacts(user.id),
           getPendingContacts(),
         ]);
-        if (cancelled) return;
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error("messaging_load_timeout")), MESSAGING_LOAD_TIMEOUT_MS);
+        });
+        const [list, bookingContacts, favoriteContacts, pendingContacts] = await Promise.race([
+          loadPromise,
+          timeoutPromise,
+        ]);
+        if (cancelled || loadRequestIdRef.current !== requestId) return;
         setConversations(list);
         const mergedById = new Map<string, MessageContact>();
         for (const group of [bookingContacts, favoriteContacts, pendingContacts]) {
@@ -161,16 +175,20 @@ export default function InternalMessagingPanel({
         }
       } catch (e) {
         console.error("Error loading messaging module:", e);
-        toast.error(tm("loadError"));
+        if (!cancelled && loadRequestIdRef.current === requestId) {
+          toast.error(tmRef.current("loadError"));
+        }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled && loadRequestIdRef.current === requestId) {
+          setLoading(false);
+        }
       }
     }
     void loadInitial();
     return () => {
       cancelled = true;
     };
-  }, [authLoading, getPendingContacts, user?.id, tm]);
+  }, [authLoading, getPendingContacts, user?.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -219,14 +237,14 @@ export default function InternalMessagingPanel({
         );
       } catch (e) {
         console.error("Error loading conversation messages:", e);
-        toast.error(tm("loadMessagesError"));
+        toast.error(tmRef.current("loadMessagesError"));
       }
     }
     void loadMessages();
     return () => {
       cancelled = true;
     };
-  }, [selectedConversationId, user?.id, tm]);
+  }, [selectedConversationId, user?.id]);
 
   const startConversation = async (contactId: string) => {
     if (!user?.id) return;
@@ -283,10 +301,18 @@ export default function InternalMessagingPanel({
     setShowMobileChat(true);
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="rounded-md border border-violet-100 bg-white/80 px-6 py-12 text-center text-sm font-medium text-violet-500 shadow-sm">
         {t("loading")}
+      </div>
+    );
+  }
+
+  if (!user?.id) {
+    return (
+      <div className="rounded-md border border-violet-100 bg-white/80 px-6 py-12 text-center text-sm text-violet-600 shadow-sm">
+        {tm("notAuthenticated")}
       </div>
     );
   }

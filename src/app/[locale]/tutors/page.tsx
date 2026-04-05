@@ -1,4 +1,8 @@
 import type { Subject } from "@/types/subject";
+import {
+  fetchTutorReviewStatsMap,
+  mergeTutorProfileReviewStats,
+} from "@/lib/supabase/tutor-review-stats";
 import { createCatalogServerClient } from "@/lib/supabase/server-public";
 import { unstable_cache } from "next/cache";
 import { Suspense } from "react";
@@ -132,21 +136,29 @@ const getTutorsPageDataCached = unstable_cache(
       subjectListsByTutorId.set(tid, list);
     }
 
-    const initialTutors: EnrichedTutor[] = profiles.map((tutor) => ({
-      ...tutor,
-      experience_years:
-        tutor.experience_years ?? tutor.years_of_experience ?? null,
-      subjects: subjectListsByTutorId.get(tutor.id) ?? [],
-      coursesCount: courseCountByTutor.get(tutor.id) ?? 0,
-      min_course_price: minCoursePriceByTutor.get(tutor.id) ?? null,
-    }));
+    const reviewStats = await fetchTutorReviewStatsMap(
+      supabase,
+      tutorIdsWithCourses
+    );
+
+    const initialTutors: EnrichedTutor[] = profiles.map((tutor) => {
+      const merged = mergeTutorProfileReviewStats(tutor, reviewStats);
+      return {
+        ...merged,
+        experience_years:
+          tutor.experience_years ?? tutor.years_of_experience ?? null,
+        subjects: subjectListsByTutorId.get(tutor.id) ?? [],
+        coursesCount: courseCountByTutor.get(tutor.id) ?? 0,
+        min_course_price: minCoursePriceByTutor.get(tutor.id) ?? null,
+      };
+    });
 
     return {
       initialTutors,
       subjectsData: (subjectsData ?? []) as Subject[],
     };
   },
-  ["public-tutors-page-v4"],
+  ["public-tutors-page-v5"],
   { revalidate: 3600, tags: ["tutors", "subjects", "courses"] }
 );
 
