@@ -39,11 +39,30 @@ export async function getBookingsByTutor(tutorId: string): Promise<Booking[]> {
   return (data || []) as Booking[];
 }
 
+/** Estados que siempre permiten reseña (coincide con RLS en Supabase, salvo excepción `pending`). */
+export const BOOKING_STATUSES_ELIGIBLE_FOR_REVIEW: Booking["status"][] = [
+  "completed",
+  "confirmed",
+];
+
 /**
- * Get completed bookings for a student filtered by lesson IDs.
- * Used to map completed lessons to booking IDs (to attach a review).
+ * Coincide con la política `reviews_student_insert` (incl. pending si la lección está completada).
  */
-export async function getCompletedBookingsByStudentAndLessonIds(
+export function isBookingStatusEligibleForReview(
+  status: Booking["status"],
+  options?: { lessonCompleted?: boolean }
+): boolean {
+  if (BOOKING_STATUSES_ELIGIBLE_FOR_REVIEW.includes(status)) return true;
+  if (options?.lessonCompleted && status === "pending") return true;
+  return false;
+}
+
+/**
+ * Todas las reservas del estudiante vinculadas a las lecciones indicadas (cualquier estado).
+ * El filtrado por estado elegible para reseña se hace en el cliente para manejar varias
+ * reservas por lección y no perder filas por restricciones demasiado estrechas en SQL.
+ */
+export async function getBookingsByStudentAndLessonIds(
   studentId: string,
   lessonIds: number[]
 ): Promise<Booking[]> {
@@ -53,10 +72,6 @@ export async function getCompletedBookingsByStudentAndLessonIds(
     .from("bookings")
     .select("id, lesson_id, tutor_id, student_id, status, created_at, updated_at")
     .eq("student_id", studentId)
-    // En esta app, a veces el estado "finalizado" se refleja como `confirmed`
-    // mientras que `lessons.status` es el que indica completitud.
-    // Permitimos ambos para que el historial mapee la reseña correctamente.
-    .in("status", ["completed", "confirmed"])
     .in("lesson_id", lessonIds);
 
   if (error) throw error;

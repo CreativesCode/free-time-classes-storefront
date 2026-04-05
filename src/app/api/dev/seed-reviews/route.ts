@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { NextResponse } from "next/server";
 
 const noStoreJson = (body: unknown, init?: ResponseInit) =>
   NextResponse.json(body, {
@@ -65,13 +65,29 @@ export async function POST() {
     }
     const subjectId = subjects[0].id as number;
 
+    // Find a tutor that is NOT the current user so the lesson shows a different name.
+    const { data: otherTutors, error: tutorError } = await admin
+      .from("tutor_profiles")
+      .select("id")
+      .neq("id", userId)
+      .limit(1);
+
+    let tutorId: string;
+
+    if (tutorError || !otherTutors || otherTutors.length === 0) {
+      // No other tutor exists — fall back to current user (self-demo).
+      tutorId = userId;
+    } else {
+      tutorId = otherTutors[0].id as string;
+    }
+
     const scheduledAt = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
     // Create a completed lesson.
     const { data: lesson, error: lessonError } = await admin
       .from("lessons")
       .insert({
-        tutor_id: userId,
+        tutor_id: tutorId,
         student_id: userId,
         subject_id: subjectId,
         price: 0,
@@ -95,12 +111,9 @@ export async function POST() {
       .from("bookings")
       .insert({
         student_id: userId,
-        tutor_id: userId,
+        tutor_id: tutorId,
         lesson_id: lesson.id,
         requested_date: scheduledAt,
-        // En muchos entornos del proyecto el estado que existe en DB es `confirmed`
-        // (el check constraint suele no permitir `completed`).
-        // Para el seed nos sirve `confirmed` y dejamos que `lessons.status` marque completitud.
         status: "confirmed",
       })
       .select("id")
@@ -122,7 +135,7 @@ export async function POST() {
       .insert({
         booking_id: booking.id,
         student_id: userId,
-        tutor_id: userId,
+        tutor_id: tutorId,
         rating,
         comment,
       })

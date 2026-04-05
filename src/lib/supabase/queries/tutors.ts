@@ -1,5 +1,5 @@
-import type { TutorProfile, TutorSubject } from "@/types/tutor";
 import type { Subject } from "@/types/subject";
+import type { TutorProfile, TutorSubject } from "@/types/tutor";
 import type { User } from "@/types/user";
 import { createClient } from "../client";
 
@@ -28,6 +28,54 @@ export async function getTutorProfile(id: string): Promise<TutorProfile | null> 
 /**
  * Get tutor profile with user data
  */
+export type TutorDisplayRow = {
+  tutorId: string;
+  user: Pick<User, "id" | "username" | "email" | "profile_picture">;
+};
+
+/**
+ * Datos públicos del tutor para listados (historial, etc.).
+ * Parte de `tutor_profiles` y el FK a `users` para no mezclar con el estudiante al anidar desde `lessons`.
+ */
+export async function getTutorDisplayRowsByIds(
+  tutorIds: string[]
+): Promise<Record<string, TutorDisplayRow["user"]>> {
+  if (tutorIds.length === 0) return {};
+
+  const unique = [...new Set(tutorIds)];
+  const { data, error } = await supabase
+    .from("tutor_profiles")
+    .select(
+      `
+      id,
+      user:users!tutor_profiles_id_fkey (
+        id,
+        username,
+        email,
+        profile_picture
+      )
+    `
+    )
+    .in("id", unique);
+
+  if (error) throw error;
+
+  const map: Record<string, TutorDisplayRow["user"]> = {};
+  for (const row of data || []) {
+    const tid = row.id as string;
+    const u = row.user as TutorDisplayRow["user"] | null | undefined;
+    if (u?.id) {
+      map[tid] = {
+        id: u.id,
+        username: u.username,
+        email: u.email,
+        profile_picture: u.profile_picture ?? null,
+      };
+    }
+  }
+  return map;
+}
+
 export async function getTutorProfileWithUser(
   id: string
 ): Promise<(TutorProfile & { user: User }) | null> {

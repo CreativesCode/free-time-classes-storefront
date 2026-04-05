@@ -1,29 +1,134 @@
 "use client";
 
+import LeaveReviewModal from "@/components/student/LeaveReviewModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getPublicUrl } from "@/lib/supabase/storage";
+import { useAuth } from "@/context/UserContext";
+import { useTranslations } from "@/i18n/translations";
+import {
+  getBookingsByStudentAndLessonIds,
+  isBookingStatusEligibleForReview,
+} from "@/lib/supabase/queries/bookings";
+import { getLessonsWithRelations } from "@/lib/supabase/queries/lessons";
+import {
+  getReviewsByStudentAndBookingIds,
+  getReviewsByStudentAndLessonIds,
+} from "@/lib/supabase/queries/reviews";
 import {
   addFavoriteTutor,
   getFavoriteTutorIds,
   removeFavoriteTutor,
 } from "@/lib/supabase/queries/studentFavorites";
-import {
-  getCompletedBookingsByStudentAndLessonIds,
-} from "@/lib/supabase/queries/bookings";
-import { getLessonsWithRelations } from "@/lib/supabase/queries/lessons";
-import { getReviewsByStudentAndBookingIds } from "@/lib/supabase/queries/reviews";
+import { getPublicUrl } from "@/lib/supabase/storage";
+import { cn } from "@/lib/utils";
+import type { Booking } from "@/types/booking";
 import type { LessonWithRelations } from "@/types/lesson";
 import type { Review } from "@/types/review";
-import { useAuth } from "@/context/UserContext";
-import { useTranslations } from "@/i18n/translations";
-import { toast } from "sonner";
-import { Calendar, Star, StarOff } from "lucide-react";
+import { Calendar, Star } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import LeaveReviewModal from "@/components/student/LeaveReviewModal";
+import { toast } from "sonner";
 
-export default function LessonHistoryTable() {
+type TutorUserInfo = {
+  id: string;
+  username: string;
+  email: string;
+  profile_picture?: string | null;
+};
+
+/**
+ * Reseña por `lesson_id` (sin booking) o por reservas de la lección.
+ */
+function resolveReviewForLesson(
+  lessonId: number,
+  lessonTutorId: string,
+  lessonCompleted: boolean,
+  bookings: Pick<Booking, "id" | "lesson_id" | "tutor_id" | "status">[],
+  reviewsByBookingId: Record<number, Review>,
+  reviewsByLessonId: Record<number, Review>
+): {
+  review: Review | null;
+  bookingForNewReview: { bookingId: number; tutorId: string } | null;
+  lessonForNewReview: { lessonId: number; tutorId: string } | null;
+  hasBookingButCannotReview: boolean;
+} {
+  const byLesson = reviewsByLessonId[lessonId];
+  if (byLesson) {
+    return {
+      review: byLesson,
+      bookingForNewReview: null,
+      lessonForNewReview: null,
+      hasBookingButCannotReview: false,
+    };
+  }
+
+  const forLesson = bookings.filter((b) => b.lesson_id === lessonId);
+  const eligible = forLesson.filter((b) =>
+    isBookingStatusEligibleForReview(b.status, { lessonCompleted })
+  );
+
+  let review: Review | null = null;
+  for (const b of eligible) {
+    const r = reviewsByBookingId[b.id];
+    if (r) {
+      review = r;
+      break;
+    }
+  }
+  if (!review) {
+    for (const b of forLesson) {
+      const r = reviewsByBookingId[b.id];
+      if (r) {
+        review = r;
+        break;
+      }
+    }
+  }
+
+  if (review) {
+    return {
+      review,
+      bookingForNewReview: null,
+      lessonForNewReview: null,
+      hasBookingButCannotReview: false,
+    };
+  }
+
+  const unratedEligible = eligible.filter((b) => !reviewsByBookingId[b.id]);
+  if (unratedEligible.length > 0) {
+    const chosen = [...unratedEligible].sort((a, b) => b.id - a.id)[0];
+    return {
+      review: null,
+      bookingForNewReview: {
+        bookingId: chosen.id,
+        tutorId: chosen.tutor_id,
+      },
+      lessonForNewReview: null,
+      hasBookingButCannotReview: false,
+    };
+  }
+
+  if (lessonCompleted) {
+    return {
+      review: null,
+      bookingForNewReview: null,
+      lessonForNewReview: { lessonId, tutorId: lessonTutorId },
+      hasBookingButCannotReview: false,
+    };
+  }
+
+  return {
+    review: null,
+    bookingForNewReview: null,
+    lessonForNewReview: null,
+    hasBookingButCannotReview: forLesson.length > 0,
+  };
+}
+
+export default function LessonHistoryTable(props: {
+  favoritesRevision?: number;
+  onFavoritesChanged?: () => void;
+}) {
   const { user } = useAuth();
   const t = useTranslations("studentProfile");
   // Keep demo-seed capability in code, but hidden by default.
@@ -34,17 +139,18 @@ export default function LessonHistoryTable() {
   const [lessons, setLessons] = useState<LessonWithRelations[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  type BookingForLesson = { bookingId: number; tutorId: string };
-  const [bookingsByLessonId, setBookingsByLessonId] = useState<
-    Record<number, BookingForLesson>
-  >({});
+  const [historyBookings, setHistoryBookings] = useState<Booking[]>([]);
   const [reviewsByBookingId, setReviewsByBookingId] = useState<
+    Record<number, Review>
+  >({});
+  const [reviewsByLessonId, setReviewsByLessonId] = useState<
     Record<number, Review>
   >({});
 
   const [leaveReviewOpen, setLeaveReviewOpen] = useState(false);
-  const [selectedReviewBooking, setSelectedReviewBooking] = useState<{
-    bookingId: number;
+  const [selectedReviewTarget, setSelectedReviewTarget] = useState<{
+    bookingId: number | null;
+    lessonId: number | null;
     tutorId: string;
   } | null>(null);
 
@@ -77,7 +183,7 @@ export default function LessonHistoryTable() {
     return () => {
       cancelled = true;
     };
-  }, [user?.id]);
+  }, [user?.id, props.favoritesRevision]);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,33 +222,40 @@ export default function LessonHistoryTable() {
           const lessonIds = sorted.map((l) => l.id);
           const bookings =
             lessonIds.length > 0
-              ? await getCompletedBookingsByStudentAndLessonIds(user.id, lessonIds)
+              ? await getBookingsByStudentAndLessonIds(user.id, lessonIds)
               : [];
 
           if (cancelled) return;
 
-          const nextBookingsByLessonId: Record<number, BookingForLesson> = {};
-          for (const b of bookings) {
-            if (b.lesson_id) {
-              nextBookingsByLessonId[b.lesson_id] = {
-                bookingId: b.id,
-                tutorId: b.tutor_id,
-              };
-            }
-          }
-          setBookingsByLessonId(nextBookingsByLessonId);
+          setHistoryBookings(bookings);
 
           const bookingIds = bookings.map((b) => b.id);
-          const reviews =
+          const [bookingReviews, lessonReviews] = await Promise.all([
             bookingIds.length > 0
-              ? await getReviewsByStudentAndBookingIds(user.id, bookingIds)
-              : [];
+              ? getReviewsByStudentAndBookingIds(user.id, bookingIds)
+              : Promise.resolve([] as Review[]),
+            lessonIds.length > 0
+              ? getReviewsByStudentAndLessonIds(user.id, lessonIds)
+              : Promise.resolve([] as Review[]),
+          ]);
+
+          if (cancelled) return;
 
           const nextReviewsByBookingId: Record<number, Review> = {};
-          for (const r of reviews) {
-            nextReviewsByBookingId[r.booking_id] = r;
+          for (const r of bookingReviews) {
+            if (r.booking_id != null) {
+              nextReviewsByBookingId[r.booking_id] = r;
+            }
           }
           setReviewsByBookingId(nextReviewsByBookingId);
+
+          const nextReviewsByLessonId: Record<number, Review> = {};
+          for (const r of lessonReviews) {
+            if (r.lesson_id != null) {
+              nextReviewsByLessonId[r.lesson_id] = r;
+            }
+          }
+          setReviewsByLessonId(nextReviewsByLessonId);
         } catch (e) {
           console.error("[reviews] Failed loading booking/review info:", e);
         }
@@ -211,6 +324,7 @@ export default function LessonHistoryTable() {
         });
         toast.success(t("favoriteAdded"));
       }
+      props.onFavoritesChanged?.();
     } catch (e) {
       console.error("Error toggling favorite tutor:", e);
       toast.error(t("favoriteToggleError"));
@@ -265,13 +379,22 @@ export default function LessonHistoryTable() {
               </thead>
               <tbody>
                 {lessons.map((lesson) => {
-                  const bookingInfo = bookingsByLessonId[lesson.id];
-                  const review =
-                    bookingInfo && reviewsByBookingId[bookingInfo.bookingId]
-                      ? reviewsByBookingId[bookingInfo.bookingId]
-                      : null;
+                  const lessonCompleted = lesson.status === "completed";
+                  const {
+                    review,
+                    bookingForNewReview,
+                    lessonForNewReview,
+                    hasBookingButCannotReview,
+                  } = resolveReviewForLesson(
+                    lesson.id,
+                    lesson.tutor_id,
+                    lessonCompleted,
+                    historyBookings,
+                    reviewsByBookingId,
+                    reviewsByLessonId
+                  );
 
-                  const tutor = lesson.tutor?.user;
+                  const tutor: TutorUserInfo | null = lesson.tutor?.user ?? null;
                   const tutorProfilePicture = tutor?.profile_picture;
                   const tutorAvatarUrl =
                     tutorProfilePicture && typeof tutorProfilePicture === "string"
@@ -321,8 +444,8 @@ export default function LessonHistoryTable() {
                           <span>
                             {lesson.scheduled_date_time
                               ? new Date(
-                                  lesson.scheduled_date_time
-                                ).toLocaleString()
+                                lesson.scheduled_date_time
+                              ).toLocaleString()
                               : "—"}
                           </span>
                         </div>
@@ -342,42 +465,76 @@ export default function LessonHistoryTable() {
                               {review.rating}/5
                             </span>
                           </div>
-                        ) : bookingInfo ? (
+                        ) : bookingForNewReview || lessonForNewReview ? (
                           <Button
-                            variant="outline"
+                            type="button"
                             size="sm"
-                            className="h-9"
+                            className="h-9 gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-r from-violet-600 to-violet-700 px-3.5 text-xs font-semibold text-white shadow-sm hover:opacity-95 sm:text-sm"
                             onClick={() => {
-                              setSelectedReviewBooking({
-                                bookingId: bookingInfo.bookingId,
-                                tutorId: bookingInfo.tutorId,
-                              });
+                              if (bookingForNewReview) {
+                                setSelectedReviewTarget({
+                                  bookingId: bookingForNewReview.bookingId,
+                                  lessonId: null,
+                                  tutorId: bookingForNewReview.tutorId,
+                                });
+                              } else if (lessonForNewReview) {
+                                setSelectedReviewTarget({
+                                  bookingId: null,
+                                  lessonId: lessonForNewReview.lessonId,
+                                  tutorId: lessonForNewReview.tutorId,
+                                });
+                              }
                               setLeaveReviewOpen(true);
                             }}
                           >
+                            <Star className="h-3.5 w-3.5 shrink-0 fill-white text-white" />
                             {t("leaveReview")}
                           </Button>
+                        ) : hasBookingButCannotReview ? (
+                          <span
+                            className="max-w-[10rem] text-gray-500 text-xs leading-snug"
+                            title={t("reviewUnavailableShort")}
+                          >
+                            {t("reviewUnavailableShort")}
+                          </span>
                         ) : (
-                          <span className="text-gray-500 text-xs">—</span>
+                          <span
+                            className="max-w-[11rem] text-gray-500 text-xs leading-snug"
+                            title={t("reviewNoBookingHint")}
+                          >
+                            {t("reviewNoBookingHint")}
+                          </span>
                         )}
                       </td>
 
                       <td className="py-3">
                         <Button
-                          variant="outline"
+                          type="button"
+                          variant="ghost"
                           size="icon"
-                          className="h-9 w-9"
+                          className={cn(
+                            "h-9 w-9 shrink-0 rounded-full border transition-colors",
+                            isFavorited
+                              ? "border-violet-500 bg-violet-100 text-violet-700 hover:bg-violet-200 hover:text-violet-900"
+                              : "border-violet-200/90 bg-white text-violet-400 hover:border-violet-400 hover:bg-violet-50 hover:text-violet-600"
+                          )}
                           onClick={() => toggleFavorite(lesson.tutor_id)}
                           disabled={favoriteActionLoading === lesson.tutor_id}
+                          aria-pressed={isFavorited}
                           aria-label={
                             isFavorited ? t("unfavorite") : t("favorite")
                           }
                         >
-                          {isFavorited ? (
-                            <StarOff className="h-4 w-4" />
-                          ) : (
-                            <Star className="h-4 w-4" />
-                          )}
+                          <Star
+                            className={cn(
+                              "h-4 w-4",
+                              isFavorited
+                                ? "fill-violet-600 text-violet-600"
+                                : "text-violet-400"
+                            )}
+                            fill={isFavorited ? "currentColor" : "none"}
+                            strokeWidth={isFavorited ? 0 : 2}
+                          />
                         </Button>
                       </td>
                     </tr>
@@ -406,15 +563,24 @@ export default function LessonHistoryTable() {
         open={leaveReviewOpen}
         onOpenChange={(open) => {
           setLeaveReviewOpen(open);
-          if (!open) setSelectedReviewBooking(null);
+          if (!open) setSelectedReviewTarget(null);
         }}
-        bookingId={selectedReviewBooking?.bookingId ?? null}
-        tutorId={selectedReviewBooking?.tutorId ?? null}
+        bookingId={selectedReviewTarget?.bookingId ?? null}
+        lessonId={selectedReviewTarget?.lessonId ?? null}
+        tutorId={selectedReviewTarget?.tutorId ?? null}
         onCreated={(created) => {
-          setReviewsByBookingId((prev) => ({
-            ...prev,
-            [created.booking_id]: created,
-          }));
+          if (created.booking_id != null) {
+            setReviewsByBookingId((prev) => ({
+              ...prev,
+              [created.booking_id]: created,
+            }));
+          }
+          if (created.lesson_id != null) {
+            setReviewsByLessonId((prev) => ({
+              ...prev,
+              [created.lesson_id]: created,
+            }));
+          }
         }}
       />
     </Card>

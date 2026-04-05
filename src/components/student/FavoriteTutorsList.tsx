@@ -5,24 +5,30 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/context/UserContext";
 import { useTranslations } from "@/i18n/translations";
-import { getFavoriteTutorsWithProfile, removeFavoriteTutor } from "@/lib/supabase/queries/studentFavorites";
+import {
+  type FavoriteTutorWithProfile,
+  getFavoriteTutorsWithProfile,
+  removeFavoriteTutor,
+} from "@/lib/supabase/queries/studentFavorites";
 import { getPublicUrl } from "@/lib/supabase/storage";
-import type { TutorProfile } from "@/types/tutor";
-import type { User } from "@/types/user";
 import { toast } from "sonner";
 import { StarOff } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-type TutorWithUser = TutorProfile & { user: User };
-
-export default function FavoriteTutorsList() {
+export default function FavoriteTutorsList(props: {
+  /** Al cambiar, se vuelve a cargar la lista (p. ej. favorito desde el historial). */
+  favoritesRevision?: number;
+  /** Tras quitar un favorito aquí, notifica para actualizar otras vistas. */
+  onFavoritesChanged?: () => void;
+}) {
   const { user } = useAuth();
   const t = useTranslations("studentProfile");
 
   const [loading, setLoading] = useState(false);
-  const [tutors, setTutors] = useState<TutorWithUser[]>([]);
+  const [tutors, setTutors] = useState<FavoriteTutorWithProfile[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const refresh = async () => {
     if (!user?.id) return;
@@ -42,17 +48,23 @@ export default function FavoriteTutorsList() {
   useEffect(() => {
     void refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [user?.id, props.favoritesRevision]);
 
-  const handleRemove = async (tutorId: string) => {
-    if (!user?.id) return;
+  const handleRemove = async (favoriteTutorId: string) => {
+    if (!user?.id || removingId) return;
     try {
-      await removeFavoriteTutor(user.id, tutorId);
+      setRemovingId(favoriteTutorId);
+      await removeFavoriteTutor(user.id, favoriteTutorId);
       toast.success(t("favoriteRemoved"));
-      setTutors((prev) => prev.filter((tut) => tut.id !== tutorId));
+      setTutors((prev) =>
+        prev.filter((row) => row.favoriteTutorId !== favoriteTutorId)
+      );
+      props.onFavoritesChanged?.();
     } catch (e) {
       console.error("Error removing favorite tutor:", e);
       toast.error(t("favoriteToggleError"));
+    } finally {
+      setRemovingId(null);
     }
   };
 
@@ -90,6 +102,7 @@ export default function FavoriteTutorsList() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {tutors.map((tutor) => {
               const avatarPath = tutor.user.profile_picture;
+              const fid = tutor.favoriteTutorId;
               const avatarUrl =
                 avatarPath && typeof avatarPath === "string"
                   ? avatarPath.startsWith("http")
@@ -99,7 +112,7 @@ export default function FavoriteTutorsList() {
 
               return (
                 <div
-                  key={tutor.id}
+                  key={fid}
                   className="border rounded-lg p-4 bg-white flex items-start gap-4"
                 >
                   <div className="relative h-14 w-14 rounded-full overflow-hidden bg-gray-100">
@@ -130,10 +143,12 @@ export default function FavoriteTutorsList() {
                       </div>
 
                       <Button
+                        type="button"
                         variant="outline"
                         size="icon"
-                        className="h-9 w-9"
-                        onClick={() => handleRemove(tutor.id)}
+                        className="relative z-10 h-9 w-9 shrink-0"
+                        onClick={() => void handleRemove(fid)}
+                        disabled={removingId === fid}
                         aria-label={t("unfavorite")}
                       >
                         <StarOff className="h-4 w-4" />

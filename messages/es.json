@@ -170,6 +170,8 @@
     "lessonHistory": "Historial de clases",
     "noLessonsHistory": "Aún no tienes clases completadas.",
     "reviewColumn": "Reseña",
+    "reviewUnavailableShort": "Reseña no disponible",
+    "reviewNoBookingHint": "Sin reserva asociada a esta clase.",
     "leaveReview": "Dejar reseña",
     "leaveReviewTitle": "Dejar una reseña",
     "leaveReviewDescription": "Tu opinión ayuda a otros estudiantes y al tutor.",

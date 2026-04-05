@@ -170,6 +170,8 @@
     "lessonHistory": "Class history",
     "noLessonsHistory": "You don't have any completed classes yet.",
     "reviewColumn": "Review",
+    "reviewUnavailableShort": "Review unavailable",
+    "reviewNoBookingHint": "No booking linked to this class.",
     "leaveReview": "Leave a review",
     "leaveReviewTitle": "Leave a review",
     "leaveReviewDescription": "Your feedback helps other students and the tutor improve.",

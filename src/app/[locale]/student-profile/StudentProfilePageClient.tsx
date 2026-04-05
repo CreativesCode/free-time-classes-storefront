@@ -83,6 +83,11 @@ export default function StudentProfilePageClient({
     initialStudentProfile
   );
 
+  /** Sincroniza estrellas del historial con la tarjeta de tutores favoritos. */
+  const [favoritesRevision, setFavoritesRevision] = useState(0);
+  const bumpFavoritesRevision = () =>
+    setFavoritesRevision((n) => n + 1);
+
   useEffect(() => {
     setStudentProfile(initialStudentProfile);
   }, [initialStudentProfile]);
@@ -301,8 +306,14 @@ export default function StudentProfilePageClient({
         <TabsContent value="courses" className="space-y-4">
           <div className="space-y-6">
             <UpcomingLessonsCard />
-            <LessonHistoryTable />
-            <FavoriteTutorsList />
+            <LessonHistoryTable
+              favoritesRevision={favoritesRevision}
+              onFavoritesChanged={bumpFavoritesRevision}
+            />
+            <FavoriteTutorsList
+              favoritesRevision={favoritesRevision}
+              onFavoritesChanged={bumpFavoritesRevision}
+            />
           </div>
         </TabsContent>
 

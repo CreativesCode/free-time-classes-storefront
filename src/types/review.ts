@@ -1,6 +1,8 @@
 export interface Review {
   id: string; // uuid
-  booking_id: number;
+  booking_id: number | null;
+  /** Reseña sin reserva: solo `lesson_id` (mutuamente excluyente con booking_id en DB). */
+  lesson_id?: number | null;
   student_id: string;
   tutor_id: string;
   course_id?: string | null;

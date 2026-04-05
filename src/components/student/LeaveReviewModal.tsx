@@ -17,6 +17,8 @@ export default function LeaveReviewModal(props: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   bookingId: number | null;
+  /** Si no hay reserva, reseña ligada a la lección completada (migración 018). */
+  lessonId: number | null;
   tutorId: string | null;
   onCreated: (review: Review) => void;
 }) {
@@ -37,8 +39,13 @@ export default function LeaveReviewModal(props: {
   ];
 
   const isReady = useMemo(
-    () => Boolean(user?.id && props.bookingId && props.tutorId),
-    [props.bookingId, props.tutorId, user?.id]
+    () =>
+      Boolean(
+        user?.id &&
+          props.tutorId &&
+          (props.bookingId != null || props.lessonId != null)
+      ),
+    [props.bookingId, props.lessonId, props.tutorId, user?.id]
   );
 
   useEffect(() => {
@@ -46,7 +53,7 @@ export default function LeaveReviewModal(props: {
     setRating(5);
     setComment("");
     setSelectedHighlights([]);
-  }, [props.open, props.bookingId, props.tutorId]);
+  }, [props.open, props.bookingId, props.lessonId, props.tutorId]);
 
   function toggleHighlight(tag: string) {
     setSelectedHighlights((prev) =>
@@ -56,7 +63,8 @@ export default function LeaveReviewModal(props: {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!user?.id || !props.bookingId || !props.tutorId) return;
+    if (!user?.id || !props.tutorId) return;
+    if (props.bookingId == null && props.lessonId == null) return;
 
     const trimmed = comment.trim();
     if (trimmed.length === 0) {
@@ -67,14 +75,16 @@ export default function LeaveReviewModal(props: {
     setSubmitting(true);
     try {
       const created = await createReview({
-        booking_id: props.bookingId,
+        ...(props.bookingId != null
+          ? { booking_id: props.bookingId }
+          : { lesson_id: props.lessonId! }),
         student_id: user.id,
         tutor_id: props.tutorId,
         rating,
-              comment:
-                selectedHighlights.length > 0
-                  ? `[${selectedHighlights.join(", ")}] ${trimmed}`
-                  : trimmed,
+        comment:
+          selectedHighlights.length > 0
+            ? `[${selectedHighlights.join(", ")}] ${trimmed}`
+            : trimmed,
       });
 
       props.onCreated(created);
@@ -106,7 +116,7 @@ export default function LeaveReviewModal(props: {
 
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 pb-4 pt-2 sm:px-8">
-            <div className="rounded-2xl bg-violet-50/70 p-4 sm:p-5">
+            <div className="rounded-lg bg-violet-50/70 p-4 sm:p-5">
             <div className="text-xs font-semibold uppercase tracking-[0.14em] text-violet-700">
               {t("reviewRating")}
             </div>
@@ -168,7 +178,7 @@ export default function LeaveReviewModal(props: {
               onChange={(e) => setComment(e.target.value)}
               placeholder={t("reviewCommentPlaceholder")}
               maxLength={MAX_COMMENT_LENGTH}
-              className="min-h-[140px] resize-none rounded-2xl border-0 bg-zinc-100/70 px-4 py-3 text-zinc-900 placeholder:text-zinc-500 focus-visible:ring-2 focus-visible:ring-violet-200"
+              className="min-h-[140px] resize-none rounded-lg border border-zinc-200/80 bg-zinc-100/70 px-4 py-3 text-zinc-900 placeholder:text-zinc-500 focus-visible:border-violet-300 focus-visible:ring-2 focus-visible:ring-violet-200"
             />
             <div className="text-right text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
               {comment.length} / {MAX_COMMENT_LENGTH}

@@ -42,35 +42,51 @@ export async function addFavoriteTutor(
 
 /**
  * Removes a tutor from favorites.
+ * Devuelve error si no se borró ninguna fila (RLS, ids incorrectos, etc.).
  */
 export async function removeFavoriteTutor(
   studentId: string,
   tutorId: string
 ): Promise<void> {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("student_favorite_tutors")
     .delete()
     .eq("student_id", studentId)
-    .eq("tutor_id", tutorId);
+    .eq("tutor_id", tutorId)
+    .select("tutor_id");
 
   if (error) {
     throw error;
   }
+  if (!data?.length) {
+    throw new Error(
+      "No se eliminó el favorito. Comprueba permisos en Supabase (RLS DELETE en student_favorite_tutors) o vuelve a cargar la página."
+    );
+  }
 }
+
+export type FavoriteTutorWithProfile = TutorProfile & {
+  user: User;
+  /** tutor_id guardado en student_favorite_tutors (usar en removeFavoriteTutor). */
+  favoriteTutorId: string;
+};
 
 /**
  * Returns full tutor profiles for a student's favorites.
  */
 export async function getFavoriteTutorsWithProfile(
   studentId: string
-): Promise<(TutorProfile & { user: User })[]> {
+): Promise<FavoriteTutorWithProfile[]> {
   const tutorIds = await getFavoriteTutorIds(studentId);
-  const tutors = await Promise.all(
-    tutorIds.map((tutorId) => getTutorProfileWithUser(tutorId))
-  );
+  const out: FavoriteTutorWithProfile[] = [];
 
-  return tutors.filter(
-    (tutor): tutor is TutorProfile & { user: User } => tutor !== null
-  );
+  for (const favoriteTutorId of tutorIds) {
+    const tutor = await getTutorProfileWithUser(favoriteTutorId);
+    if (tutor) {
+      out.push({ ...tutor, favoriteTutorId });
+    }
+  }
+
+  return out;
 }
 
