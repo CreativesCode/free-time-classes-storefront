@@ -61,7 +61,7 @@ export default function LoginClient({ locale }: { locale: string }) {
     } else if (user.is_tutor) {
       router.push(`/${locale}/teacher-profile`);
     } else {
-      router.push(`/${locale}/student-profile`);
+      router.push(`/${locale}/dashboard`);
     }
   }, [shouldRedirectAfterLogin, user, router, locale, safeNext]);
 

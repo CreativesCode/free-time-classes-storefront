@@ -31,7 +31,7 @@ export default function DashboardDeferredRecommended({
   const locale = useLocale();
 
   return (
-    <Card className="rounded-3xl border-violet-100/70 bg-white/85 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+    <Card className="rounded-xl border-violet-100/70 bg-white/85 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <p className="text-lg font-bold text-slate-900 dark:text-white">
@@ -48,7 +48,7 @@ export default function DashboardDeferredRecommended({
       </CardHeader>
       <CardContent className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {courses.length === 0 ? (
-          <div className="col-span-full rounded-2xl border border-dashed border-violet-200 bg-violet-50/40 py-10 text-center text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800/30 dark:text-slate-400">
+          <div className="col-span-full rounded-lg border border-dashed border-violet-200 bg-violet-50/40 py-10 text-center text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800/30 dark:text-slate-400">
             Aún no hay cursos disponibles. Explora el catálogo próximamente.
           </div>
         ) : (
@@ -67,7 +67,7 @@ export default function DashboardDeferredRecommended({
                 key={course.id}
                 type="button"
                 onClick={() => router.push(`/${locale}/courses/${course.id}`)}
-                className="overflow-hidden rounded-2xl border border-violet-100 bg-white text-left transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+                className="overflow-hidden rounded-lg border border-violet-100 bg-white text-left transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
               >
                 <div className="relative h-32 w-full bg-gradient-to-br from-violet-600/90 via-purple-600/85 to-fuchsia-500/80">
                   {coverUrl ? (

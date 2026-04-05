@@ -12,9 +12,8 @@ export default function FooterWrapper() {
     return null;
   }
 
-  // Empuja el footer al final del viewport cuando el contenido es corto.
   return (
-    <div className="mt-auto">
+    <div className="mt-auto w-full">
       <Footer />
     </div>
   );

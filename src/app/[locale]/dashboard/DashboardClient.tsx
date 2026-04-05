@@ -35,7 +35,7 @@ const DashboardDeferredRecommended = dynamic(
   () => import("./DashboardDeferredRecommended"),
   {
     loading: () => (
-      <div className="min-h-[220px] animate-pulse rounded-3xl border border-violet-100/70 bg-white/50 dark:border-slate-800 dark:bg-slate-900/40" />
+      <div className="min-h-[220px] animate-pulse rounded-xl border border-violet-100/70 bg-white/50 dark:border-slate-800 dark:bg-slate-900/40" />
     ),
   }
 );
@@ -165,8 +165,8 @@ export default function DashboardClient({
   ];
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#fef3ff] pb-28 md:pb-0 dark:bg-slate-950">
-      <aside className="fixed left-0 top-0 z-40 hidden h-full w-20 flex-col items-center gap-4 border-r border-violet-100/70 bg-[#faecff] py-5 md:flex lg:hidden dark:border-slate-800 dark:bg-slate-900">
+    <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-[#fef3ff] pb-28 md:flex-row md:pb-0 dark:bg-slate-950">
+      <aside className="order-first hidden w-20 shrink-0 flex-col items-center gap-4 self-stretch border-r border-violet-100/70 bg-[#faecff] py-5 md:flex lg:hidden dark:border-slate-800 dark:bg-slate-900">
         <div className="mb-2 h-10 w-10 rounded-xl bg-[#702ae1] text-white grid place-items-center font-black">
           F
         </div>
@@ -187,7 +187,7 @@ export default function DashboardClient({
         ))}
       </aside>
 
-      <aside className="fixed left-0 top-0 z-40 hidden h-full w-64 flex-col gap-8 border-r border-violet-100/70 bg-[#faecff] p-6 lg:flex dark:border-slate-800 dark:bg-slate-900">
+      <aside className="order-first hidden w-64 shrink-0 flex-col gap-8 self-stretch border-r border-violet-100/70 bg-[#faecff] p-6 lg:flex dark:border-slate-800 dark:bg-slate-900">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-[#702ae1] text-white grid place-items-center font-black">
             F
@@ -218,7 +218,8 @@ export default function DashboardClient({
         </nav>
       </aside>
 
-      <header className="sticky top-0 z-30 border-b border-violet-100/70 bg-[#fef3ff]/85 backdrop-blur-xl md:ml-20 md:w-[calc(100%-5rem)] lg:ml-64 lg:w-[calc(100%-16rem)] dark:border-slate-800 dark:bg-slate-950/80">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-30 border-b border-violet-100/70 bg-[#fef3ff]/85 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/80">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
             <p className="text-lg font-extrabold tracking-tight text-[#702ae1] md:hidden">
@@ -255,9 +256,9 @@ export default function DashboardClient({
             </Avatar>
           </div>
         </div>
-      </header>
+        </header>
 
-      <div className="w-full space-y-6 px-4 pb-24 pt-6 sm:px-6 md:ml-20 md:w-[calc(100%-5rem)] md:pb-10 lg:ml-64 lg:w-[calc(100%-16rem)] lg:space-y-8 lg:px-8 lg:pt-8">
+        <div className="w-full space-y-6 px-4 pb-24 pt-6 sm:px-6 md:pb-10 lg:space-y-8 lg:px-8 lg:pt-8">
         <section className="space-y-3">
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50 sm:text-4xl lg:text-5xl">
@@ -510,6 +511,7 @@ export default function DashboardClient({
             <span className="mt-1 text-[10px] font-semibold">Perfil</span>
           </button>
         </nav>
+        </div>
       </div>
     </div>
   );
