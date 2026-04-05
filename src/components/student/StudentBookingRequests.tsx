@@ -76,7 +76,7 @@ export default function StudentBookingRequests() {
   };
 
   return (
-    <Card className="w-full">
+    <Card className="w-full rounded-md border-border/60">
       <CardHeader className="flex flex-row items-start justify-between gap-4">
         <div className="space-y-1">
           <CardTitle>{t("title")}</CardTitle>
@@ -94,7 +94,7 @@ export default function StudentBookingRequests() {
         ) : (
           <div className="grid gap-4">
             {items.map((item) => (
-              <div key={item.bookingId} className="rounded-lg border bg-white p-4 space-y-3">
+              <div key={item.bookingId} className="space-y-3 rounded-md border border-border/60 bg-white p-4">
                 <div className="flex items-center justify-between gap-4">
                   <div className="min-w-0">
                     <p className="font-semibold truncate">

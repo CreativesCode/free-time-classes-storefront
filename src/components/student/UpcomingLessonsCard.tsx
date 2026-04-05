@@ -10,8 +10,9 @@ import { addFavoriteTutor, getFavoriteTutorIds, removeFavoriteTutor } from "@/li
 import { getLessonsWithRelations } from "@/lib/supabase/queries/lessons";
 import { getBookingsByStudent } from "@/lib/supabase/queries/bookings";
 import { getPublicUrl } from "@/lib/supabase/storage";
+import { cn } from "@/lib/utils";
 import type { LessonWithRelations } from "@/types/lesson";
-import { Calendar, Clock, DollarSign, Star, StarOff, Video, ExternalLink } from "lucide-react";
+import { Calendar, Clock, DollarSign, Star, Video, ExternalLink } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
@@ -29,7 +30,10 @@ function toStatusBadge(status: LessonWithRelations["status"]): {
   }
 }
 
-export default function UpcomingLessonsCard() {
+export default function UpcomingLessonsCard(props: {
+  favoritesRevision?: number;
+  onFavoritesChanged?: () => void;
+}) {
   const { user } = useAuth();
   const t = useTranslations("studentProfile");
 
@@ -40,7 +44,6 @@ export default function UpcomingLessonsCard() {
   const [favoriteTutorIds, setFavoriteTutorIds] = useState<Set<string>>(
     () => new Set()
   );
-  const [favoritesLoading, setFavoritesLoading] = useState(false);
 
   const [favoriteActionLoading, setFavoriteActionLoading] = useState<
     string | null
@@ -55,15 +58,11 @@ export default function UpcomingLessonsCard() {
     async function loadFavorites() {
       if (!user?.id) return;
       try {
-        setFavoritesLoading(true);
         const ids = await getFavoriteTutorIds(user.id);
         if (cancelled) return;
         setFavoriteTutorIds(new Set(ids));
       } catch (e) {
-        // Favorites are optional in early stages; don't block the page.
         console.error("Error loading favorite tutors:", e);
-      } finally {
-        if (!cancelled) setFavoritesLoading(false);
       }
     }
 
@@ -71,7 +70,7 @@ export default function UpcomingLessonsCard() {
     return () => {
       cancelled = true;
     };
-  }, [user?.id]);
+  }, [user?.id, props.favoritesRevision]);
 
   useEffect(() => {
     let cancelled = false;
@@ -156,6 +155,7 @@ export default function UpcomingLessonsCard() {
         });
         toast.success(t("favoriteAdded"));
       }
+      props.onFavoritesChanged?.();
     } catch (e) {
       console.error("Error toggling favorite tutor:", e);
       toast.error(t("favoriteToggleError"));
@@ -200,7 +200,7 @@ export default function UpcomingLessonsCard() {
 
   if (loading) {
     return (
-      <Card className="w-full">
+      <Card className="w-full rounded-md border-border/60">
         <CardContent className="py-8 text-center text-sm text-gray-500">
           Cargando...
         </CardContent>
@@ -210,7 +210,7 @@ export default function UpcomingLessonsCard() {
 
   if (error) {
     return (
-      <Card className="w-full">
+      <Card className="w-full rounded-md border-border/60">
         <CardContent className="py-8 text-center text-destructive text-sm">
           {error}
         </CardContent>
@@ -219,12 +219,9 @@ export default function UpcomingLessonsCard() {
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader className="flex flex-row items-start justify-between gap-4">
+    <Card className="w-full rounded-md border-border/60">
+      <CardHeader>
         <CardTitle>{t("upcomingLessons")}</CardTitle>
-        {favoritesLoading ? (
-          <Badge variant="secondary">{t("loadingFavorites")}</Badge>
-        ) : null}
       </CardHeader>
       <CardContent>
         {lessons.length === 0 ? (
@@ -250,7 +247,7 @@ export default function UpcomingLessonsCard() {
               return (
                 <div
                   key={lesson.id}
-                  className="border rounded-lg p-4 bg-white flex flex-col gap-3"
+                  className="flex flex-col gap-3 rounded-md border border-border/60 bg-white p-4"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-center gap-3 min-w-0">
@@ -284,14 +281,32 @@ export default function UpcomingLessonsCard() {
                         {badge.label}
                       </Badge>
                       <Button
-                        variant="outline"
+                        type="button"
+                        variant="ghost"
                         size="icon"
-                        className="h-9 w-9"
-                        onClick={() => toggleFavorite(lesson.tutor_id)}
-                        disabled={!!favoriteActionLoading}
-                        aria-label={isFavorited ? t("unfavorite") : t("favorite")}
+                        className={cn(
+                          "h-9 w-9 shrink-0 rounded-full border transition-colors",
+                          isFavorited
+                            ? "border-violet-500 bg-violet-100 text-violet-700 hover:bg-violet-200 hover:text-violet-900"
+                            : "border-violet-200/90 bg-white text-violet-400 hover:border-violet-400 hover:bg-violet-50 hover:text-violet-600"
+                        )}
+                        onClick={() => void toggleFavorite(lesson.tutor_id)}
+                        disabled={favoriteActionLoading === lesson.tutor_id}
+                        aria-pressed={isFavorited}
+                        aria-label={
+                          isFavorited ? t("unfavorite") : t("favorite")
+                        }
                       >
-                        {isFavorited ? <StarOff className="h-4 w-4" /> : <Star className="h-4 w-4" />}
+                        <Star
+                          className={cn(
+                            "h-4 w-4",
+                            isFavorited
+                              ? "fill-violet-600 text-violet-600"
+                              : "text-violet-400"
+                          )}
+                          fill={isFavorited ? "currentColor" : "none"}
+                          strokeWidth={isFavorited ? 0 : 2}
+                        />
                       </Button>
                     </div>
                   </div>

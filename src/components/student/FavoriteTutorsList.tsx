@@ -70,7 +70,7 @@ export default function FavoriteTutorsList(props: {
 
   if (loading) {
     return (
-      <Card className="w-full">
+      <Card className="w-full rounded-md border-border/60">
         <CardContent className="py-8 text-center text-sm text-gray-500">
           Cargando...
         </CardContent>
@@ -80,7 +80,7 @@ export default function FavoriteTutorsList(props: {
 
   if (error) {
     return (
-      <Card className="w-full">
+      <Card className="w-full rounded-md border-border/60">
         <CardContent className="py-8 text-center text-destructive text-sm">
           {error}
         </CardContent>
@@ -89,7 +89,7 @@ export default function FavoriteTutorsList(props: {
   }
 
   return (
-    <Card className="w-full">
+    <Card className="w-full rounded-md border-border/60">
       <CardHeader>
         <CardTitle>{t("favoriteTutors")}</CardTitle>
       </CardHeader>
@@ -113,7 +113,7 @@ export default function FavoriteTutorsList(props: {
               return (
                 <div
                   key={fid}
-                  className="border rounded-lg p-4 bg-white flex items-start gap-4"
+                  className="flex items-start gap-4 rounded-md border border-border/60 bg-white p-4"
                 >
                   <div className="relative h-14 w-14 rounded-full overflow-hidden bg-gray-100">
                     {avatarUrl ? (

@@ -265,7 +265,7 @@ export default function AvailabilityBrowser(props: AvailabilityBrowserProps) {
   return (
     <div className="space-y-6">
       {/* Header with search and filters */}
-      <Card className="w-full rounded-lg">
+      <Card className="w-full rounded-md border-border/60">
         <CardHeader>
           <div className="flex items-center justify-between gap-2">
             <CardTitle className="text-primary-800">
@@ -356,13 +356,13 @@ export default function AvailabilityBrowser(props: AvailabilityBrowserProps) {
 
       {/* Availabilities grid */}
       {isUpdatingResults ? (
-        <Card className="w-full rounded-lg">
+        <Card className="w-full rounded-md border-border/60">
           <CardContent className="py-12 text-center text-gray-500">
             {t("loadingResults")}
           </CardContent>
         </Card>
       ) : filteredAvailabilities.length === 0 ? (
-        <Card className="w-full rounded-lg">
+        <Card className="w-full rounded-md border-border/60">
           <CardContent className="py-12 text-center text-gray-500">
             {hasActiveFilters ? t("noFilteredAvailabilities") : t("noAvailabilities")}
           </CardContent>
@@ -372,7 +372,7 @@ export default function AvailabilityBrowser(props: AvailabilityBrowserProps) {
           {filteredAvailabilities.map((lesson) => (
             <Card
               key={lesson.id}
-              className="w-full cursor-pointer rounded-lg transition-shadow hover:shadow-lg"
+              className="w-full cursor-pointer rounded-md border-border/60 transition-shadow hover:shadow-lg"
               onClick={() => setSelectedLesson(lesson)}
             >
               <CardContent className="p-4 space-y-3">
@@ -449,7 +449,7 @@ export default function AvailabilityBrowser(props: AvailabilityBrowserProps) {
             <div className="flex min-h-0 flex-1 flex-col">
               <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-1 sm:px-6">
               {/* Tutor info */}
-              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-4 rounded-md bg-gray-50 p-4">
                 <Avatar className="h-16 w-16">
                   <AvatarImage
                     src={getTutorProfilePictureUrl(selectedLesson) ?? undefined}

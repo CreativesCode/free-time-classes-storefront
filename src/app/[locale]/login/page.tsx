@@ -29,7 +29,7 @@ export default async function LoginPage({
     if (profile?.is_tutor) {
       redirect(`/${locale}/teacher-profile`);
     }
-    redirect(`/${locale}/student-profile`);
+    redirect(`/${locale}/dashboard`);
   }
 
   return (

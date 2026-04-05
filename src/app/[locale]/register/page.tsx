@@ -28,7 +28,7 @@ export default async function RegisterPage({
     if (profile?.is_tutor) {
       redirect(`/${locale}/teacher-profile`);
     }
-    redirect(`/${locale}/student-profile`);
+    redirect(`/${locale}/dashboard`);
   }
 
   return <RegisterClient locale={locale} />;

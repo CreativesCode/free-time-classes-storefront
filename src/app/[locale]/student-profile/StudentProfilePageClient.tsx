@@ -156,7 +156,7 @@ export default function StudentProfilePageClient({
 
         {/* Profile Tab */}
         <TabsContent value="profile" className="space-y-4">
-          <Card className="w-full border-border/60">
+          <Card className="w-full rounded-md border-border/60">
             <CardHeader>
               <CardTitle>{t("personalInformation")}</CardTitle>
             </CardHeader>
@@ -305,7 +305,10 @@ export default function StudentProfilePageClient({
         {/* Courses Tab */}
         <TabsContent value="courses" className="space-y-4">
           <div className="space-y-6">
-            <UpcomingLessonsCard />
+            <UpcomingLessonsCard
+              favoritesRevision={favoritesRevision}
+              onFavoritesChanged={bumpFavoritesRevision}
+            />
             <LessonHistoryTable
               favoritesRevision={favoritesRevision}
               onFavoritesChanged={bumpFavoritesRevision}
@@ -324,7 +327,7 @@ export default function StudentProfilePageClient({
 
         {/* Settings Tab */}
         <TabsContent value="settings" className="space-y-4">
-          <Card className="w-full border-border/60">
+          <Card className="w-full rounded-md border-border/60">
             <CardHeader>
               <CardTitle>{t("accountSettings")}</CardTitle>
             </CardHeader>

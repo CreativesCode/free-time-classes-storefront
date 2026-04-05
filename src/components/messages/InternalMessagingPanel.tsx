@@ -15,10 +15,24 @@ import type { ConversationListItem, DirectMessage, MessageContact } from "@/type
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, MessageCircle, Search, SendHorizontal } from "lucide-react";
+
+/** Evita desfase horario: ISO sin zona se interpreta como local; timestamptz de Supabase es UTC. */
+function dateFromSupabaseTimestamptz(value: string): Date {
+  const s = value.trim();
+  if (!s) return new Date(NaN);
+  if (/[zZ]$/.test(s) || /[+-]\d{2}:\d{2}/.test(s)) {
+    return new Date(s);
+  }
+  const normalized = s.includes("T") ? s : s.replace(" ", "T");
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?$/.test(normalized)) {
+    return new Date(`${normalized}Z`);
+  }
+  return new Date(s);
+}
 
 type InternalMessagingPanelProps = {
   namespace: "studentProfile" | "teacherProfile" | "messagesPage";
@@ -27,7 +41,8 @@ type InternalMessagingPanelProps = {
 export default function InternalMessagingPanel({
   namespace,
 }: InternalMessagingPanelProps) {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
+  const locale = useLocale();
   const t = useTranslations(namespace);
   const tm = useTranslations(`${namespace}.messaging`);
 
@@ -51,48 +66,59 @@ export default function InternalMessagingPanel({
   const getPendingContacts = useCallback(async (): Promise<MessageContact[]> => {
     const byId = new Map<string, MessageContact>();
 
-    try {
-      const studentPending = await fetch(`/api/bookings/student/pending`);
-      if (studentPending.ok) {
-        const result = (await studentPending.json()) as {
-          items?: Array<{ tutorId: string; tutorName?: string | null }>;
-        };
-        for (const item of result.items || []) {
-          if (!item.tutorId) continue;
-          byId.set(item.tutorId, {
-            id: item.tutorId,
-            username: item.tutorName || item.tutorId,
-            email: "",
-            profile_picture: null,
-          });
+    const loadStudentPending =
+      namespace === "studentProfile" ||
+      (namespace === "messagesPage" && Boolean(user?.is_student));
+    const loadTutorPending =
+      namespace === "teacherProfile" ||
+      (namespace === "messagesPage" && Boolean(user?.is_tutor));
+
+    if (loadStudentPending) {
+      try {
+        const studentPending = await fetch(`/api/bookings/student/pending`);
+        if (studentPending.ok) {
+          const result = (await studentPending.json()) as {
+            items?: Array<{ tutorId: string; tutorName?: string | null }>;
+          };
+          for (const item of result.items || []) {
+            if (!item.tutorId) continue;
+            byId.set(item.tutorId, {
+              id: item.tutorId,
+              username: item.tutorName || item.tutorId,
+              email: "",
+              profile_picture: null,
+            });
+          }
         }
+      } catch (error) {
+        console.error("Error loading student pending contacts:", error);
       }
-    } catch (error) {
-      console.error("Error loading student pending contacts:", error);
     }
 
-    try {
-      const tutorPending = await fetch(`/api/bookings/tutor/pending`);
-      if (tutorPending.ok) {
-        const result = (await tutorPending.json()) as {
-          items?: Array<{ studentId: string; studentName?: string | null }>;
-        };
-        for (const item of result.items || []) {
-          if (!item.studentId) continue;
-          byId.set(item.studentId, {
-            id: item.studentId,
-            username: item.studentName || item.studentId,
-            email: "",
-            profile_picture: null,
-          });
+    if (loadTutorPending) {
+      try {
+        const tutorPending = await fetch(`/api/bookings/tutor/pending`);
+        if (tutorPending.ok) {
+          const result = (await tutorPending.json()) as {
+            items?: Array<{ studentId: string; studentName?: string | null }>;
+          };
+          for (const item of result.items || []) {
+            if (!item.studentId) continue;
+            byId.set(item.studentId, {
+              id: item.studentId,
+              username: item.studentName || item.studentId,
+              email: "",
+              profile_picture: null,
+            });
+          }
         }
+      } catch (error) {
+        console.error("Error loading tutor pending contacts:", error);
       }
-    } catch (error) {
-      console.error("Error loading tutor pending contacts:", error);
     }
 
     return Array.from(byId.values());
-  }, []);
+  }, [namespace, user?.is_student, user?.is_tutor]);
 
   const selectedConversation = useMemo(
     () => conversations.find((c) => c.id === selectedConversationId) || null,
@@ -103,7 +129,11 @@ export default function InternalMessagingPanel({
   useEffect(() => {
     let cancelled = false;
     async function loadInitial() {
-      if (!user?.id) return;
+      if (authLoading) return;
+      if (!user?.id) {
+        if (!cancelled) setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         const [list, bookingContacts, favoriteContacts, pendingContacts] = await Promise.all([
@@ -140,7 +170,7 @@ export default function InternalMessagingPanel({
     return () => {
       cancelled = true;
     };
-  }, [getPendingContacts, tm, user?.id]);
+  }, [authLoading, getPendingContacts, user?.id, tm]);
 
   useEffect(() => {
     let cancelled = false;
@@ -241,7 +271,7 @@ export default function InternalMessagingPanel({
   };
 
   const formatMessageDate = (value: string) =>
-    new Date(value).toLocaleString(undefined, {
+    dateFromSupabaseTimestamptz(value).toLocaleString(locale, {
       hour: "2-digit",
       minute: "2-digit",
       month: "short",
@@ -255,19 +285,19 @@ export default function InternalMessagingPanel({
 
   if (loading) {
     return (
-      <div className="rounded-3xl border border-violet-100 bg-white/80 px-6 py-12 text-center text-sm font-medium text-violet-500 shadow-sm">
+      <div className="rounded-md border border-violet-100 bg-white/80 px-6 py-12 text-center text-sm font-medium text-violet-500 shadow-sm">
         {t("loading")}
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-[28px] border border-violet-100 bg-[#fefbff] shadow-[0_24px_60px_-40px_rgba(112,42,225,0.4)]">
+    <div className="overflow-hidden rounded-md border border-violet-100 bg-[#fefbff] shadow-[0_24px_60px_-40px_rgba(112,42,225,0.4)]">
       {!hasConversationData ? (
         <div className="flex min-h-[560px] flex-col items-center justify-center gap-6 px-8 py-16 text-center">
           <div className="relative">
             <div className="absolute -inset-6 rounded-full bg-violet-200/40 blur-2xl" />
-            <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-violet-100 text-violet-700">
+            <div className="relative flex h-24 w-24 items-center justify-center rounded-md bg-violet-100 text-violet-700">
               <MessageCircle className="h-11 w-11" />
             </div>
           </div>
@@ -297,7 +327,7 @@ export default function InternalMessagingPanel({
                 </div>
               </div>
               {searchTerm.trim().length >= 2 ? (
-                <div className="mt-3 space-y-2 rounded-2xl border border-violet-100 bg-white p-3">
+                <div className="mt-3 space-y-2 rounded-md border border-violet-100 bg-white p-3">
                   {searching ? (
                     <p className="text-xs text-violet-400">{tm("searching")}</p>
                   ) : searchResults.length === 0 ? (
@@ -306,7 +336,7 @@ export default function InternalMessagingPanel({
                     searchResults.map((contact) => (
                       <div
                         key={`search-${contact.id}`}
-                        className="flex items-center justify-between gap-2 rounded-xl bg-violet-50/60 px-3 py-2"
+                        className="flex items-center justify-between gap-2 rounded-md bg-violet-50/60 px-3 py-2"
                       >
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-violet-950">{contact.username}</p>
@@ -331,7 +361,7 @@ export default function InternalMessagingPanel({
 
             <div className="min-h-0 flex-1 overflow-y-auto p-3">
               {conversations.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-violet-200 bg-violet-50/50 p-4 text-sm text-violet-500">
+                <div className="rounded-md border border-dashed border-violet-200 bg-violet-50/50 p-4 text-sm text-violet-500">
                   {tm("emptyConversations")}
                 </div>
               ) : (
@@ -341,7 +371,7 @@ export default function InternalMessagingPanel({
                       key={conversation.id}
                       type="button"
                       onClick={() => openConversation(conversation.id)}
-                      className={`w-full rounded-2xl px-4 py-3 text-left transition ${
+                      className={`w-full rounded-md px-4 py-3 text-left transition ${
                         conversation.id === selectedConversationId
                           ? "bg-violet-100 text-violet-900"
                           : "bg-white text-violet-700 hover:bg-violet-50"
@@ -417,7 +447,7 @@ export default function InternalMessagingPanel({
               <>
                 <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-6">
                   {messages.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-violet-200 bg-white p-4 text-sm text-violet-500">
+                    <div className="rounded-md border border-dashed border-violet-200 bg-white p-4 text-sm text-violet-500">
                       {tm("noMessagesYet")}
                     </div>
                   ) : (
@@ -426,7 +456,7 @@ export default function InternalMessagingPanel({
                       return (
                         <div key={message.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
                           <div
-                            className={`max-w-[88%] rounded-3xl px-4 py-3 sm:max-w-[78%] ${
+                            className={`max-w-[88%] rounded-md px-4 py-3 sm:max-w-[78%] ${
                               isMine
                                 ? "rounded-br-md bg-gradient-to-br from-violet-600 to-violet-500 text-white"
                                 : "rounded-bl-md bg-white text-violet-900 shadow-sm"
@@ -444,10 +474,16 @@ export default function InternalMessagingPanel({
                 </div>
 
                 <div className="border-t border-violet-100 bg-white/85 px-4 py-3 sm:px-6">
-                  <div className="flex items-end gap-2 rounded-3xl border border-violet-200 bg-white p-2">
+                  <div className="flex items-end gap-2 rounded-md border border-violet-200 bg-white p-2">
                     <Textarea
                       value={messageText}
                       onChange={(e) => setMessageText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key !== "Enter" || e.shiftKey) return;
+                        e.preventDefault();
+                        if (!messageText.trim() || sending) return;
+                        void handleSend();
+                      }}
                       placeholder={tm("messagePlaceholder")}
                       rows={2}
                       maxLength={2000}

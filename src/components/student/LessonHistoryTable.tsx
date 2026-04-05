@@ -335,7 +335,7 @@ export default function LessonHistoryTable(props: {
 
   if (loading) {
     return (
-      <Card className="w-full">
+      <Card className="w-full rounded-md border-border/60">
         <CardContent className="py-8 text-center text-sm text-gray-500">
           Cargando...
         </CardContent>
@@ -345,7 +345,7 @@ export default function LessonHistoryTable(props: {
 
   if (error) {
     return (
-      <Card className="w-full">
+      <Card className="w-full rounded-md border-border/60">
         <CardContent className="py-8 text-center text-destructive text-sm">
           {error}
         </CardContent>
@@ -354,7 +354,7 @@ export default function LessonHistoryTable(props: {
   }
 
   return (
-    <Card className="w-full">
+    <Card className="w-full rounded-md border-border/60">
       <CardHeader>
         <CardTitle>{t("lessonHistory")}</CardTitle>
       </CardHeader>

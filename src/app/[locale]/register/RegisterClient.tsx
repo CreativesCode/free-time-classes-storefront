@@ -98,7 +98,7 @@ export default function RegisterClient({ locale }: { locale: string }) {
       } else if (accountType === "tutor") {
         router.push(`/${locale}/teacher-profile`);
       } else {
-        router.push(`/${locale}/student-profile`);
+        router.push(`/${locale}/dashboard`);
       }
     } catch (error: unknown) {
       const message =
