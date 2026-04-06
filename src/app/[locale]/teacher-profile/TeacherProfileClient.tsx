@@ -7,6 +7,7 @@ import TutorBookingRequests from "@/components/teacher/TutorBookingRequests";
 import TutorCoursesManager from "@/components/teacher/TutorCoursesManager";
 import TutorSubjectsManager from "@/components/teacher/TutorSubjectsManager";
 import TutorReviewsSection from "@/components/teacher/TutorReviewsSection";
+import TutorCVSection from "@/components/teacher/TutorCVSection";
 import InternalMessagingPanel from "@/components/messages/InternalMessagingPanel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -190,7 +191,6 @@ export default function TeacherProfileClient({
         tutorId={teacherUser.id}
         initialBio={tutorProfile?.bio ?? ""}
         initialYearsOfExperience={tutorProfile?.years_of_experience ?? null}
-        initialCertifications={tutorProfile?.certifications ?? null}
         onTutorProfileUpdated={(updates) =>
           setTutorProfile((prev) => (prev ? { ...prev, ...updates } : prev))
         }
@@ -308,14 +308,6 @@ export default function TeacherProfileClient({
                     {bioText}
                   </p>
                 </div>
-                {tutorProfile?.certifications ? (
-                  <div className="rounded-md border border-violet-100 bg-white/80 p-4">
-                    <h3 className="font-semibold text-slate-800">{t("certifications")}</h3>
-                    <p className="mt-2 text-sm leading-relaxed text-slate-600 whitespace-pre-line">
-                      {tutorProfile.certifications}
-                    </p>
-                  </div>
-                ) : null}
                 <div className="grid gap-3 sm:grid-cols-3">
                   <div className="rounded-md border border-violet-100 bg-white/80 p-4">
                     <p className="text-xs uppercase tracking-wider text-slate-500">
@@ -347,6 +339,14 @@ export default function TeacherProfileClient({
               </div>
             </CardContent>
           </Card>
+
+          <TutorCVSection
+            tutorId={teacherUser.id}
+            certifications={tutorProfile?.certifications}
+            onTutorProfileUpdated={(updates) =>
+              setTutorProfile((prev) => (prev ? { ...prev, ...updates } : prev))
+            }
+          />
 
           <Card className="rounded-3xl border-violet-100">
             <CardHeader className="pb-3">

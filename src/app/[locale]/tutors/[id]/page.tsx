@@ -4,9 +4,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
+  Award,
   BookOpen,
+  Briefcase,
   Clock,
   DollarSign,
+  GraduationCap,
   MapPin,
   Star,
 } from "lucide-react";
@@ -20,6 +23,7 @@ import { getCourseCoverPublicUrl, getPublicUrl } from "@/lib/supabase/storage";
 import { getAvatarColor } from "@/lib/utils";
 import type { TutorProfile } from "@/types/tutor";
 import type { User } from "@/types/user";
+import { parseCVData } from "@/types/tutor-cv";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -290,20 +294,107 @@ export default async function TutorPublicProfilePage({
               </Card>
             ) : null}
 
-            {profile.certifications ? (
-              <Card className="border-violet-100/80 bg-white/95 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-lg font-bold text-slate-900">
-                    {t("certifications")}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm leading-relaxed text-slate-600">
-                    {profile.certifications}
-                  </p>
-                </CardContent>
-              </Card>
-            ) : null}
+            {(() => {
+              const cv = parseCVData(profile.certifications);
+              const hasCV =
+                cv.education.length > 0 ||
+                cv.certifications.length > 0 ||
+                cv.experience.length > 0;
+              if (!hasCV) return null;
+              return (
+                <Card className="border-violet-100/80 bg-white/95 shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="text-lg font-bold text-slate-900">
+                      {t("professionalBackground")}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-5">
+                    {cv.education.length > 0 && (
+                      <div>
+                        <div className="mb-2 flex items-center gap-2">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-100">
+                            <GraduationCap className="h-3.5 w-3.5 text-violet-700" />
+                          </div>
+                          <h3 className="text-sm font-semibold text-slate-700">
+                            {t("education")}
+                          </h3>
+                        </div>
+                        <div className="space-y-1.5 pl-9">
+                          {cv.education.map((item) => (
+                            <p key={item.id} className="text-sm text-slate-600">
+                              <span className="font-medium text-slate-800">{item.degree}</span>
+                              {item.institution && (
+                                <span className="text-slate-400"> · {item.institution}</span>
+                              )}
+                              {item.year && (
+                                <span className="text-slate-400"> · {item.year}</span>
+                              )}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {cv.certifications.length > 0 && (
+                      <div>
+                        <div className="mb-2 flex items-center gap-2">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100">
+                            <Award className="h-3.5 w-3.5 text-amber-700" />
+                          </div>
+                          <h3 className="text-sm font-semibold text-slate-700">
+                            {t("certifications")}
+                          </h3>
+                        </div>
+                        <div className="space-y-1.5 pl-9">
+                          {cv.certifications.map((item) => (
+                            <p key={item.id} className="text-sm text-slate-600">
+                              <span className="font-medium text-slate-800">{item.name}</span>
+                              {item.issuer && (
+                                <span className="text-slate-400"> · {item.issuer}</span>
+                              )}
+                              {item.year && (
+                                <span className="text-slate-400"> · {item.year}</span>
+                              )}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {cv.experience.length > 0 && (
+                      <div>
+                        <div className="mb-2 flex items-center gap-2">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100">
+                            <Briefcase className="h-3.5 w-3.5 text-emerald-700" />
+                          </div>
+                          <h3 className="text-sm font-semibold text-slate-700">
+                            {t("teachingExperience")}
+                          </h3>
+                        </div>
+                        <div className="space-y-2 pl-9">
+                          {cv.experience.map((item) => (
+                            <div key={item.id}>
+                              <p className="text-sm text-slate-600">
+                                <span className="font-medium text-slate-800">{item.role}</span>
+                                {item.institution && (
+                                  <span className="text-slate-400"> · {item.institution}</span>
+                                )}
+                                {item.period && (
+                                  <span className="text-slate-400"> · {item.period}</span>
+                                )}
+                              </p>
+                              {item.description && (
+                                <p className="mt-0.5 text-xs leading-relaxed text-slate-400">
+                                  {item.description}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })()}
 
             <Card className="border-violet-100/80 bg-white/95 shadow-sm">
               <CardHeader>

@@ -31,7 +31,6 @@ interface EditProfileModalProps {
   tutorId: string;
   initialBio?: string | null;
   initialYearsOfExperience?: number | null;
-  initialCertifications?: string | null;
   onTutorProfileUpdated?: (updates: Partial<TutorProfile>) => void;
 }
 
@@ -41,7 +40,6 @@ interface FormData {
   country: string;
   bio: string;
   yearsOfExperience: string;
-  certifications: string;
 }
 
 export default function EditProfileModal({
@@ -50,7 +48,6 @@ export default function EditProfileModal({
   tutorId,
   initialBio = "",
   initialYearsOfExperience,
-  initialCertifications,
   onTutorProfileUpdated,
 }: EditProfileModalProps) {
   const { user, refreshUser } = useAuth();
@@ -62,7 +59,6 @@ export default function EditProfileModal({
     country: user?.country || "",
     bio: initialBio ?? "",
     yearsOfExperience: initialYearsOfExperience != null ? String(initialYearsOfExperience) : "",
-    certifications: initialCertifications ?? "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -84,9 +80,8 @@ export default function EditProfileModal({
       country: user?.country || "",
       bio: initialBio ?? "",
       yearsOfExperience: initialYearsOfExperience != null ? String(initialYearsOfExperience) : "",
-      certifications: initialCertifications ?? "",
     });
-  }, [user, initialBio, initialYearsOfExperience, initialCertifications]);
+  }, [user, initialBio, initialYearsOfExperience]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,11 +107,9 @@ export default function EditProfileModal({
       });
       const bioValue = formData.bio.trim() || null;
       const yearsValue = formData.yearsOfExperience ? parseInt(formData.yearsOfExperience, 10) : null;
-      const certificationsValue = formData.certifications.trim() || null;
       const tutorUpdates: Partial<TutorProfile> = {
         bio: bioValue,
         years_of_experience: Number.isNaN(yearsValue) ? null : yearsValue,
-        certifications: certificationsValue,
       };
       await updateTutorProfile(tutorId, tutorUpdates);
       onTutorProfileUpdated?.(tutorUpdates);
@@ -265,18 +258,6 @@ export default function EditProfileModal({
               value={formData.yearsOfExperience}
               onChange={handleChange}
               placeholder={t("experiencePlaceholder")}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="certifications">{t("certifications")}</Label>
-            <Textarea
-              id="certifications"
-              name="certifications"
-              value={formData.certifications}
-              onChange={handleChange}
-              placeholder={t("certificationsPlaceholder")}
-              className="min-h-[80px] resize-y"
             />
           </div>
 
