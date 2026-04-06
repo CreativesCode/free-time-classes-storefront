@@ -17,7 +17,6 @@ import {
   Calendar,
   Clock,
   Users,
-  MessageSquare,
   Search,
   ArrowRight,
   GraduationCap,
