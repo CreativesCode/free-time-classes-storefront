@@ -181,7 +181,7 @@ export function SelectMenu({
           sideOffset={sideOffset}
           onOpenAutoFocus={
             searchable
-              ? (e) => {
+              ? (e: Event) => {
                   e.preventDefault();
                   queueMicrotask(() => searchInputRef.current?.focus());
                 }

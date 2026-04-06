@@ -569,16 +569,18 @@ export default function LessonHistoryTable(props: {
         lessonId={selectedReviewTarget?.lessonId ?? null}
         tutorId={selectedReviewTarget?.tutorId ?? null}
         onCreated={(created) => {
-          if (created.booking_id != null) {
+          const bookingId = created.booking_id;
+          if (bookingId != null) {
             setReviewsByBookingId((prev) => ({
               ...prev,
-              [created.booking_id]: created,
+              [bookingId]: created,
             }));
           }
-          if (created.lesson_id != null) {
+          const lessonId = created.lesson_id;
+          if (lessonId != null) {
             setReviewsByLessonId((prev) => ({
               ...prev,
-              [created.lesson_id]: created,
+              [lessonId]: created,
             }));
           }
         }}

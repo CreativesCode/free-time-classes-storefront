@@ -63,7 +63,12 @@ export async function getTutorDisplayRowsByIds(
   const map: Record<string, TutorDisplayRow["user"]> = {};
   for (const row of data || []) {
     const tid = row.id as string;
-    const u = row.user as TutorDisplayRow["user"] | null | undefined;
+    // PostgREST devuelve objeto 1:1; los tipos del cliente suelen inferir el embed como array.
+    const rawUser = row.user as unknown;
+    const u = (Array.isArray(rawUser) ? rawUser[0] : rawUser) as
+      | TutorDisplayRow["user"]
+      | null
+      | undefined;
     if (u?.id) {
       map[tid] = {
         id: u.id,
