@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "@/app/[locale]/globals.css";
+import { getMetadataBase } from "@/lib/seo/page-metadata";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -9,8 +10,14 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   display: "swap",
 });
 
+const metadataBase = getMetadataBase();
+
 export const metadata: Metadata = {
-  title: "Free Time Classes",
+  ...(metadataBase ? { metadataBase } : {}),
+  title: {
+    default: "Free Time Classes",
+    template: "%s · Free Time Classes",
+  },
   description: "Find and book classes for your free time",
   icons: {
     icon: "/favicon.ico",

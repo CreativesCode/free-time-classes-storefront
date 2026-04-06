@@ -1326,5 +1326,101 @@
     "videoCall": "Videollamada",
     "resumeClass": "Reanudar clase",
     "upcomingClassMobile": "Siguiente clase"
+  },
+  "seo": {
+    "home": {
+      "title": "Descubre cursos y tutores",
+      "description": "Explora talleres y tutores expertos. Reserva clases que encajen con tu agenda en Free Time Classes."
+    },
+    "login": {
+      "title": "Iniciar sesión",
+      "description": "Accede a tu cuenta de Free Time Classes para reservar clases, chatear con tutores y gestionar tu aprendizaje."
+    },
+    "register": {
+      "title": "Crear cuenta",
+      "description": "Únete a Free Time Classes como estudiante o tutor. Regístrate para reservar clases, enseñar online y completar tu perfil."
+    },
+    "contact": {
+      "title": "Ayuda y contacto",
+      "description": "Obtén ayuda con reservas, facturación, tu cuenta y soporte técnico en Free Time Classes."
+    },
+    "courses": {
+      "title": "Cursos",
+      "description": "Explora cursos online por materia y nivel. Encuentra la clase adecuada y reserva sesión con un tutor."
+    },
+    "courseCreate": {
+      "title": "Crear curso",
+      "description": "Publica un nuevo curso como tutor: detalles, precios y disponibilidad para tus estudiantes."
+    },
+    "courseNotFound": {
+      "title": "Curso no encontrado",
+      "description": "Este curso no está disponible. Explora otros cursos en Free Time Classes."
+    },
+    "tutors": {
+      "title": "Tutores",
+      "description": "Busca tutores verificados por materia, valoración y precio. Reserva clases individuales online."
+    },
+    "tutorNotFound": {
+      "title": "Tutor no encontrado",
+      "description": "No se encontró este perfil de tutor. Descubre otros tutores en Free Time Classes."
+    },
+    "dashboard": {
+      "title": "Panel",
+      "description": "Tu panel de Free Time Classes: próximas clases, actividad y accesos rápidos."
+    },
+    "settings": {
+      "title": "Ajustes",
+      "description": "Gestiona tu cuenta, privacidad, notificaciones e integraciones en Free Time Classes."
+    },
+    "bookings": {
+      "title": "Mis reservas",
+      "description": "Consulta y gestiona tus reservas de clase, horarios y estado de las solicitudes."
+    },
+    "messages": {
+      "title": "Mensajes",
+      "description": "Tus conversaciones con tutores y estudiantes en Free Time Classes."
+    },
+    "notifications": {
+      "title": "Notificaciones",
+      "description": "Mantente al día con reservas, mensajes y novedades de Free Time Classes."
+    },
+    "studentProfile": {
+      "title": "Perfil de estudiante",
+      "description": "Consulta y edita tu perfil de alumno, cursos y preferencias."
+    },
+    "teacherProfile": {
+      "title": "Perfil de profesor",
+      "description": "Gestiona tu perfil de tutor, materias, cursos y disponibilidad."
+    },
+    "tutorDashboard": {
+      "title": "Panel de tutor",
+      "description": "Reservas pendientes y herramientas para confirmar clases y gestionar tu docencia."
+    },
+    "becomeTutor": {
+      "title": "Ser tutor",
+      "description": "Empieza a enseñar en Free Time Classes: horario flexible, tus tarifas y nuevos estudiantes."
+    },
+    "authCallback": {
+      "title": "Confirmando cuenta",
+      "description": "Completando la verificación por correo de tu cuenta en Free Time Classes."
+    },
+    "privacyPolicy": {
+      "title": "Política de privacidad",
+      "description": "Cómo Free Time Classes recopila, usa y protege tus datos personales."
+    },
+    "termsOfService": {
+      "title": "Términos del servicio",
+      "description": "Términos y condiciones de uso de la plataforma Free Time Classes."
+    },
+    "studentProfileRedirect": {
+      "title": "Perfil",
+      "description": "Redirigiendo a tu perfil de estudiante."
+    },
+    "courseTitleSuffix": "Curso en Free Time Classes",
+    "courseDescriptionWithTutor": "Clases online con {tutor}. {excerpt}",
+    "courseExcerptFallback": "Reserva este curso en Free Time Classes.",
+    "tutorTitleSuffix": "Tutor en Free Time Classes",
+    "tutorDescription": "Reserva clases con {name}. {excerpt}",
+    "tutorExcerptFallback": "Tutor verificado en Free Time Classes."
   }
 }

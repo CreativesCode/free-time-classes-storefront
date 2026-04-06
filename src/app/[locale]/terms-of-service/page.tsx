@@ -1,3 +1,23 @@
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+
+import { buildPageMetadata } from "@/lib/seo/page-metadata";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "seo" });
+  return buildPageMetadata({
+    locale,
+    path: "/terms-of-service",
+    title: t("termsOfService.title"),
+    description: t("termsOfService.description"),
+  });
+}
+
 const sections = [
   {
     title: "1. Aceptación de los términos",

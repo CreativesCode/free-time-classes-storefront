@@ -1327,5 +1327,101 @@
     "videoCall": "Video call",
     "resumeClass": "Resume class",
     "upcomingClassMobile": "Next class"
+  },
+  "seo": {
+    "home": {
+      "title": "Discover courses and tutors",
+      "description": "Browse workshops and expert tutors. Book classes that fit your schedule on Free Time Classes."
+    },
+    "login": {
+      "title": "Sign in",
+      "description": "Sign in to your Free Time Classes account to book lessons, message tutors, and manage your learning."
+    },
+    "register": {
+      "title": "Create account",
+      "description": "Join Free Time Classes as a student or tutor. Register to book classes, teach online, and build your profile."
+    },
+    "contact": {
+      "title": "Help & contact",
+      "description": "Get help with bookings, billing, your account, and technical support on Free Time Classes."
+    },
+    "courses": {
+      "title": "Courses",
+      "description": "Explore online courses by subject and level. Find the right class and book a session with a tutor."
+    },
+    "courseCreate": {
+      "title": "Create course",
+      "description": "Publish a new course as a tutor: set details, pricing, and availability for your students."
+    },
+    "courseNotFound": {
+      "title": "Course not found",
+      "description": "This course is not available. Explore other courses on Free Time Classes."
+    },
+    "tutors": {
+      "title": "Tutors",
+      "description": "Search verified tutors by subject, rating, and price. Book one-to-one lessons online."
+    },
+    "tutorNotFound": {
+      "title": "Tutor not found",
+      "description": "This tutor profile could not be found. Browse other tutors on Free Time Classes."
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "description": "Your Free Time Classes dashboard: upcoming lessons, activity, and quick links."
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Manage your account, privacy, notifications, and integrations on Free Time Classes."
+    },
+    "bookings": {
+      "title": "My bookings",
+      "description": "View and manage your class reservations, schedules, and booking status."
+    },
+    "messages": {
+      "title": "Messages",
+      "description": "Your conversations with tutors and students on Free Time Classes."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Stay up to date with bookings, messages, and updates from Free Time Classes."
+    },
+    "studentProfile": {
+      "title": "Student profile",
+      "description": "View and edit your learner profile, courses, and preferences."
+    },
+    "teacherProfile": {
+      "title": "Teacher profile",
+      "description": "Manage your tutor profile, subjects, courses, and availability."
+    },
+    "tutorDashboard": {
+      "title": "Tutor dashboard",
+      "description": "Pending bookings and tutor tools to confirm classes and manage your teaching."
+    },
+    "becomeTutor": {
+      "title": "Become a tutor",
+      "description": "Start teaching on Free Time Classes: flexible schedule, set your rates, and reach new students."
+    },
+    "authCallback": {
+      "title": "Confirming account",
+      "description": "Completing email verification for your Free Time Classes account."
+    },
+    "privacyPolicy": {
+      "title": "Privacy policy",
+      "description": "How Free Time Classes collects, uses, and protects your personal data."
+    },
+    "termsOfService": {
+      "title": "Terms of service",
+      "description": "Terms and conditions for using the Free Time Classes platform."
+    },
+    "studentProfileRedirect": {
+      "title": "Profile",
+      "description": "Redirecting to your student profile."
+    },
+    "courseTitleSuffix": "Course on Free Time Classes",
+    "courseDescriptionWithTutor": "Online lessons with {tutor}. {excerpt}",
+    "courseExcerptFallback": "Book this course on Free Time Classes.",
+    "tutorTitleSuffix": "Tutor on Free Time Classes",
+    "tutorDescription": "Book lessons with {name}. {excerpt}",
+    "tutorExcerptFallback": "Verified tutor on Free Time Classes."
   }
 }

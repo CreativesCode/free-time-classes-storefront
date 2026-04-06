@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -14,6 +15,7 @@ import {
   Star,
 } from "lucide-react";
 
+import { buildPageMetadata, truncateForMeta } from "@/lib/seo/page-metadata";
 import { createCatalogServerClient } from "@/lib/supabase/server-public";
 import {
   fetchTutorReviewStatsMap,
@@ -40,6 +42,73 @@ import {
 } from "@/components/ui/avatar";
 
 export const revalidate = 3600;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; id: string }>;
+}): Promise<Metadata> {
+  const { locale, id } = await params;
+  const t = await getTranslations({ locale, namespace: "seo" });
+
+  if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {
+    return buildPageMetadata({
+      locale,
+      path: `/tutors/${id}`,
+      title: t("tutorNotFound.title"),
+      description: t("tutorNotFound.description"),
+    });
+  }
+
+  const supabase = createCatalogServerClient();
+  const { data, error } = await supabase
+    .from("tutor_profiles")
+    .select(
+      `
+      bio,
+      user:users!tutor_profiles_id_fkey ( username, profile_picture )
+    `
+    )
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error || !data) {
+    return buildPageMetadata({
+      locale,
+      path: `/tutors/${id}`,
+      title: t("tutorNotFound.title"),
+      description: t("tutorNotFound.description"),
+    });
+  }
+
+  const tProfile = await getTranslations({
+    locale,
+    namespace: "tutorPublicProfile",
+  });
+  const rawUser = data.user as
+    | { username: string; profile_picture?: string | null }
+    | { username: string; profile_picture?: string | null }[]
+    | null
+    | undefined;
+  const user = Array.isArray(rawUser) ? (rawUser[0] ?? null) : rawUser ?? null;
+  const name = user?.username ?? tProfile("unknownTutor");
+  const excerpt =
+    truncateForMeta(data.bio ?? "") || t("tutorExcerptFallback");
+  const description = t("tutorDescription", { name, excerpt });
+  const title = `${name} · ${t("tutorTitleSuffix")}`;
+  const pic = user?.profile_picture
+    ? getPublicUrl("avatars", user.profile_picture)
+    : undefined;
+
+  return buildPageMetadata({
+    locale,
+    path: `/tutors/${id}`,
+    title,
+    titleAbsolute: true,
+    description,
+    openGraphImages: pic ? [pic] : undefined,
+  });
+}
 
 function StarRating({ rating, size = 16 }: { rating: number; size?: number }) {
   return (

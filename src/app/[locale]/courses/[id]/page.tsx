@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -14,6 +15,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 
+import { buildPageMetadata, truncateForMeta } from "@/lib/seo/page-metadata";
 import { resolveCourseTutorUser } from "@/lib/supabase/course-tutor";
 import { createCatalogServerClient } from "@/lib/supabase/server-public";
 import {
@@ -43,6 +45,75 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar";
+
+const COURSE_PAGE_ID_RE = /^[0-9a-f-]{36}$/i;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; id: string }>;
+}): Promise<Metadata> {
+  const { locale, id } = await params;
+  const t = await getTranslations({ locale, namespace: "seo" });
+
+  if (!id || !COURSE_PAGE_ID_RE.test(id)) {
+    return buildPageMetadata({
+      locale,
+      path: `/courses/${id}`,
+      title: t("courseNotFound.title"),
+      description: t("courseNotFound.description"),
+    });
+  }
+
+  const supabase = createCatalogServerClient();
+  const { data, error } = await supabase
+    .from("courses")
+    .select(
+      `
+      title,
+      description,
+      cover_image,
+      tutor_profile:tutor_profiles!courses_tutor_id_fkey (
+        user:users!tutor_profiles_id_fkey ( username )
+      )
+    `
+    )
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error || !data) {
+    return buildPageMetadata({
+      locale,
+      path: `/courses/${id}`,
+      title: t("courseNotFound.title"),
+      description: t("courseNotFound.description"),
+    });
+  }
+
+  const tCourse = await getTranslations({ locale, namespace: "courseDetail" });
+  const tp = data.tutor_profile as
+    | { user?: { username: string } | null }
+    | null
+    | undefined;
+  const tutorName = tp?.user?.username ?? tCourse("unknownTutor");
+  const bodyExcerpt =
+    truncateForMeta(data.description ?? "") || t("courseExcerptFallback");
+  const description = t("courseDescriptionWithTutor", {
+    tutor: tutorName,
+    excerpt: bodyExcerpt,
+  });
+  const title = `${data.title} · ${t("courseTitleSuffix")}`;
+  const cover = getCourseCoverPublicUrl(data.cover_image ?? null);
+
+  return buildPageMetadata({
+    locale,
+    path: `/courses/${id}`,
+    title,
+    titleAbsolute: true,
+    description,
+    openGraphImages: cover ? [cover] : undefined,
+  });
+}
 
 type Translator = Awaited<ReturnType<typeof getTranslations>>;
 

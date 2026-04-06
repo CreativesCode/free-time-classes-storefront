@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { createCatalogServerClient } from "@/lib/supabase/server-public";
 import { createClient } from "@/lib/supabase/server";
+import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import DashboardClient from "./DashboardClient";
 import { resolveCourseTutorUser } from "@/lib/supabase/course-tutor";
 import type { DashboardRecommendedCourse } from "./DashboardDeferredRecommended";
@@ -46,6 +49,22 @@ interface DashboardStats {
   totalHours: number;
   totalTutors: number;
   pendingRequests: number;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "seo" });
+  return buildPageMetadata({
+    locale,
+    path: "/dashboard",
+    title: t("dashboard.title"),
+    description: t("dashboard.description"),
+    robots: { index: false, follow: false },
+  });
 }
 
 export default async function DashboardPage({

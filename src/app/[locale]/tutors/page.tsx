@@ -3,12 +3,30 @@ import {
   fetchTutorReviewStatsMap,
   mergeTutorProfileReviewStats,
 } from "@/lib/supabase/tutor-review-stats";
+import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import { createCatalogServerClient } from "@/lib/supabase/server-public";
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { unstable_cache } from "next/cache";
 import { Suspense } from "react";
 import TutorsPageClient, { type EnrichedTutor } from "./TutorsPageClient";
 
 export const revalidate = 3600;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "seo" });
+  return buildPageMetadata({
+    locale,
+    path: "/tutors",
+    title: t("tutors.title"),
+    description: t("tutors.description"),
+  });
+}
 
 interface TutorUser {
   id: string;

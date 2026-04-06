@@ -1,5 +1,8 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
+import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import { fetchTutorReviewStatsMap } from "@/lib/supabase/tutor-review-stats";
 import TutorDashboardClient from "./TutorDashboardClient";
 import type { Booking } from "@/types/booking";
@@ -26,6 +29,22 @@ interface TodayLesson {
   meet_link: string | null;
   subject: { name: string } | null;
   student: { id: string; user: { username: string } | null } | null;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "seo" });
+  return buildPageMetadata({
+    locale,
+    path: "/tutor/dashboard",
+    title: t("tutorDashboard.title"),
+    description: t("tutorDashboard.description"),
+    robots: { index: false, follow: false },
+  });
 }
 
 export default async function TutorDashboardPage({

@@ -1,12 +1,31 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
+import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import { createClient } from "@/lib/supabase/server";
 import type { StudentProfile } from "@/types/student";
 
 import StudentProfilePageClient, {
   type StudentProfilePageUser,
 } from "./StudentProfilePageClient";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "seo" });
+  return buildPageMetadata({
+    locale,
+    path: "/student-profile",
+    title: t("studentProfile.title"),
+    description: t("studentProfile.description"),
+    robots: { index: false, follow: false },
+  });
+}
 
 function StudentProfileFallback() {
   return (

@@ -1,8 +1,27 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
 
+import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import { createClient } from "@/lib/supabase/server";
 
 import RegisterClient from "./RegisterClient";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "seo" });
+  return buildPageMetadata({
+    locale,
+    path: "/register",
+    title: t("register.title"),
+    description: t("register.description"),
+    robots: { index: false, follow: true },
+  });
+}
 
 export default async function RegisterPage({
   params,

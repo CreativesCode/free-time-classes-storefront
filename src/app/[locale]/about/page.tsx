@@ -1,6 +1,7 @@
 import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
+import { buildPageMetadata } from "@/lib/seo/page-metadata";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -9,10 +10,13 @@ export async function generateMetadata({
 }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "aboutUs" });
-  return {
+  return buildPageMetadata({
+    locale,
+    path: "/about",
     title: t("metaTitle"),
     description: t("metaDescription"),
-  };
+    titleAbsolute: true,
+  });
 }
 
 export default async function AboutPage({ params }: Props) {

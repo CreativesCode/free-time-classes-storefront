@@ -1,4 +1,6 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import {
   ArrowRight,
   BookOpen,
@@ -11,6 +13,23 @@ import {
   Settings2,
   ShieldCheck,
 } from "lucide-react";
+
+import { buildPageMetadata } from "@/lib/seo/page-metadata";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "seo" });
+  return buildPageMetadata({
+    locale,
+    path: "/contact",
+    title: t("contact.title"),
+    description: t("contact.description"),
+  });
+}
 
 const helpCategories = [
   {

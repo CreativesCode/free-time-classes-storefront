@@ -1,15 +1,33 @@
 import type { CourseWithRelations } from "@/types/course";
 import type { Subject } from "@/types/subject";
 import { resolveCourseTutorUser } from "@/lib/supabase/course-tutor";
+import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import {
   createCatalogServerClient,
   createPublicServerClient,
 } from "@/lib/supabase/server-public";
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { unstable_cache } from "next/cache";
 import { Suspense } from "react";
 import CoursesPageClient from "./CoursesPageClient";
 
 export const revalidate = 3600;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "seo" });
+  return buildPageMetadata({
+    locale,
+    path: "/courses",
+    title: t("courses.title"),
+    description: t("courses.description"),
+  });
+}
 
 function CoursesFallback() {
   return (

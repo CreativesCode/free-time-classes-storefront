@@ -1,5 +1,8 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
+import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import { resolveCourseTutorUser } from "@/lib/supabase/course-tutor";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -24,6 +27,22 @@ function flattenTutorSubjects(
     const s = row.subject;
     if (!s) return [];
     return Array.isArray(s) ? s : [s];
+  });
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "seo" });
+  return buildPageMetadata({
+    locale,
+    path: "/teacher-profile",
+    title: t("teacherProfile.title"),
+    description: t("teacherProfile.description"),
+    robots: { index: false, follow: false },
   });
 }
 

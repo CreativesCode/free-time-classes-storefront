@@ -1,10 +1,29 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
+import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import { resolveCourseTutorUser } from "@/lib/supabase/course-tutor";
 import { createClient } from "@/lib/supabase/server";
 import type { Course, CourseWithRelations } from "@/types/course";
 
 import CoursesCreateClient from "./CoursesCreateClient";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "seo" });
+  return buildPageMetadata({
+    locale,
+    path: "/courses/create",
+    title: t("courseCreate.title"),
+    description: t("courseCreate.description"),
+    robots: { index: false, follow: false },
+  });
+}
 
 export default async function TutorCoursesCreatePage({
   params,

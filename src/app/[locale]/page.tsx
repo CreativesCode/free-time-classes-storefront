@@ -1,12 +1,30 @@
 import HomeContent from "@/components/HomeContent";
 import { resolveCourseTutorUser } from "@/lib/supabase/course-tutor";
 import { fetchHomeFeaturedTeachers } from "@/lib/supabase/server-queries/home-featured-teachers";
+import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import { createCatalogServerClient } from "@/lib/supabase/server-public";
 import type { HomeCourseCard, HomeFeaturedTeacher } from "@/types/home";
+import { getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
 import { unstable_cache } from "next/cache";
 import { Suspense } from "react";
 
 export const revalidate = 3600;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "seo" });
+  return buildPageMetadata({
+    locale,
+    path: "/",
+    title: t("home.title"),
+    description: t("home.description"),
+  });
+}
 
 function HomeFallback() {
   return (

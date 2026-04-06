@@ -1,3 +1,23 @@
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+
+import { buildPageMetadata } from "@/lib/seo/page-metadata";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "seo" });
+  return buildPageMetadata({
+    locale,
+    path: "/privacy-policy",
+    title: t("privacyPolicy.title"),
+    description: t("privacyPolicy.description"),
+  });
+}
+
 const sections = [
   {
     title: "1. Información que recopilamos",

@@ -1,9 +1,28 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
 import { Suspense } from "react";
 
+import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import { createClient } from "@/lib/supabase/server";
 
 import LoginClient from "./LoginClient";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "seo" });
+  return buildPageMetadata({
+    locale,
+    path: "/login",
+    title: t("login.title"),
+    description: t("login.description"),
+    robots: { index: false, follow: true },
+  });
+}
 
 export default async function LoginPage({
   params,

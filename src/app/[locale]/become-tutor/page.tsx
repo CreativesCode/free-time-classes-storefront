@@ -1,7 +1,24 @@
+import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
+import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import BecomeTutorClient, {
   type BecomeTutorCopy,
 } from "./BecomeTutorClient";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "seo" });
+  return buildPageMetadata({
+    locale,
+    path: "/become-tutor",
+    title: t("becomeTutor.title"),
+    description: t("becomeTutor.description"),
+  });
+}
 
 export default async function BecomeTutorPage() {
   const t = await getTranslations("becomeTutor");
