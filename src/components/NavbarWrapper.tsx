@@ -21,6 +21,7 @@ import {
   GraduationCap,
   Home,
   LayoutDashboard,
+  LogIn,
   Menu,
   MessageSquare,
   School,
@@ -148,17 +149,25 @@ export default function NavbarWrapper({
     { href: `/${locale}/contact`, label: t("contact") },
   ];
 
-  const bottomTabs = [
-    { href: `/${locale}/`, icon: Home, label: t("home") },
-    { href: `/${locale}/courses`, icon: BookOpen, label: t("courses") },
-    {
-      href: `/${locale}/${user?.is_tutor ? "tutor/dashboard" : "dashboard"}`,
-      icon: LayoutDashboard,
-      label: t("dashboard"),
-    },
-    { href: `/${locale}/messages`, icon: MessageSquare, label: t("messages") },
-    { href: profileHref, icon: User, label: t("profile") },
-  ];
+  const bottomTabs = user
+    ? [
+        { href: `/${locale}/`, icon: Home, label: t("home") },
+        { href: `/${locale}/courses`, icon: BookOpen, label: t("courses") },
+        {
+          href: `/${locale}/${user.is_tutor ? "tutor/dashboard" : "dashboard"}`,
+          icon: LayoutDashboard,
+          label: t("dashboard"),
+        },
+        { href: `/${locale}/messages`, icon: MessageSquare, label: t("messages") },
+        { href: profileHref, icon: User, label: t("profile") },
+      ]
+    : [
+        { href: `/${locale}/`, icon: Home, label: t("home") },
+        { href: `/${locale}/courses`, icon: BookOpen, label: t("courses") },
+        { href: `/${locale}/tutors`, icon: User, label: t("tutors") },
+        { href: `/${locale}/contact`, icon: CircleHelp, label: t("contact") },
+        { href: `/${locale}/login`, icon: LogIn, label: t("login") },
+      ];
 
   const mobilePrimaryLinks = [
     {
@@ -204,6 +213,7 @@ export default function NavbarWrapper({
       requiresAuth: false,
     },
   ].filter((link) => !link.requiresAuth || user);
+
 
   return (
     <div className="flex min-h-screen flex-col bg-background">

@@ -606,26 +606,7 @@ export default function BookingsClient({ locale }: { locale: string }) {
         </div>
       )}
 
-      {!loading && !error && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-violet-100 bg-white/90 px-4 pb-4 pt-3 backdrop-blur md:hidden">
-          <div className="mx-auto flex w-full max-w-md items-center justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-violet-500">
-                Reservas visibles
-              </p>
-              <p className="text-lg font-black text-violet-900">{filteredBookings.length}</p>
-            </div>
-            <Button
-              onClick={() => router.push(`/${locale}/courses`)}
-              className="rounded-full px-5"
-              size="sm"
-            >
-              <BookOpen className="h-4 w-4" />
-              {t("exploreCourses")}
-            </Button>
-          </div>
-        </div>
-      )}
+      {/* Mobile bottom navigation is handled globally in NavbarWrapper */}
     </div>
   );
 }

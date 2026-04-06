@@ -273,27 +273,6 @@ export default function DashboardClient({
           </p>
         </section>
 
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-violet-100 bg-white/90 px-4 pb-4 pt-3 backdrop-blur md:hidden">
-          <div className="mx-auto flex w-full max-w-md items-center justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-violet-500">
-                Siguiente clase
-              </p>
-              <p className="text-sm font-bold text-violet-900">
-                {upcomingLessons.length > 0
-                  ? formatDate(upcomingLessons[0].scheduled_date_time)
-                  : "Sin agenda"}
-              </p>
-            </div>
-            <Button
-              size="sm"
-              className="rounded-full px-5"
-              onClick={() => router.push(`/${locale}/bookings`)}
-            >
-              {t("seeAll")}
-            </Button>
-          </div>
-        </div>
 
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#702ae1] to-[#b28cff] p-5 text-white shadow-xl shadow-violet-300/40 sm:p-8">
           <div className="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-white/20 blur-3xl" />
@@ -478,39 +457,6 @@ export default function DashboardClient({
           </div>
         </section>
 
-        <nav className="fixed bottom-0 left-0 z-40 flex w-full items-center justify-around rounded-t-[36px] bg-[#fef3ff]/90 px-5 pb-6 pt-3 shadow-[0_-8px_30px_rgba(58,38,75,0.08)] backdrop-blur-xl md:hidden dark:bg-slate-950/90">
-          <button
-            type="button"
-            className="flex flex-col items-center rounded-full bg-[#702ae1] p-3 text-white"
-          >
-            <BookOpen className="h-4 w-4" />
-            <span className="mt-1 text-[10px] font-semibold">Inicio</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push(`/${locale}/courses`)}
-            className="flex flex-col items-center p-3 text-slate-500 dark:text-slate-400"
-          >
-            <GraduationCap className="h-4 w-4" />
-            <span className="mt-1 text-[10px] font-semibold">Clases</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push(`/${locale}/tutors`)}
-            className="flex flex-col items-center p-3 text-slate-500 dark:text-slate-400"
-          >
-            <Users className="h-4 w-4" />
-            <span className="mt-1 text-[10px] font-semibold">Tutores</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push(`/${locale}/student-profile`)}
-            className="flex flex-col items-center p-3 text-slate-500 dark:text-slate-400"
-          >
-            <MessageSquare className="h-4 w-4" />
-            <span className="mt-1 text-[10px] font-semibold">Perfil</span>
-          </button>
-        </nav>
         </div>
       </div>
     </div>
