@@ -39,6 +39,26 @@ export type BecomeTutorCopy = {
   step3Description: string;
   upgradeAccount: string;
   registerNow: string;
+  badge: string;
+  formProfessionalTitle: string;
+  formProfessionalDescription: string;
+  formMainSubjectLabel: string;
+  formMainSubjectPlaceholder: string;
+  formExperienceLabel: string;
+  formExperiencePlaceholder: string;
+  formPortfolioLabel: string;
+  formPortfolioPlaceholder: string;
+  formRatesTitle: string;
+  formRatesDescription: string;
+  formSessionRateLabel: string;
+  formSessionRatePlaceholder: string;
+  formRateHint: string;
+  termsAccept: string;
+  saveDraft: string;
+  footerReviewData: string;
+  footerHaveAccount: string;
+  linkGoToSettings: string;
+  linkSignIn: string;
 };
 
 export default function BecomeTutorClient({
@@ -117,7 +137,7 @@ export default function BecomeTutorClient({
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 pb-16 pt-10 sm:px-6 md:gap-10 md:px-8 md:pt-14 lg:flex-row lg:gap-14 lg:px-10 lg:pt-20">
         <section className="w-full lg:sticky lg:top-24 lg:h-fit lg:w-5/12">
           <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
-            Expert onboarding
+            {copy.badge}
           </div>
           <h1 className="mt-5 text-balance text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
             {copy.title}
@@ -185,51 +205,50 @@ export default function BecomeTutorClient({
               <div className="space-y-4">
                 <div className="border-l-4 border-primary pl-4">
                   <h2 className="text-xl font-bold tracking-tight md:text-2xl">
-                    Perfil profesional
+                    {copy.formProfessionalTitle}
                   </h2>
                   <p className="text-sm text-muted-foreground">
-                    Cuéntanos sobre tu área de especialización.
+                    {copy.formProfessionalDescription}
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <InputField
                     icon={BookOpen}
-                    label="Materia principal"
-                    placeholder="Ej. Dirección creativa"
+                    label={copy.formMainSubjectLabel}
+                    placeholder={copy.formMainSubjectPlaceholder}
                   />
                   <InputField
                     icon={BriefcaseBusiness}
-                    label="Experiencia"
-                    placeholder="Selecciona experiencia"
+                    label={copy.formExperienceLabel}
+                    placeholder={copy.formExperiencePlaceholder}
                   />
                 </div>
                 <InputField
                   icon={LinkIcon}
-                  label="Portfolio URL"
-                  placeholder="https://tuportfolio.com"
+                  label={copy.formPortfolioLabel}
+                  placeholder={copy.formPortfolioPlaceholder}
                 />
               </div>
 
               <div className="space-y-4">
                 <div className="border-l-4 border-primary pl-4">
                   <h2 className="text-xl font-bold tracking-tight md:text-2xl">
-                    Tarifas por sesión
+                    {copy.formRatesTitle}
                   </h2>
                   <p className="text-sm text-muted-foreground">
-                    Configura tu precio estándar por hora.
+                    {copy.formRatesDescription}
                   </p>
                 </div>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-[1.2fr_1fr]">
                   <InputField
                     icon={CircleDollarSign}
-                    label="Tarifa por sesión (USD)"
-                    placeholder="95.00 / hora"
+                    label={copy.formSessionRateLabel}
+                    placeholder={copy.formSessionRatePlaceholder}
                   />
                   <div className="flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/10 p-4 text-xs leading-relaxed text-primary/90">
                     <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
-                    Los tutores con tu nivel suelen cobrar entre $80 y $140 para
-                    esta materia.
+                    {copy.formRateHint}
                   </div>
                 </div>
               </div>
@@ -241,10 +260,7 @@ export default function BecomeTutorClient({
                     type="checkbox"
                     defaultChecked
                   />
-                  <p>
-                    Acepto los términos de servicio para tutores y confirmo que
-                    cuento con las credenciales necesarias para impartir clases.
-                  </p>
+                  <p>{copy.termsAccept}</p>
                 </div>
               </div>
 
@@ -260,18 +276,18 @@ export default function BecomeTutorClient({
                   variant="secondary"
                   className="h-12 rounded-full px-8"
                 >
-                  Guardar avance
+                  {copy.saveDraft}
                 </Button>
               </div>
             </form>
 
             <p className="mt-8 text-center text-sm text-muted-foreground">
-              {user ? "¿Quieres revisar tus datos?" : "¿Ya tienes cuenta?"}{" "}
+              {user ? copy.footerReviewData : copy.footerHaveAccount}{" "}
               <Link
                 href={user ? `/${locale}/settings` : `/${locale}/login`}
                 className="font-semibold text-primary hover:underline"
               >
-                {user ? "Ir a configuración" : "Inicia sesión"}
+                {user ? copy.linkGoToSettings : copy.linkSignIn}
               </Link>
             </p>
           </div>
