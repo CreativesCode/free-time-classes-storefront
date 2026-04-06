@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useTranslations } from "@/i18n/translations";
 import { useAuth } from "@/context/UserContext";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,9 +29,14 @@ type PendingBookingItem = {
   price: number | null;
 };
 
-export default function TutorBookingRequests() {
+export default function TutorBookingRequests({
+  onRequestResponded,
+}: {
+  onRequestResponded?: () => void;
+}) {
   const t = useTranslations("teacherProfile.requests");
   const { user } = useAuth();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<PendingBookingItem[]>([]);
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
@@ -90,7 +96,10 @@ export default function TutorBookingRequests() {
         throw new Error(result.error || t("actionError"));
       }
       toast.success(action === "confirm" ? t("confirmSuccess") : t("rejectSuccess"));
+      setItems((previous) => previous.filter((item) => item.bookingId !== bookingId));
       await loadPendingRequests();
+      onRequestResponded?.();
+      router.refresh();
       setRejectTarget(null);
       setRejectReason("");
       setConfirmTarget(null);

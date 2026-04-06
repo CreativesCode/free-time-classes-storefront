@@ -393,7 +393,12 @@ export default function TeacherProfileClient({
         <TabsContent value="requests" className="space-y-4">
           <Card className="rounded-3xl border-violet-100 p-1">
             <CardContent className="p-4 md:p-6">
-              <TutorBookingRequests />
+              <TutorBookingRequests
+                onRequestResponded={() => {
+                  setCalendarRefresh((n) => n + 1);
+                  router.refresh();
+                }}
+              />
             </CardContent>
           </Card>
         </TabsContent>
