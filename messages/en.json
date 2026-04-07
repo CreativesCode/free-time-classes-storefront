@@ -23,7 +23,8 @@
     "invalidCredentials": "Invalid email or password",
     "genericError": "An error occurred. Please try again.",
     "showPassword": "Show password",
-    "hidePassword": "Hide password"
+    "hidePassword": "Hide password",
+    "backToHome": "Back to home"
   },
   "register": {
     "title": "Register",

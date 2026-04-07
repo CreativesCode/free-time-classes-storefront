@@ -23,7 +23,8 @@
     "invalidCredentials": "Correo o contraseña incorrectos",
     "genericError": "Ha ocurrido un error. Inténtalo de nuevo.",
     "showPassword": "Mostrar contraseña",
-    "hidePassword": "Ocultar contraseña"
+    "hidePassword": "Ocultar contraseña",
+    "backToHome": "Volver al inicio"
   },
   "register": {
     "title": "Registrarse",

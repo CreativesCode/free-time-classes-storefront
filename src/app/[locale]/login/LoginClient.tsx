@@ -3,7 +3,7 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/UserContext";
-import { Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -134,6 +134,16 @@ export default function LoginClient({ locale }: { locale: string }) {
       </div>
 
       <main className="relative z-10 w-full max-w-[480px] space-y-7 pb-6 md:max-w-[540px] md:space-y-11 md:pb-36 lg:max-w-[480px] lg:space-y-12 lg:pb-28">
+        <div className="flex w-full justify-start max-md:px-0.5">
+          <Link
+            href={`/${locale}`}
+            className="inline-flex items-center gap-2 font-headline text-sm font-semibold text-primary transition-colors hover:text-primary-dim"
+          >
+            <ArrowLeft className="size-4 shrink-0" strokeWidth={2} aria-hidden />
+            {t("backToHome")}
+          </Link>
+        </div>
+
         <div className="space-y-2 text-center max-md:px-0.5 md:space-y-4">
           <h1 className="font-headline text-[1.75rem] font-extrabold leading-display tracking-display text-on-background sm:text-lumina-h1 md:text-[2.25rem] md:leading-[1.15] lg:text-lumina-h1-lg">
             {t("brandName")}
