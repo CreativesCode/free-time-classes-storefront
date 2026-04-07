@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { deleteMeetEvent } from "@/lib/google-calendar";
+import { insertNotification } from "@/lib/notifications";
 
 const noStoreJson = (body: unknown, init?: ResponseInit) =>
   NextResponse.json(body, {
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
 
     const { data: booking, error: bookingError } = await admin
       .from("bookings")
-      .select("id,student_id,lesson_id,status")
+      .select("id,student_id,tutor_id,lesson_id,status")
       .eq("id", bookingId)
       .single();
 
@@ -169,6 +170,21 @@ export async function POST(request: NextRequest) {
         })
         .eq("id", booking.lesson_id);
     }
+
+    // Notify tutor about cancellation
+    const { data: studentUser } = await admin
+      .from("users")
+      .select("username")
+      .eq("id", user.id)
+      .single();
+
+    await insertNotification(admin, {
+      userId: booking.tutor_id,
+      type: "booking_cancelled",
+      title: "Clase cancelada",
+      body: `${studentUser?.username ?? "Un estudiante"} ha cancelado su solicitud de clase.`,
+      data: { booking_id: bookingId, lesson_id: booking.lesson_id },
+    });
 
     return noStoreJson({ ok: true }, { status: 200 });
   } catch (err) {

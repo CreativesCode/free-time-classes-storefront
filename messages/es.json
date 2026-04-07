@@ -1261,13 +1261,27 @@
       "notAuthenticated": "Debes iniciar sesión para usar la mensajería."
     }
   },
+  "notifications": {
+    "title": "Notificaciones",
+    "markAllRead": "Marcar todo como leído",
+    "empty": "Sin notificaciones aún",
+    "viewAll": "Ver todas las notificaciones",
+    "now": "ahora",
+    "bookingRequest": "Nueva solicitud de clase",
+    "bookingConfirmed": "Clase confirmada",
+    "bookingRejected": "Solicitud rechazada",
+    "bookingCancelled": "Clase cancelada"
+  },
   "notificationsPage": {
     "badge": "Mantente al día",
     "title": "Centro de Notificaciones",
-    "subtitle": "Revisa tus mensajes, reservas y pagos recientes en un solo lugar.",
+    "subtitle": "Revisa tus reservas y actualizaciones recientes en un solo lugar.",
     "markAllAsRead": "Marcar todo como leído",
     "groupToday": "Hoy",
-    "groupYesterday": "Ayer",
+    "groupEarlier": "Anteriores",
+    "empty": "Aún no tienes notificaciones.",
+    "emptySubtitle": "Te avisaremos cuando ocurra algo importante.",
+    "endOfList": "Fin de actualizaciones recientes",
     "promoTag": "Mentoría Pro",
     "promoTitle": "Lleva tu aprendizaje al siguiente nivel",
     "promoDescription": "Desbloquea sesiones 1:1 con mentores premium y recursos exclusivos.",

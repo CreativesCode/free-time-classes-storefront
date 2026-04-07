@@ -34,6 +34,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import LanguageSwitcher from "./LanguageSwitcher";
+import NotificationBell from "./NotificationBell";
 import { PageRefreshButton } from "./PageRefreshButton";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -258,15 +259,17 @@ export default function NavbarWrapper({
 
             {/* Right */}
             <div className="flex items-center space-x-2 sm:space-x-3">
-              {/* Mobile / small: theme always visible */}
+              {/* Mobile / small: notifications + theme always visible */}
               <div className="flex items-center gap-0.5 md:hidden">
+                <NotificationBell />
                 <PageRefreshButton />
                 <ThemeToggle />
               </div>
 
-              {/* Tablet + desktop: language + theme + account */}
+              {/* Tablet + desktop: language + notifications + theme + account */}
               <div className="hidden items-center gap-2 md:flex">
                 <LanguageSwitcher />
+                <NotificationBell />
                 <PageRefreshButton />
                 <ThemeToggle />
               </div>

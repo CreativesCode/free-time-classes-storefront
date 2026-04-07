@@ -1262,13 +1262,27 @@
       "notAuthenticated": "You must be logged in to use messaging."
     }
   },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "empty": "No notifications yet",
+    "viewAll": "View all notifications",
+    "now": "now",
+    "bookingRequest": "New class request",
+    "bookingConfirmed": "Class confirmed",
+    "bookingRejected": "Request rejected",
+    "bookingCancelled": "Class cancelled"
+  },
   "notificationsPage": {
     "badge": "Stay updated",
     "title": "Notification Center",
-    "subtitle": "Review your latest messages, bookings, and payments in one place.",
+    "subtitle": "Review your latest bookings and updates in one place.",
     "markAllAsRead": "Mark all as read",
     "groupToday": "Today",
-    "groupYesterday": "Yesterday",
+    "groupEarlier": "Earlier",
+    "empty": "You don't have any notifications yet.",
+    "emptySubtitle": "We'll notify you when something important happens.",
+    "endOfList": "End of recent updates",
     "promoTag": "Mentorship Pro",
     "promoTitle": "Level up your learning journey",
     "promoDescription": "Unlock premium 1:1 sessions and exclusive editorial resources.",

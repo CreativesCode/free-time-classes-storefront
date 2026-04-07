@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import { insertNotification } from "@/lib/notifications";
 
 const noStoreJson = (body: unknown, init?: ResponseInit) =>
   NextResponse.json(body, {
@@ -123,6 +124,21 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Notify the tutor about the new booking request
+    const { data: studentUser } = await supabaseAdmin
+      .from("users")
+      .select("username")
+      .eq("id", user.id)
+      .single();
+
+    await insertNotification(supabaseAdmin, {
+      userId: updatedLesson.tutor_id,
+      type: "booking_request",
+      title: "Nueva solicitud de clase",
+      body: `${studentUser?.username ?? "Un estudiante"} ha solicitado una clase contigo.`,
+      data: { booking_id: booking.id, lesson_id: updatedLesson.id, student_id: user.id },
+    });
 
     return noStoreJson({ bookingId: booking.id }, { status: 200 });
   } catch (err) {

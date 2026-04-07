@@ -22,7 +22,6 @@ import {
   GraduationCap,
   TrendingUp,
   ChevronRight,
-  Bell,
   Flame,
   Video,
 } from "lucide-react";
@@ -242,15 +241,7 @@ export default function DashboardClient({
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              className="relative rounded-full bg-violet-100/80 p-2.5 text-violet-700 transition-colors hover:bg-violet-200 dark:bg-slate-800 dark:text-violet-300"
-            >
-              <Bell className="h-5 w-5" />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
-            </button>
-          </div>
+          <div className="flex items-center gap-3" />
         </div>
         </header>
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createMeetEvent, hasGoogleConnection } from "@/lib/google-calendar";
+import { insertNotification } from "@/lib/notifications";
 
 const noStoreJson = (body: unknown, init?: ResponseInit) =>
   NextResponse.json(body, {
@@ -68,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     const { data: booking, error: bookingError } = await admin
       .from("bookings")
-      .select("id,tutor_id,lesson_id,status")
+      .select("id,tutor_id,student_id,lesson_id,status")
       .eq("id", bookingId)
       .single();
 
@@ -167,6 +168,21 @@ export async function POST(request: NextRequest) {
           .eq("id", booking.lesson_id);
       }
 
+      // Notify student about confirmation
+      const { data: tutorUser } = await admin
+        .from("users")
+        .select("username")
+        .eq("id", user.id)
+        .single();
+
+      await insertNotification(admin, {
+        userId: booking.student_id,
+        type: "booking_confirmed",
+        title: "Clase confirmada",
+        body: `${tutorUser?.username ?? "Tu tutor"} ha confirmado tu solicitud de clase.`,
+        data: { booking_id: bookingId, lesson_id: booking.lesson_id },
+      });
+
       return noStoreJson({ ok: true, meetLink: finalMeetLink || null }, { status: 200 });
     }
 
@@ -213,6 +229,21 @@ export async function POST(request: NextRequest) {
         })
         .eq("id", booking.lesson_id);
     }
+
+    // Notify student about rejection
+    const { data: tutorUserReject } = await admin
+      .from("users")
+      .select("username")
+      .eq("id", user.id)
+      .single();
+
+    await insertNotification(admin, {
+      userId: booking.student_id,
+      type: "booking_rejected",
+      title: "Solicitud rechazada",
+      body: `${tutorUserReject?.username ?? "Tu tutor"} no pudo aceptar tu solicitud de clase.`,
+      data: { booking_id: bookingId, lesson_id: booking.lesson_id },
+    });
 
     return noStoreJson({ ok: true }, { status: 200 });
   } catch (err) {
