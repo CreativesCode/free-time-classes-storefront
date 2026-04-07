@@ -115,6 +115,14 @@ export default function HomeContent({
                   {t("findTutors")}
                 </Link>
               </div>
+              <p className="pt-1 text-center text-sm text-on-surface-variant md:mx-auto lg:mx-0 lg:text-left">
+                <Link
+                  href={`/${locale}/contact`}
+                  className="font-semibold text-primary underline-offset-4 hover:underline"
+                >
+                  {t("heroContactCta")}
+                </Link>
+              </p>
             </div>
             <div className="md:col-span-5 relative mt-2 md:mt-8 lg:mt-0">
               <div className="relative w-full aspect-[4/3] md:hidden rounded-xl overflow-hidden z-10 bg-surface-container-highest shadow-[0_30px_60px_-12px_rgba(112,42,225,0.08)]">

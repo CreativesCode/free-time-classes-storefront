@@ -15,6 +15,7 @@ export default function Footer() {
     { href: `/${locale}/courses`, label: t("availableCourses") },
     { href: `/${locale}/become-tutor`, label: t("becomeTutor") },
     { href: `/${locale}/about`, label: t("aboutUs") },
+    { href: `/${locale}/contact`, label: t("contact") },
     { href: `/${locale}/privacy-policy`, label: "Política de privacidad" },
     { href: `/${locale}/terms-of-service`, label: "Términos de servicio" },
   ];

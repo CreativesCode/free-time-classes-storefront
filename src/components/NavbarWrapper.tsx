@@ -195,6 +195,12 @@ export default function NavbarWrapper({
       requiresAuth: false,
     },
     {
+      href: `/${locale}/contact`,
+      label: t("contact"),
+      icon: CircleHelp,
+      requiresAuth: false,
+    },
+    {
       href: `/${locale}/settings`,
       label: t("settings"),
       icon: CreditCard,
@@ -204,12 +210,6 @@ export default function NavbarWrapper({
       href: `/${locale}/courses`,
       label: t("courses"),
       icon: FolderOpen,
-      requiresAuth: false,
-    },
-    {
-      href: `/${locale}/contact`,
-      label: t("contact"),
-      icon: CircleHelp,
       requiresAuth: false,
     },
   ].filter((link) => !link.requiresAuth || user);
@@ -320,6 +320,9 @@ export default function NavbarWrapper({
                         <Link href={`/${locale}/settings`}>
                           {t("settings")}
                         </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild className="rounded-sm">
+                        <Link href={`/${locale}/contact`}>{t("contact")}</Link>
                       </DropdownMenuItem>
                       {user.is_tutor && (
                         <DropdownMenuItem asChild className="rounded-sm">

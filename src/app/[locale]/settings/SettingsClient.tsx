@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
@@ -876,8 +877,8 @@ export default function SettingsClient({ locale }: { locale: string }) {
                     <h3 className="text-base font-bold text-zinc-900">{t("billingSupportTitle")}</h3>
                     <p className="mt-1 text-sm text-zinc-600">{t("billingSupportDescription")}</p>
                     <div className="mt-4 flex flex-wrap gap-2">
-                      <Button variant="outline" className="rounded-md">
-                        {t("contactSupport")}
+                      <Button variant="outline" className="rounded-md" asChild>
+                        <Link href={`/${locale}/contact`}>{t("contactSupport")}</Link>
                       </Button>
                       <Button variant="ghost" className="rounded-md text-primary">
                         {t("billingFaq")}
