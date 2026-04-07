@@ -93,7 +93,9 @@
     "theme": "Appearance",
     "themeLight": "Light",
     "themeDark": "Dark",
-    "themeToggleAria": "Switch between light and dark mode"
+    "themeToggleAria": "Switch between light and dark mode",
+    "refreshAria": "Refresh page",
+    "refreshTooltip": "Refresh"
   },
   "authCallback": {
     "verifyingTitle": "Verifying your account",

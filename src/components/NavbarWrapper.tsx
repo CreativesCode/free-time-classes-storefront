@@ -34,6 +34,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import LanguageSwitcher from "./LanguageSwitcher";
+import { PageRefreshButton } from "./PageRefreshButton";
 import { ThemeToggle } from "./ThemeToggle";
 
 function UserAvatar({
@@ -133,9 +134,10 @@ export default function NavbarWrapper({
       <>
         {children}
         <div
-          className="fixed bottom-4 right-4 z-[60] md:bottom-8 md:right-8 lg:bottom-10 lg:right-10"
+          className="fixed bottom-4 right-4 z-[60] flex flex-col items-end gap-2 md:bottom-8 md:right-8 lg:bottom-10 lg:right-10"
           style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
         >
+          <PageRefreshButton />
           <ThemeToggle />
         </div>
       </>
@@ -257,13 +259,15 @@ export default function NavbarWrapper({
             {/* Right */}
             <div className="flex items-center space-x-2 sm:space-x-3">
               {/* Mobile / small: theme always visible */}
-              <div className="md:hidden">
+              <div className="flex items-center gap-0.5 md:hidden">
+                <PageRefreshButton />
                 <ThemeToggle />
               </div>
 
               {/* Tablet + desktop: language + theme + account */}
               <div className="hidden items-center gap-2 md:flex">
                 <LanguageSwitcher />
+                <PageRefreshButton />
                 <ThemeToggle />
               </div>
 

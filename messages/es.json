@@ -93,7 +93,9 @@
     "theme": "Apariencia",
     "themeLight": "Claro",
     "themeDark": "Oscuro",
-    "themeToggleAria": "Cambiar entre modo claro y oscuro"
+    "themeToggleAria": "Cambiar entre modo claro y oscuro",
+    "refreshAria": "Actualizar la página",
+    "refreshTooltip": "Actualizar"
   },
   "authCallback": {
     "verifyingTitle": "Verificando tu cuenta",
