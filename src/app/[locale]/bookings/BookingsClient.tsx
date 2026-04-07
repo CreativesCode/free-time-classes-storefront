@@ -286,7 +286,7 @@ export default function BookingsClient({ locale }: { locale: string }) {
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary">
               <Calendar className="h-3.5 w-3.5" />
-              FreeTime Lumina
+              {t("heroBadge")}
             </div>
             <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 md:hidden">
               {t("title")}

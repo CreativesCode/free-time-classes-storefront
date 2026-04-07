@@ -35,10 +35,7 @@ export default function Footer() {
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-lg border border-white/10 bg-white/[0.04] p-6 shadow-lumina-sm backdrop-blur-lumina">
-            <p className="text-lumina-overline font-bold uppercase tracking-overline text-white/65">
-              FreeTime Lumina
-            </p>
-            <h3 className="mt-3 text-lumina-h3 font-semibold text-white">Free Time Classes</h3>
+            <h3 className="text-lumina-h3 font-semibold text-white">Free Time Classes</h3>
             <p className="mt-3 text-lumina-body text-white/70">{t("companyDescription")}</p>
           </div>
 

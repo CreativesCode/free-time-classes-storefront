@@ -29,7 +29,7 @@
   "register": {
     "title": "Register",
     "description": "Create your account to get started",
-    "lumina": {
+    "hero": {
       "badge": "Start your journey",
       "headline": "Unleash your <accent>creative</accent> potential.",
       "editorial": "Join a community of learners exploring workshops in art, tech, and design.",
@@ -1175,6 +1175,7 @@
     "hourlyRate": "hourly rate"
   },
   "bookingsPage": {
+    "heroBadge": "Free Time Classes",
     "title": "My Bookings",
     "subtitle": "Manage your class reservations",
     "loading": "Loading bookings...",

@@ -10,7 +10,7 @@ module.exports = {
   ],
   theme: {
     extend: {
-      /* ── Typography — Plus Jakarta Sans (guía Lumina, única familia) ─── */
+      /* ── Typography — Plus Jakarta Sans (single family) ─────────────── */
       fontFamily: {
         sans: [
           "var(--font-plus-jakarta)",
@@ -39,8 +39,7 @@ module.exports = {
       },
 
       /**
-       * Escala FreeTime Lumina (Mobile / Desktop)
-       * @see docs/design/stitch/gu_a_de_tipograf_a_freetime_lumina.html
+       * Tipografía responsive (mobile / desktop).
        * Usar: text-lumina-h1 md:text-lumina-h1-lg, etc.
        */
       fontSize: {
@@ -96,7 +95,7 @@ module.exports = {
         input:  "hsl(var(--input))",
         ring:   "hsl(var(--ring))",
 
-        /* Lumina semantic tokens — RGB channels (supports /opacity) ──── */
+        /* Brand semantic tokens — RGB channels (supports /opacity) ───── */
 
         // Primary  (#702ae1 light · #A78BFA dark)
         primary: {
@@ -204,7 +203,7 @@ module.exports = {
         "lumina-text-secondary":
           "rgb(var(--lt-text-body-secondary) / <alpha-value>)",
 
-        // Accent (shadcn compat — points to Lumina surface layer)
+        // Accent (shadcn compat — surface layer)
         accent: {
           DEFAULT:    "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
@@ -221,7 +220,7 @@ module.exports = {
         },
       },
 
-      /* ── Border Radius — Lumina Roundedness Scale ────────────────────
+      /* ── Border Radius — roundedness scale ───────────────────────────
          Cards/Sections: xl (3rem/48px)  — brand signature
          Buttons/Inputs: md (1.5rem/24px) — precise interaction
          Panels:         lg (2rem/32px)   — inner containers            */
@@ -236,7 +235,7 @@ module.exports = {
         full:    "9999px",
       },
 
-      /* ── Box Shadow — Lumina Ambient Shadows ─────────────────────────
+      /* ── Box Shadow — ambient shadows ────────────────────────────────
          Never pure black. Always tinted with on_surface (#3a264b)       */
       boxShadow: {
         "lumina-xs":    "0 2px  8px rgba(58, 38, 75, 0.04)",

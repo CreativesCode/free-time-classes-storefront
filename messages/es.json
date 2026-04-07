@@ -29,7 +29,7 @@
   "register": {
     "title": "Registrarse",
     "description": "Crea tu cuenta para comenzar",
-    "lumina": {
+    "hero": {
       "badge": "Comienza tu camino",
       "headline": "Desata tu potencial <accent>creativo</accent>.",
       "editorial": "Únete a una comunidad de personas que aprenden con talleres de arte, tecnología y diseño.",
@@ -1174,6 +1174,7 @@
     "hourlyRate": "tarifa por hora"
   },
   "bookingsPage": {
+    "heroBadge": "Free Time Classes",
     "title": "Mis Reservas",
     "subtitle": "Gestiona tus reservas de clases",
     "loading": "Cargando reservas...",

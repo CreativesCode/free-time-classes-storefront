@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* ─────────────────────────────────────────────────────────────────────────
-   FreeTime Lumina — Design System Tokens
+   Design system tokens (Free Time Classes)
    Design North Star: "The Editorial Mentor"
    Primary: #702ae1 (light) / #A78BFA (dark)
    Surface strategy: Tonal layering, no 1px borders, glassmorphism for nav
@@ -38,7 +38,7 @@
     --chart-4:                 43  74% 66%;
     --chart-5:                 27  87% 67%;
 
-    /* ── Lumina color tokens — RGB channels (supports opacity modifiers) */
+    /* ── Semantic color tokens — RGB channels (supports opacity modifiers) */
 
     /* Background & Surface */
     --lt-background:                  254 243 255;  /* #fef3ff */
@@ -137,7 +137,7 @@
     --chart-4:                280  65% 60%;
     --chart-5:                340  75% 55%;
 
-    /* ── Lumina dark tokens — RGB channels ──────────────────────────── */
+    /* ── Dark theme tokens — RGB channels ─────────────────────────── */
 
     /* Background & Surface (Zinc-based, no pure black) */
     --lt-background:                    9   9  11;  /* #09090B – Zinc 950 */
@@ -213,7 +213,7 @@
     @apply border-border;
   }
 
-  /* Cuerpo por defecto: 14px / leading 1.5 (guía Lumina — Body Medium) */
+  /* Cuerpo por defecto: 14px / leading 1.5 (body medium) */
   body {
     @apply bg-background text-foreground font-sans text-sm leading-[1.5];
     font-feature-settings: "rlig" 1, "calt" 1;
@@ -241,7 +241,7 @@
   }
 }
 
-/* ── Lumina glass effect utility ───────────────────────────────────────── */
+/* ── Glass effect utilities ───────────────────────────────────────────── */
 @layer utilities {
   .glass-lumina {
     backdrop-filter: blur(24px);

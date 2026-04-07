@@ -211,25 +211,25 @@ export default function RegisterClient({ locale }: { locale: string }) {
             <Link
               href={`/${locale}/login`}
               className="flex size-12 items-center justify-center rounded-full bg-surface-container-highest/50 text-on-surface transition-colors hover:bg-surface-container-highest"
-              aria-label={t("lumina.backAria")}
+              aria-label={t("hero.backAria")}
             >
               <ArrowLeft className="size-5" strokeWidth={2} />
             </Link>
             <span className="rounded-full bg-surface-container-highest px-4 py-1.5 font-headline text-xs font-semibold uppercase tracking-wider text-primary">
-              {t("lumina.stepLabel")}
+              {t("hero.stepLabel")}
             </span>
           </div>
 
           <div className="mb-6 space-y-3 lg:hidden">
             <h1 className="font-headline text-[1.75rem] font-extrabold leading-tight tracking-tight text-on-surface sm:text-4xl">
-              {t.rich("lumina.mobileHeadline", {
+              {t.rich("hero.mobileHeadline", {
                 accent: (chunks) => (
                   <span className="text-primary">{chunks}</span>
                 ),
               })}
             </h1>
             <p className="text-lg font-medium leading-relaxed text-on-surface-variant">
-              {t("lumina.mobileSubtitle")}
+              {t("hero.mobileSubtitle")}
             </p>
           </div>
 
@@ -249,17 +249,17 @@ export default function RegisterClient({ locale }: { locale: string }) {
           <div className="hidden max-w-[540px] space-y-6 md:mx-auto md:block lg:hidden">
             <div className="space-y-3 md:space-y-4">
               <span className="inline-block rounded-full bg-primary-container px-4 py-1.5 font-headline text-xs font-bold uppercase tracking-widest text-on-primary-container">
-                {t("lumina.badge")}
+                {t("hero.badge")}
               </span>
               <h1 className="font-headline text-2xl font-extrabold leading-[1.15] tracking-tighter text-on-background md:text-3xl xl:text-5xl">
-                {t.rich("lumina.headline", {
+                {t.rich("hero.headline", {
                   accent: (chunks) => (
                     <span className="text-primary">{chunks}</span>
                   ),
                 })}
               </h1>
               <p className="max-w-md text-base leading-relaxed text-on-surface-variant md:text-lg">
-                {t("lumina.editorial")}
+                {t("hero.editorial")}
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 md:gap-4">
@@ -270,7 +270,7 @@ export default function RegisterClient({ locale }: { locale: string }) {
                   aria-hidden
                 />
                 <p className="font-headline text-sm font-bold text-on-background">
-                  {t("lumina.featureMentors")}
+                  {t("hero.featureMentors")}
                 </p>
               </div>
               <div className="space-y-2 rounded-lg bg-surface-container-highest p-4 md:p-6">
@@ -280,7 +280,7 @@ export default function RegisterClient({ locale }: { locale: string }) {
                   aria-hidden
                 />
                 <p className="font-headline text-sm font-bold text-on-background">
-                  {t("lumina.featureFlexible")}
+                  {t("hero.featureFlexible")}
                 </p>
               </div>
             </div>
@@ -290,17 +290,17 @@ export default function RegisterClient({ locale }: { locale: string }) {
           <div className="hidden space-y-8 lg:col-span-5 lg:block">
             <div className="space-y-4">
               <span className="inline-block rounded-full bg-primary-container px-4 py-1.5 font-headline text-xs font-bold uppercase tracking-widest text-on-primary-container">
-                {t("lumina.badge")}
+                {t("hero.badge")}
               </span>
               <h1 className="font-headline text-4xl font-extrabold leading-[1.1] tracking-tighter text-on-background xl:text-5xl">
-                {t.rich("lumina.headline", {
+                {t.rich("hero.headline", {
                   accent: (chunks) => (
                     <span className="text-primary">{chunks}</span>
                   ),
                 })}
               </h1>
               <p className="max-w-md text-lg leading-relaxed text-on-surface-variant">
-                {t("lumina.editorial")}
+                {t("hero.editorial")}
               </p>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -311,7 +311,7 @@ export default function RegisterClient({ locale }: { locale: string }) {
                   aria-hidden
                 />
                 <p className="font-headline text-sm font-bold text-on-background">
-                  {t("lumina.featureMentors")}
+                  {t("hero.featureMentors")}
                 </p>
               </div>
               <div className="space-y-2 rounded-lg bg-surface-container-highest p-6">
@@ -321,7 +321,7 @@ export default function RegisterClient({ locale }: { locale: string }) {
                   aria-hidden
                 />
                 <p className="font-headline text-sm font-bold text-on-background">
-                  {t("lumina.featureFlexible")}
+                  {t("hero.featureFlexible")}
                 </p>
               </div>
             </div>
@@ -333,14 +333,14 @@ export default function RegisterClient({ locale }: { locale: string }) {
                 <div className="h-1.5 flex-1 rounded-full bg-primary" />
                 <div className="h-1.5 flex-1 rounded-full bg-surface-container-high" />
                 <div className="whitespace-nowrap font-headline text-xs font-bold uppercase tracking-widest text-primary">
-                  {t("lumina.stepLabel")}
+                  {t("hero.stepLabel")}
                 </div>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="space-y-6">
                   <h2 className="font-headline text-xl font-bold text-on-background md:text-2xl">
-                    {t("lumina.whoAreYou")}
+                    {t("hero.whoAreYou")}
                   </h2>
                   <div
                     className="grid grid-cols-1 gap-4 sm:grid-cols-2"
@@ -351,10 +351,10 @@ export default function RegisterClient({ locale }: { locale: string }) {
                       const selected = accountType === value;
                       const roleDesc =
                         value === "student"
-                          ? t("lumina.roleStudentDesc")
+                          ? t("hero.roleStudentDesc")
                           : value === "tutor"
-                            ? t("lumina.roleTutorDesc")
-                            : t("lumina.roleBothDesc");
+                            ? t("hero.roleTutorDesc")
+                            : t("hero.roleBothDesc");
                       return (
                         <button
                           key={value}
@@ -481,7 +481,7 @@ export default function RegisterClient({ locale }: { locale: string }) {
                     disabled={isLoading}
                     className="h-12 w-full rounded-full bg-gradient-to-br from-primary to-primary-dim px-8 font-headline text-lumina-button font-bold text-on-primary shadow-lg shadow-primary/20 transition-all duration-300 hover:opacity-90 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60 sm:h-14 md:w-auto md:min-w-[200px]"
                   >
-                    {isLoading ? t("loading") : t("lumina.submitCta")}
+                    {isLoading ? t("loading") : t("hero.submitCta")}
                   </button>
                   <p className="text-center text-sm text-on-surface-variant md:text-left">
                     {t("alreadyHaveAccount")}{" "}
@@ -499,7 +499,7 @@ export default function RegisterClient({ locale }: { locale: string }) {
             <div className="mx-auto mt-8 flex max-w-md items-center gap-4 px-2 lg:max-w-none">
               <div className="h-px flex-1 bg-outline-variant/30" />
               <span className="font-headline text-[10px] font-black uppercase tracking-[0.2em] text-outline">
-                {t("lumina.secureBadge")}
+                {t("hero.secureBadge")}
               </span>
               <div className="h-px flex-1 bg-outline-variant/30" />
             </div>
