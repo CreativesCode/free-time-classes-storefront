@@ -162,8 +162,8 @@ export default function EditProfileModal({
         }
       }}
     >
-      <DialogContent className="flex max-h-[calc(100dvh-1rem)] flex-col overflow-hidden p-0 sm:max-w-[600px]">
-        <DialogHeader className="px-4 pt-6 sm:px-6">
+      <DialogContent className="flex min-h-0 max-h-[calc(100dvh-1.5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col overflow-hidden p-0 sm:max-w-[600px]">
+        <DialogHeader className="shrink-0 px-4 pt-6 sm:px-6">
           <DialogTitle>{t("editProfile")}</DialogTitle>
           <DialogDescription>{t("editProfileDescription")}</DialogDescription>
         </DialogHeader>
@@ -262,7 +262,7 @@ export default function EditProfileModal({
           </div>
 
           </div>
-          <DialogFooter className="mt-2 flex shrink-0 flex-col gap-2 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:px-6">
+          <DialogFooter className="mt-auto flex shrink-0 flex-col gap-2 border-t bg-background px-4 pt-3 pb-[max(1rem,calc(env(safe-area-inset-bottom)+0.75rem))] sm:flex-row sm:justify-end sm:px-6">
             <Button type="button" variant="outline" onClick={onClose}>
               {t("cancel")}
             </Button>
