@@ -1321,7 +1321,24 @@
     "meetLinkSaving": "Saving...",
     "videoCall": "Video call",
     "resumeClass": "Resume class",
-    "upcomingClassMobile": "Next class"
+    "upcomingClassMobile": "Next class",
+    "navDashboard": "Dashboard",
+    "navMyClasses": "My classes",
+    "navTutors": "Tutors",
+    "navProgress": "Progress",
+    "searchPlaceholder": "Search courses, tutors…",
+    "brandTagline": "Classes",
+    "weeklyGoalEyebrow": "Your weekly goal",
+    "weeklyGoalTitle": "You're one step away from completing your study goal.",
+    "streakDays": "{days}-day streak",
+    "weeklyProgressLabel": "Weekly progress",
+    "defaultLessonTitle": "Lesson",
+    "durationMinutesShort": "{minutes} min",
+    "durationHoursShort": "{hours} h",
+    "recommendedForYou": "Recommended for you",
+    "recommendedEmpty": "No courses available yet. Check back soon to explore the catalog.",
+    "defaultCourseCategory": "Course",
+    "unknownTutor": "Tutor"
   },
   "seo": {
     "home": {

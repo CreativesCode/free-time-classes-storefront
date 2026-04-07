@@ -51,9 +51,7 @@ const DashboardDeferredSidebar = dynamic(
 );
 
 interface DashboardUser {
-  id: string;
   username: string | null;
-  profile_picture: string | null;
   is_tutor: boolean;
 }
 
@@ -91,16 +89,6 @@ export default function DashboardClient({
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("dashboard");
-
-  const profilePictureUrl =
-    user.profile_picture && typeof user.profile_picture === "string"
-      ? user.profile_picture.startsWith("http")
-        ? user.profile_picture
-        : getPublicUrl("avatars", user.profile_picture)
-      : null;
-
-  const avatarColor = getAvatarColor(user.username ?? "");
-  const initials = user.username?.[0]?.toUpperCase() ?? "U";
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -157,10 +145,30 @@ export default function DashboardClient({
   };
 
   const sidebarItems = [
-    { label: "Dashboard", icon: BookOpen, href: `/${locale}/dashboard`, active: true },
-    { label: "Mis clases", icon: GraduationCap, href: `/${locale}/courses` },
-    { label: "Tutores", icon: Users, href: `/${locale}/tutors` },
-    { label: "Progreso", icon: TrendingUp, href: `/${locale}/bookings` },
+    {
+      label: t("navDashboard"),
+      icon: BookOpen,
+      href: `/${locale}/dashboard`,
+      active: true,
+    },
+    {
+      label: t("navMyClasses"),
+      icon: GraduationCap,
+      href: `/${locale}/courses`,
+      active: false,
+    },
+    {
+      label: t("navTutors"),
+      icon: Users,
+      href: `/${locale}/tutors`,
+      active: false,
+    },
+    {
+      label: t("navProgress"),
+      icon: TrendingUp,
+      href: `/${locale}/bookings`,
+      active: false,
+    },
   ];
 
   return (
@@ -171,7 +179,7 @@ export default function DashboardClient({
         </div>
         {sidebarItems.map((item) => (
           <button
-            key={item.label}
+            key={item.href}
             type="button"
             onClick={() => router.push(item.href)}
             className={`rounded-2xl p-3 transition ${
@@ -194,14 +202,14 @@ export default function DashboardClient({
           <div>
             <p className="text-lg font-black text-[#702ae1]">FreeTime</p>
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-violet-500">
-              Classes
+              {t("brandTagline")}
             </p>
           </div>
         </div>
         <nav className="flex flex-1 flex-col gap-2">
           {sidebarItems.map((item) => (
             <button
-              key={item.label}
+              key={item.href}
               type="button"
               onClick={() => router.push(item.href)}
               className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold transition ${
@@ -228,7 +236,7 @@ export default function DashboardClient({
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-violet-400" />
               <input
                 type="text"
-                placeholder="Buscar clases, tutores..."
+                placeholder={t("searchPlaceholder")}
                 className="h-10 w-80 rounded-2xl border border-violet-200/70 bg-white/75 pl-9 pr-3 text-sm text-slate-700 outline-none ring-0 placeholder:text-slate-400 focus:border-violet-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
               />
             </div>
@@ -242,17 +250,6 @@ export default function DashboardClient({
               <Bell className="h-5 w-5" />
               <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
             </button>
-            <Avatar className="h-10 w-10 ring-2 ring-violet-100 dark:ring-slate-800">
-              {profilePictureUrl ? (
-                <AvatarImage src={profilePictureUrl} alt={user.username ?? ""} />
-              ) : null}
-              <AvatarFallback
-                style={{ backgroundColor: avatarColor }}
-                className="font-semibold text-white"
-              >
-                {initials}
-              </AvatarFallback>
-            </Avatar>
           </div>
         </div>
         </header>
@@ -279,10 +276,10 @@ export default function DashboardClient({
           <div className="relative z-10 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-2xl space-y-3">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-violet-100">
-                Tu meta semanal
+                {t("weeklyGoalEyebrow")}
               </p>
               <p className="text-2xl font-bold leading-tight sm:text-3xl">
-                Estas a un paso de completar tu objetivo de estudio.
+                {t("weeklyGoalTitle")}
               </p>
               <div className="flex flex-wrap gap-3">
                 <Button
@@ -293,13 +290,13 @@ export default function DashboardClient({
                 </Button>
                 <div className="inline-flex items-center gap-2 rounded-xl bg-white/20 px-3 py-2 text-xs font-semibold backdrop-blur">
                   <Flame className="h-4 w-4" />
-                  Racha de 12 dias
+                  {t("streakDays", { days: 12 })}
                 </div>
               </div>
             </div>
             <div className="hidden lg:block">
               <p className="text-xs font-semibold uppercase tracking-wider text-violet-100">
-                Progreso semanal
+                {t("weeklyProgressLabel")}
               </p>
               <div className="mt-3 flex h-20 items-end gap-1.5">
                 {[40, 55, 38, 75, 90, 62, 48].map((h) => (
@@ -375,7 +372,9 @@ export default function DashboardClient({
                 ) : (
                   upcomingLessons.map((lesson, index) => {
                     const tutorAvatar = getTutorAvatar(lesson);
-                    const tutorColor = getAvatarColor(lesson.tutorUsername);
+                    const tutorDisplayName =
+                      lesson.tutorUsername.trim() || t("unknownTutor");
+                    const tutorColor = getAvatarColor(tutorDisplayName);
                     const isSoon = index === 0;
 
                     return (
@@ -388,22 +387,22 @@ export default function DashboardClient({
                             {tutorAvatar ? (
                               <AvatarImage
                                 src={tutorAvatar}
-                                alt={lesson.tutorUsername}
+                                alt={tutorDisplayName}
                               />
                             ) : null}
                             <AvatarFallback
                               style={{ backgroundColor: tutorColor }}
                               className="font-semibold text-white"
                             >
-                              {lesson.tutorUsername[0]?.toUpperCase()}
+                              {tutorDisplayName[0]?.toUpperCase() ?? "?"}
                             </AvatarFallback>
                           </Avatar>
                           <div className="min-w-0">
                             <p className="truncate text-sm font-bold text-slate-900 dark:text-white">
-                              {lesson.subjectName ?? "Clase"}
+                              {lesson.subjectName ?? t("defaultLessonTitle")}
                             </p>
                             <p className="truncate text-xs text-slate-500 dark:text-slate-400">
-                              {lesson.tutorUsername}
+                              {tutorDisplayName}
                             </p>
                           </div>
                         </div>
@@ -414,7 +413,9 @@ export default function DashboardClient({
                             </p>
                             <p className="text-xs text-slate-500 dark:text-slate-400">
                               {formatTime(lesson.scheduled_date_time)} ·{" "}
-                              {lesson.duration_minutes} min
+                              {t("durationMinutesShort", {
+                                minutes: lesson.duration_minutes,
+                              })}
                             </p>
                           </div>
                           {lesson.meetLink ? (

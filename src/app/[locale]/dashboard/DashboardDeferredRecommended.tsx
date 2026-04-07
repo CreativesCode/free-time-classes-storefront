@@ -6,7 +6,7 @@ import {
   CardContent,
   CardHeader,
 } from "@/components/ui/card";
-import { useLocale } from "@/i18n/translations";
+import { useLocale, useTranslations } from "@/i18n/translations";
 import { getCourseCoverPublicUrl } from "@/lib/supabase/storage";
 import { Star } from "lucide-react";
 import Image from "next/image";
@@ -29,38 +29,43 @@ export default function DashboardDeferredRecommended({
 }) {
   const router = useRouter();
   const locale = useLocale();
+  const t = useTranslations("dashboard");
 
   return (
     <Card className="rounded-xl border-violet-100/70 bg-white/85 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <p className="text-lg font-bold text-slate-900 dark:text-white">
-            Recomendados para ti
+            {t("recommendedForYou")}
           </p>
           <Button
             variant="ghost"
             className="text-violet-700 dark:text-violet-300"
             onClick={() => router.push(`/${locale}/courses`)}
           >
-            Ver todo
+            {t("seeAll")}
           </Button>
         </div>
       </CardHeader>
       <CardContent className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {courses.length === 0 ? (
           <div className="col-span-full rounded-lg border border-dashed border-violet-200 bg-violet-50/40 py-10 text-center text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800/30 dark:text-slate-400">
-            Aún no hay cursos disponibles. Explora el catálogo próximamente.
+            {t("recommendedEmpty")}
           </div>
         ) : (
           courses.map((course) => {
             const coverUrl = getCourseCoverPublicUrl(course.cover_image);
             const category =
-              course.subjectName?.trim() || "Curso";
+              course.subjectName?.trim() || t("defaultCourseCategory");
             const rating = course.rating ?? 0;
             const durationLabel =
               course.duration_minutes >= 60
-                ? `${Math.round(course.duration_minutes / 60)} h`
-                : `${course.duration_minutes} min`;
+                ? t("durationHoursShort", {
+                    hours: Math.round(course.duration_minutes / 60),
+                  })
+                : t("durationMinutesShort", {
+                    minutes: course.duration_minutes,
+                  });
 
             return (
               <button

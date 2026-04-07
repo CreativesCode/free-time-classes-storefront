@@ -1320,7 +1320,24 @@
     "meetLinkSaving": "Guardando...",
     "videoCall": "Videollamada",
     "resumeClass": "Reanudar clase",
-    "upcomingClassMobile": "Siguiente clase"
+    "upcomingClassMobile": "Siguiente clase",
+    "navDashboard": "Panel",
+    "navMyClasses": "Mis clases",
+    "navTutors": "Tutores",
+    "navProgress": "Progreso",
+    "searchPlaceholder": "Buscar cursos, tutores…",
+    "brandTagline": "Clases",
+    "weeklyGoalEyebrow": "Tu meta semanal",
+    "weeklyGoalTitle": "Estás a un paso de completar tu objetivo de estudio.",
+    "streakDays": "Racha de {days} días",
+    "weeklyProgressLabel": "Progreso semanal",
+    "defaultLessonTitle": "Clase",
+    "durationMinutesShort": "{minutes} min",
+    "durationHoursShort": "{hours} h",
+    "recommendedForYou": "Recomendados para ti",
+    "recommendedEmpty": "Aún no hay cursos disponibles. Explora el catálogo próximamente.",
+    "defaultCourseCategory": "Curso",
+    "unknownTutor": "Profesor"
   },
   "seo": {
     "home": {

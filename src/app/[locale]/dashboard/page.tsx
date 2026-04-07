@@ -84,7 +84,7 @@ export default async function DashboardPage({
 
   const { data: userRow } = await supabase
     .from("users")
-    .select("id, username, profile_picture, is_tutor")
+    .select("username, is_tutor")
     .eq("id", authUser.id)
     .single();
 
@@ -192,7 +192,7 @@ export default async function DashboardPage({
       duration_minutes: l.duration_minutes,
       status: l.status,
       subjectName: subj?.name ?? null,
-      tutorUsername: tutUser?.username ?? "Tutor",
+      tutorUsername: tutUser?.username?.trim() ?? "",
       tutorPicture: tutUser?.profile_picture ?? null,
       meetLink: l.meet_link ?? null,
     };
@@ -201,9 +201,7 @@ export default async function DashboardPage({
   return (
     <DashboardClient
       user={{
-        id: authUser.id,
         username: userRow?.username ?? null,
-        profile_picture: userRow?.profile_picture ?? null,
         is_tutor: userRow?.is_tutor ?? false,
       }}
       stats={stats}
