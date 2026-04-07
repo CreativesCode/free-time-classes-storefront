@@ -254,6 +254,7 @@ export default function InternalMessagingPanel({
       const refreshed = await getUserConversations(user.id);
       setConversations(refreshed);
       setSelectedConversationId(conversationId);
+      setShowMobileChat(true);
     } catch (e) {
       console.error("Error creating direct conversation:", e);
       toast.error(tm("createConversationError"));
