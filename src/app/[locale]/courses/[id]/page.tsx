@@ -4,15 +4,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import {
-  ArrowLeft,
-  Clock,
-  Users,
-  Star,
-  BookOpen,
-  GraduationCap,
-  DollarSign,
-  Calendar,
   AlertCircle,
+  ArrowLeft,
+  Award,
+  BookOpen,
+  Briefcase,
+  Calendar,
+  Clock,
+  DollarSign,
+  GraduationCap,
+  Star,
+  Users,
 } from "lucide-react";
 
 import { buildPageMetadata, truncateForMeta } from "@/lib/seo/page-metadata";
@@ -27,6 +29,7 @@ import { getAvatarColor } from "@/lib/utils";
 
 import type { CourseWithRelations } from "@/types/course";
 import type { TutorProfile } from "@/types/tutor";
+import { parseCVData } from "@/types/tutor-cv";
 import type { User } from "@/types/user";
 import type { ReviewWithStudent } from "@/types/review";
 
@@ -733,16 +736,92 @@ function TutorCard({
           )}
         </div>
 
-        {tutorProfile?.certifications && (
-          <div>
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
-              {t("certifications")}
-            </p>
-            <p className="text-sm text-slate-600">
-              {tutorProfile.certifications}
-            </p>
-          </div>
-        )}
+        {(() => {
+          const cv = parseCVData(tutorProfile?.certifications ?? null);
+          const hasCV =
+            cv.education.length > 0 ||
+            cv.certifications.length > 0 ||
+            cv.experience.length > 0;
+          if (!hasCV) return null;
+          return (
+            <div className="space-y-4 border-t border-violet-100/80 pt-4">
+              {cv.education.length > 0 && (
+                <div>
+                  <div className="mb-2 flex items-center gap-2">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-100">
+                      <GraduationCap className="h-3.5 w-3.5 text-violet-700" />
+                    </div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      {t("education")}
+                    </p>
+                  </div>
+                  <div className="space-y-1.5 pl-9">
+                    {cv.education.map((item) => (
+                      <p key={item.id} className="text-sm text-slate-600">
+                        <span className="font-medium text-slate-800">{item.degree}</span>
+                        {item.institution ? (
+                          <span className="text-slate-400"> · {item.institution}</span>
+                        ) : null}
+                        {item.year ? <span className="text-slate-400"> · {item.year}</span> : null}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {cv.certifications.length > 0 && (
+                <div>
+                  <div className="mb-2 flex items-center gap-2">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100">
+                      <Award className="h-3.5 w-3.5 text-amber-700" />
+                    </div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      {t("certifications")}
+                    </p>
+                  </div>
+                  <div className="space-y-1.5 pl-9">
+                    {cv.certifications.map((item) => (
+                      <p key={item.id} className="text-sm text-slate-600">
+                        <span className="font-medium text-slate-800">{item.name}</span>
+                        {item.issuer ? <span className="text-slate-400"> · {item.issuer}</span> : null}
+                        {item.year ? <span className="text-slate-400"> · {item.year}</span> : null}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {cv.experience.length > 0 && (
+                <div>
+                  <div className="mb-2 flex items-center gap-2">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100">
+                      <Briefcase className="h-3.5 w-3.5 text-emerald-700" />
+                    </div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      {t("teachingExperience")}
+                    </p>
+                  </div>
+                  <div className="space-y-2 pl-9">
+                    {cv.experience.map((item) => (
+                      <div key={item.id}>
+                        <p className="text-sm text-slate-600">
+                          <span className="font-medium text-slate-800">{item.role}</span>
+                          {item.institution ? (
+                            <span className="text-slate-400"> · {item.institution}</span>
+                          ) : null}
+                          {item.period ? <span className="text-slate-400"> · {item.period}</span> : null}
+                        </p>
+                        {item.description ? (
+                          <p className="mt-0.5 text-xs leading-relaxed text-slate-400">
+                            {item.description}
+                          </p>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         <Button
           asChild

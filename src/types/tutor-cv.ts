@@ -32,15 +32,26 @@ export const EMPTY_CV: TutorCVData = {
   experience: [],
 };
 
-export function parseCVData(raw: string | null | undefined): TutorCVData {
+function cvFromParsedObject(parsed: Record<string, unknown>): TutorCVData {
+  return {
+    education: Array.isArray(parsed.education) ? (parsed.education as CVEducation[]) : [],
+    certifications: Array.isArray(parsed.certifications)
+      ? (parsed.certifications as CVCertification[])
+      : [],
+    experience: Array.isArray(parsed.experience) ? (parsed.experience as CVExperience[]) : [],
+  };
+}
+
+/** Accepts JSON string, plain legacy text, or JSONB object from PostgREST. */
+export function parseCVData(raw: string | Record<string, unknown> | null | undefined): TutorCVData {
   if (!raw) return { ...EMPTY_CV };
+  if (typeof raw === "object" && !Array.isArray(raw)) {
+    return cvFromParsedObject(raw as Record<string, unknown>);
+  }
+  if (typeof raw !== "string") return { ...EMPTY_CV };
   try {
-    const parsed = JSON.parse(raw);
-    return {
-      education: Array.isArray(parsed.education) ? parsed.education : [],
-      certifications: Array.isArray(parsed.certifications) ? parsed.certifications : [],
-      experience: Array.isArray(parsed.experience) ? parsed.experience : [],
-    };
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    return cvFromParsedObject(parsed);
   } catch {
     // Legacy plain-text certifications: migrate into a single certification entry
     if (raw.trim()) {

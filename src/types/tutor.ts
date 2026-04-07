@@ -3,7 +3,8 @@ export interface TutorProfile {
   id: string; // UUID, references users(id)
   bio?: string | null;
   years_of_experience?: number | null;
-  certifications?: string | null;
+  /** JSON string or JSONB object: education, certifications, experience (see tutor-cv). */
+  certifications?: string | Record<string, unknown> | null;
   languages_spoken?: Record<string, unknown> | null; // JSONB
   hourly_rate?: number | null; // numeric(6,2)
   availability?: Record<string, unknown> | null; // JSONB

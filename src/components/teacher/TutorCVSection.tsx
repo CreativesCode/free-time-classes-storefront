@@ -35,7 +35,7 @@ import { toast } from "sonner";
 
 interface TutorCVSectionProps {
   tutorId: string;
-  certifications: string | null | undefined;
+  certifications: string | Record<string, unknown> | null | undefined;
   onTutorProfileUpdated?: (updates: Partial<TutorProfile>) => void;
 }
 
