@@ -226,7 +226,7 @@ export default async function CourseDetailPage({
         tutor: resolveCourseTutorUser(row.tutor_profile),
       };
 
-      const [{ data: profileData, error: profileError }, { data: reviewsData, error: reviewsError }] =
+      const [{ data: profileData, error: profileError }, { data: reviewsData, error: reviewsError }, tutorReviewStats] =
         await Promise.all([
           supabase
             .from("tutor_profiles")
@@ -256,6 +256,7 @@ export default async function CourseDetailPage({
             .eq("tutor_id", course.tutor_id)
             .order("created_at", { ascending: false })
             .limit(10),
+          fetchTutorReviewStatsMap(supabase, [course.tutor_id]),
         ]);
 
       if (profileError && profileError.code !== "PGRST116") {
@@ -267,9 +268,6 @@ export default async function CourseDetailPage({
 
       tutorProfile = (profileData as (TutorProfile & { user: User }) | null) ?? null;
       if (tutorProfile) {
-        const tutorReviewStats = await fetchTutorReviewStatsMap(supabase, [
-          course.tutor_id,
-        ]);
         tutorProfile = mergeTutorProfileReviewStats(
           tutorProfile,
           tutorReviewStats

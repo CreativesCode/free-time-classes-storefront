@@ -4,21 +4,30 @@ import { createClient } from "../client";
 const supabase = createClient();
 
 /**
- * Get current authenticated user
+ * Get current authenticated user.
+ * When the caller already has the auth user id (e.g. from getSession()),
+ * pass it via `knownUserId` to skip the extra auth round-trip.
  */
-export async function getCurrentUser(): Promise<User | null> {
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser();
+export async function getCurrentUser(
+  knownUserId?: string
+): Promise<User | null> {
+  let userId = knownUserId;
 
-  if (!authUser) {
+  if (!userId) {
+    const {
+      data: { user: authUser },
+    } = await supabase.auth.getUser();
+    userId = authUser?.id;
+  }
+
+  if (!userId) {
     return null;
   }
 
   const { data, error } = await supabase
     .from("users")
     .select("*")
-    .eq("id", authUser.id)
+    .eq("id", userId)
     .single();
 
   if (error) {

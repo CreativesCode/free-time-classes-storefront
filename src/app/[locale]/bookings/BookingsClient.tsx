@@ -24,7 +24,7 @@ import {
   Video,
   ExternalLink,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 type BookingStatus =
@@ -100,6 +100,7 @@ export default function BookingsClient({ locale }: { locale: string }) {
   const [filter, setFilter] = useState<FilterTab>("all");
   const [cancellingId, setCancellingId] = useState<number | null>(null);
 
+  const supabaseRef = useRef(createClient());
   const isBothRoles = !!user?.is_student && !!user?.is_tutor;
   const [viewRole, setViewRole] = useState<ViewRole>("student");
 
@@ -122,7 +123,7 @@ export default function BookingsClient({ locale }: { locale: string }) {
     setError(null);
 
     try {
-      const supabase = createClient();
+      const supabase = supabaseRef.current;
 
       if (viewRole === "student") {
         const { data, error: fetchError } = await supabase
@@ -201,7 +202,7 @@ export default function BookingsClient({ locale }: { locale: string }) {
   const handleCancel = async (bookingId: number) => {
     setCancellingId(bookingId);
     try {
-      const supabase = createClient();
+      const supabase = supabaseRef.current;
       const { error: updateError } = await supabase
         .from("bookings")
         .update({ status: "cancelled" })

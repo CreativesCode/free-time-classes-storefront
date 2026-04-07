@@ -44,7 +44,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         } = await supabase.auth.getSession();
 
         if (session?.user) {
-          const userData = await getCurrentUser();
+          const userData = await getCurrentUser(session.user.id);
           setUser(userData);
         } else {
           setUser(null);
@@ -65,7 +65,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       try {
         if (session?.user) {
-          const userData = await getCurrentUser();
+          const userData = await getCurrentUser(session.user.id);
           setUser(userData);
         } else {
           setUser(null);

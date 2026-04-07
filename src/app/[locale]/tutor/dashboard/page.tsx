@@ -79,7 +79,7 @@ export default async function TutorDashboardPage({
   const todayEnd = new Date();
   todayEnd.setHours(23, 59, 59, 999);
 
-  const [pendingRes, lessonsStatsRes, tutorProfileRes, pendingCountRes, todayLessonsRes] =
+  const [pendingRes, lessonsStatsRes, tutorProfileRes, pendingCountRes, todayLessonsRes, reviewStatsMap] =
     await Promise.all([
       supabase
         .from("bookings")
@@ -109,6 +109,7 @@ export default async function TutorDashboardPage({
         .gte("scheduled_date_time", todayStart.toISOString())
         .lte("scheduled_date_time", todayEnd.toISOString())
         .order("scheduled_date_time", { ascending: true }),
+      fetchTutorReviewStatsMap(supabase, [user.id]),
     ]);
 
   const pendingBookings = (pendingRes.data ?? []).filter(
@@ -147,7 +148,6 @@ export default async function TutorDashboardPage({
     0
   );
 
-  const reviewStatsMap = await fetchTutorReviewStatsMap(supabase, [user.id]);
   const fromReviews = reviewStatsMap?.get(user.id);
   const stats: DashboardStats = {
     classesThisMonth,

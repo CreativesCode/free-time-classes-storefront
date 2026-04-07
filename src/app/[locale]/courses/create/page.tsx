@@ -40,40 +40,42 @@ export default async function TutorCoursesCreatePage({
     redirect(`/${locale}/login`);
   }
 
-  const { data: userRow, error: userRowError } = await supabase
-    .from("users")
-    .select("is_tutor")
-    .eq("id", authUser.id)
-    .single();
+  const [{ data: userRow, error: userRowError }, { data: coursesData, error: coursesError }] =
+    await Promise.all([
+      supabase
+        .from("users")
+        .select("is_tutor")
+        .eq("id", authUser.id)
+        .single(),
+      supabase
+        .from("courses")
+        .select(
+          `
+          *,
+          tutor_profile:tutor_profiles!courses_tutor_id_fkey (
+            id,
+            user:users!tutor_profiles_id_fkey (
+              id,
+              username,
+              email,
+              profile_picture
+            )
+          ),
+          subject:subjects (
+            id,
+            name,
+            description,
+            icon
+          )
+        `
+        )
+        .eq("tutor_id", authUser.id)
+        .order("created_at", { ascending: false }),
+    ]);
 
   if (userRowError || !userRow?.is_tutor) {
     redirect(`/${locale}/dashboard`);
   }
-
-  const { data: coursesData, error: coursesError } = await supabase
-    .from("courses")
-    .select(
-      `
-      *,
-      tutor_profile:tutor_profiles!courses_tutor_id_fkey (
-        id,
-        user:users!tutor_profiles_id_fkey (
-          id,
-          username,
-          email,
-          profile_picture
-        )
-      ),
-      subject:subjects (
-        id,
-        name,
-        description,
-        icon
-      )
-    `
-    )
-    .eq("tutor_id", authUser.id)
-    .order("created_at", { ascending: false });
 
   let initialCourses: CourseWithRelations[] = [];
   if (!coursesError && coursesData) {

@@ -84,7 +84,7 @@ export default async function TeacherProfilePage({
     profile_picture: userRow.profile_picture ?? null,
   };
 
-  const [profileRes, subjectsRes, coursesRes] = await Promise.all([
+  const [profileRes, subjectsRes, coursesRes, reviewStats] = await Promise.all([
     supabase.from("tutor_profiles").select("*").eq("id", authUser.id).maybeSingle(),
     supabase
       .from("tutor_subjects")
@@ -125,11 +125,11 @@ export default async function TeacherProfilePage({
       )
       .eq("tutor_id", authUser.id)
       .order("created_at", { ascending: false }),
+    fetchTutorReviewStatsMap(supabase, [authUser.id]),
   ]);
 
   let initialTutorProfile = (profileRes.data ?? null) as TutorProfile | null;
   if (initialTutorProfile) {
-    const reviewStats = await fetchTutorReviewStatsMap(supabase, [authUser.id]);
     initialTutorProfile = mergeTutorProfileReviewStats(
       initialTutorProfile,
       reviewStats

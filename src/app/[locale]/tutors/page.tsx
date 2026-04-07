@@ -105,7 +105,7 @@ const getTutorsPageDataCached = unstable_cache(
       };
     }
 
-    const [{ data: profilesData, error: profilesError }, { data: subjectLinks, error: tsError }] =
+    const [{ data: profilesData, error: profilesError }, { data: subjectLinks, error: tsError }, reviewStats] =
       await Promise.all([
         supabase
           .from("tutor_profiles")
@@ -123,6 +123,7 @@ const getTutorsPageDataCached = unstable_cache(
           .from("tutor_subjects")
           .select("tutor_id, subject:subjects(id, name)")
           .in("tutor_id", tutorIdsWithCourses),
+        fetchTutorReviewStatsMap(supabase, tutorIdsWithCourses),
       ]);
 
     if (profilesError && process.env.NODE_ENV === "development") {
@@ -153,11 +154,6 @@ const getTutorsPageDataCached = unstable_cache(
       }
       subjectListsByTutorId.set(tid, list);
     }
-
-    const reviewStats = await fetchTutorReviewStatsMap(
-      supabase,
-      tutorIdsWithCourses
-    );
 
     const initialTutors: EnrichedTutor[] = profiles.map((tutor) => {
       const merged = mergeTutorProfileReviewStats(tutor, reviewStats);

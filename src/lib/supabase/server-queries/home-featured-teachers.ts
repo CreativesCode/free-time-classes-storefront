@@ -43,59 +43,61 @@ export async function fetchHomeFeaturedTeachers(
   const tutorIds = collectTutorIds(courses);
   if (tutorIds.length === 0) return [];
 
-  const rows = await Promise.all(
-    tutorIds.map(async (tutorId) => {
-      const [{ data: profile, error: profileError }, { data: subjectRows, error: subError }] =
-        await Promise.all([
-          supabase
-            .from("tutor_profiles")
-            .select(
-              `years_of_experience, user:users!tutor_profiles_id_fkey (username, profile_picture)`
-            )
-            .eq("id", tutorId)
-            .single(),
-          supabase
-            .from("tutor_subjects")
-            .select(`subject:subjects (name)`)
-            .eq("tutor_id", tutorId)
-            .limit(1),
-        ]);
+  // Batch: 2 queries instead of 2*N
+  const [{ data: profiles, error: profilesError }, { data: subjectRows, error: subError }] =
+    await Promise.all([
+      supabase
+        .from("tutor_profiles")
+        .select(
+          `id, years_of_experience, user:users!tutor_profiles_id_fkey (username, profile_picture)`
+        )
+        .in("id", tutorIds),
+      supabase
+        .from("tutor_subjects")
+        .select(`tutor_id, subject:subjects (name)`)
+        .in("tutor_id", tutorIds),
+    ]);
 
-      if (profileError && profileError.code !== "PGRST116") {
-        throw profileError;
-      }
-      if (subError) throw subError;
+  if (profilesError && profilesError.code !== "PGRST116") {
+    throw profilesError;
+  }
+  if (subError) throw subError;
 
-      const user = profile?.user as
-        | { username?: string; profile_picture?: string | null }
-        | null
-        | undefined;
-      const row = subjectRows?.[0] as
-        | { subject: { name: string } | { name: string }[] | null }
-        | undefined;
-      const sub = row?.subject;
-      const specialty =
-        sub == null
-          ? "—"
-          : Array.isArray(sub)
-            ? sub[0]?.name ?? "—"
-            : sub.name;
+  // Index profiles by id
+  const profileById = new Map<string, (typeof profiles extends (infer R)[] | null ? R : never)>();
+  for (const p of profiles ?? []) {
+    profileById.set(p.id, p);
+  }
 
-      const coursesCount = courses.filter((c) => c.tutor?.id === tutorId).length;
+  // Index first subject per tutor
+  const subjectByTutor = new Map<string, string>();
+  for (const row of subjectRows ?? []) {
+    const tid = row.tutor_id as string;
+    if (tid && !subjectByTutor.has(tid)) {
+      const sub = row.subject as { name: string } | { name: string }[] | null;
+      const name = sub == null ? null : Array.isArray(sub) ? sub[0]?.name : sub.name;
+      if (name) subjectByTutor.set(tid, name);
+    }
+  }
 
-      return {
-        id: tutorId,
-        name: user?.username ?? "Profesor",
-        specialty,
-        yearsOfExperience: profile?.years_of_experience ?? 0,
-        coursesCount,
-        profilePicture: resolveFeaturedTeacherAvatarUrl(
-          supabase,
-          user?.profile_picture
-        ),
-      } satisfies HomeFeaturedTeacher;
-    })
-  );
+  return tutorIds.map((tutorId) => {
+    const profile = profileById.get(tutorId);
+    const user = profile?.user as
+      | { username?: string; profile_picture?: string | null }
+      | null
+      | undefined;
+    const coursesCount = courses.filter((c) => c.tutor?.id === tutorId).length;
 
-  return rows;
+    return {
+      id: tutorId,
+      name: user?.username ?? "Profesor",
+      specialty: subjectByTutor.get(tutorId) ?? "—",
+      yearsOfExperience: profile?.years_of_experience ?? 0,
+      coursesCount,
+      profilePicture: resolveFeaturedTeacherAvatarUrl(
+        supabase,
+        user?.profile_picture
+      ),
+    } satisfies HomeFeaturedTeacher;
+  });
 }
