@@ -667,24 +667,14 @@ export default function TutorDashboardClient({
       <div className="hidden space-y-6 md:block">
         {/* Hero card */}
         <div className="rounded-3xl border border-violet-100 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-7 shadow-sm">
-          <div className="flex flex-row items-end justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium text-violet-600">{todayLabel}</p>
-              <h1 className="mt-1 text-4xl font-extrabold tracking-tight text-slate-900 lg:text-5xl">
-                {td("tutorDashboard")}
-              </h1>
-              <p className="mt-2 text-base text-slate-600">
-                {td("welcomeSubtitle")} {greetingName}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 rounded-xl bg-white p-1 shadow-sm">
-              <Button size="sm" className="rounded-lg bg-violet-600 hover:bg-violet-700">
-                Dashboard
-              </Button>
-              <Button variant="ghost" size="sm" className="rounded-lg text-slate-600">
-                Performance
-              </Button>
-            </div>
+          <div>
+            <p className="text-sm font-medium text-violet-600">{todayLabel}</p>
+            <h1 className="mt-1 text-4xl font-extrabold tracking-tight text-slate-900 lg:text-5xl">
+              {td("tutorDashboard")}
+            </h1>
+            <p className="mt-2 text-base text-slate-600">
+              {td("welcomeSubtitle")} {greetingName}
+            </p>
           </div>
         </div>
 
