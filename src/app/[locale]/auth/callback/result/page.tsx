@@ -15,14 +15,14 @@ export async function generateMetadata({
   const t = await getTranslations({ locale, namespace: "seo" });
   return buildPageMetadata({
     locale,
-    path: "/auth/callback",
+    path: "/auth/callback/result",
     title: t("authCallback.title"),
     description: t("authCallback.description"),
     robots: { index: false, follow: false },
   });
 }
 
-export default async function AuthCallbackPage({
+export default async function AuthCallbackResultPage({
   params,
 }: {
   params: Promise<{ locale: string }>;

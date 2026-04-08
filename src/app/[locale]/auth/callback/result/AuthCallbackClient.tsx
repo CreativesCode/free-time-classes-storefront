@@ -3,80 +3,27 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { createClient } from "@/lib/supabase/client";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-type Status = "verifying" | "success" | "error";
+type Status = "success" | "error";
 
 export default function AuthCallbackClient({ locale }: { locale: string }) {
-  const supabase = useMemo(() => createClient(), []);
   const params = useSearchParams();
   const router = useRouter();
   const t = useTranslations("authCallback");
 
-  const [status, setStatus] = useState<Status>("verifying");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [redirectSeconds, setRedirectSeconds] = useState<number | null>(null);
 
-  useEffect(() => {
-    let isMounted = true;
+  const errorMessage = useMemo(() => {
+    const err = params.get("error");
+    if (!err) return null;
+    if (err === "missing_code") return t("missingCode");
+    return decodeURIComponent(err);
+  }, [params, t]);
 
-    const run = async () => {
-      const errorFromUrl =
-        params.get("error_description") || params.get("error");
-      if (errorFromUrl) {
-        if (!isMounted) return;
-        setStatus("error");
-        setErrorMessage(decodeURIComponent(errorFromUrl));
-        return;
-      }
-
-      const code = params.get("code");
-      if (!code) {
-        if (!isMounted) return;
-        setStatus("error");
-        setErrorMessage(t("missingCode"));
-        return;
-      }
-
-      try {
-        const exchangePromise = supabase.auth.exchangeCodeForSession(code);
-        const timeoutPromise = new Promise<never>((_, reject) => {
-          window.setTimeout(() => reject(new Error("callback-timeout")), 12000);
-        });
-
-        const { error } = await Promise.race([exchangePromise, timeoutPromise]);
-        if (error) {
-          if (!isMounted) return;
-          setStatus("error");
-          setErrorMessage(error.message);
-          return;
-        }
-      } catch (err) {
-        if (!isMounted) return;
-        setStatus("error");
-        setErrorMessage(
-          err instanceof Error && err.message === "callback-timeout"
-            ? t("verificationTimeout")
-            : err instanceof Error
-              ? err.message
-              : t("genericError")
-        );
-        return;
-      }
-
-      if (!isMounted) return;
-      setStatus("success");
-    };
-
-    run();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [params, supabase, t]);
+  const status: Status = errorMessage ? "error" : "success";
 
   useEffect(() => {
     if (status !== "success") return;
@@ -97,7 +44,6 @@ export default function AuthCallbackClient({ locale }: { locale: string }) {
   }, [status, router, locale]);
 
   const goToLogin = () => router.push(`/${locale}/login`);
-
   const goToDashboard = () => router.push(`/${locale}/dashboard`);
 
   return (
@@ -105,25 +51,10 @@ export default function AuthCallbackClient({ locale }: { locale: string }) {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl text-center text-secondary-500">
-            {status === "verifying"
-              ? t("verifyingTitle")
-              : status === "success"
-                ? t("successTitle")
-                : t("errorTitle")}
+            {status === "success" ? t("successTitle") : t("errorTitle")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {status === "verifying" && (
-            <>
-              <p className="text-center text-sm text-secondary-500">
-                {t("verifyingDescription")}
-              </p>
-              <Button className="w-full" variant="outline" onClick={goToLogin}>
-                {t("goToLogin")}
-              </Button>
-            </>
-          )}
-
           {status === "success" && (
             <>
               <p className="text-center text-sm text-secondary-500">
