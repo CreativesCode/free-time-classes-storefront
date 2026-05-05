@@ -19,6 +19,7 @@ import type { Subject } from "@/types/subject";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getPublicUrl } from "@/lib/supabase/storage";
 import { getAvatarColor } from "@/lib/utils";
+import { isLessonInPast } from "@/lib/datetime/lessonTime";
 import { Calendar, Clock, DollarSign, Filter, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -157,7 +158,9 @@ export default function AvailabilityBrowser(props: AvailabilityBrowserProps) {
   }, [debouncedFilters.subject_id, fixedTutorId, t]);
 
   const filteredAvailabilities = useMemo(() => {
-    let filtered = [...availabilities];
+    let filtered = availabilities.filter(
+      (lesson) => !isLessonInPast(lesson.scheduled_date_time)
+    );
 
     if (debouncedFilters.search) {
       const normalizedSearch = debouncedFilters.search.toLowerCase();

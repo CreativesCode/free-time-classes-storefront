@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import { nowAsLessonTimestamp } from "@/lib/datetime/lessonTime";
 
 const PRIVATE_READ_CACHE_CONTROL =
   "private, max-age=30, stale-while-revalidate=120";
@@ -85,7 +86,8 @@ export async function GET() {
         admin
           .from("lessons")
           .select("id,subject_id,scheduled_date_time,duration_minutes,price")
-          .in("id", lessonIds),
+          .in("id", lessonIds)
+          .gte("scheduled_date_time", nowAsLessonTimestamp()),
         admin.from("users").select("id,username").in("id", studentIds),
       ]);
 
@@ -115,18 +117,20 @@ export async function GET() {
     const userNameById = new Map((users || []).map((row) => [row.id, row.username]));
     const subjectNameById = new Map((subjects || []).map((row) => [row.id, row.name]));
 
-    const items: PendingRequestItem[] = pendingBookings.map((booking) => {
-      const lesson = lessonById.get(booking.lesson_id as number);
-      return {
-        bookingId: booking.id,
-        studentId: booking.student_id,
-        studentName: userNameById.get(booking.student_id) ?? null,
-        subjectName: lesson ? subjectNameById.get(lesson.subject_id) ?? null : null,
-        scheduledDateTime: lesson?.scheduled_date_time ?? null,
-        durationMinutes: lesson?.duration_minutes ?? null,
-        price: lesson?.price ?? null,
-      };
-    });
+    const items: PendingRequestItem[] = pendingBookings
+      .filter((booking) => lessonById.has(booking.lesson_id as number))
+      .map((booking) => {
+        const lesson = lessonById.get(booking.lesson_id as number);
+        return {
+          bookingId: booking.id,
+          studentId: booking.student_id,
+          studentName: userNameById.get(booking.student_id) ?? null,
+          subjectName: lesson ? subjectNameById.get(lesson.subject_id) ?? null : null,
+          scheduledDateTime: lesson?.scheduled_date_time ?? null,
+          durationMinutes: lesson?.duration_minutes ?? null,
+          price: lesson?.price ?? null,
+        };
+      });
 
     return NextResponse.json(
       { items },

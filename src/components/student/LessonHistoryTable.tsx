@@ -21,6 +21,7 @@ import {
 } from "@/lib/supabase/queries/studentFavorites";
 import { getPublicUrl } from "@/lib/supabase/storage";
 import { cn } from "@/lib/utils";
+import { nowAsLessonTimestamp } from "@/lib/datetime/lessonTime";
 import type { Booking } from "@/types/booking";
 import type { LessonWithRelations } from "@/types/lesson";
 import type { Review } from "@/types/review";
@@ -161,7 +162,7 @@ export default function LessonHistoryTable(props: {
     string | null
   >(null);
 
-  const nowIso = useMemo(() => new Date().toISOString(), []);
+  const nowIso = useMemo(() => nowAsLessonTimestamp(), []);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {

@@ -7,6 +7,11 @@ import { fetchTutorReviewStatsMap } from "@/lib/supabase/tutor-review-stats";
 import TutorDashboardClient from "./TutorDashboardClient";
 import type { Booking } from "@/types/booking";
 import type { LessonWithRelations } from "@/types/lesson";
+import {
+  startOfTodayAsLessonTimestamp,
+  endOfTodayAsLessonTimestamp,
+  startOfMonthAsLessonTimestamp,
+} from "@/lib/datetime/lessonTime";
 
 type PendingBookingItem = {
   booking: Booking;
@@ -72,12 +77,9 @@ export default async function TutorDashboardPage({
     redirect(`/${locale}/dashboard`);
   }
 
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  const todayEnd = new Date();
-  todayEnd.setHours(23, 59, 59, 999);
+  const startOfMonth = startOfMonthAsLessonTimestamp();
+  const todayStartTs = startOfTodayAsLessonTimestamp();
+  const todayEndTs = endOfTodayAsLessonTimestamp();
 
   const [pendingRes, lessonsStatsRes, tutorProfileRes, pendingCountRes, todayLessonsRes, reviewStatsMap] =
     await Promise.all([
@@ -106,8 +108,8 @@ export default async function TutorDashboardPage({
         )
         .eq("tutor_id", user.id)
         .in("status", ["confirmed", "scheduled"])
-        .gte("scheduled_date_time", todayStart.toISOString())
-        .lte("scheduled_date_time", todayEnd.toISOString())
+        .gte("scheduled_date_time", todayStartTs)
+        .lte("scheduled_date_time", todayEndTs)
         .order("scheduled_date_time", { ascending: true }),
       fetchTutorReviewStatsMap(supabase, [user.id]),
     ]);

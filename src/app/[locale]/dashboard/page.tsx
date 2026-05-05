@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import DashboardClient from "./DashboardClient";
 import { resolveCourseTutorUser } from "@/lib/supabase/course-tutor";
+import { nowAsLessonTimestamp } from "@/lib/datetime/lessonTime";
 import type { DashboardRecommendedCourse } from "./DashboardDeferredRecommended";
 
 interface UpcomingLessonRaw {
@@ -110,7 +111,7 @@ export default async function DashboardPage({
       )
       .eq("student_id", authUser.id)
       .in("status", ["confirmed", "scheduled"])
-      .gte("scheduled_date_time", new Date().toISOString())
+      .gte("scheduled_date_time", nowAsLessonTimestamp())
       .order("scheduled_date_time", { ascending: true })
       .limit(3),
 

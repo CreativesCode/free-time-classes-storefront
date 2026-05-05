@@ -1,17 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import { nowAsLessonTimestamp } from "@/lib/datetime/lessonTime";
 
 const PRIVATE_READ_CACHE_CONTROL =
   "private, max-age=30, stale-while-revalidate=120";
-
-function getLocalNowForTimestampFilter(): string {
-  const now = new Date();
-  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
-    .toISOString()
-    .slice(0, 19);
-  return local;
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -80,7 +73,7 @@ export async function GET(request: NextRequest) {
 
     query = query
       .eq("status", "available")
-      .gte("scheduled_date_time", getLocalNowForTimestampFilter());
+      .gte("scheduled_date_time", nowAsLessonTimestamp());
 
     if (Number.isInteger(subjectId) && subjectId && subjectId > 0) {
       query = query.eq("subject_id", subjectId);

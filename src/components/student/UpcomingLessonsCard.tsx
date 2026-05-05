@@ -9,6 +9,7 @@ import { useTranslations } from "@/i18n/translations";
 import { addFavoriteTutor, getFavoriteTutorIds, removeFavoriteTutor } from "@/lib/supabase/queries/studentFavorites";
 import { getLessonsWithRelations } from "@/lib/supabase/queries/lessons";
 import { getBookingsByStudent } from "@/lib/supabase/queries/bookings";
+import { nowAsLessonTimestamp } from "@/lib/datetime/lessonTime";
 import { getPublicUrl } from "@/lib/supabase/storage";
 import { cn } from "@/lib/utils";
 import type { LessonWithRelations } from "@/types/lesson";
@@ -50,7 +51,7 @@ export default function UpcomingLessonsCard(props: {
   >(null);
   const [cancelActionLoading, setCancelActionLoading] = useState<number | null>(null);
 
-  const nowIso = useMemo(() => new Date().toISOString(), []);
+  const nowIso = useMemo(() => nowAsLessonTimestamp(), []);
 
   useEffect(() => {
     let cancelled = false;

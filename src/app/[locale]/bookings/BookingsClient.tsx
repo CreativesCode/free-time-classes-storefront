@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { isLessonInPast } from "@/lib/datetime/lessonTime";
 
 type BookingStatus =
   | "pending"
@@ -195,8 +196,14 @@ export default function BookingsClient({ locale }: { locale: string }) {
   }, [user, fetchBookings]);
 
   const filteredBookings = useMemo(() => {
-    if (filter === "all") return bookings;
-    return bookings.filter((b) => b.status === filter);
+    const isUpcomingTab = filter === "all" || filter === "pending" || filter === "confirmed";
+    return bookings.filter((b) => {
+      if (filter !== "all" && b.status !== filter) return false;
+      if (isUpcomingTab && (b.status === "pending" || b.status === "confirmed")) {
+        if (isLessonInPast(b.lesson?.scheduled_date_time)) return false;
+      }
+      return true;
+    });
   }, [bookings, filter]);
 
   const handleCancel = async (bookingId: number) => {
@@ -270,8 +277,12 @@ export default function BookingsClient({ locale }: { locale: string }) {
   if (!user) return null;
 
   const countsByStatus: Record<BookingStatus, number> = {
-    pending: bookings.filter((b) => b.status === "pending").length,
-    confirmed: bookings.filter((b) => b.status === "confirmed").length,
+    pending: bookings.filter(
+      (b) => b.status === "pending" && !isLessonInPast(b.lesson?.scheduled_date_time)
+    ).length,
+    confirmed: bookings.filter(
+      (b) => b.status === "confirmed" && !isLessonInPast(b.lesson?.scheduled_date_time)
+    ).length,
     completed: bookings.filter((b) => b.status === "completed").length,
     cancelled: bookings.filter((b) => b.status === "cancelled").length,
     rejected: bookings.filter((b) => b.status === "rejected").length,
