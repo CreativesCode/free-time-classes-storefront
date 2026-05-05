@@ -3,6 +3,9 @@ import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js
 import { createClient } from "@/lib/supabase/server";
 import { createMeetEvent, hasGoogleConnection } from "@/lib/google-calendar";
 import { insertNotification } from "@/lib/notifications";
+import { nowPlusMinutesAsLessonTimestamp } from "@/lib/datetime/lessonTime";
+
+const CUSTOM_REQUEST_EXPIRY_MINUTES = 15;
 
 const noStoreJson = (body: unknown, init?: ResponseInit) =>
   NextResponse.json(body, {
@@ -69,7 +72,9 @@ export async function POST(request: NextRequest) {
 
     const { data: booking, error: bookingError } = await admin
       .from("bookings")
-      .select("id,tutor_id,student_id,lesson_id,status")
+      .select(
+        "id,tutor_id,student_id,lesson_id,status,requested_subject_id,requested_scheduled_date_time,requested_duration_minutes"
+      )
       .eq("id", bookingId)
       .single();
 
@@ -88,11 +93,83 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const isCustomRequest = booking.lesson_id == null;
+
+    if (
+      isCustomRequest &&
+      (!booking.requested_subject_id ||
+        !booking.requested_scheduled_date_time ||
+        !booking.requested_duration_minutes)
+    ) {
+      return noStoreJson(
+        { error: "Custom request is missing required fields." },
+        { status: 409 }
+      );
+    }
+
     if (action === "confirm") {
+      let lessonIdForFlow: number | null = booking.lesson_id ?? null;
+
+      if (isCustomRequest) {
+        const expiryCutoff = nowPlusMinutesAsLessonTimestamp(CUSTOM_REQUEST_EXPIRY_MINUTES);
+        if ((booking.requested_scheduled_date_time as string) < expiryCutoff) {
+          await admin
+            .from("bookings")
+            .update({ status: "rejected", updated_at: new Date().toISOString() })
+            .eq("id", bookingId);
+          return noStoreJson(
+            { error: "This request has expired.", code: "request_expired" },
+            { status: 410 }
+          );
+        }
+
+        const { data: tutorProfile } = await admin
+          .from("tutor_profiles")
+          .select("hourly_rate")
+          .eq("id", user.id)
+          .single();
+
+        const hourlyRate = Number(tutorProfile?.hourly_rate ?? 0);
+        const duration = booking.requested_duration_minutes as number;
+        const computedPrice = hourlyRate > 0
+          ? Math.round(((hourlyRate * duration) / 60) * 100) / 100
+          : 0;
+
+        const { data: createdLesson, error: lessonInsertError } = await admin
+          .from("lessons")
+          .insert({
+            tutor_id: user.id,
+            student_id: booking.student_id,
+            subject_id: booking.requested_subject_id,
+            scheduled_date_time: booking.requested_scheduled_date_time,
+            duration_minutes: duration,
+            price: computedPrice,
+            status: "scheduled",
+          })
+          .select("id")
+          .single();
+
+        if (lessonInsertError || !createdLesson) {
+          console.error(
+            "[bookings/tutor/respond] custom request lesson insert failed:",
+            lessonInsertError
+          );
+          return noStoreJson(
+            { error: lessonInsertError?.message || "Failed to create lesson for request." },
+            { status: 400 }
+          );
+        }
+
+        lessonIdForFlow = createdLesson.id;
+      }
+
       const { error: updateError } = await admin
         .from("bookings")
         .update({
           status: "confirmed",
+          ...(isCustomRequest && lessonIdForFlow
+            ? { lesson_id: lessonIdForFlow }
+            : {}),
           updated_at: new Date().toISOString(),
         })
         .eq("id", bookingId);
@@ -108,13 +185,13 @@ export async function POST(request: NextRequest) {
       let finalMeetLink = manualMeetLink;
       let googleEventId: string | null = null;
 
-      if (!manualMeetLink && booking.lesson_id) {
+      if (!manualMeetLink && lessonIdForFlow) {
         const googleConnected = await hasGoogleConnection(user.id);
         if (googleConnected) {
           const { data: lessonData } = await admin
             .from("lessons")
             .select("scheduled_date_time,duration_minutes,student_id,subject_id")
-            .eq("id", booking.lesson_id)
+            .eq("id", lessonIdForFlow)
             .single();
 
           if (lessonData?.scheduled_date_time) {
@@ -155,7 +232,7 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      if (booking.lesson_id && (finalMeetLink || googleEventId)) {
+      if (lessonIdForFlow && (finalMeetLink || googleEventId)) {
         const lessonUpdate: Record<string, unknown> = {
           updated_at: new Date().toISOString(),
         };
@@ -165,7 +242,7 @@ export async function POST(request: NextRequest) {
         await admin
           .from("lessons")
           .update(lessonUpdate)
-          .eq("id", booking.lesson_id);
+          .eq("id", lessonIdForFlow);
       }
 
       // Notify student about confirmation
@@ -180,7 +257,7 @@ export async function POST(request: NextRequest) {
         type: "booking_confirmed",
         title: "Clase confirmada",
         body: `${tutorUser?.username ?? "Tu tutor"} ha confirmado tu solicitud de clase.`,
-        data: { booking_id: bookingId, lesson_id: booking.lesson_id },
+        data: { booking_id: bookingId, lesson_id: lessonIdForFlow },
       });
 
       return noStoreJson({ ok: true, meetLink: finalMeetLink || null }, { status: 200 });

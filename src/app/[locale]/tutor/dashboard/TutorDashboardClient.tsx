@@ -47,12 +47,54 @@ import {
   Video,
   Link as LinkIcon,
   Copy,
+  Sparkles,
 } from "lucide-react";
+import { nowPlusMinutesAsLessonTimestamp } from "@/lib/datetime/lessonTime";
 
 type PendingBookingItem = {
   booking: Booking;
   lesson: LessonWithRelations | null;
+  // For custom requests we don't have a lesson; carry the snapshot from the booking.
+  customSubjectName?: string | null;
 };
+
+const CUSTOM_REQUEST_EXPIRY_MINUTES = 15;
+
+function isCustomRequestItem(item: PendingBookingItem): boolean {
+  return item.booking.lesson_id == null;
+}
+
+function getItemDisplay(item: PendingBookingItem): {
+  subjectName: string | null;
+  scheduledDateTime: string | null;
+  durationMinutes: number | null;
+  price: number | null;
+  studentName: string | null;
+  isCustomRequest: boolean;
+  notes: string | null;
+} {
+  const isCustom = isCustomRequestItem(item);
+  if (isCustom) {
+    return {
+      subjectName: item.customSubjectName ?? null,
+      scheduledDateTime: item.booking.requested_scheduled_date_time ?? null,
+      durationMinutes: item.booking.requested_duration_minutes ?? null,
+      price: null,
+      studentName: null,
+      isCustomRequest: true,
+      notes: item.booking.notes ?? null,
+    };
+  }
+  return {
+    subjectName: item.lesson?.subject?.name ?? null,
+    scheduledDateTime: item.lesson?.scheduled_date_time ?? null,
+    durationMinutes: item.lesson?.duration_minutes ?? null,
+    price: item.lesson?.price ?? null,
+    studentName: item.lesson?.student?.user?.username ?? null,
+    isCustomRequest: false,
+    notes: item.booking.notes ?? null,
+  };
+}
 
 interface TodayLesson {
   id: number;
@@ -148,18 +190,52 @@ export default function TutorDashboardClient({
     setLoading(true);
     try {
       const bookings = await getBookingsByTutor(effectiveUser.id);
-      const pendingBookings = bookings.filter(
-        (b) => b.status === "pending" && typeof b.lesson_id === "number"
+      const expiryCutoff = nowPlusMinutesAsLessonTimestamp(CUSTOM_REQUEST_EXPIRY_MINUTES);
+      const pendingBookings = bookings.filter((b) => {
+        if (b.status !== "pending") return false;
+        if (typeof b.lesson_id === "number") return true;
+        // Custom request: keep only if not expired and well-formed.
+        return (
+          typeof b.requested_scheduled_date_time === "string" &&
+          b.requested_scheduled_date_time >= expiryCutoff &&
+          typeof b.requested_subject_id === "number"
+        );
+      });
+
+      const customSubjectIds = [
+        ...new Set(
+          pendingBookings
+            .filter((b) => b.lesson_id == null)
+            .map((b) => b.requested_subject_id)
+            .filter((id): id is number => typeof id === "number")
+        ),
+      ];
+
+      const supabase = createClient();
+      const subjectsRes = customSubjectIds.length
+        ? await supabase
+            .from("subjects")
+            .select("id,name")
+            .in("id", customSubjectIds)
+        : { data: [] as { id: number; name: string }[] };
+      const subjectNameById = new Map(
+        (subjectsRes.data ?? []).map((s) => [s.id, s.name])
       );
 
       const items = await Promise.all(
         pendingBookings.map(async (booking) => {
-          const lesson =
-            typeof booking.lesson_id === "number"
-              ? await getLessonWithRelations(booking.lesson_id)
-              : null;
-
-          return { booking, lesson } satisfies PendingBookingItem;
+          if (typeof booking.lesson_id === "number") {
+            const lesson = await getLessonWithRelations(booking.lesson_id);
+            return { booking, lesson } satisfies PendingBookingItem;
+          }
+          return {
+            booking,
+            lesson: null,
+            customSubjectName:
+              typeof booking.requested_subject_id === "number"
+                ? subjectNameById.get(booking.requested_subject_id) ?? null
+                : null,
+          } satisfies PendingBookingItem;
         })
       );
 
@@ -266,7 +342,6 @@ export default function TutorDashboardClient({
 
   const handleConfirm = async (booking: Booking, videoLink?: string) => {
     if (!effectiveUser.id) return;
-    if (typeof booking.lesson_id !== "number") return;
 
     setActionLoadingBookingId(booking.id);
     try {
@@ -324,11 +399,9 @@ export default function TutorDashboardClient({
 
   const handleReject = async () => {
     if (!rejectTarget || !effectiveUser.id) return;
-    if (typeof rejectTarget.booking.lesson_id !== "number") return;
 
     const { booking } = rejectTarget;
     const lessonId = booking.lesson_id;
-    if (typeof lessonId !== "number") return;
 
     setActionLoadingBookingId(booking.id);
     try {
@@ -341,10 +414,13 @@ export default function TutorDashboardClient({
         reason: rejectReason,
       });
 
-      await updateLesson(lessonId, {
-        student_id: null,
-        status: "available",
-      });
+      // Custom requests have no pre-existing lesson to revert.
+      if (typeof lessonId === "number") {
+        await updateLesson(lessonId, {
+          student_id: null,
+          status: "available",
+        });
+      }
 
       setRejectDialogOpen(false);
       setRejectTarget(null);
@@ -487,17 +563,21 @@ export default function TutorDashboardClient({
             <p className="py-6 text-center text-sm text-muted-foreground">{t("noPendingBookings")}</p>
           ) : (
             <div className="space-y-2">
-              {pendingItems.map(({ booking, lesson }) => {
-                const studentName = lesson?.student?.user?.username ?? booking.student_id;
+              {pendingItems.map((item) => {
+                const { booking } = item;
+                const display = getItemDisplay(item);
+                const studentName = display.studentName ?? booking.student_id;
                 const initials = studentName.slice(0, 2).toUpperCase();
-                const timeLabel = lesson?.scheduled_date_time
-                  ? formatTime(lesson.scheduled_date_time)
+                const timeLabel = display.scheduledDateTime
+                  ? formatTime(display.scheduledDateTime)
                   : "—";
 
                 return (
                   <div
                     key={booking.id}
-                    className="flex items-center justify-between gap-3 rounded-2xl bg-white p-4 shadow-sm"
+                    className={`flex items-center justify-between gap-3 rounded-2xl p-4 shadow-sm ${
+                      display.isCustomRequest ? "bg-amber-50" : "bg-white"
+                    }`}
                   >
                     <div className="flex min-w-0 items-center gap-3">
                       <Avatar className="h-11 w-11 shrink-0">
@@ -509,16 +589,21 @@ export default function TutorDashboardClient({
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">
-                        <p className="truncate font-bold text-slate-900">{studentName}</p>
+                        <p className="flex items-center gap-1.5 truncate font-bold text-slate-900">
+                          {studentName}
+                          {display.isCustomRequest ? (
+                            <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-600" />
+                          ) : null}
+                        </p>
                         <p className="truncate text-xs text-slate-500">
-                          {lesson?.subject?.name ?? t("lessonUnknown")} &middot; {timeLabel}
+                          {display.subjectName ?? t("lessonUnknown")} &middot; {timeLabel}
                         </p>
                       </div>
                     </div>
                     <div className="flex shrink-0 gap-2">
                       <button
                         className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-50 text-rose-500 transition-colors hover:bg-rose-100"
-                        onClick={() => openRejectDialog({ booking, lesson })}
+                        onClick={() => openRejectDialog(item)}
                         disabled={actionLoadingBookingId === booking.id}
                       >
                         <span className="text-lg font-bold">✕</span>
@@ -746,17 +831,23 @@ export default function TutorDashboardClient({
                     <div className="py-10 text-center text-sm text-gray-500">{t("noPendingBookings")}</div>
                   ) : (
                     <div className="grid gap-3">
-                      {pendingItems.map(({ booking, lesson }) => {
-                        const scheduledLabel = lesson?.scheduled_date_time
-                          ? new Date(lesson.scheduled_date_time).toLocaleString(locale)
+                      {pendingItems.map((item) => {
+                        const { booking } = item;
+                        const display = getItemDisplay(item);
+                        const scheduledLabel = display.scheduledDateTime
+                          ? new Date(display.scheduledDateTime).toLocaleString(locale)
                           : "—";
-                        const studentName = lesson?.student?.user?.username ?? booking.student_id;
+                        const studentName = display.studentName ?? booking.student_id;
                         const initials = studentName.slice(0, 2).toUpperCase();
 
                         return (
                           <div
                             key={booking.id}
-                            className="space-y-3 rounded-xl border border-violet-100 bg-violet-50/40 p-4"
+                            className={`space-y-3 rounded-xl border p-4 ${
+                              display.isCustomRequest
+                                ? "border-amber-200 bg-amber-50/50"
+                                : "border-violet-100 bg-violet-50/40"
+                            }`}
                           >
                             <div className="flex items-center justify-between gap-3">
                               <div className="flex min-w-0 items-center gap-3">
@@ -770,14 +861,21 @@ export default function TutorDashboardClient({
                                 </Avatar>
                                 <div className="min-w-0">
                                   <p className="truncate font-semibold text-slate-900">
-                                    {lesson?.subject?.name ?? t("lessonUnknown")}
+                                    {display.subjectName ?? t("lessonUnknown")}
                                   </p>
                                   <p className="truncate text-xs text-slate-600">
                                     {t("student")}: {studentName}
                                   </p>
                                 </div>
                               </div>
-                              <Badge variant="secondary">{t("pending")}</Badge>
+                              {display.isCustomRequest ? (
+                                <Badge className="gap-1 bg-amber-100 text-amber-800 hover:bg-amber-100">
+                                  <Sparkles className="h-3 w-3" />
+                                  {t("customRequestBadge")}
+                                </Badge>
+                              ) : (
+                                <Badge variant="secondary">{t("pending")}</Badge>
+                              )}
                             </div>
 
                             <div className="grid grid-cols-3 gap-2 text-sm text-slate-700">
@@ -788,14 +886,27 @@ export default function TutorDashboardClient({
                               <div className="rounded-lg bg-white/80 p-2">
                                 <p className="text-xs text-slate-500">{t("duration")}</p>
                                 <p className="font-medium">
-                                  {lesson?.duration_minutes ?? "—"} {t("minutes")}
+                                  {display.durationMinutes ?? "—"} {t("minutes")}
                                 </p>
                               </div>
                               <div className="rounded-lg bg-white/80 p-2">
                                 <p className="text-xs text-slate-500">{t("price")}</p>
-                                <p className="font-medium">${lesson?.price ?? "—"}</p>
+                                <p className="font-medium">
+                                  {display.isCustomRequest
+                                    ? t("priceFromHourlyRate")
+                                    : `$${display.price ?? "—"}`}
+                                </p>
                               </div>
                             </div>
+
+                            {display.notes ? (
+                              <div className="rounded-md bg-white/70 p-2 text-xs text-slate-600">
+                                <span className="font-semibold text-slate-700">
+                                  {t("studentNotes")}:
+                                </span>{" "}
+                                {display.notes}
+                              </div>
+                            ) : null}
 
                             <div className="space-y-2 border-t border-violet-100 pt-2">
                               <div className="flex items-center gap-2">
@@ -813,7 +924,7 @@ export default function TutorDashboardClient({
                                 <Button
                                   variant="outline"
                                   className="border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
-                                  onClick={() => openRejectDialog({ booking, lesson })}
+                                  onClick={() => openRejectDialog(item)}
                                   disabled={actionLoadingBookingId === booking.id}
                                 >
                                   {t("reject")}

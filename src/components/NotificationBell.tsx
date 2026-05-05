@@ -28,6 +28,7 @@ import type { Notification, NotificationType } from "@/types/notification";
 function notifIcon(type: NotificationType) {
   switch (type) {
     case "booking_request":
+    case "booking_custom_request":
       return <CalendarPlus className="h-4 w-4 text-blue-600" />;
     case "booking_confirmed":
       return <CalendarCheck2 className="h-4 w-4 text-emerald-600" />;
@@ -43,6 +44,7 @@ function notifIcon(type: NotificationType) {
 function getNotificationHref(n: Notification, locale: string): string {
   switch (n.type) {
     case "booking_request":
+    case "booking_custom_request":
       return `/${locale}/tutor/dashboard`;
     case "booking_confirmed":
     case "booking_rejected":

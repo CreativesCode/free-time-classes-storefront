@@ -20,6 +20,7 @@ import type { Notification, NotificationType } from "@/types/notification";
 function IconByType({ type }: { type: NotificationType }) {
   switch (type) {
     case "booking_request":
+    case "booking_custom_request":
       return <CalendarPlus className="h-5 w-5" />;
     case "booking_confirmed":
       return <CalendarCheck2 className="h-5 w-5" />;
@@ -36,6 +37,8 @@ function iconColor(type: NotificationType) {
   switch (type) {
     case "booking_request":
       return "bg-blue-100 text-blue-600";
+    case "booking_custom_request":
+      return "bg-amber-100 text-amber-700";
     case "booking_confirmed":
       return "bg-emerald-100 text-emerald-600";
     case "booking_rejected":
@@ -51,6 +54,8 @@ function borderColor(type: NotificationType) {
   switch (type) {
     case "booking_request":
       return "border-l-blue-500";
+    case "booking_custom_request":
+      return "border-l-amber-500";
     case "booking_confirmed":
       return "border-l-emerald-500";
     case "booking_rejected":
@@ -76,6 +81,7 @@ function timeAgo(dateStr: string): string {
 function getNotificationHref(n: Notification, locale: string): string {
   switch (n.type) {
     case "booking_request":
+    case "booking_custom_request":
       return `/${locale}/tutor/dashboard`;
     case "booking_confirmed":
     case "booking_rejected":

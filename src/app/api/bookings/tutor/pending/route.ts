@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
-import { nowAsLessonTimestamp } from "@/lib/datetime/lessonTime";
+import {
+  nowAsLessonTimestamp,
+  nowPlusMinutesAsLessonTimestamp,
+} from "@/lib/datetime/lessonTime";
 
 const PRIVATE_READ_CACHE_CONTROL =
   "private, max-age=30, stale-while-revalidate=120";
+
+const CUSTOM_REQUEST_EXPIRY_MINUTES = 15;
 
 type PendingRequestItem = {
   bookingId: number;
@@ -14,6 +19,8 @@ type PendingRequestItem = {
   scheduledDateTime: string | null;
   durationMinutes: number | null;
   price: number | null;
+  isCustomRequest: boolean;
+  notes: string | null;
 };
 
 export async function GET() {
@@ -53,7 +60,9 @@ export async function GET() {
 
     const { data: bookings, error: bookingsError } = await admin
       .from("bookings")
-      .select("id,student_id,lesson_id,status")
+      .select(
+        "id,student_id,lesson_id,status,notes,requested_subject_id,requested_scheduled_date_time,requested_duration_minutes"
+      )
       .eq("tutor_id", user.id)
       .eq("status", "pending")
       .order("created_at", { ascending: false });
@@ -65,10 +74,21 @@ export async function GET() {
       );
     }
 
-    const pendingBookings = (bookings || []).filter(
+    const allBookings = bookings || [];
+    const slotBookings = allBookings.filter(
       (booking) => typeof booking.lesson_id === "number"
     );
-    if (pendingBookings.length === 0) {
+    const customRequests = allBookings.filter(
+      (booking) => booking.lesson_id == null
+    );
+
+    const expiryCutoff = nowPlusMinutesAsLessonTimestamp(CUSTOM_REQUEST_EXPIRY_MINUTES);
+    const validCustomRequests = customRequests.filter((booking) => {
+      const ts = booking.requested_scheduled_date_time as string | null;
+      return typeof ts === "string" && ts >= expiryCutoff;
+    });
+
+    if (slotBookings.length === 0 && validCustomRequests.length === 0) {
       return NextResponse.json(
         { items: [] as PendingRequestItem[] },
         {
@@ -78,18 +98,30 @@ export async function GET() {
       );
     }
 
-    const lessonIds = pendingBookings.map((booking) => booking.lesson_id as number);
-    const studentIds = [...new Set(pendingBookings.map((booking) => booking.student_id))];
+    const lessonIds = slotBookings.map((booking) => booking.lesson_id as number);
+    const studentIds = [
+      ...new Set([
+        ...slotBookings.map((b) => b.student_id),
+        ...validCustomRequests.map((b) => b.student_id),
+      ]),
+    ];
 
-    const [{ data: lessons, error: lessonsError }, { data: users, error: usersError }] =
-      await Promise.all([
-        admin
+    const lessonsPromise = lessonIds.length
+      ? admin
           .from("lessons")
           .select("id,subject_id,scheduled_date_time,duration_minutes,price")
           .in("id", lessonIds)
-          .gte("scheduled_date_time", nowAsLessonTimestamp()),
-        admin.from("users").select("id,username").in("id", studentIds),
-      ]);
+          .gte("scheduled_date_time", nowAsLessonTimestamp())
+      : Promise.resolve({ data: [], error: null });
+
+    const usersPromise = studentIds.length
+      ? admin.from("users").select("id,username").in("id", studentIds)
+      : Promise.resolve({ data: [], error: null });
+
+    const [
+      { data: lessons, error: lessonsError },
+      { data: users, error: usersError },
+    ] = await Promise.all([lessonsPromise, usersPromise]);
 
     if (lessonsError || usersError) {
       return NextResponse.json(
@@ -99,13 +131,19 @@ export async function GET() {
     }
 
     const subjectIds = [
-      ...new Set((lessons || []).map((lesson) => lesson.subject_id).filter(Boolean)),
-    ] as number[];
-    const { data: subjects, error: subjectsError } = await admin
-      .from("subjects")
-      .select("id,name")
-      .in("id", subjectIds);
+      ...new Set([
+        ...((lessons || []).map((lesson) => lesson.subject_id) as number[]),
+        ...(validCustomRequests
+          .map((b) => b.requested_subject_id)
+          .filter((id): id is number => typeof id === "number")),
+      ]),
+    ];
 
+    const subjectsPromise = subjectIds.length
+      ? admin.from("subjects").select("id,name").in("id", subjectIds)
+      : Promise.resolve({ data: [], error: null });
+
+    const { data: subjects, error: subjectsError } = await subjectsPromise;
     if (subjectsError) {
       return NextResponse.json(
         { error: "Failed to load subjects for pending bookings." },
@@ -117,7 +155,7 @@ export async function GET() {
     const userNameById = new Map((users || []).map((row) => [row.id, row.username]));
     const subjectNameById = new Map((subjects || []).map((row) => [row.id, row.name]));
 
-    const items: PendingRequestItem[] = pendingBookings
+    const slotItems: PendingRequestItem[] = slotBookings
       .filter((booking) => lessonById.has(booking.lesson_id as number))
       .map((booking) => {
         const lesson = lessonById.get(booking.lesson_id as number);
@@ -129,8 +167,27 @@ export async function GET() {
           scheduledDateTime: lesson?.scheduled_date_time ?? null,
           durationMinutes: lesson?.duration_minutes ?? null,
           price: lesson?.price ?? null,
+          isCustomRequest: false,
+          notes: booking.notes ?? null,
         };
       });
+
+    const customItems: PendingRequestItem[] = validCustomRequests.map((booking) => ({
+      bookingId: booking.id,
+      studentId: booking.student_id,
+      studentName: userNameById.get(booking.student_id) ?? null,
+      subjectName:
+        typeof booking.requested_subject_id === "number"
+          ? subjectNameById.get(booking.requested_subject_id) ?? null
+          : null,
+      scheduledDateTime: booking.requested_scheduled_date_time ?? null,
+      durationMinutes: booking.requested_duration_minutes ?? null,
+      price: null,
+      isCustomRequest: true,
+      notes: booking.notes ?? null,
+    }));
+
+    const items = [...customItems, ...slotItems];
 
     return NextResponse.json(
       { items },
@@ -144,4 +201,3 @@ export async function GET() {
     return NextResponse.json({ error: "Unexpected server error." }, { status: 500 });
   }
 }
-

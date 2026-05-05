@@ -40,6 +40,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar";
+import RequestCustomClassButton from "@/components/student/RequestCustomClassButton";
 
 export const revalidate = 3600;
 
@@ -526,6 +527,26 @@ export default async function TutorPublicProfilePage({
           </div>
 
           <aside className="space-y-6">
+            {subjects.length > 0 ? (
+              <Card className="border-violet-200 bg-gradient-to-br from-violet-50 to-fuchsia-50 shadow-sm">
+                <CardContent className="space-y-3 pt-6">
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">
+                      {t("requestCustomTitle")}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-600">
+                      {t("requestCustomDescription")}
+                    </p>
+                  </div>
+                  <RequestCustomClassButton
+                    tutorId={id}
+                    tutorName={displayName}
+                    subjects={subjects}
+                  />
+                </CardContent>
+              </Card>
+            ) : null}
+
             <Card className="border-violet-100/80 bg-white/95 shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg font-bold text-slate-900">

@@ -549,7 +549,10 @@
       "meetLinkLabel": "Enlace de videollamada (opcional)",
       "meetLinkPlaceholder": "https://meet.google.com/... o Zoom, Teams, Jitsi...",
       "meetLinkHint": "Puedes pegar un enlace de Google Meet, Zoom, Teams u otro servicio.",
-      "confirmWithLink": "Aceptar con enlace"
+      "confirmWithLink": "Aceptar con enlace",
+      "customRequestBadge": "Fuera de tu disponibilidad",
+      "priceFromHourlyRate": "Según tu tarifa por hora",
+      "studentNotes": "Nota del estudiante"
     },
     "addAvailability": "Añadir Disponibilidad",
     "clearAll": "Limpiar Todo",
@@ -1060,7 +1063,10 @@
       "emergency": "Emergencia",
       "technicalIssues": "Problemas técnicos",
       "other": "Otro"
-    }
+    },
+    "customRequestBadge": "Fuera de tu disponibilidad",
+    "priceFromHourlyRate": "Según tu tarifa/h",
+    "studentNotes": "Nota del estudiante"
   },
   "courseDetail": {
     "loading": "Cargando curso...",
@@ -1175,7 +1181,32 @@
     "noSubjects": "Sin materias indicadas.",
     "reviews": "reseñas",
     "yearsExperience": "años de experiencia",
-    "hourlyRate": "tarifa por hora"
+    "hourlyRate": "tarifa por hora",
+    "requestCustomTitle": "¿Tienes un hueco ahora?",
+    "requestCustomDescription": "Pídele al profesor una clase fuera de su disponibilidad publicada. Aprovecha tu tiempo libre."
+  },
+  "requestCustomClass": {
+    "ctaOpen": "Pedir clase fuera de disponibilidad",
+    "ctaLoginToRequest": "Inicia sesión para solicitar",
+    "dialogTitle": "Solicitar clase fuera de disponibilidad",
+    "dialogDescription": "Envía una solicitud a {tutor}. El profesor podrá aceptarla o rechazarla.",
+    "subjectLabel": "Materia",
+    "whenLabel": "Fecha y hora",
+    "whenHintMadrid": "Hora local de Madrid (Europe/Madrid).",
+    "durationLabel": "Duración",
+    "minutesShort": "min",
+    "notesLabel": "Notas (opcional)",
+    "notesPlaceholder": "Ej: voy en el coche, prefiero solo audio",
+    "expiryWarning": "La solicitud caducará automáticamente 15 min antes de la hora pedida si el profesor no responde.",
+    "cancel": "Cancelar",
+    "submit": "Enviar solicitud",
+    "submitting": "Enviando...",
+    "success": "Solicitud enviada. El profesor recibirá una notificación.",
+    "errorSubjectRequired": "Selecciona una materia.",
+    "errorDateTimeRequired": "Selecciona una fecha y hora.",
+    "errorLeadTimeTooShort": "La hora pedida debe ser al menos {minutes} min en el futuro.",
+    "errorTooManyOpenRequests": "Ya tienes demasiadas solicitudes abiertas con este profesor.",
+    "errorGeneric": "No se pudo enviar la solicitud. Inténtalo de nuevo."
   },
   "bookingsPage": {
     "heroBadge": "Free Time Classes",
@@ -1270,6 +1301,7 @@
     "viewAll": "Ver todas las notificaciones",
     "now": "ahora",
     "bookingRequest": "Nueva solicitud de clase",
+    "bookingCustomRequest": "Solicitud fuera de tu disponibilidad",
     "bookingConfirmed": "Clase confirmada",
     "bookingRejected": "Solicitud rechazada",
     "bookingCancelled": "Clase cancelada"

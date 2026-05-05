@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Video } from "lucide-react";
+import { Sparkles, Video } from "lucide-react";
 
 type PendingBookingItem = {
   bookingId: number;
@@ -27,6 +27,8 @@ type PendingBookingItem = {
   scheduledDateTime: string | null;
   durationMinutes: number | null;
   price: number | null;
+  isCustomRequest?: boolean;
+  notes?: string | null;
 };
 
 export default function TutorBookingRequests({
@@ -131,7 +133,14 @@ export default function TutorBookingRequests({
         ) : (
           <div className="grid gap-4">
             {items.map((item) => (
-              <div key={item.bookingId} className="rounded-lg border bg-white p-4 space-y-3">
+              <div
+                key={item.bookingId}
+                className={`rounded-lg border p-4 space-y-3 ${
+                  item.isCustomRequest
+                    ? "border-amber-200 bg-amber-50/40"
+                    : "border-gray-200 bg-white"
+                }`}
+              >
                 <div className="flex items-center justify-between gap-4">
                   <div className="min-w-0">
                     <p className="font-semibold truncate">
@@ -141,7 +150,14 @@ export default function TutorBookingRequests({
                       {t("student")}: {item.studentName ?? item.studentId}
                     </p>
                   </div>
-                  <Badge variant="secondary">{t("pendingBadge")}</Badge>
+                  {item.isCustomRequest ? (
+                    <Badge className="gap-1 bg-amber-100 text-amber-800 hover:bg-amber-100">
+                      <Sparkles className="h-3 w-3" />
+                      {t("customRequestBadge")}
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary">{t("pendingBadge")}</Badge>
+                  )}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm text-gray-700">
                   <div>
@@ -160,9 +176,21 @@ export default function TutorBookingRequests({
                   </div>
                   <div>
                     <p className="text-gray-500">{t("price")}</p>
-                    <p>${item.price ?? "—"}</p>
+                    <p>
+                      {item.isCustomRequest
+                        ? t("priceFromHourlyRate")
+                        : `$${item.price ?? "—"}`}
+                    </p>
                   </div>
                 </div>
+                {item.notes ? (
+                  <div className="rounded-md bg-white/60 p-2 text-xs text-slate-600">
+                    <span className="font-semibold text-slate-700">
+                      {t("studentNotes")}:
+                    </span>{" "}
+                    {item.notes}
+                  </div>
+                ) : null}
                 <div className="flex justify-end gap-2 pt-2 border-t">
                   <Button
                     variant="outline"

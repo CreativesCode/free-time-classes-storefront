@@ -1,6 +1,6 @@
 export const BUSINESS_TIMEZONE = "Europe/Madrid";
 
-export function nowAsLessonTimestamp(): string {
+function dateAsLessonTimestamp(date: Date): string {
   const parts = new Intl.DateTimeFormat("sv-SE", {
     timeZone: BUSINESS_TIMEZONE,
     year: "numeric",
@@ -10,10 +10,22 @@ export function nowAsLessonTimestamp(): string {
     minute: "2-digit",
     second: "2-digit",
     hour12: false,
-  }).formatToParts(new Date());
+  }).formatToParts(date);
 
   const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "00";
   return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}:${get("second")}`;
+}
+
+export function nowAsLessonTimestamp(): string {
+  return dateAsLessonTimestamp(new Date());
+}
+
+/**
+ * Wall-clock Madrid timestamp `now + minutes`. Útil para fronteras
+ * de antelación mínima y expiración de solicitudes.
+ */
+export function nowPlusMinutesAsLessonTimestamp(minutes: number): string {
+  return dateAsLessonTimestamp(new Date(Date.now() + minutes * 60_000));
 }
 
 export function startOfTodayAsLessonTimestamp(): string {

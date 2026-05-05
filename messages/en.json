@@ -550,7 +550,10 @@
       "meetLinkLabel": "Video call link (optional)",
       "meetLinkPlaceholder": "https://meet.google.com/... or Zoom, Teams, Jitsi...",
       "meetLinkHint": "You can paste a Google Meet, Zoom, Teams or other service link.",
-      "confirmWithLink": "Accept with link"
+      "confirmWithLink": "Accept with link",
+      "customRequestBadge": "Outside your availability",
+      "priceFromHourlyRate": "Based on your hourly rate",
+      "studentNotes": "Student note"
     },
     "addAvailability": "Add Availability",
     "clearAll": "Clear All",
@@ -1061,7 +1064,10 @@
       "emergency": "Emergency",
       "technicalIssues": "Technical issues",
       "other": "Other"
-    }
+    },
+    "customRequestBadge": "Outside your availability",
+    "priceFromHourlyRate": "Based on your /h rate",
+    "studentNotes": "Student note"
   },
   "courseDetail": {
     "loading": "Loading course...",
@@ -1176,7 +1182,32 @@
     "noSubjects": "No subjects listed yet.",
     "reviews": "reviews",
     "yearsExperience": "years experience",
-    "hourlyRate": "hourly rate"
+    "hourlyRate": "hourly rate",
+    "requestCustomTitle": "Got a free moment now?",
+    "requestCustomDescription": "Ask the tutor for a class outside their published availability. Make the most of your free time."
+  },
+  "requestCustomClass": {
+    "ctaOpen": "Request a class outside availability",
+    "ctaLoginToRequest": "Sign in to request",
+    "dialogTitle": "Request a class outside availability",
+    "dialogDescription": "Send a request to {tutor}. The tutor can accept or decline.",
+    "subjectLabel": "Subject",
+    "whenLabel": "Date and time",
+    "whenHintMadrid": "Madrid local time (Europe/Madrid).",
+    "durationLabel": "Duration",
+    "minutesShort": "min",
+    "notesLabel": "Notes (optional)",
+    "notesPlaceholder": "E.g. driving — audio only please",
+    "expiryWarning": "The request will auto-expire 15 min before the requested time if the tutor does not respond.",
+    "cancel": "Cancel",
+    "submit": "Send request",
+    "submitting": "Sending...",
+    "success": "Request sent. The tutor will receive a notification.",
+    "errorSubjectRequired": "Pick a subject.",
+    "errorDateTimeRequired": "Pick a date and time.",
+    "errorLeadTimeTooShort": "Requested time must be at least {minutes} min in the future.",
+    "errorTooManyOpenRequests": "You already have too many open requests with this tutor.",
+    "errorGeneric": "Could not send the request. Please try again."
   },
   "bookingsPage": {
     "heroBadge": "Free Time Classes",
@@ -1271,6 +1302,7 @@
     "viewAll": "View all notifications",
     "now": "now",
     "bookingRequest": "New class request",
+    "bookingCustomRequest": "Request outside your availability",
     "bookingConfirmed": "Class confirmed",
     "bookingRejected": "Request rejected",
     "bookingCancelled": "Class cancelled"

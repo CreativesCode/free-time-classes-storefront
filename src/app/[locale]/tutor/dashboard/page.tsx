@@ -11,11 +11,15 @@ import {
   startOfTodayAsLessonTimestamp,
   endOfTodayAsLessonTimestamp,
   startOfMonthAsLessonTimestamp,
+  nowPlusMinutesAsLessonTimestamp,
 } from "@/lib/datetime/lessonTime";
+
+const CUSTOM_REQUEST_EXPIRY_MINUTES = 15;
 
 type PendingBookingItem = {
   booking: Booking;
   lesson: LessonWithRelations | null;
+  customSubjectName?: string | null;
 };
 
 interface DashboardStats {
@@ -81,7 +85,7 @@ export default async function TutorDashboardPage({
   const todayStartTs = startOfTodayAsLessonTimestamp();
   const todayEndTs = endOfTodayAsLessonTimestamp();
 
-  const [pendingRes, lessonsStatsRes, tutorProfileRes, pendingCountRes, todayLessonsRes, reviewStatsMap] =
+  const [pendingRes, lessonsStatsRes, tutorProfileRes, todayLessonsRes, reviewStatsMap] =
     await Promise.all([
       supabase
         .from("bookings")
@@ -97,11 +101,6 @@ export default async function TutorDashboardPage({
         .gte("scheduled_date_time", startOfMonth),
       supabase.from("tutor_profiles").select("rating").eq("id", user.id).single(),
       supabase
-        .from("bookings")
-        .select("id", { count: "exact", head: true })
-        .eq("tutor_id", user.id)
-        .eq("status", "pending"),
-      supabase
         .from("lessons")
         .select(
           "id, scheduled_date_time, duration_minutes, price, status, meet_link, subject:subjects(name), student:student_profiles!lessons_student_id_fkey(id, user:users!student_profiles_id_fkey(username))"
@@ -114,12 +113,30 @@ export default async function TutorDashboardPage({
       fetchTutorReviewStatsMap(supabase, [user.id]),
     ]);
 
-  const pendingBookings = (pendingRes.data ?? []).filter(
+  const expiryCutoff = nowPlusMinutesAsLessonTimestamp(CUSTOM_REQUEST_EXPIRY_MINUTES);
+  const allPending = (pendingRes.data ?? []) as Booking[];
+
+  const slotBookings = allPending.filter(
     (booking) => typeof booking.lesson_id === "number"
-  ) as Booking[];
-  const lessonIds = pendingBookings
+  );
+  const customBookings = allPending.filter(
+    (booking) =>
+      booking.lesson_id == null &&
+      typeof booking.requested_scheduled_date_time === "string" &&
+      booking.requested_scheduled_date_time >= expiryCutoff &&
+      typeof booking.requested_subject_id === "number"
+  );
+
+  const lessonIds = slotBookings
     .map((booking) => booking.lesson_id)
     .filter((lessonId): lessonId is number => typeof lessonId === "number");
+  const customSubjectIds = [
+    ...new Set(
+      customBookings
+        .map((b) => b.requested_subject_id)
+        .filter((id): id is number => typeof id === "number")
+    ),
+  ];
 
   let lessonById = new Map<number, LessonWithRelations>();
   if (lessonIds.length > 0) {
@@ -138,11 +155,34 @@ export default async function TutorDashboardPage({
     );
   }
 
-  const pendingItems: PendingBookingItem[] = pendingBookings.map((booking) => ({
-    booking,
-    lesson:
-      typeof booking.lesson_id === "number" ? lessonById.get(booking.lesson_id) ?? null : null,
-  }));
+  let subjectNameById = new Map<number, string>();
+  if (customSubjectIds.length > 0) {
+    const { data: subjects } = await supabase
+      .from("subjects")
+      .select("id, name")
+      .in("id", customSubjectIds);
+    subjectNameById = new Map(
+      (subjects ?? []).map((s) => [s.id as number, s.name as string])
+    );
+  }
+
+  const pendingItems: PendingBookingItem[] = [
+    ...customBookings.map((booking) => ({
+      booking,
+      lesson: null,
+      customSubjectName:
+        typeof booking.requested_subject_id === "number"
+          ? subjectNameById.get(booking.requested_subject_id) ?? null
+          : null,
+    })),
+    ...slotBookings.map((booking) => ({
+      booking,
+      lesson:
+        typeof booking.lesson_id === "number"
+          ? lessonById.get(booking.lesson_id) ?? null
+          : null,
+    })),
+  ];
 
   const classesThisMonth = lessonsStatsRes.data?.length ?? 0;
   const earningsThisMonth = (lessonsStatsRes.data ?? []).reduce(
@@ -153,7 +193,7 @@ export default async function TutorDashboardPage({
   const fromReviews = reviewStatsMap?.get(user.id);
   const stats: DashboardStats = {
     classesThisMonth,
-    pendingRequests: pendingCountRes.count ?? pendingItems.length,
+    pendingRequests: pendingItems.length,
     avgRating:
       fromReviews?.rating ?? tutorProfileRes.data?.rating ?? null,
     earningsThisMonth,

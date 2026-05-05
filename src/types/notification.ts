@@ -1,5 +1,6 @@
 export type NotificationType =
   | "booking_request"
+  | "booking_custom_request"
   | "booking_confirmed"
   | "booking_rejected"
   | "booking_cancelled";
