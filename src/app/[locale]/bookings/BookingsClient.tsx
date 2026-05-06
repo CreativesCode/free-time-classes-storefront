@@ -1,32 +1,26 @@
 "use client";
 
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  AudioLines,
+  ArrowRight,
+  ChevronRight,
+  Loader2,
+  Sparkles,
+  Video,
+  XCircle,
+} from "lucide-react";
+import { toast } from "sonner";
+
+import { Avatar } from "@/components/ds/Avatar";
+import { StudentSidebarNav } from "@/components/ds/StudentSidebarNav";
 import { useAuth } from "@/context/UserContext";
 import { useTranslations } from "@/i18n/translations";
-import { useRouter } from "next/navigation";
+import { isLessonInPast } from "@/lib/datetime/lessonTime";
 import { createClient } from "@/lib/supabase/client";
 import { getPublicUrl } from "@/lib/supabase/storage";
-import { getAvatarColor } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Calendar,
-  Clock,
-  DollarSign,
-  User,
-  BookOpen,
-  Filter,
-  ChevronRight,
-  AlertCircle,
-  CheckCircle,
-  XCircle,
-  Loader2,
-  Video,
-  ExternalLink,
-} from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
-import { isLessonInPast } from "@/lib/datetime/lessonTime";
+import { cn } from "@/lib/utils";
 
 type BookingStatus =
   | "pending"
@@ -68,27 +62,17 @@ interface Booking {
   } | null;
 }
 
-type FilterTab = "all" | BookingStatus;
+type Tab = "upcoming" | "past" | "cancelled";
 type ViewRole = "student" | "tutor";
 
-const STATUS_CONFIG: Record<
-  BookingStatus,
-  { color: string; icon: React.ElementType }
-> = {
-  pending: { color: "border-amber-200 bg-amber-50 text-amber-700", icon: Clock },
-  confirmed: { color: "border-emerald-200 bg-emerald-50 text-emerald-700", icon: CheckCircle },
-  completed: { color: "border-sky-200 bg-sky-50 text-sky-700", icon: CheckCircle },
-  cancelled: { color: "border-rose-200 bg-rose-50 text-rose-700", icon: XCircle },
-  rejected: { color: "border-rose-200 bg-rose-50 text-rose-700", icon: XCircle },
-};
+const LIVE_WINDOW_MIN = 30;
 
-const FILTER_TABS: FilterTab[] = [
-  "all",
-  "pending",
-  "confirmed",
-  "completed",
-  "cancelled",
-];
+function isStartingSoon(iso: string | null | undefined): boolean {
+  if (!iso) return false;
+  const target = new Date(iso).getTime();
+  const diffMin = (target - Date.now()) / 60000;
+  return diffMin >= -LIVE_WINDOW_MIN && diffMin <= LIVE_WINDOW_MIN;
+}
 
 export default function BookingsClient({ locale }: { locale: string }) {
   const { user, isLoading: authLoading } = useAuth();
@@ -98,7 +82,7 @@ export default function BookingsClient({ locale }: { locale: string }) {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<FilterTab>("all");
+  const [tab, setTab] = useState<Tab>("upcoming");
   const [cancellingId, setCancellingId] = useState<number | null>(null);
 
   const supabaseRef = useRef(createClient());
@@ -172,11 +156,7 @@ export default function BookingsClient({ locale }: { locale: string }) {
             lesson: lesson
               ? {
                   ...lesson,
-                  student: lesson.student as Booking["lesson"] extends infer L
-                    ? L extends { student?: unknown }
-                      ? L["student"]
-                      : never
-                    : never,
+                  student: lesson.student,
                 }
               : null,
           };
@@ -195,16 +175,41 @@ export default function BookingsClient({ locale }: { locale: string }) {
     if (user) void fetchBookings();
   }, [user, fetchBookings]);
 
-  const filteredBookings = useMemo(() => {
-    const isUpcomingTab = filter === "all" || filter === "pending" || filter === "confirmed";
-    return bookings.filter((b) => {
-      if (filter !== "all" && b.status !== filter) return false;
-      if (isUpcomingTab && (b.status === "pending" || b.status === "confirmed")) {
-        if (isLessonInPast(b.lesson?.scheduled_date_time)) return false;
-      }
-      return true;
-    });
-  }, [bookings, filter]);
+  const upcoming = useMemo(
+    () =>
+      bookings.filter(
+        (b) =>
+          (b.status === "pending" || b.status === "confirmed") &&
+          !isLessonInPast(b.lesson?.scheduled_date_time)
+      ),
+    [bookings]
+  );
+  const past = useMemo(
+    () =>
+      bookings.filter(
+        (b) =>
+          b.status === "completed" ||
+          ((b.status === "pending" || b.status === "confirmed") &&
+            isLessonInPast(b.lesson?.scheduled_date_time))
+      ),
+    [bookings]
+  );
+  const cancelled = useMemo(
+    () =>
+      bookings.filter(
+        (b) => b.status === "cancelled" || b.status === "rejected"
+      ),
+    [bookings]
+  );
+
+  const visible = tab === "upcoming" ? upcoming : tab === "past" ? past : cancelled;
+
+  const liveBooking = useMemo(() => {
+    return upcoming.find(
+      (b) =>
+        b.status === "confirmed" && isStartingSoon(b.lesson?.scheduled_date_time)
+    );
+  }, [upcoming]);
 
   const handleCancel = async (bookingId: number) => {
     setCancellingId(bookingId);
@@ -234,391 +239,310 @@ export default function BookingsClient({ locale }: { locale: string }) {
     if (viewRole === "student") {
       return booking.lesson?.tutor?.user?.username ?? t("tutor");
     }
-    return (
-      (booking.lesson as Record<string, unknown>)?.student as { username?: string }
-    )?.username ?? t("student");
+    return booking.lesson?.student?.username ?? t("student");
   }
 
   function getPersonAvatar(booking: Booking): string | null {
-    if (viewRole === "student") {
-      const pic = booking.lesson?.tutor?.user?.profile_picture;
-      return pic ? getPublicUrl("avatars", pic) : null;
-    }
-    const student = (booking.lesson as Record<string, unknown>)
-      ?.student as { profile_picture?: string | null } | null;
-    const pic = student?.profile_picture;
-    return pic ? getPublicUrl("avatars", pic) : null;
+    const pic =
+      viewRole === "student"
+        ? booking.lesson?.tutor?.user?.profile_picture
+        : booking.lesson?.student?.profile_picture;
+    if (!pic) return null;
+    return pic.startsWith("http") ? pic : getPublicUrl("avatars", pic);
   }
 
-  function formatDateTime(isoStr: string): { date: string; time: string } {
-    const d = new Date(isoStr);
-    return {
-      date: d.toLocaleDateString(locale, {
-        weekday: "short",
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      }),
-      time: d.toLocaleTimeString(locale, {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
+  function formatDateTime(iso: string): { date: string; time: string; countdown: string } {
+    const d = new Date(iso);
+    const date = d.toLocaleDateString(locale, {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    });
+    const time = d.toLocaleTimeString(locale, {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const diffMin = Math.round((d.getTime() - Date.now()) / 60000);
+    let countdown = "";
+    if (diffMin >= 0) {
+      if (diffMin < 60) countdown = t("inMinutes", { minutes: diffMin });
+      else if (diffMin < 60 * 24) countdown = t("inHours", { hours: Math.round(diffMin / 60) });
+      else countdown = t("inDays", { days: Math.round(diffMin / (60 * 24)) });
+    }
+    return { date, time, countdown };
   }
 
   if (authLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-ft-ink-3" />
       </div>
     );
   }
 
   if (!user) return null;
 
-  const countsByStatus: Record<BookingStatus, number> = {
-    pending: bookings.filter(
-      (b) => b.status === "pending" && !isLessonInPast(b.lesson?.scheduled_date_time)
-    ).length,
-    confirmed: bookings.filter(
-      (b) => b.status === "confirmed" && !isLessonInPast(b.lesson?.scheduled_date_time)
-    ).length,
-    completed: bookings.filter((b) => b.status === "completed").length,
-    cancelled: bookings.filter((b) => b.status === "cancelled").length,
-    rejected: bookings.filter((b) => b.status === "rejected").length,
-  };
+  const TABS: Array<{ id: Tab; label: string }> = [
+    { id: "upcoming", label: t("tabUpcoming") },
+    { id: "past", label: t("tabPast") },
+    { id: "cancelled", label: t("tabCancelled") },
+  ];
 
   return (
-    <div className="relative mx-auto w-full max-w-screen-2xl px-4 pb-28 pt-6 sm:px-6 md:pb-12 lg:px-8 lg:pt-10">
-      <div className="pointer-events-none absolute -top-16 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-primary/15 blur-3xl" />
+    <div className="mx-auto w-full max-w-screen-md md:max-w-screen-lg lg:max-w-screen-xl lg:px-9 lg:py-8">
+      <div className="lg:grid lg:grid-cols-[220px_1fr] lg:gap-8">
+        <StudentSidebarNav isTutor={user.is_tutor ?? false} />
 
-      <section className="relative overflow-hidden rounded-[2rem] border border-primary/10 bg-gradient-to-br from-white via-violet-50/60 to-fuchsia-50/50 p-5 shadow-[0_18px_60px_rgba(112,42,225,0.08)] md:p-8">
-        <div className="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-primary/10 blur-3xl" />
-        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary">
-              <Calendar className="h-3.5 w-3.5" />
-              {t("heroBadge")}
-            </div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 md:hidden">
-              {t("title")}
-            </h1>
-            <h1 className="hidden text-4xl font-extrabold tracking-tight text-zinc-900 md:block lg:hidden">
-              {t("title")}
-            </h1>
-            <h1 className="hidden text-5xl font-extrabold tracking-tight text-zinc-900 lg:block">
-              {t("title")}
-            </h1>
-            <p className="max-w-2xl text-sm text-zinc-600 md:text-base">{t("subtitle")}</p>
-          </div>
+        <div className="min-w-0">
+      <div className="px-5 pt-[18px] md:px-9 md:pt-8 lg:px-0 lg:pt-0">
+        <h1 className="text-[28px] font-semibold tracking-[-0.03em] text-ft-ink md:text-[32px]">
+          {t("title")}
+        </h1>
 
-          <div className="grid w-full gap-3 sm:grid-cols-3 lg:w-auto lg:min-w-[420px]">
-            <div className="rounded-lg border border-violet-100 bg-white/80 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{t("filterPending")}</p>
-              <p className="mt-1 text-2xl font-black text-violet-700">{countsByStatus.pending}</p>
-            </div>
-            <div className="rounded-lg border border-violet-100 bg-white/80 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{t("filterConfirmed")}</p>
-              <p className="mt-1 text-2xl font-black text-violet-700">{countsByStatus.confirmed}</p>
-            </div>
-            <div className="rounded-lg border border-violet-100 bg-white/80 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">{t("filterCompleted")}</p>
-              <p className="mt-1 text-2xl font-black text-violet-700">{countsByStatus.completed}</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {isBothRoles && (
-        <div className="mt-6 flex gap-2 rounded-full border border-violet-100 bg-violet-50/70 p-1.5 w-fit">
-          <Button
-            variant={viewRole === "student" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setViewRole("student")}
-            className="rounded-full px-4"
-          >
-            <User className="h-4 w-4" />
-            {t("student")}
-          </Button>
-          <Button
-            variant={viewRole === "tutor" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setViewRole("tutor")}
-            className="rounded-full px-4"
-          >
-            <BookOpen className="h-4 w-4" />
-            {t("tutor")}
-          </Button>
-        </div>
-      )}
-
-      <div className="mt-6 flex items-center gap-2 overflow-x-auto pb-2">
-        <Filter className="h-4 w-4 shrink-0 text-zinc-500" />
-        {FILTER_TABS.map((tab) => {
-          const filterKey =
-            tab === "all"
-              ? "filterAll"
-              : tab === "pending"
-                ? "filterPending"
-                : tab === "confirmed"
-                  ? "filterConfirmed"
-                  : tab === "completed"
-                    ? "filterCompleted"
-                    : "filterCancelled";
-          return (
-            <Button
-              key={tab}
-              variant={filter === tab ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilter(tab)}
-              className="whitespace-nowrap rounded-full"
-            >
-              {t(filterKey)}
-              {tab !== "all" && (
-                <span className="ml-1.5 text-xs opacity-70">
-                  ({bookings.filter((b) => b.status === tab).length})
-                </span>
+        {isBothRoles && (
+          <div className="mt-4 inline-flex gap-1.5 rounded-full border border-ft-line-soft bg-ft-surface-1 p-1">
+            <button
+              type="button"
+              onClick={() => setViewRole("student")}
+              className={cn(
+                "rounded-full px-4 py-1.5 text-[12px] font-semibold transition-colors",
+                viewRole === "student"
+                  ? "bg-ft-paper text-ft-ink shadow-sm"
+                  : "text-ft-ink-3 hover:text-ft-ink-2"
               )}
-            </Button>
-          );
-        })}
-      </div>
-
-      {loading && (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="animate-pulse rounded-3xl border border-violet-100 bg-white p-5 shadow-sm"
             >
-              <div className="pb-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-violet-100" />
-                  <div className="space-y-2 flex-1">
-                    <div className="h-4 w-2/3 rounded bg-violet-100" />
-                    <div className="h-3 w-1/3 rounded bg-violet-100" />
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-3">
-                <div className="h-3 w-full rounded bg-violet-100" />
-                <div className="h-3 w-3/4 rounded bg-violet-100" />
-                <div className="h-3 w-1/2 rounded bg-violet-100" />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {!loading && error && (
-        <div className="mt-6 rounded-3xl border border-destructive/30 bg-destructive/5 p-6">
-          <div className="flex items-center gap-3">
-            <AlertCircle className="h-8 w-8 shrink-0 text-destructive" />
-            <div>
-              <p className="font-medium text-destructive">{error}</p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-3"
-                onClick={() => void fetchBookings()}
-              >
-                {t("filterAll")}
-              </Button>
-            </div>
+              {t("student")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewRole("tutor")}
+              className={cn(
+                "rounded-full px-4 py-1.5 text-[12px] font-semibold transition-colors",
+                viewRole === "tutor"
+                  ? "bg-ft-paper text-ft-ink shadow-sm"
+                  : "text-ft-ink-3 hover:text-ft-ink-2"
+              )}
+            >
+              {t("tutor")}
+            </button>
           </div>
-        </div>
-      )}
+        )}
 
-      {!loading && !error && filteredBookings.length === 0 && (
-        <div className="mt-6 rounded-3xl border border-dashed border-violet-200 bg-white/70 p-10 text-center md:p-14">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-violet-100">
-            <Calendar className="h-10 w-10 text-violet-500" />
-          </div>
-          <p className="mb-2 text-xl font-bold text-zinc-900">{t("noBookings")}</p>
-          <p className="mx-auto mb-6 max-w-sm text-sm text-zinc-500">{t("noBookingsHint")}</p>
-          <Button
-            onClick={() => router.push(`/${locale}/courses`)}
-            className="rounded-full px-6"
-          >
-            <BookOpen className="h-4 w-4" />
-            {t("exploreCourses")}
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
-
-      {!loading && !error && filteredBookings.length > 0 && (
-        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filteredBookings.map((booking) => {
-            const personName = getPersonName(booking);
-            const personAvatar = getPersonAvatar(booking);
-            const statusCfg = STATUS_CONFIG[booking.status];
-            const StatusIcon = statusCfg.icon;
-            const lesson = booking.lesson;
-            const dateTime = lesson?.scheduled_date_time
-              ? formatDateTime(lesson.scheduled_date_time)
-              : null;
-
+        {/* Tabs */}
+        <div className="mt-3.5 flex gap-1.5 rounded-ft-md border border-ft-line-soft bg-ft-surface-1 p-1">
+          {TABS.map((it) => {
+            const active = tab === it.id;
             return (
-              <article
-                key={booking.id}
-                className="group flex h-full flex-col rounded-3xl border border-violet-100 bg-white/90 p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgba(112,42,225,0.12)]"
+              <button
+                key={it.id}
+                type="button"
+                onClick={() => setTab(it.id)}
+                className={cn(
+                  "flex-1 rounded-ft-sm border-none px-0 py-2.5 text-[13px] font-semibold transition-colors",
+                  active
+                    ? "bg-ft-paper text-ft-ink shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+                    : "bg-transparent text-ft-ink-3 hover:text-ft-ink-2"
+                )}
               >
-                <div className="mb-4 flex items-start justify-between gap-2">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <Avatar className="h-11 w-11 shrink-0 ring-2 ring-primary/15">
-                      {personAvatar && <AvatarImage src={personAvatar} alt={personName} />}
-                      <AvatarFallback
-                        style={{ backgroundColor: getAvatarColor(personName) }}
-                        className="text-sm font-semibold text-white"
-                      >
-                        {personName.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-zinc-900">{personName}</p>
-                      <p className="text-xs text-zinc-500">
-                        {viewRole === "student" ? t("tutor") : t("student")}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant="outline" className={`gap-1 rounded-full ${statusCfg.color}`}>
-                    <StatusIcon className="h-3 w-3" />
-                    {t(
-                      `status${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}` as
-                        | "statusPending"
-                        | "statusConfirmed"
-                        | "statusRejected"
-                        | "statusCancelled"
-                        | "statusCompleted"
-                    )}
-                  </Badge>
-                </div>
-
-                <div className="space-y-3 text-sm">
-                  {lesson?.subject?.name && (
-                    <div className="flex items-center gap-2 text-zinc-600">
-                      <BookOpen className="h-4 w-4 shrink-0 text-primary" />
-                      <span className="font-medium text-zinc-900">{lesson.subject.name}</span>
-                    </div>
-                  )}
-                  {dateTime && (
-                    <div className="flex items-center gap-2 text-zinc-600">
-                      <Calendar className="h-4 w-4 shrink-0 text-primary" />
-                      <span>{dateTime.date}</span>
-                      <span className="text-zinc-400">|</span>
-                      <Clock className="h-3.5 w-3.5 shrink-0 text-primary" />
-                      <span>{dateTime.time}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-4">
-                    {lesson?.duration_minutes && (
-                      <div className="flex items-center gap-1.5 text-zinc-600">
-                        <Clock className="h-4 w-4 shrink-0 text-primary" />
-                        <span>
-                          {lesson.duration_minutes} {t("minutes")}
-                        </span>
-                      </div>
-                    )}
-                    {lesson?.price != null && (
-                      <div className="flex items-center gap-1.5 text-zinc-600">
-                        <DollarSign className="h-4 w-4 shrink-0 text-primary" />
-                        <span className="font-semibold text-zinc-900">${lesson.price.toFixed(2)}</span>
-                      </div>
-                    )}
-                  </div>
-                  {booking.notes && (
-                    <p className="line-clamp-2 rounded-xl bg-violet-50 px-3 py-2 text-xs text-zinc-600">
-                      {booking.notes}
-                    </p>
-                  )}
-                </div>
-
-                {booking.status === "confirmed" && lesson?.meet_link && (
-                  <div className="mt-3 flex items-center gap-2 rounded-xl bg-violet-50 px-3 py-2">
-                    <Video className="h-4 w-4 shrink-0 text-violet-600" />
-                    <span className="flex-1 truncate text-xs text-violet-700">
-                      {t("videoCallLink")}
-                    </span>
-                    <Button
-                      size="sm"
-                      className="h-7 gap-1 rounded-full bg-violet-600 px-3 text-xs hover:bg-violet-700"
-                      onClick={() => window.open(lesson.meet_link!, "_blank")}
-                    >
-                      {t("joinVideoCall")}
-                      <ExternalLink className="h-3 w-3" />
-                    </Button>
-                  </div>
-                )}
-
-                {booking.status === "confirmed" && !lesson?.meet_link && (
-                  <p className="mt-3 text-xs italic text-slate-400">
-                    {t("noMeetLink")}
-                  </p>
-                )}
-
-                <div className="mt-4 flex flex-wrap gap-2 pt-2">
-                  {(booking.status === "pending" || booking.status === "confirmed") && (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="rounded-full"
-                      disabled={cancellingId === booking.id}
-                      onClick={() => void handleCancel(booking.id)}
-                    >
-                      {cancellingId === booking.id ? (
-                        <>
-                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                          {t("cancelling")}
-                        </>
-                      ) : (
-                        t("cancelBooking")
-                      )}
-                    </Button>
-                  )}
-                  {booking.status === "completed" && viewRole === "student" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="rounded-full"
-                      onClick={() => router.push(`/${locale}/student-profile`)}
-                    >
-                      <CheckCircle className="h-3.5 w-3.5" />
-                      {t("leaveReview")}
-                    </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="ml-auto rounded-full text-zinc-600 group-hover:text-primary"
-                    onClick={() =>
-                      router.push(
-                        viewRole === "student"
-                          ? `/${locale}/student-profile`
-                          : `/${locale}/teacher-profile`
-                      )
-                    }
-                  >
-                    {t("viewDetails")}
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </article>
+                {it.label}
+              </button>
             );
           })}
         </div>
-      )}
+      </div>
 
-      {!loading && !error && filteredBookings.length > 0 && (
-        <div className="mt-6 rounded-3xl border border-violet-100 bg-violet-50/70 p-4 text-xs text-zinc-600 md:hidden">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4 text-emerald-500" />
-            Reserva y pago se procesan de forma segura.
+      <div className="px-5 py-3.5 md:px-9 lg:px-0 lg:py-4">
+        {/* Live banner */}
+        {tab === "upcoming" && liveBooking && (
+          <div
+            className="mb-3.5 flex items-center gap-3 rounded-ft-base p-3.5"
+            style={{
+              background: "linear-gradient(135deg, var(--ft-accent) 0%, #B89B5E 100%)",
+              color: "#1a1410",
+            }}
+          >
+            <div className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-full bg-[#1a1410] text-ft-accent">
+              <Sparkles width={16} height={16} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-[11px] font-bold uppercase tracking-[0.08em] opacity-85">
+                {t("liveStartingSoon")}
+              </div>
+              <div className="text-[14px] font-semibold tracking-tight">
+                {liveBooking.lesson?.subject?.name ?? t("lesson")} ·{" "}
+                {liveBooking.lesson
+                  ? formatDateTime(liveBooking.lesson.scheduled_date_time).time
+                  : ""}
+              </div>
+            </div>
+            {liveBooking.lesson?.meet_link ? (
+              <a
+                href={liveBooking.lesson.meet_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#1a1410] px-3.5 py-2 text-[12px] font-semibold text-ft-paper"
+              >
+                {t("joinClass")}
+                <ArrowRight width={12} height={12} />
+              </a>
+            ) : null}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Mobile bottom navigation is handled globally in NavbarWrapper */}
+        {/* Loading */}
+        {loading && (
+          <div className="space-y-3">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="h-[130px] animate-pulse rounded-ft-lg border border-ft-line-soft bg-ft-paper-deep"
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Error */}
+        {!loading && error && (
+          <div className="rounded-ft-lg border border-red-200 bg-red-50/60 p-4 text-[13px] text-red-700">
+            <p>{error}</p>
+            <button
+              type="button"
+              onClick={() => void fetchBookings()}
+              className="mt-3 rounded-full border border-red-300 px-3 py-1.5 text-[12px] font-semibold"
+            >
+              {t("retry")}
+            </button>
+          </div>
+        )}
+
+        {/* Empty */}
+        {!loading && !error && visible.length === 0 && (
+          <div className="rounded-ft-lg border border-dashed border-ft-line bg-ft-paper p-8 text-center md:p-10">
+            <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-ft-surface-2">
+              <AudioLines width={20} height={20} className="text-ft-accent-deep" />
+            </div>
+            <p className="text-[15px] font-semibold tracking-tight text-ft-ink">
+              {tab === "upcoming"
+                ? t("noUpcomingBookings")
+                : tab === "past"
+                  ? t("noPastBookings")
+                  : t("noCancelledBookings")}
+            </p>
+            <p className="mx-auto mt-1.5 max-w-xs text-[13px] text-ft-ink-3">
+              {t("noBookingsHint")}
+            </p>
+            <button
+              type="button"
+              onClick={() => router.push(`/${locale}/courses`)}
+              className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-ft-ink px-5 py-2.5 text-[13px] font-semibold text-ft-paper transition-colors hover:bg-[#2a241b]"
+            >
+              {t("exploreCourses")}
+              <ChevronRight width={13} height={13} />
+            </button>
+          </div>
+        )}
+
+        {/* List */}
+        {!loading && !error && visible.length > 0 && (
+          <div className="flex flex-col gap-3 md:grid md:grid-cols-2 md:gap-4 lg:grid-cols-3">
+            {visible.map((booking) => {
+              const personName = getPersonName(booking);
+              const personAvatar = getPersonAvatar(booking);
+              const lesson = booking.lesson;
+              const dateTime = lesson?.scheduled_date_time
+                ? formatDateTime(lesson.scheduled_date_time)
+                : null;
+              const isCancelable =
+                tab === "upcoming" &&
+                (booking.status === "pending" || booking.status === "confirmed");
+
+              return (
+                <article
+                  key={booking.id}
+                  className="rounded-ft-lg border border-ft-line-soft bg-ft-paper p-4"
+                >
+                  <div className="mb-3 flex items-center justify-between">
+                    <div className="text-[11px] font-bold uppercase tracking-[0.06em] text-ft-accent-deep">
+                      {dateTime ? `${dateTime.date} · ${dateTime.time}` : t("dateUnknown")}
+                    </div>
+                    {dateTime?.countdown && (
+                      <div className="text-[11px] text-ft-ink-3">{dateTime.countdown}</div>
+                    )}
+                  </div>
+                  <div className="text-[16px] font-semibold tracking-[-0.02em] text-ft-ink">
+                    {lesson?.subject?.name ?? t("lesson")}
+                  </div>
+
+                  <div className="mt-3.5 flex items-center justify-between gap-2">
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      {personAvatar ? (
+                        <Avatar src={personAvatar} name={personName} size={32} />
+                      ) : (
+                        <span className="grid h-8 w-8 place-items-center rounded-full bg-ft-surface-2 text-[12px] font-semibold text-ft-ink-2">
+                          {personName[0]?.toUpperCase()}
+                        </span>
+                      )}
+                      <div className="min-w-0">
+                        <div className="truncate text-[12px] font-medium text-ft-ink">
+                          {personName}
+                        </div>
+                        <div className="flex items-center gap-1 text-[10px] text-ft-ink-3">
+                          {lesson?.duration_minutes
+                            ? `${lesson.duration_minutes} ${t("minutesShort")}`
+                            : null}
+                          {lesson?.price != null && (
+                            <>
+                              <span className="opacity-50">·</span>
+                              <span>{lesson.price.toFixed(0)}€</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-shrink-0 gap-1.5">
+                      {booking.status === "confirmed" && lesson?.meet_link && (
+                        <a
+                          href={lesson.meet_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 rounded-ft-sm border border-ft-line bg-ft-paper px-3 py-2 text-[11px] font-semibold text-ft-ink hover:bg-ft-surface-1"
+                        >
+                          <Video width={12} height={12} />
+                          {t("joinClass")}
+                        </a>
+                      )}
+                      {isCancelable && (
+                        <button
+                          type="button"
+                          onClick={() => void handleCancel(booking.id)}
+                          disabled={cancellingId === booking.id}
+                          className="inline-flex items-center gap-1 rounded-ft-sm border border-ft-line bg-ft-paper px-3 py-2 text-[11px] font-semibold text-ft-ink-2 hover:bg-ft-surface-1 disabled:opacity-60"
+                        >
+                          {cancellingId === booking.id ? (
+                            <Loader2 width={12} height={12} className="animate-spin" />
+                          ) : (
+                            <XCircle width={12} height={12} />
+                          )}
+                          {t("cancelBooking")}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {booking.notes && (
+                    <p className="mt-3 line-clamp-2 rounded-ft border border-ft-line-soft bg-ft-surface-1 px-3 py-2 text-[11px] text-ft-ink-2">
+                      {booking.notes}
+                    </p>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -209,6 +209,26 @@
     --lt-text-body-secondary:         161 161 170;  /* #A1A1AA Zinc 400 */
   }
 
+  /* ─────────────────────────────────────────────────────────────────────
+     FreeTime redesign theme — see docs/design/REDESIGN.md
+     Activate by adding data-theme="freetime" on the wrapping element.
+     Uses --ft-* prefix to avoid colliding with shadcn tokens above.
+     ───────────────────────────────────────────────────────────────────── */
+  [data-theme="freetime"] {
+    --ft-paper:        #FAF7F1;
+    --ft-paper-deep:   #F5F1E8;
+    --ft-surface-1:    #F2EDE3;
+    --ft-surface-2:    #E8E0D1;
+    --ft-line-soft:    rgba(45, 36, 26, 0.06);
+    --ft-line:         rgba(45, 36, 26, 0.10);
+    --ft-ink:          #1F1A14;
+    --ft-ink-2:        #4A3F30;
+    --ft-ink-3:        #8A7A60;
+    --ft-accent:       #C9A86A;
+    --ft-accent-deep:  #8A6F3F;
+    --ft-accent-soft:  #E8D9B8;
+  }
+
   * {
     @apply border-border;
   }

@@ -1,29 +1,28 @@
 "use client";
 
-import AvailabilityBrowser from "@/components/student/AvailabilityBrowser";
-import StudentProfileEdit from "@/components/student/StudentProfileEdit";
-import UpcomingLessonsCard from "@/components/student/UpcomingLessonsCard";
-import LessonHistoryTable from "@/components/student/LessonHistoryTable";
-import FavoriteTutorsList from "@/components/student/FavoriteTutorsList";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getPublicUrl } from "@/lib/supabase/storage";
-import {
-  BookOpen,
-  Calendar,
-  ClipboardList,
-  MessageSquare,
-  Settings,
-  User,
-} from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useState } from "react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Bell,
+  ChevronRight,
+  Globe,
+  LogOut,
+  MessageCircle,
+  Receipt,
+  Shield,
+  Sparkles,
+  User,
+  CalendarRange,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+
+import { StudentSidebarNav } from "@/components/ds/StudentSidebarNav";
+import StudentProfileEdit from "@/components/student/StudentProfileEdit";
+import { useAuth } from "@/context/UserContext";
+import { useTranslations } from "@/i18n/translations";
+import { getPublicUrl } from "@/lib/supabase/storage";
 import type { StudentProfile } from "@/types/student";
-import StudentBookingRequests from "@/components/student/StudentBookingRequests";
-import InternalMessagingPanel from "@/components/messages/InternalMessagingPanel";
-import { useRouter, useSearchParams } from "next/navigation";
 
 export type StudentProfilePageUser = {
   id: string;
@@ -36,61 +35,42 @@ export type StudentProfilePageUser = {
   updated_at: string;
 };
 
-const STUDENT_PROFILE_TABS = [
-  "profile",
-  "availabilities",
-  "courses",
-  "requests",
-  "settings",
-  "messages",
-] as const;
-type StudentProfileTab = (typeof STUDENT_PROFILE_TABS)[number];
+export type StudentProfileStats = {
+  classes: number;
+  hoursLearned: number;
+  tutors: number;
+};
 
-function parseStudentProfileTab(sp: {
-  get(name: string): string | null;
-}): StudentProfileTab {
-  const raw = sp.get("tab");
-  if (
-    raw &&
-    (STUDENT_PROFILE_TABS as readonly string[]).includes(raw)
-  ) {
-    return raw as StudentProfileTab;
-  }
-  return "profile";
-}
+const LANGUAGE_LEVEL_PROGRESS: Record<
+  NonNullable<StudentProfile["language_level"]>,
+  { label: string; percent: number; next: string }
+> = {
+  beginner: { label: "A1", percent: 17, next: "A2" },
+  elementary: { label: "A2", percent: 33, next: "B1" },
+  intermediate: { label: "B1", percent: 50, next: "B2" },
+  upper_intermediate: { label: "B2", percent: 67, next: "C1" },
+  advanced: { label: "C1", percent: 83, next: "C2" },
+  proficient: { label: "C2", percent: 100, next: "—" },
+};
 
 export default function StudentProfilePageClient({
   locale,
   pageUser,
   initialStudentProfile,
+  stats,
 }: {
   locale: string;
   pageUser: StudentProfilePageUser;
   initialStudentProfile: StudentProfile | null;
+  stats: StudentProfileStats;
 }) {
   const t = useTranslations("studentProfile");
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<StudentProfileTab>(() =>
-    parseStudentProfileTab(searchParams)
-  );
-
-  useEffect(() => {
-    setActiveTab(parseStudentProfileTab(searchParams));
-  }, [searchParams]);
+  const { logout } = useAuth();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(
     initialStudentProfile
   );
-
-  /** Sincroniza estrellas del historial con la tarjeta de tutores favoritos. */
-  const [favoritesRevision, setFavoritesRevision] = useState(0);
-  const bumpFavoritesRevision = () =>
-    setFavoritesRevision((n) => n + 1);
-
-  useEffect(() => {
-    setStudentProfile(initialStudentProfile);
-  }, [initialStudentProfile]);
 
   const profilePictureUrl =
     pageUser.profile_picture && typeof pageUser.profile_picture === "string"
@@ -99,302 +79,227 @@ export default function StudentProfilePageClient({
         : getPublicUrl("avatars", pageUser.profile_picture)
       : null;
 
-  const tabItems = [
-    { value: "profile" as const, icon: User, label: t("profile") },
-    { value: "availabilities" as const, icon: Calendar, label: t("availabilities.tab") },
-    { value: "courses" as const, icon: BookOpen, label: t("courses") },
-    { value: "requests" as const, icon: ClipboardList, label: t("requests.tab") },
-    { value: "settings" as const, icon: Settings, label: t("settings") },
-    { value: "messages" as const, icon: MessageSquare, label: t("messaging.tab") },
+  const memberSinceYear = pageUser.created_at
+    ? new Date(pageUser.created_at).getFullYear()
+    : null;
+
+  const progress = studentProfile?.language_level
+    ? LANGUAGE_LEVEL_PROGRESS[studentProfile.language_level]
+    : null;
+
+  const settingsItems: Array<{
+    icon: LucideIcon;
+    label: string;
+    sub: string;
+    onClick: () => void;
+  }> = [
+    {
+      icon: User,
+      label: t("editProfile"),
+      sub: t("editProfileSub"),
+      onClick: () => setIsEditModalOpen(true),
+    },
+    {
+      icon: CalendarRange,
+      label: t("myClasses"),
+      sub: t("myClassesSub"),
+      onClick: () => router.push(`/${locale}/bookings`),
+    },
+    {
+      icon: MessageCircle,
+      label: t("myMessages"),
+      sub: t("myMessagesSub"),
+      onClick: () => router.push(`/${locale}/messages`),
+    },
+    {
+      icon: Bell,
+      label: t("notifications"),
+      sub: t("notificationsSub"),
+      onClick: () => router.push(`/${locale}/settings?tab=notifications`),
+    },
+    {
+      icon: Globe,
+      label: t("languageRegion"),
+      sub: t("languageRegionSub", {
+        timezone: studentProfile?.timezone ?? "Europe/Madrid",
+      }),
+      onClick: () => router.push(`/${locale}/settings?tab=privacy`),
+    },
+    {
+      icon: Receipt,
+      label: t("paymentsTitle"),
+      sub: t("paymentsSub"),
+      onClick: () => router.push(`/${locale}/settings?tab=payments`),
+    },
+    {
+      icon: Shield,
+      label: t("privacy"),
+      sub: t("privacySub"),
+      onClick: () => router.push(`/${locale}/settings?tab=privacy`),
+    },
   ];
 
   return (
-    <div className="mx-auto w-full max-w-screen-2xl px-4 pb-24 pt-6 sm:px-6 md:pb-10 md:pt-8">
-      {/* Profile Header */}
-      <div className="mb-6 flex flex-col items-center gap-4 text-center md:mb-8 md:flex-row md:items-center md:gap-6 md:text-left">
-        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full bg-violet-100 md:h-24 md:w-24">
-          {profilePictureUrl ? (
-            <Image
-              src={profilePictureUrl}
-              alt="Profile"
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 80px, 96px"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-500 to-violet-600 text-2xl font-bold text-white md:text-3xl">
-              {pageUser.username?.[0]?.toUpperCase() || "U"}
-            </div>
-          )}
-        </div>
-        <div>
-          <h1 className="text-xl font-extrabold tracking-tight text-foreground md:text-2xl">
+    <div className="mx-auto w-full max-w-screen-md md:max-w-screen-lg lg:max-w-screen-xl lg:px-9 lg:py-8">
+      <div className="lg:grid lg:grid-cols-[220px_1fr] lg:gap-8">
+        <StudentSidebarNav isTutor={false} />
+
+        <div className="min-w-0">
+      {/* Header */}
+      <header className="flex items-center justify-between px-5 pb-3.5 pt-[18px] md:px-9 md:pt-8 lg:px-0 lg:pt-0">
+        <h1 className="m-0 text-[28px] font-semibold tracking-[-0.03em] text-ft-ink md:text-[32px]">
+          {t("title")}
+        </h1>
+        <button
+          type="button"
+          onClick={() => router.push(`/${locale}/settings`)}
+          aria-label={t("openSettings")}
+          className="grid h-[38px] w-[38px] place-items-center rounded-full border border-ft-line bg-ft-paper transition-colors hover:bg-ft-surface-1"
+        >
+          <Sparkles width={16} height={16} className="text-ft-ink" />
+        </button>
+      </header>
+
+      {/* User card */}
+      <div className="px-5 pb-5 md:px-9 lg:px-0">
+        <div className="rounded-ft-2xl border border-ft-line bg-gradient-to-br from-ft-surface-2 to-ft-surface-1 px-5 py-6 text-center lg:mx-auto lg:max-w-md lg:py-8">
+          <div className="mx-auto h-[84px] w-[84px] overflow-hidden rounded-full bg-ft-surface-2">
+            {profilePictureUrl ? (
+              <Image
+                src={profilePictureUrl}
+                alt={pageUser.username}
+                width={84}
+                height={84}
+                className="h-full w-full object-cover"
+                unoptimized
+              />
+            ) : (
+              <div className="grid h-full w-full place-items-center bg-gradient-to-br from-ft-accent to-ft-accent-deep text-3xl font-semibold text-ft-paper">
+                {pageUser.username[0]?.toUpperCase() ?? "U"}
+              </div>
+            )}
+          </div>
+          <div className="mt-3.5 text-[20px] font-semibold tracking-[-0.02em] text-ft-ink">
             {pageUser.username}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">{pageUser.email}</p>
+          </div>
+          <div className="mt-0.5 text-[13px] text-ft-ink-3">
+            {pageUser.country ?? "—"}
+            {memberSinceYear ? ` · ${t("memberSince", { year: memberSinceYear })}` : ""}
+          </div>
+
+          <div className="mt-[18px] grid grid-cols-3 gap-1.5 border-t border-ft-line-soft pt-3.5">
+            <div>
+              <div className="text-[18px] font-semibold text-ft-ink">{stats.classes}</div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.06em] text-ft-ink-3">
+                {t("statClasses")}
+              </div>
+            </div>
+            <div className="border-x border-ft-line-soft">
+              <div className="text-[18px] font-semibold text-ft-ink">
+                {stats.hoursLearned}h
+              </div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.06em] text-ft-ink-3">
+                {t("statLearned")}
+              </div>
+            </div>
+            <div>
+              <div className="text-[18px] font-semibold text-ft-ink">{stats.tutors}</div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.06em] text-ft-ink-3">
+                {t("statTutors")}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <Tabs
-        value={activeTab}
-        onValueChange={(v) => setActiveTab(v as StudentProfileTab)}
-        className="space-y-4"
-      >
-        <TabsList className="no-scrollbar flex h-auto min-h-10 w-full gap-1 overflow-x-auto md:grid md:grid-cols-6">
-          {tabItems.map((tab) => (
-            <TabsTrigger
-              key={tab.value}
-              value={tab.value}
-              className="flex min-h-9 shrink-0 items-center gap-2 rounded-md px-3 py-2"
-            >
-              <tab.icon className="h-4 w-4" />
-              <span className="hidden sm:inline">{tab.label}</span>
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
-        {/* Profile Tab */}
-        <TabsContent value="profile" className="space-y-4">
-          <Card className="w-full rounded-md border-border/60">
-            <CardHeader>
-              <CardTitle>{t("personalInformation")}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {/* Progress card */}
+      {progress && (
+        <>
+          <h2 className="m-0 px-5 pb-2.5 pt-2 text-base font-semibold tracking-tight text-ft-ink md:px-9 lg:px-0">
+            {t("yourProgress")}
+          </h2>
+          <div className="px-5 pb-4 md:px-9 lg:px-0">
+            <div className="rounded-ft-lg border border-ft-line-soft bg-ft-paper p-[18px]">
+              <div className="flex items-center justify-between">
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {t("name")}
-                  </label>
-                  <p className="mt-1 text-sm font-medium text-foreground">{pageUser.username}</p>
+                  <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-ft-accent-deep">
+                    {t("progressLevelLabel", { level: progress.label })}
+                  </div>
+                  <div className="mt-1 text-[15px] font-semibold tracking-tight text-ft-ink">
+                    {t("progressPercent", { percent: progress.percent })}
+                  </div>
                 </div>
-                <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {t("email")}
-                  </label>
-                  <p className="mt-1 text-sm font-medium text-foreground">{pageUser.email}</p>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {t("phone")}
-                  </label>
-                  <p className="mt-1 text-sm font-medium text-foreground">{pageUser.phone || t("notProvided")}</p>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {t("country")}
-                  </label>
-                  <p className="mt-1 text-sm font-medium text-foreground">{pageUser.country || t("notProvided")}</p>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {t("registrationDate")}
-                  </label>
-                  <p className="mt-1 text-sm font-medium text-foreground">
-                    {pageUser.created_at
-                      ? new Date(pageUser.created_at).toLocaleDateString()
-                      : "-"}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {t("lastUpdate")}
-                  </label>
-                  <p className="mt-1 text-sm font-medium text-foreground">
-                    {pageUser.updated_at
-                      ? new Date(pageUser.updated_at).toLocaleDateString()
-                      : "-"}
-                  </p>
+                <div className="text-[11px] text-ft-ink-3">
+                  {t("progressNext", { level: progress.next })}
                 </div>
               </div>
-
-              <div className="space-y-3 border-t border-border/60 pt-4">
-                    <div>
-                      <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        {t("bio")}
-                      </label>
-                      <p className="mt-1 text-sm text-foreground">
-                        {studentProfile?.bio || t("notProvided")}
-                      </p>
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        {t("learningGoals")}
-                      </label>
-                      <p className="mt-1 text-sm text-foreground">
-                        {studentProfile?.learning_goals || t("notProvided")}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div>
-                        <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          {t("languageLevel")}
-                        </label>
-                        <p className="mt-1 text-sm font-medium text-foreground">
-                          {studentProfile?.language_level
-                            ? (() => {
-                                switch (studentProfile.language_level) {
-                                  case "beginner":
-                                    return t("languageLevels.beginner");
-                                  case "elementary":
-                                    return t("languageLevels.elementary");
-                                  case "intermediate":
-                                    return t("languageLevels.intermediate");
-                                  case "upper_intermediate":
-                                    return t(
-                                      "languageLevels.upper_intermediate"
-                                    );
-                                  case "advanced":
-                                    return t("languageLevels.advanced");
-                                  case "proficient":
-                                    return t("languageLevels.proficient");
-                                  default:
-                                    return t("notProvided");
-                                }
-                              })()
-                            : t("notProvided")}
-                        </p>
-                      </div>
-
-                      <div>
-                        <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          {t("timezone")}
-                        </label>
-                        <p className="mt-1 text-sm font-medium text-foreground">
-                          {studentProfile?.timezone || t("notProvided")}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        {t("preferredCommunication")}
-                      </label>
-                      <p className="mt-1 text-sm text-foreground">
-                        {[
-                          studentProfile?.prefers_audio_calls
-                            ? t("prefersAudioCalls")
-                            : null,
-                          studentProfile?.prefers_video_calls
-                            ? t("prefersVideoCalls")
-                            : null,
-                          studentProfile?.prefers_text_chat
-                            ? t("prefersTextChat")
-                            : null,
-                        ]
-                          .filter((v): v is string => Boolean(v))
-                          .join(", ") || t("notProvided")}
-                      </p>
-                    </div>
+              <div className="mt-3 h-1.5 overflow-hidden rounded-ft-xs bg-ft-surface-2">
+                <div
+                  className="h-full bg-gradient-to-r from-ft-accent to-ft-accent-deep"
+                  style={{ width: `${progress.percent}%` }}
+                />
               </div>
-
-              <Button className="mt-4" onClick={() => setIsEditModalOpen(true)}>
-                {t("editProfile")}
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Availabilities Tab */}
-        <TabsContent value="availabilities" className="space-y-4">
-          <AvailabilityBrowser />
-        </TabsContent>
-
-        {/* Courses Tab */}
-        <TabsContent value="courses" className="space-y-4">
-          <div className="space-y-6">
-            <UpcomingLessonsCard
-              favoritesRevision={favoritesRevision}
-              onFavoritesChanged={bumpFavoritesRevision}
-            />
-            <LessonHistoryTable
-              favoritesRevision={favoritesRevision}
-              onFavoritesChanged={bumpFavoritesRevision}
-            />
-            <FavoriteTutorsList
-              favoritesRevision={favoritesRevision}
-              onFavoritesChanged={bumpFavoritesRevision}
-            />
+            </div>
           </div>
-        </TabsContent>
+        </>
+      )}
 
-        {/* Requests Tab */}
-        <TabsContent value="requests" className="space-y-4">
-          <StudentBookingRequests />
-        </TabsContent>
+      {/* Settings list */}
+      <h2 className="m-0 px-5 pb-2.5 pt-2 text-base font-semibold tracking-tight text-ft-ink md:px-9 lg:px-0">
+        {t("settings")}
+      </h2>
+      <div className="px-5 md:px-9 lg:grid lg:grid-cols-2 lg:gap-x-6 lg:px-0">
+        {settingsItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.label}
+              type="button"
+              onClick={item.onClick}
+              className="flex w-full items-center gap-3.5 border-0 border-b border-ft-line-soft bg-transparent px-0 py-3.5 text-left transition-colors hover:bg-ft-surface-1/40"
+            >
+              <span className="grid h-[38px] w-[38px] flex-shrink-0 place-items-center rounded-ft border border-ft-line-soft bg-ft-surface-1">
+                <Icon width={16} height={16} className="text-ft-ink" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[14px] font-medium text-ft-ink">
+                  {item.label}
+                </span>
+                <span className="mt-px block truncate text-[11px] text-ft-ink-3">
+                  {item.sub}
+                </span>
+              </span>
+              <ChevronRight width={14} height={14} className="text-ft-ink-3" />
+            </button>
+          );
+        })}
 
-        {/* Settings Tab */}
-        <TabsContent value="settings" className="space-y-4">
-          <Card className="w-full rounded-md border-border/60">
-            <CardHeader>
-              <CardTitle>{t("accountSettings")}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {t("emailNotifications")}
-                  </label>
-                  <div className="mt-2">
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start sm:w-auto"
-                      onClick={() =>
-                        router.push(`/${locale}/settings?tab=notifications`)
-                      }
-                    >
-                      {t("configureNotifications")}
-                    </Button>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {t("changePassword")}
-                  </label>
-                  <div className="mt-2">
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start sm:w-auto"
-                      onClick={() => router.push(`/${locale}/settings?tab=account`)}
-                    >
-                      {t("updatePassword")}
-                    </Button>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {t("deleteAccount")}
-                  </label>
-                  <div className="mt-2">
-                    <Button
-                      variant="destructive"
-                      className="w-full justify-start sm:w-auto"
-                      onClick={() => router.push(`/${locale}/settings?tab=account`)}
-                    >
-                      {t("deleteAccount")}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        <button
+          type="button"
+          onClick={() => void logout()}
+          className="flex w-full items-center gap-3.5 border-0 bg-transparent px-0 py-3.5 text-left text-red-700 transition-colors hover:opacity-80 lg:col-span-2"
+        >
+          <span className="grid h-[38px] w-[38px] flex-shrink-0 place-items-center rounded-ft border border-red-100 bg-red-50">
+            <LogOut width={16} height={16} />
+          </span>
+          <span className="text-[14px] font-medium">{t("signOut")}</span>
+        </button>
+      </div>
 
-        {/* Messaging Tab */}
-        <TabsContent value="messages" className="space-y-4">
-          <InternalMessagingPanel namespace="studentProfile" />
-        </TabsContent>
-      </Tabs>
+      <div className="h-6" />
+
       <StudentProfileEdit
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         studentProfile={studentProfile}
         onUpdated={() => {
+          // refresh local copy from latest server data
           router.refresh();
+          setStudentProfile((prev) => prev);
         }}
       />
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,13 +1,5 @@
 "use client";
 
-import { useAuth } from "@/context/UserContext";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import {
   ArrowRight,
   BadgeCheck,
@@ -21,6 +13,8 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
+
+import { useAuth } from "@/context/UserContext";
 
 export type BecomeTutorCopy = {
   title: string;
@@ -72,31 +66,30 @@ export default function BecomeTutorClient({
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-ft-ink-3 border-t-ft-ink" />
       </div>
     );
   }
 
   if (user?.is_tutor) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4">
-        <Card className="max-w-md w-full text-center">
-          <CardHeader>
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-              <CheckCircle className="h-8 w-8 text-green-600" />
-            </div>
-            <CardTitle className="text-2xl">{copy.alreadyTutor}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href={`/${locale}/teacher-profile`}>
-                {copy.goToProfile}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="flex min-h-[60vh] items-center justify-center px-5">
+        <div className="w-full max-w-md rounded-ft-2xl border border-ft-line bg-ft-paper p-8 text-center">
+          <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-ft-accent-soft text-ft-accent-deep">
+            <CheckCircle className="h-7 w-7" />
+          </div>
+          <h1 className="m-0 text-[20px] font-semibold tracking-[-0.02em] text-ft-ink">
+            {copy.alreadyTutor}
+          </h1>
+          <Link
+            href={`/${locale}/teacher-profile`}
+            className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-ft-ink px-6 text-[14px] font-semibold text-ft-paper transition-colors hover:bg-[#2a241b]"
+          >
+            {copy.goToProfile}
+            <ArrowRight width={14} height={14} />
+          </Link>
+        </div>
       </div>
     );
   }
@@ -133,64 +126,72 @@ export default function BecomeTutorClient({
   ];
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(80%_90%_at_10%_0%,hsl(var(--primary)/0.10),transparent_55%),radial-gradient(80%_90%_at_100%_20%,hsl(var(--primary)/0.08),transparent_60%)]">
-      <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 pb-16 pt-10 sm:px-6 md:gap-10 md:px-8 md:pt-14 lg:flex-row lg:gap-14 lg:px-10 lg:pt-20">
-        <section className="w-full lg:sticky lg:top-24 lg:h-fit lg:w-5/12">
-          <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
+    <div className="mx-auto w-full max-w-screen-2xl">
+      <main className="flex flex-col gap-8 px-5 pb-16 pt-10 md:gap-10 md:px-9 md:pt-14 lg:flex-row lg:gap-12 lg:pt-16">
+        {/* Left column: hero + benefits + steps */}
+        <section className="w-full lg:sticky lg:top-8 lg:h-fit lg:w-5/12">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-ft-surface-2 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-ft-accent-deep">
+            <Sparkles width={11} height={11} />
             {copy.badge}
           </div>
-          <h1 className="mt-5 text-balance text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+          <h1 className="m-0 mt-5 text-balance text-[36px] font-semibold leading-[1.05] tracking-[-0.03em] text-ft-ink md:text-[44px] lg:text-[52px]">
             {copy.title}
           </h1>
-          <p className="mt-4 max-w-xl text-pretty text-base text-muted-foreground md:text-lg">
+          <p className="mt-4 max-w-xl text-pretty text-[15px] leading-relaxed text-ft-ink-2 md:text-[17px]">
             {copy.subtitle}
           </p>
 
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
             {highlights.map((item) => (
               <article
                 key={item.title}
-                className="rounded-lg border border-border/50 bg-background/75 p-4 backdrop-blur-sm"
+                className="rounded-ft-lg border border-ft-line-soft bg-ft-paper p-4"
               >
-                <item.icon className="h-5 w-5 text-primary" />
-                <h3 className="mt-2 text-sm font-semibold">{item.title}</h3>
-                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                <item.icon className="h-5 w-5 text-ft-accent-deep" />
+                <h3 className="mt-2 text-[14px] font-semibold tracking-tight text-ft-ink">
+                  {item.title}
+                </h3>
+                <p className="mt-1 text-[12px] leading-relaxed text-ft-ink-3">
                   {item.description}
                 </p>
               </article>
             ))}
           </div>
 
-          <div className="mt-6 flex gap-2 overflow-x-auto pb-2 md:hidden">
+          {/* Steps — mobile horizontal scroll */}
+          <div className="hide-scroll mt-6 flex gap-2 overflow-x-auto pb-2 md:hidden">
             {steps.map((step, index) => (
               <div
                 key={step.title}
-                className="flex min-w-[140px] flex-1 flex-col items-center gap-2 rounded-xl border border-border/50 bg-background/65 p-3 text-center backdrop-blur-sm"
+                className="flex min-w-[140px] flex-1 flex-col items-center gap-2 rounded-ft-lg border border-ft-line-soft bg-ft-paper p-3 text-center"
               >
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                <div className="grid h-7 w-7 flex-shrink-0 place-items-center rounded-full bg-ft-ink text-[11px] font-bold text-ft-paper">
                   {index + 1}
                 </div>
-                <step.icon className="h-4 w-4 text-primary" />
-                <p className="text-xs font-semibold leading-tight">{step.title}</p>
+                <step.icon className="h-4 w-4 text-ft-accent-deep" />
+                <p className="text-[11px] font-semibold leading-tight text-ft-ink">
+                  {step.title}
+                </p>
               </div>
             ))}
           </div>
 
-          <div className="mt-8 hidden gap-3 md:flex md:flex-col">
+          {/* Steps — desktop vertical */}
+          <div className="mt-8 hidden flex-col gap-2.5 md:flex">
             {steps.map((step, index) => (
               <div
                 key={step.title}
-                className="flex items-start gap-3 rounded-xl border border-border/50 bg-background/65 p-3 backdrop-blur-sm"
+                className="flex items-start gap-3 rounded-ft-lg border border-ft-line-soft bg-ft-paper p-3.5"
               >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                <div className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-ft-ink text-[12px] font-bold text-ft-paper">
                   {index + 1}
                 </div>
                 <div>
-                  <div className="flex items-center gap-2 text-sm font-semibold">
-                    <step.icon className="h-4 w-4 text-primary" />
+                  <div className="flex items-center gap-2 text-[14px] font-semibold tracking-tight text-ft-ink">
+                    <step.icon className="h-4 w-4 text-ft-accent-deep" />
                     {step.title}
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="mt-1 text-[12px] leading-relaxed text-ft-ink-3">
                     {step.description}
                   </p>
                 </div>
@@ -199,20 +200,21 @@ export default function BecomeTutorClient({
           </div>
         </section>
 
+        {/* Right column: form */}
         <section className="w-full lg:w-7/12">
-          <div className="rounded-3xl border border-border/60 bg-background/95 p-5 shadow-[0_24px_80px_rgba(112,42,225,0.10)] backdrop-blur-sm sm:p-8 md:p-10">
+          <div className="rounded-ft-2xl border border-ft-line bg-ft-paper p-5 sm:p-7 md:p-9">
             <form className="space-y-7">
               <div className="space-y-4">
-                <div className="border-l-4 border-primary pl-4">
-                  <h2 className="text-xl font-bold tracking-tight md:text-2xl">
+                <div className="border-l-2 border-ft-accent pl-3.5">
+                  <h2 className="m-0 text-[20px] font-semibold tracking-[-0.02em] text-ft-ink md:text-[22px]">
                     {copy.formProfessionalTitle}
                   </h2>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="mt-1 text-[13px] text-ft-ink-3">
                     {copy.formProfessionalDescription}
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                   <InputField
                     icon={BookOpen}
                     label={copy.formMainSubjectLabel}
@@ -232,35 +234,35 @@ export default function BecomeTutorClient({
               </div>
 
               <div className="space-y-4">
-                <div className="border-l-4 border-primary pl-4">
-                  <h2 className="text-xl font-bold tracking-tight md:text-2xl">
+                <div className="border-l-2 border-ft-accent pl-3.5">
+                  <h2 className="m-0 text-[20px] font-semibold tracking-[-0.02em] text-ft-ink md:text-[22px]">
                     {copy.formRatesTitle}
                   </h2>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="mt-1 text-[13px] text-ft-ink-3">
                     {copy.formRatesDescription}
                   </p>
                 </div>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-[1.2fr_1fr]">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-[1.2fr_1fr]">
                   <InputField
                     icon={CircleDollarSign}
                     label={copy.formSessionRateLabel}
                     placeholder={copy.formSessionRatePlaceholder}
                   />
-                  <div className="flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/10 p-4 text-xs leading-relaxed text-primary/90">
-                    <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
+                  <div className="flex items-start gap-2 rounded-ft-md border border-ft-line bg-ft-surface-2 p-3.5 text-[12px] leading-relaxed text-ft-accent-deep">
+                    <Sparkles className="mt-0.5 h-4 w-4 flex-shrink-0" />
                     {copy.formRateHint}
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-border/60 bg-muted/40 p-4 text-xs text-muted-foreground">
+              <div className="rounded-ft border border-ft-line-soft bg-ft-surface-1 p-3.5 text-[12px] text-ft-ink-2">
                 <div className="flex items-start gap-3">
                   <input
-                    className="mt-0.5 h-4 w-4 rounded border-primary/30 text-primary focus:ring-primary"
+                    className="mt-0.5 h-4 w-4 accent-ft-ink"
                     type="checkbox"
                     defaultChecked
                   />
-                  <p>{copy.termsAccept}</p>
+                  <p className="m-0 leading-relaxed">{copy.termsAccept}</p>
                 </div>
               </div>
 
@@ -271,21 +273,20 @@ export default function BecomeTutorClient({
                   upgradeAccountText={copy.upgradeAccount}
                   registerNowText={copy.registerNow}
                 />
-                <Button
+                <button
                   type="button"
-                  variant="secondary"
-                  className="h-12 rounded-full px-8"
+                  className="inline-flex h-12 items-center justify-center rounded-full border border-ft-line bg-ft-paper px-7 text-[13px] font-semibold text-ft-ink hover:bg-ft-surface-1"
                 >
                   {copy.saveDraft}
-                </Button>
+                </button>
               </div>
             </form>
 
-            <p className="mt-8 text-center text-sm text-muted-foreground">
+            <p className="mt-7 text-center text-[13px] text-ft-ink-3">
               {user ? copy.footerReviewData : copy.footerHaveAccount}{" "}
               <Link
                 href={user ? `/${locale}/settings` : `/${locale}/login`}
-                className="font-semibold text-primary hover:underline"
+                className="font-semibold text-ft-ink hover:text-ft-accent-deep"
               >
                 {user ? copy.linkGoToSettings : copy.linkSignIn}
               </Link>
@@ -307,17 +308,17 @@ function InputField({
   placeholder: string;
 }) {
   return (
-    <label className="space-y-2">
-      <span className="block pl-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+    <label className="block">
+      <span className="block pl-1 text-[11px] font-semibold uppercase tracking-[0.06em] text-ft-ink-3">
         {label}
       </span>
-      <div className="group relative">
-        <Icon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
+      <div className="group relative mt-1.5">
+        <Icon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ft-ink-3 transition-colors group-focus-within:text-ft-ink-2" />
         <input
           readOnly
           value=""
           placeholder={placeholder}
-          className="h-12 w-full rounded-xl border border-transparent bg-muted/60 pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground/80 focus:border-primary/20 focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="h-12 w-full rounded-ft border border-ft-line bg-ft-surface-1 pl-10 pr-4 text-[14px] text-ft-ink outline-none placeholder:text-ft-ink-3 focus:border-ft-ink-3"
         />
       </div>
     </label>
@@ -335,23 +336,15 @@ function HeroCta({
   upgradeAccountText: string;
   registerNowText: string;
 }) {
-  if (user) {
-    return (
-      <Button asChild className="h-12 flex-1 rounded-full px-8">
-        <Link href={`/${locale}/settings`}>
-          {upgradeAccountText}
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Link>
-      </Button>
-    );
-  }
-
+  const target = user ? `/${locale}/settings` : `/${locale}/register`;
+  const label = user ? upgradeAccountText : registerNowText;
   return (
-    <Button asChild className="h-12 flex-1 rounded-full px-8">
-      <Link href={`/${locale}/register`}>
-        {registerNowText}
-        <ArrowRight className="ml-2 h-4 w-4" />
-      </Link>
-    </Button>
+    <Link
+      href={target}
+      className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-ft-ink px-7 text-[14px] font-semibold text-ft-paper hover:bg-[#2a241b]"
+    >
+      {label}
+      <ArrowRight width={14} height={14} />
+    </Link>
   );
 }

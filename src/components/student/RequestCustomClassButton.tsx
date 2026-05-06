@@ -32,6 +32,12 @@ type Props = {
   tutorId: string;
   tutorName: string;
   subjects: SubjectOption[];
+  /** Override the default trigger button styling (used by the FreeTime redesign). */
+  triggerClassName?: string;
+  /** Custom trigger label. Defaults to t("ctaOpen"). */
+  triggerLabel?: string;
+  /** Hide the calendar icon inside the trigger. */
+  hideTriggerIcon?: boolean;
 };
 
 function pad(n: number): string {
@@ -48,7 +54,14 @@ function defaultStartLocalValue(): string {
   )}:${pad(d.getMinutes())}`;
 }
 
-export default function RequestCustomClassButton({ tutorId, tutorName, subjects }: Props) {
+export default function RequestCustomClassButton({
+  tutorId,
+  tutorName,
+  subjects,
+  triggerClassName,
+  triggerLabel,
+  hideTriggerIcon = false,
+}: Props) {
   const t = useTranslations("requestCustomClass");
   const locale = useLocale();
   const router = useRouter();
@@ -158,10 +171,13 @@ export default function RequestCustomClassButton({ tutorId, tutorName, subjects 
     <>
       <Button
         onClick={() => setOpen(true)}
-        className="h-11 w-full gap-2 bg-violet-600 px-5 text-sm hover:bg-violet-700"
+        className={
+          triggerClassName ??
+          "h-11 w-full gap-2 bg-violet-600 px-5 text-sm hover:bg-violet-700"
+        }
       >
-        <CalendarPlus className="h-4 w-4 shrink-0" />
-        <span className="truncate">{t("ctaOpen")}</span>
+        {!hideTriggerIcon && <CalendarPlus className="h-4 w-4 shrink-0" />}
+        <span className="truncate">{triggerLabel ?? t("ctaOpen")}</span>
       </Button>
 
       <Dialog

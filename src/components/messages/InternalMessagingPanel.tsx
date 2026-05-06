@@ -304,7 +304,7 @@ export default function InternalMessagingPanel({
 
   if (authLoading || loading) {
     return (
-      <div className="rounded-md border border-violet-100 bg-white/80 px-6 py-12 text-center text-sm font-medium text-violet-500 shadow-sm">
+      <div className="rounded-ft-lg border border-ft-line-soft bg-ft-paper px-6 py-12 text-center text-sm font-medium text-ft-ink-3">
         {t("loading")}
       </div>
     );
@@ -312,68 +312,73 @@ export default function InternalMessagingPanel({
 
   if (!user?.id) {
     return (
-      <div className="rounded-md border border-violet-100 bg-white/80 px-6 py-12 text-center text-sm text-violet-600 shadow-sm">
+      <div className="rounded-ft-lg border border-ft-line-soft bg-ft-paper px-6 py-12 text-center text-sm text-ft-ink-2">
         {tm("notAuthenticated")}
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-md border border-violet-100 bg-[#fefbff] shadow-[0_24px_60px_-40px_rgba(112,42,225,0.4)]">
+    <div className="overflow-hidden rounded-ft-lg border border-ft-line-soft bg-ft-paper">
       {!hasConversationData ? (
         <div className="flex min-h-[560px] flex-col items-center justify-center gap-6 px-8 py-16 text-center">
-          <div className="relative">
-            <div className="absolute -inset-6 rounded-full bg-violet-200/40 blur-2xl" />
-            <div className="relative flex h-24 w-24 items-center justify-center rounded-md bg-violet-100 text-violet-700">
-              <MessageCircle className="h-11 w-11" />
-            </div>
+          <div className="grid h-20 w-20 place-items-center rounded-full bg-ft-surface-2 text-ft-accent-deep">
+            <MessageCircle className="h-9 w-9" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-2xl font-black tracking-tight text-violet-950">{tm("emptyConversations")}</h2>
-            <p className="mx-auto max-w-xl text-sm text-violet-500">{tm("selectConversationHelp")}</p>
+            <h2 className="text-[22px] font-semibold tracking-[-0.02em] text-ft-ink">
+              {tm("emptyConversations")}
+            </h2>
+            <p className="mx-auto max-w-xl text-[13px] text-ft-ink-3">
+              {tm("selectConversationHelp")}
+            </p>
           </div>
         </div>
       ) : (
-        <div className="grid h-[min(78vh,820px)] grid-cols-1 md:grid-cols-[360px_1fr] xl:grid-cols-[380px_1fr]">
+        <div className="grid h-[min(78vh,820px)] grid-cols-1 md:grid-cols-[320px_1fr] xl:grid-cols-[360px_1fr]">
           <aside
-            className={`flex flex-col border-r border-violet-100 bg-white/80 ${
+            className={`flex flex-col border-r border-ft-line-soft bg-ft-paper ${
               showMobileChat ? "hidden md:flex" : "flex"
             }`}
           >
-            <div className="border-b border-violet-100 p-4 sm:p-5">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-violet-400">{tm("title")}</p>
-              <div className="mt-3 rounded-full border border-violet-200 bg-violet-50/70 px-3">
-                <div className="flex items-center gap-2">
-                  <Search className="h-4 w-4 text-violet-400" />
-                  <Input
-                    value={searchTerm}
-                    onChange={(event) => setSearchTerm(event.target.value)}
-                    placeholder={tm("searchPlaceholder")}
-                    className="h-11 border-0 bg-transparent px-0 text-sm shadow-none focus-visible:ring-0"
-                  />
-                </div>
+            <div className="border-b border-ft-line-soft p-4 sm:p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ft-ink-3">
+                {tm("title")}
+              </p>
+              <div className="mt-3 flex items-center gap-2 rounded-ft border border-ft-line bg-ft-surface-1 px-3">
+                <Search className="h-4 w-4 text-ft-ink-3" />
+                <Input
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder={tm("searchPlaceholder")}
+                  className="h-11 border-0 bg-transparent px-0 text-sm shadow-none placeholder:text-ft-ink-3 focus-visible:ring-0"
+                />
               </div>
               {searchTerm.trim().length >= 2 ? (
-                <div className="mt-3 space-y-2 rounded-md border border-violet-100 bg-white p-3">
+                <div className="mt-3 space-y-2 rounded-ft border border-ft-line-soft bg-ft-paper-deep p-3">
                   {searching ? (
-                    <p className="text-xs text-violet-400">{tm("searching")}</p>
+                    <p className="text-[12px] text-ft-ink-3">{tm("searching")}</p>
                   ) : searchResults.length === 0 ? (
-                    <p className="text-xs text-violet-400">{tm("searchNoResults")}</p>
+                    <p className="text-[12px] text-ft-ink-3">{tm("searchNoResults")}</p>
                   ) : (
                     searchResults.map((contact) => (
                       <div
                         key={`search-${contact.id}`}
-                        className="flex items-center justify-between gap-2 rounded-md bg-violet-50/60 px-3 py-2"
+                        className="flex items-center justify-between gap-2 rounded-ft bg-ft-paper px-3 py-2"
                       >
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-violet-950">{contact.username}</p>
-                          <p className="truncate text-xs text-violet-500">{contact.email}</p>
+                          <p className="truncate text-[13px] font-semibold text-ft-ink">
+                            {contact.username}
+                          </p>
+                          <p className="truncate text-[11px] text-ft-ink-3">
+                            {contact.email}
+                          </p>
                         </div>
                         <Button
                           type="button"
                           size="sm"
                           variant="outline"
-                          className="border-violet-200 text-violet-700"
+                          className="rounded-full border-ft-line bg-ft-paper text-ft-ink hover:bg-ft-surface-1"
                           disabled={creatingConversationWith === contact.id}
                           onClick={() => void startConversation(contact.id)}
                         >
@@ -388,56 +393,70 @@ export default function InternalMessagingPanel({
 
             <div className="min-h-0 flex-1 overflow-y-auto p-3">
               {conversations.length === 0 ? (
-                <div className="rounded-md border border-dashed border-violet-200 bg-violet-50/50 p-4 text-sm text-violet-500">
+                <div className="rounded-ft border border-dashed border-ft-line bg-ft-surface-1 p-4 text-[13px] text-ft-ink-3">
                   {tm("emptyConversations")}
                 </div>
               ) : (
-                <div className="space-y-2">
-                  {conversations.map((conversation) => (
-                    <button
-                      key={conversation.id}
-                      type="button"
-                      onClick={() => openConversation(conversation.id)}
-                      className={`w-full rounded-md px-4 py-3 text-left transition ${
-                        conversation.id === selectedConversationId
-                          ? "bg-violet-100 text-violet-900"
-                          : "bg-white text-violet-700 hover:bg-violet-50"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="truncate text-sm font-bold">
-                          {conversation.other_user.username}
-                        </span>
-                        {conversation.unread_count > 0 ? (
-                          <span className="rounded-full bg-violet-600 px-2 py-0.5 text-[10px] font-bold text-white">
-                            {conversation.unread_count}
+                <div className="space-y-1">
+                  {conversations.map((conversation) => {
+                    const isActive = conversation.id === selectedConversationId;
+                    return (
+                      <button
+                        key={conversation.id}
+                        type="button"
+                        onClick={() => openConversation(conversation.id)}
+                        className={`w-full rounded-ft px-3 py-3 text-left transition-colors ${
+                          isActive
+                            ? "bg-ft-surface-1 text-ft-ink"
+                            : "bg-transparent text-ft-ink-2 hover:bg-ft-paper-deep"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="truncate text-[14px] font-semibold tracking-tight text-ft-ink">
+                            {conversation.other_user.username}
                           </span>
-                        ) : null}
-                      </div>
-                      <p className="mt-1 truncate text-xs text-violet-500">
-                        {conversation.last_message_content || tm("noMessagesYet")}
-                      </p>
-                    </button>
-                  ))}
+                          {conversation.unread_count > 0 ? (
+                            <span className="grid h-[18px] min-w-[18px] place-items-center rounded-full bg-ft-accent px-1.5 text-[10px] font-bold text-[#1a1410]">
+                              {conversation.unread_count}
+                            </span>
+                          ) : null}
+                        </div>
+                        <p
+                          className={`mt-1 truncate text-[12px] ${
+                            conversation.unread_count > 0
+                              ? "font-medium text-ft-ink-2"
+                              : "text-ft-ink-3"
+                          }`}
+                        >
+                          {conversation.last_message_content || tm("noMessagesYet")}
+                        </p>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
 
-              <div className="mt-4 rounded-md border border-violet-100 bg-white p-3">
-                <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-violet-400">
+              <div className="mt-4 rounded-ft border border-ft-line-soft bg-ft-paper-deep p-3">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-ft-ink-3">
                   {tm("startConversation")}
                 </p>
-                <div className="max-h-44 space-y-2 overflow-y-auto">
+                <div className="max-h-44 space-y-1 overflow-y-auto">
                   {contacts.length === 0 ? (
-                    <p className="text-xs text-violet-500">{tm("noContacts")}</p>
+                    <p className="text-[12px] text-ft-ink-3">{tm("noContacts")}</p>
                   ) : (
                     contacts.map((contact) => (
-                      <div key={contact.id} className="flex items-center justify-between gap-2 rounded-md bg-violet-50/60 px-3 py-2">
-                        <span className="truncate text-sm font-medium text-violet-900">{contact.username}</span>
+                      <div
+                        key={contact.id}
+                        className="flex items-center justify-between gap-2 rounded-ft bg-ft-paper px-3 py-2"
+                      >
+                        <span className="truncate text-[13px] font-medium text-ft-ink">
+                          {contact.username}
+                        </span>
                         <Button
                           type="button"
                           size="sm"
                           variant="outline"
-                          className="rounded-md border-violet-200 text-violet-700"
+                          className="rounded-full border-ft-line bg-ft-paper text-ft-ink hover:bg-ft-surface-1"
                           disabled={creatingConversationWith === contact.id}
                           onClick={() => void startConversation(contact.id)}
                         >
@@ -451,46 +470,63 @@ export default function InternalMessagingPanel({
             </div>
           </aside>
 
-          <section className={`${showMobileChat ? "flex" : "hidden md:flex"} min-h-0 flex-col bg-[#fcf8ff]`}>
-            <header className="flex items-center gap-3 border-b border-violet-100 bg-white/70 px-4 py-4 sm:px-6">
+          <section
+            className={`${showMobileChat ? "flex" : "hidden md:flex"} min-h-0 flex-col bg-ft-paper-deep`}
+          >
+            <header className="flex items-center gap-3 border-b border-ft-line-soft bg-ft-paper px-4 py-4 sm:px-6">
               <button
                 type="button"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-violet-100 text-violet-700 md:hidden"
+                className="grid h-9 w-9 place-items-center rounded-full border border-ft-line bg-ft-paper text-ft-ink hover:bg-ft-surface-1 md:hidden"
                 onClick={() => setShowMobileChat(false)}
               >
                 <ArrowLeft className="h-4 w-4" />
               </button>
               <div className="min-w-0">
-                <h2 className="truncate text-sm font-black text-violet-950 sm:text-base">
+                <h2 className="truncate text-[14px] font-semibold tracking-tight text-ft-ink sm:text-[15px]">
                   {selectedConversation
                     ? tm("chatWith", { name: selectedConversation.other_user.username })
                     : tm("selectConversation")}
                 </h2>
-                <p className="text-xs text-violet-500">{tm("messagePlaceholder")}</p>
+                <p className="text-[11px] text-ft-ink-3">
+                  {tm("messagePlaceholder")}
+                </p>
               </div>
             </header>
 
             {selectedConversationId ? (
               <>
-                <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-6">
+                <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-5 sm:px-6">
                   {messages.length === 0 ? (
-                    <div className="rounded-md border border-dashed border-violet-200 bg-white p-4 text-sm text-violet-500">
+                    <div className="rounded-ft border border-dashed border-ft-line bg-ft-paper p-4 text-[13px] text-ft-ink-3">
                       {tm("noMessagesYet")}
                     </div>
                   ) : (
                     messages.map((message) => {
                       const isMine = message.sender_id === user?.id;
                       return (
-                        <div key={message.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
+                        <div
+                          key={message.id}
+                          className={`flex ${isMine ? "justify-end" : "justify-start"}`}
+                        >
                           <div
-                            className={`max-w-[88%] rounded-md px-4 py-3 sm:max-w-[78%] ${
+                            className={`max-w-[78%] rounded-ft-lg px-4 py-2.5 text-[13.5px] leading-relaxed ${
                               isMine
-                                ? "rounded-br-md bg-gradient-to-br from-violet-600 to-violet-500 text-white"
-                                : "rounded-bl-md bg-white text-violet-900 shadow-sm"
+                                ? "bg-ft-ink text-ft-paper"
+                                : "border border-ft-line-soft bg-ft-paper text-ft-ink"
                             }`}
+                            style={{
+                              borderBottomRightRadius: isMine ? 6 : undefined,
+                              borderBottomLeftRadius: isMine ? undefined : 6,
+                            }}
                           >
-                            <p className="whitespace-pre-wrap break-words text-sm">{message.content}</p>
-                            <p className={`mt-1 text-[10px] ${isMine ? "text-violet-100" : "text-violet-400"}`}>
+                            <p className="m-0 whitespace-pre-wrap break-words">
+                              {message.content}
+                            </p>
+                            <p
+                              className={`mt-1 text-right text-[10px] tracking-[0.04em] ${
+                                isMine ? "text-ft-paper/55" : "text-ft-ink-3"
+                              }`}
+                            >
                               {formatMessageDate(message.created_at)}
                             </p>
                           </div>
@@ -500,8 +536,8 @@ export default function InternalMessagingPanel({
                   )}
                 </div>
 
-                <div className="border-t border-violet-100 bg-white/85 px-4 py-3 sm:px-6">
-                  <div className="flex items-end gap-2 rounded-md border border-violet-200 bg-white p-2">
+                <div className="border-t border-ft-line-soft bg-ft-paper px-4 py-3 sm:px-6">
+                  <div className="flex items-end gap-2 rounded-ft-md border border-ft-line bg-ft-surface-1 p-2">
                     <Textarea
                       value={messageText}
                       onChange={(e) => setMessageText(e.target.value)}
@@ -514,13 +550,13 @@ export default function InternalMessagingPanel({
                       placeholder={tm("messagePlaceholder")}
                       rows={2}
                       maxLength={2000}
-                      className="min-h-[48px] resize-none border-0 bg-transparent px-2 py-2 text-sm shadow-none focus-visible:ring-0"
+                      className="min-h-[48px] resize-none border-0 bg-transparent px-2 py-2 text-[13.5px] text-ft-ink shadow-none placeholder:text-ft-ink-3 focus-visible:ring-0"
                     />
                     <Button
                       type="button"
                       onClick={() => void handleSend()}
                       disabled={!messageText.trim() || sending}
-                      className="h-10 rounded-full bg-violet-600 px-4 hover:bg-violet-700"
+                      className="h-10 rounded-full bg-ft-ink px-4 text-[13px] font-semibold text-ft-paper hover:bg-[#2a241b] disabled:opacity-60"
                     >
                       <SendHorizontal className="mr-1 h-4 w-4" />
                       {sending ? tm("sending") : tm("send")}
@@ -529,7 +565,7 @@ export default function InternalMessagingPanel({
                 </div>
               </>
             ) : (
-              <div className="flex flex-1 items-center justify-center px-6 text-center text-sm text-violet-500">
+              <div className="flex flex-1 items-center justify-center px-6 text-center text-[13px] text-ft-ink-3">
                 {tm("selectConversationHelp")}
               </div>
             )}

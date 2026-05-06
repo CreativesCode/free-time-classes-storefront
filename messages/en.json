@@ -3,6 +3,8 @@
     "title": "Login",
     "description": "Enter your credentials to access your account",
     "brandName": "FreeTime Classes",
+    "welcomeHeadline": "Welcome <accent>back.</accent>",
+    "welcomeSubtitle": "Pick up where you left off. Your tutors are waiting.",
     "tagline": "Continue your journey of pursuit.",
     "helpCenter": "Help Center",
     "privacy": "Privacy",
@@ -282,7 +284,31 @@
       "sending": "Sending...",
       "send": "Send",
       "notAuthenticated": "You must be logged in to use messaging."
-    }
+    },
+    "title": "You",
+    "openSettings": "Open settings",
+    "memberSince": "Learner since {year}",
+    "statClasses": "classes",
+    "statLearned": "learned",
+    "statTutors": "tutors",
+    "yourProgress": "Your progress",
+    "progressLevelLabel": "Level {level}",
+    "progressPercent": "{percent}% of the way",
+    "progressNext": "Next: {level}",
+    "editProfileSub": "Photo, bio, interests",
+    "myClasses": "My classes",
+    "myClassesSub": "Upcoming, past and cancelled",
+    "myMessages": "Messages",
+    "myMessagesSub": "Conversations with your tutors",
+    "notifications": "Notifications",
+    "notificationsSub": "Email, SMS and reminders",
+    "languageRegion": "Language & region",
+    "languageRegionSub": "English · {timezone}",
+    "paymentsTitle": "Payments & billing",
+    "paymentsSub": "Plan, methods and receipts",
+    "privacy": "Privacy",
+    "privacySub": "Visibility and data",
+    "signOut": "Sign out"
   },
 
   "navigation": {
@@ -1126,7 +1152,10 @@
     "tutorRating": "Tutor rating",
     "totalReviews": "reviews",
     "shareClass": "Share",
-    "relatedCourses": "Related courses"
+    "relatedCourses": "Related courses",
+    "perkCancelFlexible": "Flexible cancellation up to 6h before",
+    "perkLifetimeAccess": "Anytime access to your bookings",
+    "perkCompletionCertificate": "Certificate on course completion"
   },
   "tutorsPage": {
     "title": "Find Tutors",
@@ -1164,7 +1193,8 @@
     "yearsExperience": "{count, plural, one {# year of experience} other {# years of experience}}",
     "verified": "Verified",
     "showMore": "Show more",
-    "showLess": "Show less"
+    "showLess": "Show less",
+    "featuredThisWeek": "This week"
   },
   "tutorPublicProfile": {
     "backToTutors": "Back to tutors",
@@ -1184,7 +1214,11 @@
     "yearsExperience": "years experience",
     "hourlyRate": "hourly rate",
     "requestCustomTitle": "Got a free moment now?",
-    "requestCustomDescription": "Ask the tutor for a class outside their published availability. Make the most of your free time."
+    "requestCustomDescription": "Ask the tutor for a class outside their published availability. Make the most of your free time.",
+    "tabReviews": "Reviews",
+    "verified": "Verified",
+    "priceFromHour": "from {price}€",
+    "priceFromHourHint": "Cancel up to 6h before at no cost."
   },
   "requestCustomClass": {
     "ctaOpen": "Request a class outside availability",
@@ -1247,7 +1281,22 @@
     "leaveReview": "Leave a review",
     "videoCallLink": "Video call link",
     "joinVideoCall": "Join video call",
-    "noMeetLink": "The tutor will add the link soon"
+    "noMeetLink": "The tutor will add the link soon",
+    "tabUpcoming": "Upcoming",
+    "tabPast": "Past",
+    "tabCancelled": "Cancelled",
+    "liveStartingSoon": "Starting soon",
+    "joinClass": "Join",
+    "lesson": "Lesson",
+    "retry": "Retry",
+    "noUpcomingBookings": "No upcoming classes",
+    "noPastBookings": "No past classes yet",
+    "noCancelledBookings": "No cancelled classes",
+    "dateUnknown": "Date pending",
+    "minutesShort": "min",
+    "inMinutes": "in {minutes} min",
+    "inHours": "in {hours} h",
+    "inDays": "in {days} days"
   },
   "messagesPage": {
     "title": "Messages",
@@ -1388,7 +1437,77 @@
     "recommendedForYou": "Recommended for you",
     "recommendedEmpty": "No courses available yet. Check back soon to explore the catalog.",
     "defaultCourseCategory": "Course",
-    "unknownTutor": "Tutor"
+    "unknownTutor": "Tutor",
+    "greetingMorning": "Good morning",
+    "greetingAfternoon": "Good afternoon",
+    "greetingEvening": "Good evening",
+    "navNotifications": "Notifications",
+    "nextClassEyebrow": "Next class",
+    "withTutor": "with {name}",
+    "noUpcomingClassesHint": "Nothing on your calendar yet. Find a tutor and start with an intro class.",
+    "handsFreeEyebrow": "Hands-free mode",
+    "handsFreeTitle": "5 min of practice while you drive",
+    "play": "Play",
+    "pause": "Pause",
+    "exploreByInterest": "Explore by interest",
+    "coursesLabel": "courses",
+    "categoryLanguages": "Languages",
+    "categoryMusic": "Music",
+    "categoryCooking": "Cooking",
+    "categoryTech": "Tech",
+    "categoryArt": "Art & Design",
+    "categoryWellness": "Wellness",
+    "featuredTutors": "Featured tutors",
+    "editorialEyebrow": "Story · Learning in pause",
+    "editorialQuote": "\"I started English while doing the dishes. Today I talk to clients in London.\"",
+    "editorialAuthor": "Marina, 34",
+    "editorialAuthorMeta": "Student since 2024",
+    "popularCourses": "Popular courses",
+    "welcomeShort": "Hi {name}",
+    "welcomeSubtitleHours": "You've spent {hours}h learning this month — keep it up.",
+    "welcomeSubtitleEmpty": "Book your first class and start counting hours.",
+    "progressLevelLabel": "Your progress · Level {level}",
+    "progressNext": "{level}",
+    "progressNoLevelEyebrow": "Your progress",
+    "progressNoLevelHint": "Set your language level in your profile to see your progress.",
+    "statThisMonth": "Classes this month",
+    "statThisMonthHint": "Keep going",
+    "statHoursLearned": "Hours learned",
+    "statHoursLearnedHint": "Total to date",
+    "statStreak": "Streak",
+    "statStreakValue": "{days} days",
+    "statStreakHintActive": "Keep your streak alive!",
+    "statStreakHintIdle": "Start your streak today",
+    "statTutorsLabel": "Tutors",
+    "statTutorsHint": "Different so far",
+    "dayMon": "M",
+    "dayTue": "T",
+    "dayWed": "W",
+    "dayThu": "T",
+    "dayFri": "F",
+    "daySat": "S",
+    "daySun": "S"
+  },
+  "studentSidebar": {
+    "sectionLabel": "My account",
+    "overview": "Overview",
+    "classes": "My classes",
+    "messages": "Messages",
+    "favorites": "Saved tutors",
+    "students": "My students",
+    "myCourses": "My courses",
+    "earnings": "Earnings",
+    "payments": "Payments",
+    "settings": "Settings"
+  },
+  "savedTutors": {
+    "title": "Saved tutors",
+    "subtitle": "Your shortlist of favorite tutors for faster booking.",
+    "emptyTitle": "You haven't saved any tutors yet",
+    "emptyHint": "Save your favorite tutors from their profile or from your class history to keep them handy here.",
+    "browseTutors": "Browse tutors",
+    "perHour": "per hour",
+    "loadError": "Could not load saved tutors."
   },
   "seo": {
     "home": {
@@ -1422,6 +1541,10 @@
     "tutors": {
       "title": "Tutors",
       "description": "Search verified tutors by subject, rating, and price. Book one-to-one lessons online."
+    },
+    "savedTutors": {
+      "title": "Saved tutors",
+      "description": "Your shortlist of favorite tutors on Free Time Classes for faster booking."
     },
     "tutorNotFound": {
       "title": "Tutor not found",

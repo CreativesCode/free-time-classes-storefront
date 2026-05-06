@@ -9,6 +9,7 @@ import type { StudentProfile } from "@/types/student";
 
 import StudentProfilePageClient, {
   type StudentProfilePageUser,
+  type StudentProfileStats,
 } from "./StudentProfilePageClient";
 
 export async function generateMetadata({
@@ -30,7 +31,7 @@ export async function generateMetadata({
 function StudentProfileFallback() {
   return (
     <div className="flex min-h-screen items-center justify-center">
-      <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      <div className="h-10 w-10 animate-spin rounded-full border-4 border-ft-ink-3 border-t-transparent" />
     </div>
   );
 }
@@ -77,11 +78,19 @@ export default async function StudentProfilePage({
     updated_at: userRow.updated_at,
   };
 
-  const { data: profileRow, error: profileError } = await supabase
-    .from("student_profiles")
-    .select("*")
-    .eq("id", authUser.id)
-    .maybeSingle();
+  const [{ data: profileRow, error: profileError }, { data: completedLessons }] =
+    await Promise.all([
+      supabase
+        .from("student_profiles")
+        .select("*")
+        .eq("id", authUser.id)
+        .maybeSingle(),
+      supabase
+        .from("lessons")
+        .select("id, duration_minutes, tutor_id")
+        .eq("student_id", authUser.id)
+        .eq("status", "completed"),
+    ]);
 
   if (profileError) {
     console.error("student_profiles fetch:", profileError);
@@ -89,12 +98,24 @@ export default async function StudentProfilePage({
 
   const initialStudentProfile = (profileRow as StudentProfile | null) ?? null;
 
+  const completed = completedLessons ?? [];
+  const totalMinutes = completed.reduce(
+    (sum, l) => sum + (l.duration_minutes ?? 0),
+    0
+  );
+  const stats: StudentProfileStats = {
+    classes: completed.length,
+    hoursLearned: Math.round((totalMinutes / 60) * 10) / 10,
+    tutors: new Set(completed.map((l) => l.tutor_id)).size,
+  };
+
   return (
     <Suspense fallback={<StudentProfileFallback />}>
       <StudentProfilePageClient
         locale={locale}
         pageUser={pageUser}
         initialStudentProfile={initialStudentProfile}
+        stats={stats}
       />
     </Suspense>
   );

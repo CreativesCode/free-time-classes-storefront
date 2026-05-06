@@ -1,11 +1,11 @@
 "use client";
 
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Check, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+
+import { BrandLogo } from "@/components/ds/BrandLogo";
 
 type Status = "success" | "error";
 
@@ -43,57 +43,70 @@ export default function AuthCallbackClient({ locale }: { locale: string }) {
     };
   }, [status, router, locale]);
 
-  const goToLogin = () => router.push(`/${locale}/login`);
-  const goToDashboard = () => router.push(`/${locale}/dashboard`);
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 bg-[url('/images/bg.webp')] bg-cover bg-center bg-no-repeat">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl text-center text-secondary-500">
-            {status === "success" ? t("successTitle") : t("errorTitle")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {status === "success" && (
-            <>
-              <p className="text-center text-sm text-secondary-500">
-                {t("successDescription")}
-              </p>
-              {redirectSeconds !== null && (
-                <p className="text-center text-xs text-secondary-500">
-                  {t("autoRedirect", { seconds: redirectSeconds })}
-                </p>
-              )}
-              <div className="space-y-2">
-                <Button className="w-full btn-primary" onClick={goToLogin}>
-                  {t("goToLogin")}
-                </Button>
-                <Button
-                  className="w-full"
-                  variant="outline"
-                  onClick={goToDashboard}
-                >
-                  {t("goToDashboard")}
-                </Button>
-              </div>
-            </>
-          )}
+    <div className="flex min-h-[100dvh] items-center justify-center bg-ft-paper px-7">
+      <div className="w-full max-w-md text-center">
+        {status === "success" ? (
+          <div className="mx-auto mb-8 grid h-14 w-14 place-items-center rounded-ft-md bg-ft-ink text-ft-accent">
+            <Check width={26} height={26} strokeWidth={2.2} />
+          </div>
+        ) : (
+          <div className="mx-auto mb-8 grid h-14 w-14 place-items-center rounded-ft-md border border-red-200 bg-red-50 text-red-700">
+            <X width={26} height={26} strokeWidth={2.2} />
+          </div>
+        )}
 
-          {status === "error" && (
-            <>
-              <Alert variant="destructive">
-                <AlertDescription>
-                  {errorMessage || t("genericError")}
-                </AlertDescription>
-              </Alert>
-              <Button className="w-full btn-primary" onClick={goToLogin}>
+        <h1 className="m-0 text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] text-ft-ink">
+          {status === "success" ? t("successTitle") : t("errorTitle")}
+        </h1>
+
+        {status === "success" ? (
+          <>
+            <p className="mb-2 mt-3 text-sm text-ft-ink-2">
+              {t("successDescription")}
+            </p>
+            {redirectSeconds !== null && (
+              <p className="mb-8 text-xs text-ft-ink-3">
+                {t("autoRedirect", { seconds: redirectSeconds })}
+              </p>
+            )}
+            <div className="flex flex-col gap-3">
+              <button
+                type="button"
+                onClick={() => router.push(`/${locale}/login`)}
+                className="w-full rounded-ft-md bg-ft-ink px-4 py-4 text-sm font-semibold text-ft-paper transition-colors hover:bg-[#2a241b]"
+              >
                 {t("goToLogin")}
-              </Button>
-            </>
-          )}
-        </CardContent>
-      </Card>
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push(`/${locale}/dashboard`)}
+                className="w-full rounded-ft-md border border-ft-line bg-ft-paper px-4 py-4 text-sm font-semibold text-ft-ink transition-colors hover:bg-ft-surface-1"
+              >
+                {t("goToDashboard")}
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="mb-8 mt-3 text-sm text-ft-ink-2">
+              {errorMessage || t("genericError")}
+            </p>
+            <button
+              type="button"
+              onClick={() => router.push(`/${locale}/login`)}
+              className="w-full rounded-2xl bg-ft-ink px-4 py-4 text-sm font-semibold text-ft-paper transition-colors hover:bg-[#2a241b]"
+            >
+              {t("goToLogin")}
+            </button>
+          </>
+        )}
+
+        <div className="mt-12 flex items-center justify-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-ft-ink-3">
+          <BrandLogo size={16} />
+          FreeTime
+        </div>
+      </div>
     </div>
   );
 }

@@ -9,61 +9,44 @@ import {
   Sparkles,
   XCircle,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+
+import { StudentSidebarNav } from "@/components/ds/StudentSidebarNav";
 import { useTranslations, useLocale } from "@/i18n/translations";
 import { useAuth } from "@/context/UserContext";
 import { useNotifications } from "@/hooks/useNotifications";
-import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 import type { Notification, NotificationType } from "@/types/notification";
 
 function IconByType({ type }: { type: NotificationType }) {
   switch (type) {
     case "booking_request":
     case "booking_custom_request":
-      return <CalendarPlus className="h-5 w-5" />;
+      return <CalendarPlus className="h-4 w-4" />;
     case "booking_confirmed":
-      return <CalendarCheck2 className="h-5 w-5" />;
+      return <CalendarCheck2 className="h-4 w-4" />;
     case "booking_rejected":
-      return <XCircle className="h-5 w-5" />;
+      return <XCircle className="h-4 w-4" />;
     case "booking_cancelled":
-      return <CalendarX2 className="h-5 w-5" />;
+      return <CalendarX2 className="h-4 w-4" />;
     default:
-      return <Bell className="h-5 w-5" />;
+      return <Bell className="h-4 w-4" />;
   }
 }
 
-function iconColor(type: NotificationType) {
+function iconTone(type: NotificationType): string {
   switch (type) {
-    case "booking_request":
-      return "bg-blue-100 text-blue-600";
-    case "booking_custom_request":
-      return "bg-amber-100 text-amber-700";
     case "booking_confirmed":
-      return "bg-emerald-100 text-emerald-600";
+      return "bg-emerald-50 text-emerald-700";
     case "booking_rejected":
-      return "bg-red-100 text-red-500";
+      return "bg-red-50 text-red-700";
     case "booking_cancelled":
-      return "bg-amber-100 text-amber-600";
-    default:
-      return "bg-primary/10 text-primary";
-  }
-}
-
-function borderColor(type: NotificationType) {
-  switch (type) {
+      return "bg-amber-50 text-amber-700";
     case "booking_request":
-      return "border-l-blue-500";
     case "booking_custom_request":
-      return "border-l-amber-500";
-    case "booking_confirmed":
-      return "border-l-emerald-500";
-    case "booking_rejected":
-      return "border-l-red-400";
-    case "booking_cancelled":
-      return "border-l-amber-400";
+      return "bg-ft-accent-soft text-ft-accent-deep";
     default:
-      return "border-l-primary";
+      return "bg-ft-surface-2 text-ft-ink-2";
   }
 }
 
@@ -108,7 +91,7 @@ export default function NotificationsClient() {
   const router = useRouter();
   const { user } = useAuth();
   const { notifications, markAsRead, markAllAsRead } = useNotifications(
-    user?.id,
+    user?.id
   );
 
   const grouped = useMemo(() => {
@@ -127,189 +110,209 @@ export default function NotificationsClient() {
   const hasUnread = notifications.some((n) => !n.is_read);
 
   return (
-    <div className="relative min-h-[calc(100vh-72px)] overflow-hidden bg-[#fef3ff] dark:bg-background">
-      <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-20 -left-10 h-64 w-64 rounded-full bg-purple-300/20 blur-3xl" />
+    <div className="mx-auto w-full max-w-screen-md md:max-w-screen-lg lg:max-w-screen-xl lg:px-9 lg:py-8">
+      <div className="lg:grid lg:grid-cols-[220px_1fr] lg:gap-8">
+        <StudentSidebarNav isTutor={user?.is_tutor ?? false} />
 
-      <main className="relative mx-auto w-full max-w-5xl px-4 pb-10 pt-6 sm:px-6 md:pt-8 lg:pt-10">
-        {/* Header */}
-        <section className="mb-6 rounded-3xl border border-primary/10 bg-white/80 p-4 shadow-[0_20px_60px_-35px_rgba(112,42,225,0.45)] backdrop-blur-md sm:p-6 lg:mb-8 dark:bg-card/80">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div className="space-y-2">
-              <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
-                {t("badge")}
-              </span>
-              <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl md:text-4xl lg:text-5xl dark:text-foreground">
-                {t("title")}
-              </h1>
-              <p className="max-w-xl text-sm text-zinc-600 sm:text-base dark:text-muted-foreground">
-                {t("subtitle")}
-              </p>
+        <div className="min-w-0">
+          {/* Header */}
+          <header className="px-5 pb-4 pt-[18px] md:px-9 md:pt-8 lg:px-0 lg:pt-0">
+            <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+              <div>
+                <span className="inline-flex items-center rounded-full bg-ft-surface-2 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-ft-accent-deep">
+                  {t("badge")}
+                </span>
+                <h1 className="mt-2 text-[28px] font-semibold tracking-[-0.025em] text-ft-ink md:text-[32px]">
+                  {t("title")}
+                </h1>
+                <p className="mt-1 max-w-xl text-[13px] text-ft-ink-3 md:text-sm">
+                  {t("subtitle")}
+                </p>
+              </div>
+              {hasUnread && (
+                <button
+                  type="button"
+                  onClick={() => markAllAsRead()}
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-ft-line bg-ft-paper px-4 text-[13px] font-semibold text-ft-ink transition-colors hover:bg-ft-surface-1 md:self-end"
+                >
+                  <Bell className="h-4 w-4" />
+                  {t("markAllAsRead")}
+                </button>
+              )}
             </div>
+          </header>
 
-            {hasUnread && (
-              <Button
-                variant="ghost"
-                className="w-full justify-center gap-2 text-primary hover:bg-primary/10 hover:text-primary md:w-auto"
-                onClick={() => markAllAsRead()}
-              >
-                <Bell className="h-4 w-4" />
-                {t("markAllAsRead")}
-              </Button>
-            )}
-          </div>
-        </section>
-
-        {/* Notification list */}
-        {notifications.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-              <Bell className="h-8 w-8 text-primary/40" />
-            </div>
-            <p className="text-lg font-semibold text-zinc-700 dark:text-foreground">
-              {t("empty")}
-            </p>
-            <p className="mt-1 text-sm text-zinc-500 dark:text-muted-foreground">
-              {t("emptySubtitle")}
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-7">
-            {grouped.today.length > 0 && (
-              <section className="space-y-3">
-                <h2 className="px-1 text-xs font-bold uppercase tracking-[0.2em] text-zinc-400">
-                  {t("groupToday")}
-                </h2>
-                <div className="space-y-3">
-                  {grouped.today.map((item) => (
-                    <NotificationCard
-                      key={item.id}
-                      item={item}
-                      locale={locale}
-                      onMarkRead={markAsRead}
-                      onNavigate={(href) => router.push(href)}
-                    />
-                  ))}
+          {/* Content */}
+          <div className="px-5 pb-6 md:px-9 lg:px-0">
+            {notifications.length === 0 ? (
+              <div className="flex flex-col items-center justify-center rounded-ft-lg border border-dashed border-ft-line bg-ft-paper py-16 text-center md:py-20">
+                <div className="mb-4 grid h-14 w-14 place-items-center rounded-full bg-ft-surface-2">
+                  <Bell className="h-7 w-7 text-ft-ink-3" />
                 </div>
-              </section>
+                <p className="text-[15px] font-semibold tracking-tight text-ft-ink">
+                  {t("empty")}
+                </p>
+                <p className="mt-1 text-[13px] text-ft-ink-3">
+                  {t("emptySubtitle")}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-7">
+                {grouped.today.length > 0 && (
+                  <section>
+                    <h2 className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-ft-ink-3">
+                      {t("groupToday")}
+                    </h2>
+                    <div className="overflow-hidden rounded-ft-lg border border-ft-line-soft bg-ft-paper">
+                      {grouped.today.map((item, i) => (
+                        <NotificationRow
+                          key={item.id}
+                          item={item}
+                          locale={locale}
+                          onMarkRead={markAsRead}
+                          onNavigate={(href) => router.push(href)}
+                          divider={i > 0}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {grouped.earlier.length > 0 && (
+                  <section>
+                    <h2 className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-ft-ink-3">
+                      {t("groupEarlier")}
+                    </h2>
+                    <div className="overflow-hidden rounded-ft-lg border border-ft-line-soft bg-ft-paper">
+                      {grouped.earlier.map((item, i) => (
+                        <NotificationRow
+                          key={item.id}
+                          item={item}
+                          locale={locale}
+                          onMarkRead={markAsRead}
+                          onNavigate={(href) => router.push(href)}
+                          divider={i > 0}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                )}
+              </div>
             )}
 
-            {grouped.earlier.length > 0 && (
-              <section className="space-y-3">
-                <h2 className="px-1 text-xs font-bold uppercase tracking-[0.2em] text-zinc-400">
-                  {t("groupEarlier")}
-                </h2>
-                <div className="space-y-3">
-                  {grouped.earlier.map((item) => (
-                    <NotificationCard
-                      key={item.id}
-                      item={item}
-                      locale={locale}
-                      onMarkRead={markAsRead}
-                      onNavigate={(href) => router.push(href)}
-                    />
-                  ))}
-                </div>
-              </section>
+            {notifications.length > 0 && (
+              <div className="mt-8 flex flex-col items-center justify-center text-center">
+                <div className="mb-2 h-8 w-px bg-gradient-to-b from-ft-accent to-transparent" />
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-ft-ink-3">
+                  {t("endOfList")}
+                </p>
+              </div>
             )}
-          </div>
-        )}
 
-        {notifications.length > 0 && (
-          <div className="mt-8 flex flex-col items-center justify-center py-3 text-center md:mt-10">
-            <div className="mb-2 h-10 w-px bg-gradient-to-b from-primary/60 to-transparent" />
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">
-              {t("endOfList")}
-            </p>
+            {/* Promo */}
+            <section className="mt-8 overflow-hidden rounded-ft-2xl bg-gradient-to-br from-[#2A2520] to-[#1A1714] p-6 text-ft-paper md:p-8">
+              <div className="relative max-w-lg space-y-3">
+                <div
+                  aria-hidden
+                  className="absolute -right-12 -top-12 h-32 w-32 rounded-full"
+                  style={{
+                    background:
+                      "radial-gradient(circle, rgba(201,168,106,0.30), transparent 70%)",
+                  }}
+                />
+                <p className="relative text-[10px] font-bold uppercase tracking-[0.16em] text-ft-accent-soft">
+                  {t("promoTag")}
+                </p>
+                <h3 className="relative text-[24px] font-semibold leading-[1.1] tracking-[-0.02em]">
+                  <span className="font-instrument-serif italic">
+                    {t("promoTitle")}
+                  </span>
+                </h3>
+                <p className="relative text-[13px] text-white/70">
+                  {t("promoDescription")}
+                </p>
+                <button
+                  type="button"
+                  className="relative inline-flex items-center gap-2 rounded-full bg-ft-accent px-4 py-2.5 text-[13px] font-semibold text-[#1a1410] transition-colors hover:brightness-95"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  {t("promoCta")}
+                </button>
+              </div>
+            </section>
           </div>
-        )}
-
-        {/* Promo */}
-        <section className="mt-8 rounded-3xl bg-gradient-to-br from-primary to-violet-700 p-6 text-white shadow-[0_24px_50px_-30px_rgba(112,42,225,0.8)] sm:p-8">
-          <div className="max-w-sm space-y-3 md:max-w-lg">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/80">
-              {t("promoTag")}
-            </p>
-            <h3 className="text-2xl font-extrabold leading-tight">
-              {t("promoTitle")}
-            </h3>
-            <p className="text-sm text-white/80">{t("promoDescription")}</p>
-            <Button
-              variant="secondary"
-              className="rounded-full bg-white text-primary hover:bg-white/90"
-            >
-              <Sparkles className="mr-2 h-4 w-4" />
-              {t("promoCta")}
-            </Button>
-          </div>
-        </section>
-      </main>
+        </div>
+      </div>
     </div>
   );
 }
 
-function NotificationCard({
+function NotificationRow({
   item,
   locale,
   onMarkRead,
   onNavigate,
+  divider,
 }: {
   item: Notification;
   locale: string;
   onMarkRead: (id: number) => void;
   onNavigate: (href: string) => void;
+  divider: boolean;
 }) {
   return (
-    <article
-      className={cn(
-        "rounded-2xl border-l-4 border bg-white p-4 shadow-sm transition-all sm:p-5 lg:p-6 dark:bg-card",
-        "md:hover:-translate-y-0.5 md:hover:shadow-md cursor-pointer",
-        borderColor(item.type),
-        !item.is_read ? "border-primary/25" : "border-zinc-100 dark:border-border",
-      )}
+    <button
+      type="button"
       onClick={() => {
         if (!item.is_read) onMarkRead(item.id);
         onNavigate(getNotificationHref(item, locale));
       }}
+      className={cn(
+        "flex w-full items-start gap-3 px-4 py-3.5 text-left transition-colors hover:bg-ft-paper-deep sm:px-5",
+        divider && "border-t border-ft-line-soft"
+      )}
     >
-      <div className="flex items-start gap-3 sm:gap-4">
-        <div
-          className={cn(
-            "mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
-            iconColor(item.type),
-          )}
-        >
-          <IconByType type={item.type} />
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3
-              className={cn(
-                "text-base sm:text-lg dark:text-foreground",
-                !item.is_read
-                  ? "font-bold text-zinc-900"
-                  : "font-semibold text-zinc-700",
-              )}
-            >
-              {item.title}
-            </h3>
-            <div className="flex items-center gap-2">
-              <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-zinc-500 dark:bg-muted dark:text-muted-foreground">
-                {timeAgo(item.created_at)}
-              </span>
-              {!item.is_read && (
-                <span className="h-2.5 w-2.5 rounded-full bg-primary" />
-              )}
-            </div>
-          </div>
-          {item.body && (
-            <p className="mt-1 text-sm leading-relaxed text-zinc-600 sm:text-[15px] dark:text-muted-foreground">
-              {item.body}
-            </p>
-          )}
-        </div>
+      <div
+        className={cn(
+          "mt-0.5 grid h-9 w-9 flex-shrink-0 place-items-center rounded-full",
+          iconTone(item.type)
+        )}
+      >
+        <IconByType type={item.type} />
       </div>
-    </article>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-2">
+          <h3
+            className={cn(
+              "m-0 text-[14px] tracking-tight",
+              !item.is_read
+                ? "font-semibold text-ft-ink"
+                : "font-medium text-ft-ink-2"
+            )}
+          >
+            {item.title}
+          </h3>
+          <div className="flex flex-shrink-0 items-center gap-2">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-ft-ink-3">
+              {timeAgo(item.created_at)}
+            </span>
+            {!item.is_read && (
+              <span className="h-2 w-2 rounded-full bg-ft-accent" />
+            )}
+          </div>
+        </div>
+        {item.body && (
+          <p
+            className={cn(
+              "mt-1 text-[12.5px] leading-relaxed",
+              !item.is_read ? "text-ft-ink-2" : "text-ft-ink-3"
+            )}
+          >
+            {item.body}
+          </p>
+        )}
+      </div>
+    </button>
   );
 }

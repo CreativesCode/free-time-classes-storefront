@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { StudentSidebarNav } from "@/components/ds/StudentSidebarNav";
 import { useAuth } from "@/context/UserContext";
 import { useTranslations, useLocale } from "@/i18n/translations";
 import { createClient } from "@/lib/supabase/client";
@@ -510,12 +511,16 @@ export default function TutorDashboardClient({
   });
 
   return (
-    <div className="mx-auto max-w-screen-2xl pb-24 md:pb-10">
+    <div className="mx-auto w-full max-w-screen-md pb-24 md:max-w-screen-lg md:pb-10 lg:max-w-screen-xl lg:px-9 lg:py-8">
+      <div className="lg:grid lg:grid-cols-[220px_1fr] lg:gap-8">
+        <StudentSidebarNav isTutor />
+
+        <div className="min-w-0">
       {/* ═══════════════ MOBILE VIEW (< md) ═══════════════ */}
       <div className="space-y-6 px-4 pt-2 md:hidden">
         {/* Compact welcome */}
         <section>
-          <p className="text-sm font-medium text-violet-600">{td("welcomeSubtitle")}</p>
+          <p className="text-sm font-medium text-ft-ink-2">{td("welcomeSubtitle")}</p>
           <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900">
             Hola, {greetingName}
           </h1>
@@ -550,7 +555,7 @@ export default function TutorDashboardClient({
         <section className="space-y-3">
           <div className="flex items-end justify-between">
             <h2 className="text-xl font-bold tracking-tight text-slate-900">{t("title")}</h2>
-            <span className="text-sm font-semibold text-violet-600">
+            <span className="text-sm font-semibold text-ft-ink-2">
               {pendingItems.length} {t("pending")}
             </span>
           </div>
@@ -609,7 +614,7 @@ export default function TutorDashboardClient({
                         <span className="text-lg font-bold">✕</span>
                       </button>
                       <button
-                        className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-600 text-white shadow-md shadow-violet-300/40 transition-colors hover:bg-violet-700"
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-ft-ink text-white shadow-[0_8px_24px_-12px_rgba(0,0,0,0.20)] transition-colors hover:bg-[#2a241b]"
                         onClick={() => handleConfirm(booking)}
                         disabled={actionLoadingBookingId === booking.id}
                       >
@@ -640,7 +645,7 @@ export default function TutorDashboardClient({
               <p className="text-sm text-muted-foreground">{td("noClassesToday")}</p>
             </div>
           ) : (
-            <div className="relative ml-3 space-y-6 border-l-2 border-violet-200/40 pl-7">
+            <div className="relative ml-3 space-y-6 border-l-2 border-ft-line-soft pl-7">
               {todayLessons.map((lesson, idx) => {
                 const studentName = lesson.student?.user?.username ?? "—";
                 const isCurrent = idx === 0;
@@ -653,18 +658,18 @@ export default function TutorDashboardClient({
                   <div key={lesson.id} className="relative">
                     <div
                       className={`absolute -left-[33px] top-1 h-3.5 w-3.5 rounded-full border-[3px] border-white ${
-                        isCurrent ? "bg-violet-600" : "bg-slate-300"
+                        isCurrent ? "bg-ft-ink" : "bg-slate-300"
                       }`}
                     />
                     <div
                       className={`rounded-2xl p-5 ${
-                        isCurrent ? "bg-violet-50/80" : "bg-white/80 opacity-80"
+                        isCurrent ? "bg-ft-surface-1" : "bg-white/80 opacity-80"
                       }`}
                     >
                       <span
                         className={`inline-block rounded-md px-2.5 py-1 text-xs font-bold ${
                           isCurrent
-                            ? "bg-violet-100 text-violet-700"
+                            ? "bg-ft-surface-2 text-ft-ink"
                             : "bg-slate-100 text-slate-500"
                         }`}
                       >
@@ -690,7 +695,7 @@ export default function TutorDashboardClient({
                       </div>
                       {lesson.meet_link ? (
                         <Button
-                          className="mt-4 w-full rounded-xl border border-violet-200 bg-white text-violet-600 hover:bg-violet-50"
+                          className="mt-4 w-full rounded-xl border border-ft-line bg-white text-ft-ink-2 hover:bg-ft-surface-1"
                           onClick={() => window.open(lesson.meet_link!, "_blank")}
                         >
                           <Video className="mr-2 h-4 w-4" />
@@ -699,7 +704,7 @@ export default function TutorDashboardClient({
                       ) : (
                         <Button
                           variant="outline"
-                          className="mt-4 w-full rounded-xl border-violet-200 text-violet-600"
+                          className="mt-4 w-full rounded-xl border-ft-line text-ft-ink-2"
                           onClick={() => {
                             setEditingMeetLinkId(lesson.id);
                             setEditingMeetLinkValue("");
@@ -751,9 +756,9 @@ export default function TutorDashboardClient({
       {/* ═══════════════ TABLET / DESKTOP VIEW (md+) ═══════════════ */}
       <div className="hidden space-y-6 md:block">
         {/* Hero card */}
-        <div className="rounded-3xl border border-violet-100 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-7 shadow-sm">
+        <div className="rounded-3xl border border-ft-line-soft bg-gradient-to-br from-ft-surface-2 to-ft-surface-1 p-7 shadow-sm">
           <div>
-            <p className="text-sm font-medium text-violet-600">{todayLabel}</p>
+            <p className="text-sm font-medium text-ft-ink-2">{todayLabel}</p>
             <h1 className="mt-1 text-4xl font-extrabold tracking-tight text-slate-900 lg:text-5xl">
               {td("tutorDashboard")}
             </h1>
@@ -799,7 +804,7 @@ export default function TutorDashboardClient({
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
           <div className="space-y-6 lg:col-span-8">
             {/* Pending requests - full detail */}
-            <Card className="border-violet-100">
+            <Card className="border-ft-line-soft">
               <CardHeader
                 className="flex cursor-pointer flex-row items-start justify-between gap-4 select-none"
                 onClick={() => setPendingOpen((prev) => !prev)}
@@ -815,7 +820,7 @@ export default function TutorDashboardClient({
                   </CardTitle>
                   <p className="text-sm text-gray-600">{t("description")}</p>
                 </div>
-                <Badge className="bg-violet-100 text-violet-700 hover:bg-violet-100">
+                <Badge className="bg-ft-surface-2 text-ft-ink hover:bg-ft-surface-2">
                   {pendingItems.length} {t("pending")}
                 </Badge>
               </CardHeader>
@@ -846,7 +851,7 @@ export default function TutorDashboardClient({
                             className={`space-y-3 rounded-xl border p-4 ${
                               display.isCustomRequest
                                 ? "border-amber-200 bg-amber-50/50"
-                                : "border-violet-100 bg-violet-50/40"
+                                : "border-ft-line-soft bg-ft-paper-deep"
                             }`}
                           >
                             <div className="flex items-center justify-between gap-3">
@@ -908,9 +913,9 @@ export default function TutorDashboardClient({
                               </div>
                             ) : null}
 
-                            <div className="space-y-2 border-t border-violet-100 pt-2">
+                            <div className="space-y-2 border-t border-ft-line-soft pt-2">
                               <div className="flex items-center gap-2">
-                                <Video className="h-4 w-4 text-violet-500" />
+                                <Video className="h-4 w-4 text-ft-ink-3" />
                                 <Input
                                   type="url"
                                   className="h-8 flex-1 text-xs"
@@ -930,7 +935,7 @@ export default function TutorDashboardClient({
                                   {t("reject")}
                                 </Button>
                                 <Button
-                                  className="bg-violet-600 hover:bg-violet-700"
+                                  className="bg-ft-ink hover:bg-[#2a241b]"
                                   onClick={() => handleConfirm(booking, confirmMeetLink)}
                                   disabled={actionLoadingBookingId === booking.id}
                                 >
@@ -952,15 +957,15 @@ export default function TutorDashboardClient({
             </Card>
 
             {/* Today schedule - timeline */}
-            <Card className="border-violet-100">
+            <Card className="border-ft-line-soft">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-xl">
-                    <Calendar className="h-5 w-5 text-violet-600" />
+                    <Calendar className="h-5 w-5 text-ft-ink-2" />
                     {td("todaySchedule")}
                   </CardTitle>
                   <Link href={`/${locale}/teacher-profile`}>
-                    <Button variant="ghost" size="sm" className="gap-1 text-xs text-violet-700">
+                    <Button variant="ghost" size="sm" className="gap-1 text-xs text-ft-ink">
                       {td("viewAll")}
                       <ArrowRight className="h-3.5 w-3.5" />
                     </Button>
@@ -978,7 +983,7 @@ export default function TutorDashboardClient({
                     <p className="text-sm text-muted-foreground">{td("noClassesToday")}</p>
                   </div>
                 ) : (
-                  <div className="relative space-y-3 pl-4 before:absolute before:bottom-2 before:left-0 before:top-2 before:w-[2px] before:bg-violet-100">
+                  <div className="relative space-y-3 pl-4 before:absolute before:bottom-2 before:left-0 before:top-2 before:w-[2px] before:bg-ft-surface-2">
                     {todayLessons.map((lesson, idx) => {
                       const studentName = lesson.student?.user?.username ?? "—";
                       const isCurrent = idx === 0;
@@ -987,23 +992,23 @@ export default function TutorDashboardClient({
                           key={lesson.id}
                           className={`relative rounded-xl border p-4 ${
                             isCurrent
-                              ? "border-violet-200 bg-violet-50 shadow-sm"
+                              ? "border-ft-line bg-ft-surface-1 shadow-sm"
                               : "border-slate-200 bg-white"
                           }`}
                         >
                           <span
                             className={`absolute -left-[23px] top-5 h-3 w-3 rounded-full border-2 border-white ${
-                              isCurrent ? "bg-violet-600" : "bg-slate-300"
+                              isCurrent ? "bg-ft-ink" : "bg-slate-300"
                             }`}
                           />
                           <div className="flex flex-row items-center justify-between gap-3">
                             <div className="min-w-0">
                               {isCurrent ? (
-                                <span className="mb-1 inline-block rounded-full bg-violet-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                                <span className="mb-1 inline-block rounded-full bg-ft-ink px-2 py-0.5 text-[10px] font-bold uppercase text-white">
                                   En vivo
                                 </span>
                               ) : null}
-                              <p className="text-xs font-semibold text-violet-700">
+                              <p className="text-xs font-semibold text-ft-ink">
                                 {formatTime(lesson.scheduled_date_time)} · {lesson.duration_minutes} min
                               </p>
                               <p className="truncate text-base font-semibold text-slate-900">
@@ -1028,7 +1033,7 @@ export default function TutorDashboardClient({
                                   <Button
                                     size="sm"
                                     variant={isCurrent ? "default" : "outline"}
-                                    className={`gap-1 ${isCurrent ? "bg-violet-600 hover:bg-violet-700" : ""}`}
+                                    className={`gap-1 ${isCurrent ? "bg-ft-ink hover:bg-[#2a241b]" : ""}`}
                                     onClick={() => window.open(lesson.meet_link!, "_blank")}
                                   >
                                     <Video className="h-3.5 w-3.5" />
@@ -1064,7 +1069,7 @@ export default function TutorDashboardClient({
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="gap-1 text-violet-600"
+                                  className="gap-1 text-ft-ink-2"
                                   onClick={() => {
                                     setEditingMeetLinkId(lesson.id);
                                     setEditingMeetLinkValue(lesson.meet_link ?? "");
@@ -1087,7 +1092,7 @@ export default function TutorDashboardClient({
 
           {/* Sidebar */}
           <div className="space-y-6 lg:col-span-4">
-            <Card className="border-violet-200 bg-gradient-to-br from-violet-600 to-violet-700 text-white shadow-lg shadow-violet-300/40">
+            <Card className="border-ft-line bg-gradient-to-br from-[#2A2520] to-[#1A1714] text-white shadow-[0_18px_60px_-30px_rgba(0,0,0,0.25)]">
               <CardHeader>
                 <CardTitle className="text-lg">Ganancias Mensuales</CardTitle>
               </CardHeader>
@@ -1105,16 +1110,16 @@ export default function TutorDashboardClient({
                   ))}
                 </div>
                 <div className="rounded-xl bg-white/10 p-3 backdrop-blur-sm">
-                  <p className="text-xs text-violet-100">Mejor mes hasta ahora</p>
+                  <p className="text-xs text-ft-paper/70">Mejor mes hasta ahora</p>
                   <p className="text-xl font-bold">${stats.earningsThisMonth.toFixed(2)}</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-violet-100">
+            <Card className="border-ft-line-soft">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <TrendingUp className="h-5 w-5 text-violet-600" />
+                  <TrendingUp className="h-5 w-5 text-ft-ink-2" />
                   {td("quickActions")}
                 </CardTitle>
               </CardHeader>
@@ -1122,7 +1127,7 @@ export default function TutorDashboardClient({
                 <div className="grid grid-cols-2 gap-3">
                   {quickActions.map((action) => (
                     <Link key={action.href + action.label} href={action.href}>
-                      <div className="flex h-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-violet-100 bg-violet-50/40 p-4 text-center transition-all hover:bg-violet-600 hover:text-white">
+                      <div className="flex h-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-ft-line-soft bg-ft-paper-deep p-4 text-center transition-all hover:bg-ft-ink hover:text-white">
                         <action.icon className="h-5 w-5" />
                         <span className="text-xs font-semibold leading-tight">{action.label}</span>
                       </div>
@@ -1132,7 +1137,7 @@ export default function TutorDashboardClient({
               </CardContent>
             </Card>
 
-            <Card className="border-violet-100">
+            <Card className="border-ft-line-soft">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg">Tip del Mentor</CardTitle>
               </CardHeader>
@@ -1141,7 +1146,7 @@ export default function TutorDashboardClient({
                   &quot;Recuerda enviar materiales de apoyo al menos 24 horas antes para mejorar el
                   engagement en tus clases.&quot;
                 </p>
-                <Button variant="ghost" className="w-full justify-center text-violet-700">
+                <Button variant="ghost" className="w-full justify-center text-ft-ink">
                   Ver mas consejos
                   <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
@@ -1204,6 +1209,8 @@ export default function TutorDashboardClient({
           ) : null}
         </DialogContent>
       </Dialog>
+        </div>
+      </div>
     </div>
   );
 }

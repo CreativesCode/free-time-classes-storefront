@@ -6,7 +6,11 @@ import { createClient } from "@/lib/supabase/server";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import DashboardClient from "./DashboardClient";
 import { resolveCourseTutorUser } from "@/lib/supabase/course-tutor";
-import { nowAsLessonTimestamp } from "@/lib/datetime/lessonTime";
+import {
+  nowAsLessonTimestamp,
+  startOfMonthAsLessonTimestamp,
+} from "@/lib/datetime/lessonTime";
+import type { StudentProfile } from "@/types/student";
 import type { DashboardRecommendedCourse } from "./DashboardDeferredRecommended";
 
 interface UpcomingLessonRaw {
@@ -50,6 +54,8 @@ interface DashboardStats {
   totalHours: number;
   totalTutors: number;
   pendingRequests: number;
+  monthlyClasses: number;
+  streakDays: number;
 }
 
 export async function generateMetadata({
@@ -85,40 +91,41 @@ export default async function DashboardPage({
 
   const { data: userRow } = await supabase
     .from("users")
-    .select("username, is_tutor")
+    .select("username, is_tutor, profile_picture")
     .eq("id", authUser.id)
     .single();
 
   const catalog = createCatalogServerClient();
 
-  const [completedRes, pendingRes, upcomingRes, recommendedRes] = await Promise.all([
-    supabase
-      .from("lessons")
-      .select("id, duration_minutes, tutor_id")
-      .eq("student_id", authUser.id)
-      .eq("status", "completed"),
+  const [completedRes, pendingRes, upcomingRes, recommendedRes, profileRes] =
+    await Promise.all([
+      supabase
+        .from("lessons")
+        .select("id, scheduled_date_time, duration_minutes, tutor_id")
+        .eq("student_id", authUser.id)
+        .eq("status", "completed"),
 
-    supabase
-      .from("bookings")
-      .select("id", { count: "exact", head: true })
-      .eq("student_id", authUser.id)
-      .eq("status", "pending"),
+      supabase
+        .from("bookings")
+        .select("id", { count: "exact", head: true })
+        .eq("student_id", authUser.id)
+        .eq("status", "pending"),
 
-    supabase
-      .from("lessons")
-      .select(
-        "id, scheduled_date_time, duration_minutes, status, meet_link, subject:subjects(name), tutor:tutor_profiles!lessons_tutor_id_fkey(id, user:users!tutor_profiles_id_fkey(username, profile_picture))"
-      )
-      .eq("student_id", authUser.id)
-      .in("status", ["confirmed", "scheduled"])
-      .gte("scheduled_date_time", nowAsLessonTimestamp())
-      .order("scheduled_date_time", { ascending: true })
-      .limit(3),
+      supabase
+        .from("lessons")
+        .select(
+          "id, scheduled_date_time, duration_minutes, status, meet_link, subject:subjects(name), tutor:tutor_profiles!lessons_tutor_id_fkey(id, user:users!tutor_profiles_id_fkey(username, profile_picture))"
+        )
+        .eq("student_id", authUser.id)
+        .in("status", ["confirmed", "scheduled"])
+        .gte("scheduled_date_time", nowAsLessonTimestamp())
+        .order("scheduled_date_time", { ascending: true })
+        .limit(5),
 
-    catalog
-      .from("courses")
-      .select(
-        `
+      catalog
+        .from("courses")
+        .select(
+          `
         id,
         title,
         cover_image,
@@ -130,11 +137,17 @@ export default async function DashboardPage({
           user:users!tutor_profiles_id_fkey (id, username)
         )
       `
-      )
-      .eq("is_active", true)
-      .order("created_at", { ascending: false })
-      .limit(6),
-  ]);
+        )
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(6),
+
+      supabase
+        .from("student_profiles")
+        .select("language_level")
+        .eq("id", authUser.id)
+        .maybeSingle(),
+    ]);
 
   const completed = completedRes.data ?? [];
   const totalHoursValue = completed.reduce(
@@ -143,12 +156,40 @@ export default async function DashboardPage({
   );
   const uniqueTutors = new Set(completed.map((l) => l.tutor_id)).size;
 
+  const monthStart = startOfMonthAsLessonTimestamp();
+  const monthlyClasses = completed.filter(
+    (l) => (l.scheduled_date_time ?? "") >= monthStart
+  ).length;
+
+  const completedDays = new Set<string>(
+    completed
+      .map((l) => l.scheduled_date_time?.slice(0, 10))
+      .filter((d): d is string => Boolean(d))
+  );
+  let streakDays = 0;
+  const today = new Date();
+  for (let offset = 0; offset < 60; offset++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - offset);
+    const key = d.toISOString().slice(0, 10);
+    if (completedDays.has(key)) {
+      streakDays += 1;
+    } else if (offset > 0) {
+      break;
+    }
+  }
+
   const stats: DashboardStats = {
     totalClasses: completed.length,
     totalHours: Math.round((totalHoursValue / 60) * 10) / 10,
     totalTutors: uniqueTutors,
     pendingRequests: pendingRes.count ?? 0,
+    monthlyClasses,
+    streakDays,
   };
+
+  const studentProfileRow =
+    (profileRes.data as Pick<StudentProfile, "language_level"> | null) ?? null;
 
   const rawLessons = (upcomingRes.data ?? []) as UpcomingLessonRaw[];
   const rawRecommended = (recommendedRes.data ?? []) as Array<{
@@ -204,10 +245,12 @@ export default async function DashboardPage({
       user={{
         username: userRow?.username ?? null,
         is_tutor: userRow?.is_tutor ?? false,
+        profile_picture: userRow?.profile_picture ?? null,
       }}
       stats={stats}
       upcomingLessons={upcomingLessons}
       recommendedCourses={recommendedCourses}
+      languageLevel={studentProfileRow?.language_level ?? null}
     />
   );
 }

@@ -1,33 +1,8 @@
 "use client";
 
-import AvailabilityCalendar from "@/components/teacher/AvailabilityCalendar";
-import RecurringAvailabilityManager from "@/components/teacher/RecurringAvailabilityManager";
-import EditProfileModal from "@/components/teacher/EditProfileModal";
-import TutorBookingRequests from "@/components/teacher/TutorBookingRequests";
-import TutorCoursesManager from "@/components/teacher/TutorCoursesManager";
-import TutorSubjectsManager from "@/components/teacher/TutorSubjectsManager";
-import TutorReviewsSection from "@/components/teacher/TutorReviewsSection";
-import TutorCVSection from "@/components/teacher/TutorCVSection";
-import InternalMessagingPanel from "@/components/messages/InternalMessagingPanel";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useTranslations } from "@/i18n/translations";
-import { getPublicUrl } from "@/lib/supabase/storage";
-import type { CourseWithRelations } from "@/types/course";
-import type { Subject } from "@/types/subject";
-import type { TutorProfile } from "@/types/tutor";
-import { getAvatarColor } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   BookOpen,
   CalendarDays,
@@ -37,10 +12,24 @@ import {
   Sparkles,
   Star,
   User,
-  Users2,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+
+import AvailabilityCalendar from "@/components/teacher/AvailabilityCalendar";
+import RecurringAvailabilityManager from "@/components/teacher/RecurringAvailabilityManager";
+import EditProfileModal from "@/components/teacher/EditProfileModal";
+import TutorBookingRequests from "@/components/teacher/TutorBookingRequests";
+import TutorCoursesManager from "@/components/teacher/TutorCoursesManager";
+import TutorSubjectsManager from "@/components/teacher/TutorSubjectsManager";
+import TutorReviewsSection from "@/components/teacher/TutorReviewsSection";
+import TutorCVSection from "@/components/teacher/TutorCVSection";
+import InternalMessagingPanel from "@/components/messages/InternalMessagingPanel";
+import { StudentSidebarNav } from "@/components/ds/StudentSidebarNav";
+import { useTranslations } from "@/i18n/translations";
+import { getPublicUrl } from "@/lib/supabase/storage";
+import { cn, getAvatarColor } from "@/lib/utils";
+import type { CourseWithRelations } from "@/types/course";
+import type { Subject } from "@/types/subject";
+import type { TutorProfile } from "@/types/tutor";
 
 export type TeacherProfilePageUser = {
   id: string;
@@ -50,6 +39,8 @@ export type TeacherProfilePageUser = {
   country: string | null;
   profile_picture: string | null;
 };
+
+type Tab = "profile" | "availability" | "requests" | "messages";
 
 export default function TeacherProfileClient({
   teacherUser,
@@ -64,6 +55,7 @@ export default function TeacherProfileClient({
 }) {
   const router = useRouter();
   const t = useTranslations("teacherProfile");
+  const [activeTab, setActiveTab] = useState<Tab>("profile");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [tutorProfile, setTutorProfile] = useState<TutorProfile | null>(
     initialTutorProfile
@@ -78,340 +70,360 @@ export default function TeacherProfileClient({
     setCourses(initialCourses);
   }, [initialTutorProfile, initialSubjects, initialCourses]);
 
-  // Get profile picture URL - if it's a path, construct the full URL, otherwise use as-is
   const profilePictureUrl =
     teacherUser.profile_picture && typeof teacherUser.profile_picture === "string"
       ? teacherUser.profile_picture.startsWith("http")
         ? teacherUser.profile_picture
         : getPublicUrl("avatars", teacherUser.profile_picture)
-      : undefined;
+      : null;
 
   const displayName = teacherUser.username || t("teacher");
   const bioText = tutorProfile?.bio?.trim() || t("notProvided");
-  const specialtiesText =
-    subjects.length > 0
-      ? subjects.map((subject) => subject.name).join(", ")
-      : t("notProvided");
   const expertiseBadges =
     subjects.length > 0
       ? subjects.slice(0, 6).map((subject) => subject.name)
       : [t("specialties"), t("teachingExperience")];
 
+  const tabs: ReadonlyArray<{ id: Tab; label: string; icon: typeof User }> = [
+    { id: "profile", label: t("profile"), icon: User },
+    { id: "availability", label: t("availability"), icon: BookOpen },
+    { id: "requests", label: t("requests.tab"), icon: Inbox },
+    { id: "messages", label: t("messaging.tab"), icon: MessageSquare },
+  ];
+
   return (
-    <div className="w-full max-w-screen-2xl mx-auto px-4 py-6 sm:px-6 md:py-8 lg:py-10">
-      <div className="mb-6 md:mb-8 rounded-3xl border border-violet-100 bg-gradient-to-br from-white via-violet-50/60 to-fuchsia-50/50 p-5 shadow-sm md:p-8">
-        <div className="grid gap-6 md:gap-8 xl:grid-cols-12">
-          <div className="xl:col-span-8">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-              <Avatar className="h-24 w-24 rounded-2xl border-4 border-white shadow-lg sm:h-28 sm:w-28">
-                <AvatarImage src={profilePictureUrl} alt="Foto de perfil" />
-                <AvatarFallback
-                  className="text-xl font-semibold text-white"
-                  style={{ backgroundColor: getAvatarColor(teacherUser.username) }}
-                >
-                  {displayName?.[0]?.toUpperCase() || "U"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <div className="mb-2 flex flex-wrap items-center gap-2">
-                  <Badge className="rounded-full border border-violet-200 bg-violet-100 px-3 py-1 text-[10px] uppercase tracking-wider text-violet-700">
-                    <Sparkles className="mr-1 h-3 w-3" />
-                    Pro Mentor
-                  </Badge>
-                  <Badge className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[10px] uppercase tracking-wider text-amber-700">
-                    <Star className="mr-1 h-3 w-3 fill-current" />
-                    {(tutorProfile?.rating ?? 0).toFixed(1)}
-                  </Badge>
-                </div>
-                <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 md:hidden">
-                  {displayName}
-                </h1>
-                <h1 className="hidden text-4xl font-extrabold tracking-tight text-slate-900 md:block lg:text-5xl">
-                  {displayName}
-                </h1>
-                <p className="mt-1 text-sm font-medium text-violet-700">
-                  {t("teacher")}
-                </p>
-                <p className="mt-4 max-w-3xl text-sm leading-relaxed text-slate-600 md:text-base">
-                  {bioText}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="xl:col-span-4 xl:flex xl:items-start xl:justify-end">
-            <Button
-              onClick={() => setIsEditModalOpen(true)}
-              className="h-12 w-full rounded-full bg-violet-700 px-6 text-sm font-semibold text-white hover:bg-violet-800 md:w-auto xl:mt-2"
-            >
-              <CalendarDays className="mr-2 h-4 w-4" />
-              {t("editProfile")}
-            </Button>
-          </div>
-        </div>
+    <div className="mx-auto w-full max-w-screen-md md:max-w-screen-lg lg:max-w-screen-xl lg:px-9 lg:py-8">
+      <div className="lg:grid lg:grid-cols-[220px_1fr] lg:gap-8">
+        <StudentSidebarNav isTutor />
 
-        <div className="mt-6 grid grid-cols-2 gap-3 md:mt-8 md:grid-cols-4">
-          <div className="rounded-md border border-violet-100 bg-white/80 p-4">
-            <p className="text-[11px] uppercase tracking-wider text-slate-500">
-              {t("rating")}
-            </p>
-            <p className="mt-1 text-2xl font-bold text-slate-900">
-              {(tutorProfile?.rating ?? 0).toFixed(1)}
-            </p>
-          </div>
-          <div className="rounded-md border border-violet-100 bg-white/80 p-4">
-            <p className="text-[11px] uppercase tracking-wider text-slate-500">
-              {t("totalReviews")}
-            </p>
-            <p className="mt-1 text-2xl font-bold text-slate-900">
-              {tutorProfile?.total_reviews ?? 0}
-            </p>
-          </div>
-          <div className="rounded-md border border-violet-100 bg-white/80 p-4">
-            <p className="text-[11px] uppercase tracking-wider text-slate-500">
-              {t("experience")}
-            </p>
-            <p className="mt-1 text-2xl font-bold text-slate-900">
-              {tutorProfile?.years_of_experience ?? 0}
-              <span className="ml-1 text-sm font-medium text-slate-500">
-                {t("years")}
-              </span>
-            </p>
-          </div>
-          <div className="rounded-md border border-violet-100 bg-white/80 p-4">
-            <p className="text-[11px] uppercase tracking-wider text-slate-500">
-              {t("courses")}
-            </p>
-            <p className="mt-1 text-2xl font-bold text-slate-900">{courses.length}</p>
-          </div>
-        </div>
-      </div>
-
-      <EditProfileModal
-        isOpen={isEditModalOpen}
-        tutorId={teacherUser.id}
-        initialBio={tutorProfile?.bio ?? ""}
-        initialYearsOfExperience={tutorProfile?.years_of_experience ?? null}
-        onTutorProfileUpdated={(updates) =>
-          setTutorProfile((prev) => (prev ? { ...prev, ...updates } : prev))
-        }
-        onClose={() => {
-          setIsEditModalOpen(false);
-          router.refresh();
-        }}
-      />
-
-      <Tabs defaultValue="profile" className="space-y-4">
-        <TabsList className="grid h-auto w-full grid-cols-2 gap-2 rounded-2xl bg-violet-50 p-2 md:grid-cols-4">
-          <TabsTrigger
-            value="profile"
-            className="flex min-h-10 items-center gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:text-violet-700"
-          >
-            <User className="h-4 w-4" />
-            <span className="hidden sm:inline">{t("profile")}</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="availability"
-            className="flex min-h-10 items-center gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:text-violet-700"
-          >
-            <BookOpen className="h-4 w-4" />
-            <span className="hidden sm:inline">{t("availability")}</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="requests"
-            className="flex min-h-10 items-center gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:text-violet-700"
-          >
-            <Inbox className="h-4 w-4" />
-            <span className="hidden sm:inline">{t("requests.tab")}</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="messages"
-            className="flex min-h-10 items-center gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:text-violet-700"
-          >
-            <MessageSquare className="h-4 w-4" />
-            <span className="hidden sm:inline">{t("messaging.tab")}</span>
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Profile Tab */}
-        <TabsContent value="profile" className="space-y-5">
-          <div className="grid gap-5 xl:grid-cols-12">
-            <Card className="xl:col-span-7 rounded-3xl border-violet-100">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-xl text-slate-900">
-                  {t("personalInfo")}
-                </CardTitle>
-                <CardDescription className="text-slate-500">
-                  Información base de contacto y especialización.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">{t("email")}</Label>
-                    <Input id="email" value={teacherUser.email} readOnly />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">{t("phone")}</Label>
-                    <Input id="phone" value={teacherUser.phone || t("notProvided")} readOnly />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="location">{t("location")}</Label>
-                    <Input
-                      id="location"
-                      value={teacherUser.country || tutorProfile?.timezone || t("notProvided")}
-                      readOnly
+        <div className="min-w-0">
+          {/* Hero card */}
+          <div className="px-5 pt-[18px] md:px-9 md:pt-8 lg:px-0 lg:pt-0">
+            <div className="rounded-ft-2xl border border-ft-line bg-gradient-to-br from-ft-surface-2 to-ft-surface-1 p-5 md:p-7">
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+                <div className="grid h-24 w-24 flex-shrink-0 place-items-center overflow-hidden rounded-ft-xl bg-ft-surface-2">
+                  {profilePictureUrl ? (
+                    <Image
+                      src={profilePictureUrl}
+                      alt={displayName}
+                      width={96}
+                      height={96}
+                      className="h-full w-full object-cover"
+                      unoptimized
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="specialties">{t("specialties")}</Label>
-                    <Input id="specialties" value={specialtiesText} readOnly />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="xl:col-span-5 rounded-3xl border-violet-100">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-xl text-slate-900">Expertise</CardTitle>
-                <CardDescription className="text-slate-500">
-                  Áreas donde destacas como tutor.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {expertiseBadges.map((badge) => (
-                    <Badge
-                      key={badge}
-                      variant="secondary"
-                      className="rounded-full border border-violet-100 bg-violet-50 px-3 py-1 text-xs font-medium text-violet-700"
+                  ) : (
+                    <div
+                      className="grid h-full w-full place-items-center text-2xl font-semibold text-white"
+                      style={{ backgroundColor: getAvatarColor(displayName) }}
                     >
-                      <GraduationCap className="mr-1 h-3 w-3" />
-                      {badge}
-                    </Badge>
-                  ))}
+                      {displayName?.[0]?.toUpperCase() || "U"}
+                    </div>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card className="rounded-3xl border-violet-100">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-xl text-slate-900">
-                {t("teachingExperience")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="rounded-md border border-violet-100 bg-white/80 p-4">
-                  <h3 className="font-semibold text-slate-800">{t("bio")}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                <div className="flex-1">
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-ft-paper px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-ft-accent-deep">
+                      <Sparkles className="h-3 w-3" />
+                      Pro Mentor
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-ft-paper px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-ft-ink">
+                      <Star
+                        className="h-3 w-3 text-ft-accent"
+                        fill="currentColor"
+                        stroke="none"
+                      />
+                      {(tutorProfile?.rating ?? 0).toFixed(1)}
+                    </span>
+                  </div>
+                  <h1 className="m-0 text-[28px] font-semibold leading-tight tracking-[-0.025em] text-ft-ink md:text-[32px] lg:text-[36px]">
+                    {displayName}
+                  </h1>
+                  <p className="mt-1 text-[13px] font-medium text-ft-accent-deep">
+                    {t("teacher")}
+                  </p>
+                  <p className="mt-3 max-w-3xl text-[13.5px] leading-relaxed text-ft-ink-2 md:text-[14.5px]">
                     {bioText}
                   </p>
                 </div>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-md border border-violet-100 bg-white/80 p-4">
-                    <p className="text-xs uppercase tracking-wider text-slate-500">
-                      {t("hourlyRate")}
-                    </p>
-                    <p className="mt-2 font-semibold text-slate-900">
-                      {tutorProfile?.hourly_rate
-                        ? `${tutorProfile.hourly_rate} USD`
-                        : t("notProvided")}
-                    </p>
-                  </div>
-                  <div className="rounded-md border border-violet-100 bg-white/80 p-4">
-                    <p className="text-xs uppercase tracking-wider text-slate-500">
-                      {t("rating")}
-                    </p>
-                    <p className="mt-2 font-semibold text-slate-900">
-                      {tutorProfile?.rating ?? 0}
-                    </p>
-                  </div>
-                  <div className="rounded-md border border-violet-100 bg-white/80 p-4">
-                    <p className="text-xs uppercase tracking-wider text-slate-500">
-                      {t("totalReviews")}
-                    </p>
-                    <p className="mt-2 font-semibold text-slate-900">
-                      {tutorProfile?.total_reviews ?? 0}
-                    </p>
-                  </div>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-ft-ink px-5 text-[13px] font-semibold text-ft-paper hover:bg-[#2a241b] sm:flex-shrink-0"
+                >
+                  <CalendarDays className="h-4 w-4" />
+                  {t("editProfile")}
+                </button>
               </div>
-            </CardContent>
-          </Card>
 
-          <TutorCVSection
+              {/* Stats row */}
+              <div className="mt-6 grid grid-cols-2 gap-2.5 md:grid-cols-4">
+                <StatChip
+                  label={t("rating")}
+                  value={(tutorProfile?.rating ?? 0).toFixed(1)}
+                />
+                <StatChip
+                  label={t("totalReviews")}
+                  value={String(tutorProfile?.total_reviews ?? 0)}
+                />
+                <StatChip
+                  label={t("experience")}
+                  value={
+                    <>
+                      {tutorProfile?.years_of_experience ?? 0}
+                      <span className="ml-1 text-[12px] font-medium text-ft-ink-3">
+                        {t("years")}
+                      </span>
+                    </>
+                  }
+                />
+                <StatChip
+                  label={t("courses")}
+                  value={String(courses.length)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <EditProfileModal
+            isOpen={isEditModalOpen}
             tutorId={teacherUser.id}
-            certifications={tutorProfile?.certifications}
+            initialBio={tutorProfile?.bio ?? ""}
+            initialYearsOfExperience={tutorProfile?.years_of_experience ?? null}
             onTutorProfileUpdated={(updates) =>
               setTutorProfile((prev) => (prev ? { ...prev, ...updates } : prev))
             }
+            onClose={() => {
+              setIsEditModalOpen(false);
+              router.refresh();
+            }}
           />
 
-          <Card className="rounded-3xl border-violet-100">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-xl text-slate-900">
-                <Users2 className="h-5 w-5 text-violet-700" />
-                Reviews
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <TutorReviewsSection />
-            </CardContent>
-          </Card>
+          {/* Tabs */}
+          <div className="px-5 pt-5 md:px-9 lg:px-0">
+            <div className="hide-scroll flex gap-1.5 overflow-x-auto rounded-ft-md border border-ft-line-soft bg-ft-surface-1 p-1">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                const active = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id)}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 whitespace-nowrap rounded-ft-sm px-3 py-2 text-[12px] font-semibold transition-colors",
+                      active
+                        ? "bg-ft-paper text-ft-ink shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+                        : "text-ft-ink-3 hover:text-ft-ink-2"
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-          <TutorSubjectsManager
-            tutorId={teacherUser.id}
-            initialSubjects={subjects}
-            onSubjectsUpdated={setSubjects}
-          />
+          {/* Tab content */}
+          <div className="px-5 py-5 md:px-9 lg:px-0">
+            {activeTab === "profile" && (
+              <div className="space-y-4">
+                {/* Personal info + expertise side-by-side on lg */}
+                <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
+                  <section className="rounded-ft-lg border border-ft-line-soft bg-ft-paper p-5">
+                    <h2 className="m-0 text-[15px] font-semibold tracking-tight text-ft-ink">
+                      {t("personalInfo")}
+                    </h2>
+                    <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
+                      <ReadField label={t("email")} value={teacherUser.email} />
+                      <ReadField
+                        label={t("phone")}
+                        value={teacherUser.phone || t("notProvided")}
+                      />
+                      <ReadField
+                        label={t("location")}
+                        value={
+                          teacherUser.country ||
+                          tutorProfile?.timezone ||
+                          t("notProvided")
+                        }
+                      />
+                      <ReadField
+                        label={t("specialties")}
+                        value={
+                          subjects.length > 0
+                            ? subjects.map((s) => s.name).join(", ")
+                            : t("notProvided")
+                        }
+                      />
+                    </div>
+                  </section>
 
-          {/* Current Courses */}
-          <TutorCoursesManager
-            tutorId={teacherUser.id}
-            initialCourses={courses}
-            onCoursesUpdated={setCourses}
-          />
-        </TabsContent>
+                  <section className="rounded-ft-lg border border-ft-line-soft bg-ft-paper p-5">
+                    <h2 className="m-0 text-[15px] font-semibold tracking-tight text-ft-ink">
+                      Expertise
+                    </h2>
+                    <p className="mt-1 text-[12px] text-ft-ink-3">
+                      Áreas donde destacas como tutor.
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {expertiseBadges.map((badge) => (
+                        <span
+                          key={badge}
+                          className="inline-flex items-center gap-1 rounded-full border border-ft-line bg-ft-surface-1 px-3 py-1 text-[12px] font-medium text-ft-ink-2"
+                        >
+                          <GraduationCap className="h-3 w-3 text-ft-accent-deep" />
+                          {badge}
+                        </span>
+                      ))}
+                    </div>
+                  </section>
+                </div>
 
-        {/* Availability Tab */}
-        <TabsContent value="availability" className="space-y-4">
-          <Card className="rounded-3xl border-violet-100 p-1">
-            <CardContent className="space-y-4 p-4 md:p-6">
-              <AvailabilityCalendar refreshKey={calendarRefresh} />
-              {teacherUser.id ? (
-                <RecurringAvailabilityManager
+                <section className="rounded-ft-lg border border-ft-line-soft bg-ft-paper p-5">
+                  <h2 className="m-0 text-[15px] font-semibold tracking-tight text-ft-ink">
+                    {t("teachingExperience")}
+                  </h2>
+                  <div className="mt-3 rounded-ft border border-ft-line-soft bg-ft-surface-1 p-4">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.06em] text-ft-ink-3">
+                      {t("bio")}
+                    </div>
+                    <p className="mt-1.5 text-[13.5px] leading-relaxed text-ft-ink-2">
+                      {bioText}
+                    </p>
+                  </div>
+                  <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+                    <MiniStatCard
+                      label={t("hourlyRate")}
+                      value={
+                        tutorProfile?.hourly_rate
+                          ? `${tutorProfile.hourly_rate} USD`
+                          : t("notProvided")
+                      }
+                    />
+                    <MiniStatCard
+                      label={t("rating")}
+                      value={String(tutorProfile?.rating ?? 0)}
+                    />
+                    <MiniStatCard
+                      label={t("totalReviews")}
+                      value={String(tutorProfile?.total_reviews ?? 0)}
+                    />
+                  </div>
+                </section>
+
+                <TutorCVSection
                   tutorId={teacherUser.id}
-                  onChanged={() => setCalendarRefresh((n) => n + 1)}
+                  certifications={tutorProfile?.certifications}
+                  onTutorProfileUpdated={(updates) =>
+                    setTutorProfile((prev) =>
+                      prev ? { ...prev, ...updates } : prev
+                    )
+                  }
                 />
-              ) : null}
-            </CardContent>
-          </Card>
-        </TabsContent>
 
-        {/* Requests Tab */}
-        <TabsContent value="requests" className="space-y-4">
-          <Card className="rounded-3xl border-violet-100 p-1">
-            <CardContent className="p-4 md:p-6">
-              <TutorBookingRequests
-                onRequestResponded={() => {
-                  setCalendarRefresh((n) => n + 1);
-                  router.refresh();
-                }}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
+                <section className="rounded-ft-lg border border-ft-line-soft bg-ft-paper p-5">
+                  <h2 className="m-0 mb-3 inline-flex items-center gap-2 text-[15px] font-semibold tracking-tight text-ft-ink">
+                    <Star
+                      className="h-4 w-4 text-ft-accent"
+                      fill="currentColor"
+                      stroke="none"
+                    />
+                    Reviews
+                  </h2>
+                  <TutorReviewsSection />
+                </section>
 
-        {/* Messages Tab */}
-        <TabsContent value="messages" className="space-y-4">
-          <Card className="rounded-3xl border-violet-100 p-1">
-            <CardContent className="p-4 md:p-6">
+                <TutorSubjectsManager
+                  tutorId={teacherUser.id}
+                  initialSubjects={subjects}
+                  onSubjectsUpdated={setSubjects}
+                />
+
+                <TutorCoursesManager
+                  tutorId={teacherUser.id}
+                  initialCourses={courses}
+                  onCoursesUpdated={setCourses}
+                />
+              </div>
+            )}
+
+            {activeTab === "availability" && (
+              <section className="rounded-ft-lg border border-ft-line-soft bg-ft-paper p-4 md:p-5">
+                <AvailabilityCalendar refreshKey={calendarRefresh} />
+                {teacherUser.id ? (
+                  <div className="mt-4">
+                    <RecurringAvailabilityManager
+                      tutorId={teacherUser.id}
+                      onChanged={() => setCalendarRefresh((n) => n + 1)}
+                    />
+                  </div>
+                ) : null}
+              </section>
+            )}
+
+            {activeTab === "requests" && (
+              <section className="rounded-ft-lg border border-ft-line-soft bg-ft-paper p-4 md:p-5">
+                <TutorBookingRequests
+                  onRequestResponded={() => {
+                    setCalendarRefresh((n) => n + 1);
+                    router.refresh();
+                  }}
+                />
+              </section>
+            )}
+
+            {activeTab === "messages" && (
               <InternalMessagingPanel namespace="teacherProfile" />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatChip({
+  label,
+  value,
+}: {
+  label: string;
+  value: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-ft border border-ft-line-soft bg-ft-paper p-3">
+      <p className="m-0 text-[10px] font-semibold uppercase tracking-[0.06em] text-ft-ink-3">
+        {label}
+      </p>
+      <p className="m-0 mt-1 text-[20px] font-semibold tracking-[-0.02em] text-ft-ink">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function ReadField({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <span className="block text-[11px] font-semibold uppercase tracking-[0.06em] text-ft-ink-3">
+        {label}
+      </span>
+      <div className="mt-1.5 rounded-ft border border-ft-line bg-ft-surface-1 px-3 py-2.5 text-[13.5px] text-ft-ink">
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function MiniStatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-ft border border-ft-line-soft bg-ft-surface-1 p-3.5">
+      <p className="m-0 text-[10px] font-semibold uppercase tracking-[0.06em] text-ft-ink-3">
+        {label}
+      </p>
+      <p className="m-0 mt-1.5 text-[14.5px] font-semibold tracking-tight text-ft-ink">
+        {value}
+      </p>
     </div>
   );
 }

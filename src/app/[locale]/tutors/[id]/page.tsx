@@ -1,19 +1,8 @@
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  ArrowLeft,
-  Award,
-  BookOpen,
-  Briefcase,
-  Clock,
-  DollarSign,
-  GraduationCap,
-  MapPin,
-  Star,
-} from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import { buildPageMetadata, truncateForMeta } from "@/lib/seo/page-metadata";
 import { createCatalogServerClient } from "@/lib/supabase/server-public";
@@ -22,25 +11,11 @@ import {
   mergeTutorProfileReviewStats,
 } from "@/lib/supabase/tutor-review-stats";
 import { getCourseCoverPublicUrl, getPublicUrl } from "@/lib/supabase/storage";
-import { getAvatarColor } from "@/lib/utils";
 import type { TutorProfile } from "@/types/tutor";
 import type { User } from "@/types/user";
 import { parseCVData } from "@/types/tutor-cv";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
-import RequestCustomClassButton from "@/components/student/RequestCustomClassButton";
+import TutorProfileClient from "./TutorProfileClient";
 
 export const revalidate = 3600;
 
@@ -111,33 +86,7 @@ export async function generateMetadata({
   });
 }
 
-function StarRating({ rating, size = 16 }: { rating: number; size?: number }) {
-  return (
-    <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <Star
-          key={star}
-          size={size}
-          className={
-            star <= Math.round(rating)
-              ? "fill-yellow-400 text-yellow-400"
-              : "text-gray-300"
-          }
-        />
-      ))}
-    </div>
-  );
-}
-
 type TutorRow = TutorProfile & { user: User | null; is_active?: boolean | null };
-
-type CourseRow = {
-  id: string;
-  title: string;
-  price_per_session: number;
-  cover_image?: string | null;
-  subject: { name: string } | null;
-};
 
 function mapSubjectRows(
   rows: { subject: unknown }[] | null,
@@ -163,11 +112,19 @@ function mapSubjectRows(
     .filter((s): s is { id: number; name: string } => s != null);
 }
 
-function mapCourseRows(
+interface CourseRowRaw {
+  id: string;
+  title: string;
+  price_per_session: number;
+  cover_image?: string | null;
+  subject: { name: string } | { name: string }[] | null | undefined;
+}
+
+function normalizeCourseRows(
   rows: Record<string, unknown>[] | null,
   label: string,
   error: { message?: string } | null
-): CourseRow[] {
+) {
   if (error) {
     if (process.env.NODE_ENV === "development") {
       console.warn(`[tutor profile] ${label}:`, error.message ?? error);
@@ -175,14 +132,20 @@ function mapCourseRows(
     return [];
   }
   return (rows ?? []).map((row) => {
-    const sub = row.subject as
-      | { name: string }
-      | { name: string }[]
-      | null
-      | undefined;
-    const subject =
-      !sub ? null : Array.isArray(sub) ? (sub[0] ?? null) : sub;
-    return { ...row, subject } as CourseRow;
+    const r = row as unknown as CourseRowRaw;
+    const sub = r.subject;
+    const subject = !sub
+      ? null
+      : Array.isArray(sub)
+        ? (sub[0] ?? null)
+        : sub;
+    return {
+      id: r.id,
+      title: r.title,
+      price_per_session: Number(r.price_per_session),
+      coverUrl: getCourseCoverPublicUrl(r.cover_image),
+      subjectName: subject?.name ?? null,
+    };
   });
 }
 
@@ -219,17 +182,22 @@ export default async function TutorPublicProfilePage({
 
   if (profileError) {
     if (process.env.NODE_ENV === "development") {
-      console.error("[tutor profile] tutor_profiles:", profileError.message, profileError);
+      console.error(
+        "[tutor profile] tutor_profiles:",
+        profileError.message,
+        profileError
+      );
     }
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4">
-        <p className="text-lg text-muted-foreground">{t("loadError")}</p>
-        <Button asChild variant="outline">
-          <Link href={`/${locale}/tutors`}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t("backToTutors")}
-          </Link>
-        </Button>
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 bg-ft-paper px-4">
+        <p className="text-base text-ft-ink-3">{t("loadError")}</p>
+        <Link
+          href={`/${locale}/tutors`}
+          className="inline-flex items-center gap-2 rounded-full border border-ft-line bg-ft-paper px-4 py-2 text-sm font-semibold text-ft-ink transition-colors hover:bg-ft-surface-1"
+        >
+          <ArrowLeft width={14} height={14} />
+          {t("backToTutors")}
+        </Link>
       </div>
     );
   }
@@ -270,7 +238,7 @@ export default async function TutorPublicProfilePage({
     "tutor_subjects",
     subjectsResult.error
   );
-  const courses = mapCourseRows(
+  const courses = normalizeCourseRows(
     coursesResult.data as Record<string, unknown>[] | null,
     "courses",
     coursesResult.error
@@ -281,333 +249,24 @@ export default async function TutorPublicProfilePage({
   const avatarUrl = user?.profile_picture
     ? getPublicUrl("avatars", user.profile_picture)
     : null;
-  const initials = displayName
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-  const rating = profile.rating ?? 0;
-  const totalReviews = profile.total_reviews ?? 0;
+
+  const cv = parseCVData(profile.certifications);
 
   return (
-    <div className="min-h-screen bg-[#fdf7ff]">
-      <section className="relative overflow-hidden border-b border-violet-100 bg-gradient-to-br from-violet-700 via-violet-700 to-fuchsia-600 text-white">
-        <div className="pointer-events-none absolute -left-28 top-8 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
-        <div className="pointer-events-none absolute -right-24 bottom-0 h-64 w-64 rounded-full bg-fuchsia-300/20 blur-3xl" />
-        <div className="relative mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-          <Button
-            asChild
-            variant="ghost"
-            className="mb-6 -ml-2 text-white/90 hover:bg-white/10 hover:text-white"
-          >
-            <Link href={`/${locale}/tutors`}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              {t("backToTutors")}
-            </Link>
-          </Button>
-
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:gap-8">
-            <Avatar className="h-28 w-28 shrink-0 rounded-3xl ring-4 ring-white/30 sm:h-32 sm:w-32">
-              {avatarUrl ? (
-                <AvatarImage src={avatarUrl} alt={displayName} />
-              ) : null}
-              <AvatarFallback
-                className="rounded-3xl text-2xl font-bold text-white"
-                style={{ backgroundColor: getAvatarColor(displayName) }}
-              >
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-
-            <div className="min-w-0 flex-1 pb-1">
-              <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-                {displayName}
-              </h1>
-              {user?.country ? (
-                <p className="mt-2 flex items-center gap-1.5 text-sm text-violet-100">
-                  <MapPin className="h-4 w-4 shrink-0" />
-                  {user.country}
-                </p>
-              ) : null}
-              <div className="mt-3 flex flex-wrap items-center gap-3">
-                <StarRating rating={rating} size={18} />
-                <span className="text-sm font-semibold text-white">
-                  {rating.toFixed(1)}
-                </span>
-                {totalReviews > 0 ? (
-                  <span className="text-sm text-violet-100">
-                    ({totalReviews} {t("reviews")})
-                  </span>
-                ) : null}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div className="mx-auto max-w-5xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="space-y-6 lg:col-span-2">
-            {profile.bio ? (
-              <Card className="border-violet-100/80 bg-white/95 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-lg font-bold text-slate-900">
-                    {t("about")}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-600">
-                    {profile.bio}
-                  </p>
-                </CardContent>
-              </Card>
-            ) : null}
-
-            {(() => {
-              const cv = parseCVData(profile.certifications);
-              const hasCV =
-                cv.education.length > 0 ||
-                cv.certifications.length > 0 ||
-                cv.experience.length > 0;
-              if (!hasCV) return null;
-              return (
-                <Card className="border-violet-100/80 bg-white/95 shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="text-lg font-bold text-slate-900">
-                      {t("professionalBackground")}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-5">
-                    {cv.education.length > 0 && (
-                      <div>
-                        <div className="mb-2 flex items-center gap-2">
-                          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-100">
-                            <GraduationCap className="h-3.5 w-3.5 text-violet-700" />
-                          </div>
-                          <h3 className="text-sm font-semibold text-slate-700">
-                            {t("education")}
-                          </h3>
-                        </div>
-                        <div className="space-y-1.5 pl-9">
-                          {cv.education.map((item) => (
-                            <p key={item.id} className="text-sm text-slate-600">
-                              <span className="font-medium text-slate-800">{item.degree}</span>
-                              {item.institution && (
-                                <span className="text-slate-400"> · {item.institution}</span>
-                              )}
-                              {item.year && (
-                                <span className="text-slate-400"> · {item.year}</span>
-                              )}
-                            </p>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {cv.certifications.length > 0 && (
-                      <div>
-                        <div className="mb-2 flex items-center gap-2">
-                          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100">
-                            <Award className="h-3.5 w-3.5 text-amber-700" />
-                          </div>
-                          <h3 className="text-sm font-semibold text-slate-700">
-                            {t("certifications")}
-                          </h3>
-                        </div>
-                        <div className="space-y-1.5 pl-9">
-                          {cv.certifications.map((item) => (
-                            <p key={item.id} className="text-sm text-slate-600">
-                              <span className="font-medium text-slate-800">{item.name}</span>
-                              {item.issuer && (
-                                <span className="text-slate-400"> · {item.issuer}</span>
-                              )}
-                              {item.year && (
-                                <span className="text-slate-400"> · {item.year}</span>
-                              )}
-                            </p>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {cv.experience.length > 0 && (
-                      <div>
-                        <div className="mb-2 flex items-center gap-2">
-                          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100">
-                            <Briefcase className="h-3.5 w-3.5 text-emerald-700" />
-                          </div>
-                          <h3 className="text-sm font-semibold text-slate-700">
-                            {t("teachingExperience")}
-                          </h3>
-                        </div>
-                        <div className="space-y-2 pl-9">
-                          {cv.experience.map((item) => (
-                            <div key={item.id}>
-                              <p className="text-sm text-slate-600">
-                                <span className="font-medium text-slate-800">{item.role}</span>
-                                {item.institution && (
-                                  <span className="text-slate-400"> · {item.institution}</span>
-                                )}
-                                {item.period && (
-                                  <span className="text-slate-400"> · {item.period}</span>
-                                )}
-                              </p>
-                              {item.description && (
-                                <p className="mt-0.5 text-xs leading-relaxed text-slate-400">
-                                  {item.description}
-                                </p>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })()}
-
-            <Card className="border-violet-100/80 bg-white/95 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg font-bold text-slate-900">
-                  {t("coursesHeading")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {courses.length === 0 ? (
-                  <p className="text-sm text-slate-500">{t("noCourses")}</p>
-                ) : (
-                  <ul className="space-y-3">
-                    {courses.map((course) => {
-                      const coverUrl = getCourseCoverPublicUrl(course.cover_image);
-                      return (
-                        <li key={course.id}>
-                          <Link
-                            href={`/${locale}/courses/${course.id}`}
-                            className="flex gap-4 rounded-2xl border border-violet-100/80 bg-violet-50/40 p-3 transition-colors hover:border-violet-200 hover:bg-violet-50/80"
-                          >
-                            <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-xl bg-violet-100">
-                              {coverUrl ? (
-                                <Image
-                                  src={coverUrl}
-                                  alt={course.title}
-                                  fill
-                                  className="object-cover"
-                                  sizes="112px"
-                                />
-                              ) : (
-                                <div className="flex h-full w-full items-center justify-center">
-                                  <BookOpen className="h-8 w-8 text-violet-300" />
-                                </div>
-                              )}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="font-semibold text-slate-900 line-clamp-2">
-                                {course.title}
-                              </p>
-                              {course.subject?.name ? (
-                                <p className="mt-0.5 text-xs text-slate-500">
-                                  {course.subject.name}
-                                </p>
-                              ) : null}
-                              <p className="mt-2 text-sm font-bold text-violet-700">
-                                ${Number(course.price_per_session).toFixed(2)}{" "}
-                                <span className="font-normal text-slate-500">
-                                  {t("perSession")}
-                                </span>
-                              </p>
-                            </div>
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          <aside className="space-y-6">
-            {subjects.length > 0 ? (
-              <Card className="border-violet-200 bg-gradient-to-br from-violet-50 to-fuchsia-50 shadow-sm">
-                <CardContent className="space-y-3 pt-6">
-                  <div>
-                    <p className="text-sm font-bold text-slate-900">
-                      {t("requestCustomTitle")}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-600">
-                      {t("requestCustomDescription")}
-                    </p>
-                  </div>
-                  <RequestCustomClassButton
-                    tutorId={id}
-                    tutorName={displayName}
-                    subjects={subjects}
-                  />
-                </CardContent>
-              </Card>
-            ) : null}
-
-            <Card className="border-violet-100/80 bg-white/95 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg font-bold text-slate-900">
-                  {t("teaches")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {subjects.length === 0 ? (
-                  <p className="text-sm text-slate-500">{t("noSubjects")}</p>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {subjects.map((s) => (
-                      <Badge
-                        key={s.id}
-                        variant="secondary"
-                        className="rounded-full border-violet-100 bg-violet-50 px-3 py-1 text-xs text-violet-700"
-                      >
-                        {s.name}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {((profile.years_of_experience != null &&
-              profile.years_of_experience > 0) ||
-              profile.hourly_rate != null) && (
-              <Card className="border-violet-100/80 bg-white/95 shadow-sm">
-                <CardContent className="space-y-4 pt-6">
-                  {profile.years_of_experience != null &&
-                  profile.years_of_experience > 0 ? (
-                    <div className="flex items-center gap-3 rounded-xl bg-primary-50/60 p-4">
-                      <Clock className="h-5 w-5 text-violet-600" />
-                      <div>
-                        <p className="text-xl font-bold text-slate-900">
-                          {profile.years_of_experience}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {t("yearsExperience")}
-                        </p>
-                      </div>
-                    </div>
-                  ) : null}
-                  {profile.hourly_rate != null ? (
-                    <div className="flex items-center gap-3 rounded-xl bg-primary-50/60 p-4">
-                      <DollarSign className="h-5 w-5 text-violet-600" />
-                      <div>
-                        <p className="text-xl font-bold text-slate-900">
-                          ${profile.hourly_rate}
-                        </p>
-                        <p className="text-xs text-slate-500">{t("hourlyRate")}</p>
-                      </div>
-                    </div>
-                  ) : null}
-                </CardContent>
-              </Card>
-            )}
-          </aside>
-        </div>
-      </div>
-    </div>
+    <TutorProfileClient
+      locale={locale}
+      tutorId={id}
+      displayName={displayName}
+      bio={profile.bio ?? null}
+      country={user?.country ?? null}
+      avatarUrl={avatarUrl}
+      rating={profile.rating ?? 0}
+      totalReviews={profile.total_reviews ?? 0}
+      yearsOfExperience={profile.years_of_experience ?? null}
+      hourlyRate={profile.hourly_rate ?? null}
+      subjects={subjects}
+      courses={courses}
+      cv={cv}
+    />
   );
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { ShieldCheck } from "lucide-react";
 
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
 
@@ -65,31 +66,34 @@ const sections = [
 
 export default function PrivacyPolicyPage() {
   return (
-    <main className="mx-auto w-full max-w-4xl px-4 pb-16 pt-8 sm:px-6 md:pb-20 md:pt-12 lg:px-8 lg:pt-16">
-      <header className="mb-8 md:mb-12">
-        <p className="mb-3 inline-flex rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-xs font-semibold tracking-wide text-primary">
+    <main className="mx-auto w-full max-w-4xl px-5 pb-16 pt-10 md:px-9 md:pb-20 md:pt-14 lg:pt-20">
+      <header className="mb-10 md:mb-14">
+        <p className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-ft-surface-2 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-ft-accent-deep">
+          <ShieldCheck width={11} height={11} />
           Legal
         </p>
-        <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl md:text-5xl">
+        <h1 className="m-0 text-[36px] font-semibold leading-[1.05] tracking-[-0.03em] text-ft-ink md:text-[44px] lg:text-[52px]">
           Política de privacidad
         </h1>
-        <p className="mt-4 text-sm text-muted-foreground md:text-base">
+        <p className="mt-4 text-[13px] text-ft-ink-3 md:text-[14px]">
           Última actualización: 24 de marzo de 2026.
         </p>
       </header>
 
-      <section className="space-y-8">
+      <section className="space-y-5 md:space-y-6">
         {sections.map((section) => (
           <article
             key={section.title}
-            className="rounded-2xl border border-border/60 bg-card p-5 md:p-7"
+            className="rounded-ft-lg border border-ft-line-soft bg-ft-paper p-5 md:p-7"
           >
-            <h2 className="text-xl font-bold tracking-tight text-foreground md:text-2xl">
+            <h2 className="m-0 text-[18px] font-semibold tracking-tight text-ft-ink md:text-[20px]">
               {section.title}
             </h2>
-            <div className="mt-3 space-y-3 text-sm text-muted-foreground md:text-base">
+            <div className="mt-3 space-y-3 text-[14px] leading-relaxed text-ft-ink-2 md:text-[15px]">
               {section.paragraphs.map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
+                <p key={paragraph} className="m-0">
+                  {paragraph}
+                </p>
               ))}
             </div>
           </article>

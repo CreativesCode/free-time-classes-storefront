@@ -36,6 +36,17 @@ module.exports = {
           "system-ui",
           "sans-serif",
         ],
+        /* ── FreeTime redesign — activated under data-theme="freetime" ── */
+        geist: [
+          "var(--font-geist)",
+          "system-ui",
+          "sans-serif",
+        ],
+        "instrument-serif": [
+          "var(--font-instrument-serif)",
+          "Georgia",
+          "serif",
+        ],
       },
 
       /**
@@ -203,6 +214,24 @@ module.exports = {
         "lumina-text-secondary":
           "rgb(var(--lt-text-body-secondary) / <alpha-value>)",
 
+        /* ── FreeTime redesign palette ──────────────────────────────────
+           Activated only under [data-theme="freetime"]. Use as
+           bg-ft-paper, text-ft-ink, border-ft-line, etc.               */
+        ft: {
+          paper:         "var(--ft-paper)",
+          "paper-deep":  "var(--ft-paper-deep)",
+          "surface-1":   "var(--ft-surface-1)",
+          "surface-2":   "var(--ft-surface-2)",
+          line:          "var(--ft-line)",
+          "line-soft":   "var(--ft-line-soft)",
+          ink:           "var(--ft-ink)",
+          "ink-2":       "var(--ft-ink-2)",
+          "ink-3":       "var(--ft-ink-3)",
+          accent:        "var(--ft-accent)",
+          "accent-deep": "var(--ft-accent-deep)",
+          "accent-soft": "var(--ft-accent-soft)",
+        },
+
         // Accent (shadcn compat — surface layer)
         accent: {
           DEFAULT:    "hsl(var(--accent))",
@@ -221,6 +250,10 @@ module.exports = {
       },
 
       /* ── Border Radius — roundedness scale ───────────────────────────
+         Legacy app (purple theme). Note these are deliberately huge:
+         rounded-xl = 48px, rounded-2xl = 64px. DO NOT use these inside
+         FreeTime redesign components — use the rounded-ft-* scale below.
+
          Cards/Sections: xl (3rem/48px)  — brand signature
          Buttons/Inputs: md (1.5rem/24px) — precise interaction
          Panels:         lg (2rem/32px)   — inner containers            */
@@ -233,6 +266,18 @@ module.exports = {
         xl:      "3rem",      /* 48px — hero cards, main sections */
         "2xl":   "4rem",      /* 64px — large decorative elements */
         full:    "9999px",
+
+        /* ── FreeTime redesign scale — matches docs/design prototype ──
+           Use these (rounded-ft, rounded-ft-md, rounded-ft-lg, etc.)
+           inside any component under <FreetimeShell>.                 */
+        "ft-xs":   "8px",   /* small chips, logo squares                 */
+        "ft-sm":   "10px",  /* small cards, sub-thumbnails               */
+        "ft":      "12px",  /* inputs, secondary buttons                 */
+        "ft-md":   "14px",  /* primary buttons, search bars, sticky bar  */
+        "ft-base": "16px",  /* generic content cards (En vivo card)      */
+        "ft-lg":   "18px",  /* list cards (tutor rows, course rows)      */
+        "ft-xl":   "20px",  /* signature / hands-free cards              */
+        "ft-2xl":  "24px",  /* hero / featured / editorial banners       */
       },
 
       /* ── Box Shadow — ambient shadows ────────────────────────────────
