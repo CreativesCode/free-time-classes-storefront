@@ -1,7 +1,7 @@
 "use client";
 
 import RequestCustomClassButton from "@/components/student/RequestCustomClassButton";
-import { useLocale, useTranslations } from "@/i18n/translations";
+import { useTranslations } from "@/i18n/translations";
 import { cn, getAvatarColor } from "@/lib/utils";
 import {
   ArrowLeft,

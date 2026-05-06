@@ -2,7 +2,7 @@
 
 import { BookingPicker } from "@/components/ds/BookingPicker";
 import CourseBookingFocus from "@/components/courses/CourseBookingFocus";
-import { useLocale, useTranslations } from "@/i18n/translations";
+import { useTranslations } from "@/i18n/translations";
 import { cn, getAvatarColor } from "@/lib/utils";
 import {
   ArrowLeft,
