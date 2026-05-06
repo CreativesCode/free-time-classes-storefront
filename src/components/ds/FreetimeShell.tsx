@@ -13,13 +13,11 @@ interface FreetimeShellProps {
 }
 
 /**
- * Chrome wrapper for routes migrated to the redesign.
- * Activates the warm paper theme + Geist typography for the entire subtree
- * and renders the desktop navbar, bottom nav (mobile, only when logged in),
- * and paper footer.
+ * Chrome wrapper for the whole locale subtree.
+ * Activates the warm paper theme + Geist typography and renders the desktop
+ * navbar, bottom nav (mobile, only when logged in), and paper footer.
  *
- * Use via the route registry in @/lib/redesign/freetime-routes — never
- * import this directly into a page; the layout switches automatically.
+ * Mounted from LocaleLayoutWrapper — never import this directly into a page.
  */
 export function FreetimeShell({ children }: FreetimeShellProps) {
   const { user } = useAuth();

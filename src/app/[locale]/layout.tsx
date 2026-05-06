@@ -1,4 +1,3 @@
-import FooterWrapper from "@/components/FooterWrapper";
 import LocaleLayoutWrapper from "@/components/LocaleLayoutWrapper";
 import AppToaster from "@/components/AppToaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -34,7 +33,6 @@ export default async function LocaleLayout({
       <TooltipProvider>
         <LocaleLayoutWrapper>
           {children}
-          <FooterWrapper />
           <AppToaster />
         </LocaleLayoutWrapper>
       </TooltipProvider>
