@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
     if (from && isOpenWaConfigured()) {
       await sendText(
         from,
-        "No entendí tu respuesta. Responde *SÍ* para confirmar o *NO* para rechazar la solicitud.",
+        "No entendí tu respuesta 🤔\nResponde *SÍ* (o _ok_, _vale_, _confirmar_) para aceptar, o *NO* (o _cancelar_, _rechazar_) para rechazar la solicitud.",
       ).catch(() => {});
     }
     return NextResponse.json({ ok: true, skip: "unrecognized" });

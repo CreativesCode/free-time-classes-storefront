@@ -3,40 +3,62 @@ import type { RespondAction } from "@/lib/bookings/respond";
 /**
  * Parse a free-text WhatsApp reply into a booking action.
  *
- * Accepts a small set of Spanish/English affirmatives and negatives, plus
- * the "1"/"2" shortcuts. Returns null when the text isn't a clear yes/no so
- * the caller can ignore it (or send a hint).
+ * Tolerant by design: the affirmative/negative word may appear ANYWHERE inside
+ * a longer sentence ("sí, confírmame la clase", "lo siento, no puedo"). We
+ * tokenize the (accent-stripped) text and count keyword hits on each side; the
+ * side with more hits wins. Ties or no hits return null so the caller can ask
+ * the tutor to clarify — this avoids guessing on ambiguous replies like
+ * "no hay problema, confirmo".
  */
 const CONFIRM = new Set([
-  "si", "sí", "1", "yes", "y", "ok", "okay", "vale",
-  "confirmar", "confirmo", "aceptar", "acepto", "👍", "✅",
+  "si", "sii", "sip", "ok", "oka", "okay", "okey", "vale", "dale", "claro",
+  "perfecto", "confirmar", "confirmo", "confirma", "confirmado", "acepto",
+  "aceptar", "aceptado", "yes", "yeah", "yep",
 ]);
 
 const REJECT = new Set([
-  "no", "2", "n", "nope", "rechazar", "rechazo", "cancelar", "cancelo", "👎", "❌",
+  "no", "nop", "nope", "rechazar", "rechazo", "rechaza", "rechazado",
+  "cancelar", "cancela", "cancelo", "cancelado", "negativo", "imposible",
 ]);
+
+// Standalone numeric shortcuts ("1" = confirm, "2" = reject).
+const CONFIRM_DIGIT = "1";
+const REJECT_DIGIT = "2";
 
 function normalize(text: string): string {
   return text
-    .trim()
     .toLowerCase()
-    // strip accents so "sí" matches "si" (combining marks only; emoji unaffected)
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[.!¡¿?]+$/g, "")
-    .trim();
+    .replace(/[̀-ͯ]/g, "") // drop combining accents: "sí" -> "si"
+    .normalize("NFC");
 }
 
 export function parseReply(body: string): RespondAction | null {
   const raw = (body ?? "").trim();
   if (!raw) return null;
 
-  // Match the whole message first, then the first token (handles "Sí, confirmo").
-  const candidates = [normalize(raw), normalize(raw.split(/\s+/)[0] ?? "")];
+  const normalized = normalize(raw);
+  const tokens = normalized.match(/[a-z0-9]+/g) ?? [];
 
-  for (const c of candidates) {
-    if (CONFIRM.has(c)) return "confirm";
-    if (REJECT.has(c)) return "reject";
+  let confirm = 0;
+  let reject = 0;
+
+  for (const tok of tokens) {
+    if (CONFIRM.has(tok)) confirm++;
+    if (REJECT.has(tok)) reject++;
   }
+
+  // Numeric shortcut only when the whole message is just "1" or "2".
+  if (tokens.length === 1) {
+    if (tokens[0] === CONFIRM_DIGIT) confirm++;
+    if (tokens[0] === REJECT_DIGIT) reject++;
+  }
+
+  // Emoji thumbs / checks anywhere in the text.
+  if (/[👍✅]/u.test(raw)) confirm++;
+  if (/[👎❌]/u.test(raw)) reject++;
+
+  if (confirm > reject) return "confirm";
+  if (reject > confirm) return "reject";
   return null;
 }

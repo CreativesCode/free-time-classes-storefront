@@ -43,6 +43,17 @@ export function buildWhatsAppMessage(params: {
     lines.push(`🔗 ${meetLink}`);
   }
 
+  // For requests the tutor can act on by replying to this WhatsApp, spell out
+  // how to confirm or reject. (In-app these use buttons, so it's WhatsApp-only.)
+  if (type === "booking_request" || type === "booking_custom_request") {
+    lines.push(
+      "",
+      "Responde a este mensaje para gestionarla:",
+      "✅ *SÍ* (o _ok_, _vale_, _confirmar_) para aceptar.",
+      "❌ *NO* (o _cancelar_, _rechazar_) para rechazar.",
+    );
+  }
+
   lines.push("", "_FreeTime Classes_");
 
   return lines.filter((l) => l !== undefined).join("\n");
