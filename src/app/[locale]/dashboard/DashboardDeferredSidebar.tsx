@@ -55,10 +55,10 @@ export default function DashboardDeferredSidebar({ isTutor }: Props) {
 
   return (
     <div className="space-y-6">
-      <Card className="rounded-3xl border-violet-100/70 bg-white/85 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+      <Card className="rounded-ft-2xl border-ft-line bg-ft-paper shadow-none dark:border-slate-800 dark:bg-slate-900/70">
         <CardHeader className="pb-2">
-          <p className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
-            <TrendingUp className="h-5 w-5 text-violet-600" />
+          <p className="flex items-center gap-2 text-lg font-bold text-ft-ink dark:text-white">
+            <TrendingUp className="h-5 w-5 text-ft-accent-deep" />
             {t("quickActions")}
           </p>
         </CardHeader>
@@ -68,7 +68,7 @@ export default function DashboardDeferredSidebar({ isTutor }: Props) {
               key={action.label}
               type="button"
               onClick={() => router.push(action.href)}
-              className="group flex items-center gap-3 rounded-2xl bg-[#faf5ff] p-3 text-left transition hover:bg-violet-100 dark:bg-slate-800/50 dark:hover:bg-slate-700/70"
+              className="group flex items-center gap-3 rounded-ft-lg bg-ft-surface-1 p-3 text-left transition hover:bg-ft-surface-2 dark:bg-slate-800/50 dark:hover:bg-slate-700/70"
             >
               <div
                 className={`rounded-xl bg-gradient-to-br p-2 ${action.gradient}`}

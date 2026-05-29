@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ConfirmActionDialog from "@/components/common/ConfirmActionDialog";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { FT_BTN_PRIMARY, FT_FIELD } from "@/components/teacher/ftStyles";
 import { useTranslations } from "@/i18n/translations";
 import { getSubjects } from "@/lib/supabase/queries/subjects";
 import {
@@ -203,19 +205,19 @@ export default function TutorSubjectsManager({
   };
 
   return (
-    <Card className="w-full">
+    <Card className="w-full rounded-ft-2xl border-ft-line bg-ft-paper shadow-none">
       <CardHeader>
-        <CardTitle className="text-primary-800">{t("title")}</CardTitle>
+        <CardTitle className="text-ft-ink">{t("title")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-ft-ink-3">
           {t("description")} {selectedCount > 0 ? `(${selectedCount})` : ""}
         </p>
 
         {isLoading ? (
-          <p className="text-sm text-gray-600">{t("loading")}</p>
+          <p className="text-sm text-ft-ink-3">{t("loading")}</p>
         ) : !hasSubjects ? (
-          <p className="text-sm text-gray-600">{t("emptyCatalog")}</p>
+          <p className="text-sm text-ft-ink-3">{t("emptyCatalog")}</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {allSubjects.map((subject) => {
@@ -224,12 +226,17 @@ export default function TutorSubjectsManager({
               return (
                 <div
                   key={subject.id}
-                  className="inline-flex items-center rounded-md border bg-white pl-px"
+                  className="inline-flex items-center overflow-hidden rounded-ft border border-ft-line bg-ft-surface-1"
                 >
                   <Button
                     type="button"
-                    variant={isSelected ? "default" : "outline"}
-                    className="h-auto py-2 px-3 rounded-r-none border-r"
+                    variant="ghost"
+                    className={cn(
+                      "h-auto rounded-none border-r border-ft-line px-3 py-2 shadow-none",
+                      isSelected
+                        ? "bg-gradient-to-br from-ft-accent to-ft-accent-deep text-ft-paper hover:opacity-90"
+                        : "bg-transparent text-ft-ink-2 hover:bg-ft-surface-2"
+                    )}
                     disabled={isSaving}
                     onClick={() => {
                       void toggleSubject(subject.id);
@@ -241,7 +248,7 @@ export default function TutorSubjectsManager({
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 rounded-l-none text-destructive hover:text-destructive"
+                    className="h-9 w-9 rounded-none text-ft-ink-3 hover:bg-red-50 hover:text-red-600"
                     disabled={isSaving}
                     title={t("deleteAction")}
                     aria-label={t("deleteAction")}
@@ -258,15 +265,21 @@ export default function TutorSubjectsManager({
         )}
 
         <div className="space-y-2">
-          <p className="text-sm font-medium">{t("createLabel")}</p>
+          <p className="text-sm font-medium text-ft-ink-2">{t("createLabel")}</p>
           <div className="flex gap-2">
             <Input
               value={newSubjectName}
               onChange={(event) => setNewSubjectName(event.target.value)}
               placeholder={t("createPlaceholder")}
               disabled={isSaving}
+              className={FT_FIELD}
             />
-            <Button type="button" disabled={isSaving} onClick={handleCreateSubject}>
+            <Button
+              type="button"
+              disabled={isSaving}
+              onClick={handleCreateSubject}
+              className={FT_BTN_PRIMARY}
+            >
               {isSaving ? t("creating") : t("createAction")}
             </Button>
           </div>
@@ -274,15 +287,19 @@ export default function TutorSubjectsManager({
 
         {selectedSubjects.length > 0 && (
           <div className="space-y-2">
-            <p className="text-sm font-medium">{t("selectedLabel")}</p>
+            <p className="text-sm font-medium text-ft-ink-2">{t("selectedLabel")}</p>
             <div className="flex flex-wrap gap-2">
               {selectedSubjects.map((subject) => (
-                <Badge key={subject.id} variant="secondary">
+                <Badge
+                  key={subject.id}
+                  variant="secondary"
+                  className="border-transparent bg-ft-surface-2 text-ft-ink-2 hover:bg-ft-surface-2"
+                >
                   {subject.name}
                 </Badge>
               ))}
               {selectedCount > selectedSubjects.length && (
-                <Badge variant="outline">
+                <Badge variant="outline" className="border-ft-line text-ft-ink-3">
                   +{selectedCount - selectedSubjects.length} {t("more")}
                 </Badge>
               )}
@@ -290,8 +307,8 @@ export default function TutorSubjectsManager({
           </div>
         )}
 
-        {successMessage && <p className="text-sm text-green-700">{successMessage}</p>}
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        {successMessage && <p className="text-sm text-emerald-700">{successMessage}</p>}
+        {error && <p className="text-sm text-red-600">{error}</p>}
       </CardContent>
 
       <ConfirmActionDialog

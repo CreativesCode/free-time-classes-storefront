@@ -19,6 +19,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  FT_BTN_OUTLINE,
+  FT_BTN_PRIMARY,
+  FT_FIELD,
+  FT_LABEL,
+  FT_SELECT_TRIGGER,
+  FT_TEXTAREA,
+} from "@/components/teacher/ftStyles";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/UserContext";
 import { useLocale, useTranslations } from "@/i18n/translations";
 
@@ -173,7 +182,7 @@ export default function RequestCustomClassButton({
         onClick={() => setOpen(true)}
         className={
           triggerClassName ??
-          "h-11 w-full gap-2 bg-violet-600 px-5 text-sm hover:bg-violet-700"
+          cn(FT_BTN_PRIMARY, "h-11 w-full gap-2 px-5 text-sm")
         }
       >
         {!hideTriggerIcon && <CalendarPlus className="h-4 w-4 shrink-0" />}
@@ -186,17 +195,20 @@ export default function RequestCustomClassButton({
           if (!submitting) setOpen(next);
         }}
       >
-        <DialogContent className="flex max-h-[calc(100dvh-1rem)] flex-col overflow-hidden p-0 sm:max-w-[520px]">
+        <DialogContent
+          data-theme="freetime"
+          className="flex max-h-[calc(100dvh-1rem)] flex-col overflow-hidden border-ft-line bg-ft-paper p-0 text-ft-ink sm:max-w-[520px] sm:rounded-ft-2xl"
+        >
           <DialogHeader className="px-4 pt-6 sm:px-6">
-            <DialogTitle>{t("dialogTitle")}</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-[20px] font-semibold tracking-[-0.02em] text-ft-ink">{t("dialogTitle")}</DialogTitle>
+            <DialogDescription className="text-ft-ink-3">
               {t("dialogDescription", { tutor: tutorName })}
             </DialogDescription>
           </DialogHeader>
 
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-1 sm:px-6">
             <div className="space-y-2">
-              <Label htmlFor="rcc-subject">{t("subjectLabel")}</Label>
+              <Label htmlFor="rcc-subject" className={FT_LABEL}>{t("subjectLabel")}</Label>
               <SelectMenu
                 id="rcc-subject"
                 value={subjectId}
@@ -204,23 +216,25 @@ export default function RequestCustomClassButton({
                 options={subjectOptions}
                 disabled={submitting}
                 aria-label={t("subjectLabel")}
+                triggerClassName={FT_SELECT_TRIGGER}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="rcc-when">{t("whenLabel")}</Label>
+              <Label htmlFor="rcc-when" className={FT_LABEL}>{t("whenLabel")}</Label>
               <Input
                 id="rcc-when"
                 type="datetime-local"
                 value={scheduledLocal}
                 onChange={(e) => setScheduledLocal(e.target.value)}
                 disabled={submitting}
+                className={FT_FIELD}
               />
-              <p className="text-xs text-slate-500">{t("whenHintMadrid")}</p>
+              <p className="text-xs text-ft-ink-3">{t("whenHintMadrid")}</p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="rcc-duration">{t("durationLabel")}</Label>
+              <Label htmlFor="rcc-duration" className={FT_LABEL}>{t("durationLabel")}</Label>
               <SelectMenu
                 id="rcc-duration"
                 value={duration}
@@ -228,11 +242,12 @@ export default function RequestCustomClassButton({
                 options={durationOptions}
                 disabled={submitting}
                 aria-label={t("durationLabel")}
+                triggerClassName={FT_SELECT_TRIGGER}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="rcc-notes">{t("notesLabel")}</Label>
+              <Label htmlFor="rcc-notes" className={FT_LABEL}>{t("notesLabel")}</Label>
               <Textarea
                 id="rcc-notes"
                 value={notes}
@@ -240,26 +255,28 @@ export default function RequestCustomClassButton({
                 placeholder={t("notesPlaceholder")}
                 disabled={submitting}
                 rows={3}
+                className={FT_TEXTAREA}
               />
-              <p className="text-right text-xs text-slate-400">
+              <p className="text-right text-xs text-ft-ink-3">
                 {notes.length}/{NOTES_MAX_LENGTH}
               </p>
             </div>
 
-            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            <p className="rounded-ft border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
               {t("expiryWarning")}
             </p>
           </div>
 
-          <DialogFooter className="mt-2 flex shrink-0 flex-col gap-2 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:px-6">
+          <DialogFooter className="mt-2 flex shrink-0 flex-col gap-2 border-t border-ft-line bg-ft-paper px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:px-6">
             <Button
               variant="outline"
               onClick={() => setOpen(false)}
               disabled={submitting}
+              className={FT_BTN_OUTLINE}
             >
               {t("cancel")}
             </Button>
-            <Button onClick={handleSubmit} disabled={submitting || !canRequest}>
+            <Button onClick={handleSubmit} disabled={submitting || !canRequest} className={FT_BTN_PRIMARY}>
               {submitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

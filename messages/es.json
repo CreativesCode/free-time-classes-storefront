@@ -523,6 +523,7 @@
   },
   "teacherProfile": {
     "title": "Perfil del Profesor",
+    "signOut": "Cerrar sesión",
     "personalInfo": "Información Personal",
     "teachingExperience": "Experiencia Docente",
     "currentCourses": "Cursos Actuales",
@@ -932,6 +933,14 @@
     "notificationsSectionTitle": "Preferencias de notificaciones",
     "emailNotifications": "Notificaciones por email",
     "smsNotifications": "Notificaciones por SMS",
+    "whatsappNotifications": "Notificaciones por WhatsApp",
+    "whatsappNotificationsDescription": "Recibe avisos de clases en tu WhatsApp. Necesitas un número guardado.",
+    "phoneLabel": "Número de WhatsApp",
+    "phoneHint": "Formato internacional con prefijo de país, p. ej. +34600111222.",
+    "phoneInvalid": "Introduce un número válido en formato internacional (+34600111222).",
+    "phoneUpdated": "Número actualizado",
+    "phoneUpdateError": "No se pudo actualizar el número",
+    "save": "Guardar",
     "pushNotifications": "Notificaciones push",
     "pushNotificationsDescription": "Las notificaciones push requieren integración móvil (se implementará más adelante).",
     "configurePush": "Configurar notificaciones push",
@@ -1497,7 +1506,8 @@
     "myCourses": "Mis cursos",
     "earnings": "Cobros",
     "payments": "Pagos",
-    "settings": "Configuración"
+    "settings": "Configuración",
+    "signOut": "Cerrar sesión"
   },
   "savedTutors": {
     "title": "Profesores guardados",

@@ -125,7 +125,7 @@ export default function FavoriteTutorsList(props: {
                         sizes="56px"
                       />
                     ) : (
-                      <div className="h-full w-full flex items-center justify-center text-primary-800 font-semibold">
+                      <div className="h-full w-full flex items-center justify-center text-ft-ink font-semibold">
                         {(tutor.user.username?.[0] || "U").toUpperCase()}
                       </div>
                     )}

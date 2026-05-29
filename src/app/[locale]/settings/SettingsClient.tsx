@@ -64,7 +64,10 @@ export default function SettingsClient({ locale }: { locale: string }) {
   const [notificationPrefs, setNotificationPrefs] = useState({
     receive_email_notifications: false,
     receive_sms_notifications: false,
+    receive_whatsapp_notifications: false,
   });
+  const [phone, setPhone] = useState("");
+  const [isUpdatingPhone, setIsUpdatingPhone] = useState(false);
   const [profileVisibility, setProfileVisibility] = useState<
     "public" | "booking_only"
   >("public");
@@ -81,7 +84,9 @@ export default function SettingsClient({ locale }: { locale: string }) {
     setNotificationPrefs({
       receive_email_notifications: !!user.receive_email_notifications,
       receive_sms_notifications: !!user.receive_sms_notifications,
+      receive_whatsapp_notifications: !!user.receive_whatsapp_notifications,
     });
+    setPhone(user.phone ?? "");
   }, [user]);
 
   useEffect(() => {
@@ -273,8 +278,9 @@ export default function SettingsClient({ locale }: { locale: string }) {
   };
 
   const handleUpdateNotifications = async (updates: {
-    receive_email_notifications: boolean;
-    receive_sms_notifications: boolean;
+    receive_email_notifications?: boolean;
+    receive_sms_notifications?: boolean;
+    receive_whatsapp_notifications?: boolean;
   }) => {
     if (!user?.id) return;
     setIsUpdatingNotifications(true);
@@ -283,6 +289,7 @@ export default function SettingsClient({ locale }: { locale: string }) {
       setNotificationPrefs({
         receive_email_notifications: !!updatedUser.receive_email_notifications,
         receive_sms_notifications: !!updatedUser.receive_sms_notifications,
+        receive_whatsapp_notifications: !!updatedUser.receive_whatsapp_notifications,
       });
       toast.success(t("notificationsUpdated"));
     } catch (err) {
@@ -290,6 +297,28 @@ export default function SettingsClient({ locale }: { locale: string }) {
       toast.error(t("notificationsUpdateError"));
     } finally {
       setIsUpdatingNotifications(false);
+    }
+  };
+
+  const handleUpdatePhone = async () => {
+    if (!user?.id) return;
+    const trimmed = phone.trim();
+    // Require international format so the WhatsApp gateway gets an
+    // unambiguous number (avoids the double-country-code trap).
+    if (trimmed && !/^\+[1-9]\d{6,14}$/.test(trimmed)) {
+      toast.error(t("phoneInvalid"));
+      return;
+    }
+    setIsUpdatingPhone(true);
+    try {
+      const updatedUser = await updateUser(user.id, { phone: trimmed || null });
+      setPhone(updatedUser.phone ?? "");
+      toast.success(t("phoneUpdated"));
+    } catch (err) {
+      console.error("[settings] phone update error:", err);
+      toast.error(t("phoneUpdateError"));
+    } finally {
+      setIsUpdatingPhone(false);
     }
   };
 
@@ -647,8 +676,6 @@ export default function SettingsClient({ locale }: { locale: string }) {
                     onChange={(e) =>
                       void handleUpdateNotifications({
                         receive_email_notifications: e.target.checked,
-                        receive_sms_notifications:
-                          notificationPrefs.receive_sms_notifications,
                       })
                     }
                     className="h-4 w-4 accent-ft-ink"
@@ -667,14 +694,75 @@ export default function SettingsClient({ locale }: { locale: string }) {
                     disabled={!canUpdateNotifications || isUpdatingNotifications}
                     onChange={(e) =>
                       void handleUpdateNotifications({
-                        receive_email_notifications:
-                          notificationPrefs.receive_email_notifications,
                         receive_sms_notifications: e.target.checked,
                       })
                     }
                     className="h-4 w-4 accent-ft-ink"
                   />
                 </label>
+
+                <label className="flex items-center justify-between gap-3 rounded-ft border border-ft-line-soft bg-ft-surface-1 p-3.5">
+                  <div>
+                    <p className="text-[14px] font-medium text-ft-ink">
+                      {t("whatsappNotifications")}
+                    </p>
+                    <p className="mt-0.5 text-[12px] text-ft-ink-3">
+                      {t("whatsappNotificationsDescription")}
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={notificationPrefs.receive_whatsapp_notifications}
+                    disabled={
+                      !canUpdateNotifications ||
+                      isUpdatingNotifications ||
+                      !phone.trim()
+                    }
+                    onChange={(e) =>
+                      void handleUpdateNotifications({
+                        receive_whatsapp_notifications: e.target.checked,
+                      })
+                    }
+                    className="h-4 w-4 accent-ft-ink"
+                  />
+                </label>
+
+                <div className="rounded-ft border border-ft-line-soft bg-ft-surface-1 p-3.5">
+                  <label
+                    htmlFor="phone"
+                    className="text-[11px] font-semibold uppercase tracking-[0.06em] text-ft-ink-3"
+                  >
+                    {t("phoneLabel")}
+                  </label>
+                  <form
+                    className="mt-1.5 flex gap-2"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      void handleUpdatePhone();
+                    }}
+                  >
+                    <input
+                      id="phone"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+34600111222"
+                      autoComplete="tel"
+                      disabled={isUpdatingPhone}
+                      className="w-full rounded-ft border border-ft-line bg-ft-paper px-4 py-3 text-[14px] text-ft-ink outline-none focus:border-ft-ink-3"
+                    />
+                    <button
+                      type="submit"
+                      disabled={isUpdatingPhone}
+                      className="shrink-0 rounded-full bg-ft-ink px-4 py-2.5 text-[13px] font-semibold text-ft-paper transition-colors hover:bg-[#2a241b] disabled:opacity-60"
+                    >
+                      {isUpdatingPhone ? t("updating") : t("save")}
+                    </button>
+                  </form>
+                  <p className="mt-1.5 text-[11px] text-ft-ink-3">
+                    {t("phoneHint")}
+                  </p>
+                </div>
               </div>
 
               <div className="mt-5 border-t border-ft-line-soft pt-4">

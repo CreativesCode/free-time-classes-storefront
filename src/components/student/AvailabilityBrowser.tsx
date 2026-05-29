@@ -260,7 +260,7 @@ export default function AvailabilityBrowser(props: AvailabilityBrowserProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-ft-accent"></div>
       </div>
     );
   }
@@ -271,7 +271,7 @@ export default function AvailabilityBrowser(props: AvailabilityBrowserProps) {
       <Card className="w-full rounded-md border-border/60">
         <CardHeader>
           <div className="flex items-center justify-between gap-2">
-            <CardTitle className="text-primary-800">
+            <CardTitle className="text-ft-ink">
               {listTitle ?? t("title")}
             </CardTitle>
             {!scopeToCourse && (
@@ -313,7 +313,7 @@ export default function AvailabilityBrowser(props: AvailabilityBrowserProps) {
                   }
                   options={subjectFilterOptions}
                   aria-label={t("subject")}
-                  triggerClassName="h-10 rounded-md border border-gray-300 bg-white shadow-sm hover:bg-gray-50/90"
+                  triggerClassName="h-10 rounded-ft border border-ft-line bg-ft-surface-1 text-ft-ink shadow-none hover:bg-ft-surface-2"
                 />
               </div>
 
@@ -341,7 +341,7 @@ export default function AvailabilityBrowser(props: AvailabilityBrowserProps) {
       ) : (
         <div className="flex items-center gap-2 text-sm text-gray-600">
           {isUpdatingResults ? (
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-200 border-t-primary-600" />
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-ft-line border-t-ft-accent" />
           ) : null}
           <span>
             {isUpdatingResults
@@ -423,7 +423,7 @@ export default function AvailabilityBrowser(props: AvailabilityBrowserProps) {
                     </div>
                     <div className="flex items-center gap-2">
                       <DollarSign className="h-4 w-4" />
-                      <span className="font-semibold text-primary-600">
+                      <span className="font-semibold text-ft-accent-deep">
                         {lesson.price}
                       </span>
                     </div>
@@ -483,11 +483,11 @@ export default function AvailabilityBrowser(props: AvailabilityBrowserProps) {
               {/* Lesson details */}
               <div className="space-y-3">
                 <div>
-                  <Label className="text-primary-800">{t("subject")}</Label>
+                  <Label className="text-ft-ink">{t("subject")}</Label>
                   <p className="mt-1">{selectedLesson.subject?.name}</p>
                 </div>
                 <div>
-                  <Label className="text-primary-800">{t("dateTime")}</Label>
+                  <Label className="text-ft-ink">{t("dateTime")}</Label>
                   <p className="mt-1">
                     {selectedLesson.scheduled_date_time &&
                       new Date(
@@ -497,14 +497,14 @@ export default function AvailabilityBrowser(props: AvailabilityBrowserProps) {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-primary-800">{t("duration")}</Label>
+                    <Label className="text-ft-ink">{t("duration")}</Label>
                     <p className="mt-1">
                       {selectedLesson.duration_minutes} {t("minutes")}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-primary-800">{t("price")}</Label>
-                    <p className="mt-1 text-lg font-semibold text-primary-600">
+                    <Label className="text-ft-ink">{t("price")}</Label>
+                    <p className="mt-1 text-lg font-semibold text-ft-accent-deep">
                       ${selectedLesson.price}
                     </p>
                   </div>

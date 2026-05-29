@@ -524,6 +524,7 @@
   },
   "teacherProfile": {
     "title": "Teacher Profile",
+    "signOut": "Sign out",
     "personalInfo": "Personal Information",
     "teachingExperience": "Teaching Experience",
     "currentCourses": "Current Courses",
@@ -933,6 +934,14 @@
     "notificationsSectionTitle": "Notification preferences",
     "emailNotifications": "Email notifications",
     "smsNotifications": "SMS notifications",
+    "whatsappNotifications": "WhatsApp notifications",
+    "whatsappNotificationsDescription": "Get class alerts on your WhatsApp. Requires a saved number.",
+    "phoneLabel": "WhatsApp number",
+    "phoneHint": "International format with country code, e.g. +34600111222.",
+    "phoneInvalid": "Enter a valid number in international format (+34600111222).",
+    "phoneUpdated": "Number updated",
+    "phoneUpdateError": "Could not update the number",
+    "save": "Save",
     "pushNotifications": "Push notifications",
     "pushNotificationsDescription": "Push notifications require mobile integration (coming soon).",
     "configurePush": "Configure push notifications",
@@ -1498,7 +1507,8 @@
     "myCourses": "My courses",
     "earnings": "Earnings",
     "payments": "Payments",
-    "settings": "Settings"
+    "settings": "Settings",
+    "signOut": "Sign out"
   },
   "savedTutors": {
     "title": "Saved tutors",

@@ -114,7 +114,7 @@ export default function LoginClient({ locale }: { locale: string }) {
   return (
     <div className="flex min-h-[100dvh] flex-col bg-ft-paper">
       <div
-        className="flex flex-1 flex-col px-7 pt-10"
+        className="mx-auto flex w-full max-w-md flex-1 flex-col px-7 pt-10"
         style={{ paddingTop: "max(2.5rem, env(safe-area-inset-top))" }}
       >
         <Link
@@ -219,7 +219,7 @@ export default function LoginClient({ locale }: { locale: string }) {
       </div>
 
       <div
-        className="px-7 pb-7 pt-5 text-center text-[13px] text-ft-ink-3"
+        className="mx-auto w-full max-w-md px-7 pb-7 pt-5 text-center text-[13px] text-ft-ink-3"
         style={{ paddingBottom: "max(1.75rem, env(safe-area-inset-bottom))" }}
       >
         {t("dontHaveAccount")}{" "}

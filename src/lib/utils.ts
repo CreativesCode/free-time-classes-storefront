@@ -1,5 +1,32 @@
 import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { extendTailwindMerge } from "tailwind-merge";
+
+// Teach tailwind-merge about the FreeTime redesign border-radius scale
+// (rounded-ft, rounded-ft-lg, …). Without this, twMerge doesn't recognize the
+// custom tokens as part of the border-radius group, so layering e.g.
+// `rounded-ft-2xl` over a base component's `rounded-xl` leaves BOTH classes and
+// the huge legacy 48px radius wins. Registering them here makes the ft token
+// correctly override the legacy one.
+const twMerge = extendTailwindMerge({
+  extend: {
+    classGroups: {
+      rounded: [
+        {
+          rounded: [
+            "ft",
+            "ft-xs",
+            "ft-sm",
+            "ft-md",
+            "ft-base",
+            "ft-lg",
+            "ft-xl",
+            "ft-2xl",
+          ],
+        },
+      ],
+    },
+  },
+});
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

@@ -11,6 +11,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import { FT_BTN_PRIMARY } from "@/components/teacher/ftStyles";
 import { useTranslations } from "@/i18n/translations";
 import { updateTutorProfile } from "@/lib/supabase/queries/tutors";
 import type { TutorProfile } from "@/types/tutor";
@@ -32,6 +34,11 @@ import {
 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+
+const FT_FIELD_SM =
+  "h-9 rounded-ft border-ft-line bg-ft-paper text-ft-ink placeholder:text-ft-ink-3 shadow-none focus-visible:ring-2 focus-visible:ring-ft-accent/40";
+const FT_GHOST_SM =
+  "h-8 gap-1 rounded-ft-md text-xs text-ft-ink-2 hover:bg-ft-surface-1 hover:text-ft-ink";
 
 interface TutorCVSectionProps {
   tutorId: string;
@@ -218,10 +225,10 @@ export default function TutorCVSection({
   const isEditing = (section: SectionKey) => editing?.section === section;
 
   return (
-    <Card className="rounded-3xl border-violet-100">
+    <Card className="rounded-ft-2xl border-ft-line bg-ft-paper shadow-none">
       <CardHeader className="pb-4">
-        <CardTitle className="text-xl text-slate-900">{t("title")}</CardTitle>
-        <CardDescription className="text-slate-500">
+        <CardTitle className="text-xl text-ft-ink">{t("title")}</CardTitle>
+        <CardDescription className="text-ft-ink-3">
           {t("description")}
         </CardDescription>
       </CardHeader>
@@ -230,10 +237,10 @@ export default function TutorCVSection({
         <section>
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-100">
-                <GraduationCap className="h-4 w-4 text-violet-700" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-ft bg-ft-accent-soft">
+                <GraduationCap className="h-4 w-4 text-ft-accent-deep" />
               </div>
-              <h3 className="font-semibold text-slate-800">{t("education")}</h3>
+              <h3 className="font-semibold text-ft-ink">{t("education")}</h3>
             </div>
             {!isEditing("education") && (
               <Button
@@ -241,7 +248,7 @@ export default function TutorCVSection({
                 variant="outline"
                 size="sm"
                 onClick={startAddEducation}
-                className="h-8 gap-1 rounded-full border-violet-200 text-xs text-violet-700 hover:bg-violet-50"
+                className="h-8 gap-1 rounded-ft-md border-ft-line bg-ft-paper text-xs text-ft-ink-2 shadow-none hover:bg-ft-surface-1 hover:text-ft-ink"
               >
                 <Plus className="h-3.5 w-3.5" />
                 {t("add")}
@@ -250,7 +257,7 @@ export default function TutorCVSection({
           </div>
 
           {cvData.education.length === 0 && !isEditing("education") && (
-            <p className="rounded-2xl border border-dashed border-violet-200 bg-violet-50/50 px-4 py-6 text-center text-sm text-slate-500">
+            <p className="rounded-ft-lg border border-dashed border-ft-line bg-ft-surface-1/50 px-4 py-6 text-center text-sm text-ft-ink-3">
               {t("educationEmpty")}
             </p>
           )}
@@ -259,17 +266,17 @@ export default function TutorCVSection({
             {cvData.education.map((item) => (
               <div
                 key={item.id}
-                className="group flex items-center justify-between rounded-2xl border border-violet-100 bg-white px-4 py-3 transition-colors hover:border-violet-200 hover:bg-violet-50/30"
+                className="group flex items-center justify-between rounded-ft-lg border border-ft-line bg-ft-surface-1 px-4 py-3 transition-colors hover:bg-ft-surface-2"
               >
                 <div className="flex min-w-0 flex-1 items-center gap-2">
-                  <GraduationCap className="hidden h-4 w-4 shrink-0 text-violet-400 sm:block" />
-                  <span className="truncate text-sm text-slate-700">
-                    <span className="font-medium text-slate-800">{item.degree}</span>
+                  <GraduationCap className="hidden h-4 w-4 shrink-0 text-ft-accent-deep sm:block" />
+                  <span className="truncate text-sm text-ft-ink-2">
+                    <span className="font-medium text-ft-ink">{item.degree}</span>
                     {item.institution && (
-                      <span className="text-slate-400"> · {item.institution}</span>
+                      <span className="text-ft-ink-3"> · {item.institution}</span>
                     )}
                     {item.year && (
-                      <span className="text-slate-400"> · {item.year}</span>
+                      <span className="text-ft-ink-3"> · {item.year}</span>
                     )}
                   </span>
                 </div>
@@ -277,7 +284,7 @@ export default function TutorCVSection({
                   <button
                     type="button"
                     onClick={() => startEditEducation(item)}
-                    className="rounded-lg p-1.5 text-slate-400 hover:bg-violet-100 hover:text-violet-700"
+                    className="rounded-ft p-1.5 text-ft-ink-3 hover:bg-ft-surface-2 hover:text-ft-ink"
                   >
                     <Pencil className="h-3.5 w-3.5" />
                   </button>
@@ -285,7 +292,7 @@ export default function TutorCVSection({
                     type="button"
                     onClick={() => deleteEducation(item.id)}
                     disabled={saving}
-                    className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                    className="rounded-ft p-1.5 text-ft-ink-3 hover:bg-red-50 hover:text-red-600"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -295,39 +302,39 @@ export default function TutorCVSection({
           </div>
 
           {isEditing("education") && (
-            <div className="mt-2 space-y-3 rounded-2xl border border-violet-200 bg-violet-50/50 p-4">
+            <div className="mt-2 space-y-3 rounded-ft-lg border border-ft-line bg-ft-surface-1/50 p-4">
               <div className="grid gap-3 sm:grid-cols-[1fr_1fr_100px]">
                 <div className="space-y-1.5">
-                  <Label className="text-xs">{t("degree")} *</Label>
+                  <Label className="text-xs text-ft-ink-2">{t("degree")} *</Label>
                   <Input
                     value={eduDraft.degree}
                     onChange={(e) =>
                       setEduDraft((d) => ({ ...d, degree: e.target.value }))
                     }
                     placeholder={t("degreePlaceholder")}
-                    className="h-9 rounded-xl bg-white"
+                    className={FT_FIELD_SM}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">{t("institution")}</Label>
+                  <Label className="text-xs text-ft-ink-2">{t("institution")}</Label>
                   <Input
                     value={eduDraft.institution}
                     onChange={(e) =>
                       setEduDraft((d) => ({ ...d, institution: e.target.value }))
                     }
                     placeholder={t("institutionPlaceholder")}
-                    className="h-9 rounded-xl bg-white"
+                    className={FT_FIELD_SM}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">{t("year")}</Label>
+                  <Label className="text-xs text-ft-ink-2">{t("year")}</Label>
                   <Input
                     value={eduDraft.year}
                     onChange={(e) =>
                       setEduDraft((d) => ({ ...d, year: e.target.value }))
                     }
                     placeholder={t("yearPlaceholder")}
-                    className="h-9 rounded-xl bg-white"
+                    className={FT_FIELD_SM}
                   />
                 </div>
               </div>
@@ -337,7 +344,7 @@ export default function TutorCVSection({
                   variant="ghost"
                   size="sm"
                   onClick={cancelEditing}
-                  className="h-8 gap-1 rounded-full text-xs"
+                  className={FT_GHOST_SM}
                 >
                   <X className="h-3.5 w-3.5" />
                   {t("cancel")}
@@ -347,7 +354,7 @@ export default function TutorCVSection({
                   size="sm"
                   onClick={saveEducation}
                   disabled={saving || !eduDraft.degree.trim()}
-                  className="h-8 gap-1 rounded-full bg-violet-700 text-xs hover:bg-violet-800"
+                  className={cn(FT_BTN_PRIMARY, "h-8 gap-1 text-xs")}
                 >
                   {saving ? t("saving") : t("save")}
                 </Button>
@@ -356,7 +363,7 @@ export default function TutorCVSection({
           )}
         </section>
 
-        <hr className="border-violet-100" />
+        <hr className="border-ft-line" />
 
         {/* ─── Certifications ─── */}
         <section>
@@ -375,7 +382,7 @@ export default function TutorCVSection({
                 variant="outline"
                 size="sm"
                 onClick={startAddCert}
-                className="h-8 gap-1 rounded-full border-amber-200 text-xs text-amber-700 hover:bg-amber-50"
+                className="h-8 gap-1 rounded-ft-md border-ft-line bg-ft-paper text-xs text-ft-ink-2 shadow-none hover:bg-ft-surface-1 hover:text-ft-ink"
               >
                 <Plus className="h-3.5 w-3.5" />
                 {t("add")}
@@ -384,7 +391,7 @@ export default function TutorCVSection({
           </div>
 
           {cvData.certifications.length === 0 && !isEditing("certifications") && (
-            <p className="rounded-2xl border border-dashed border-amber-200 bg-amber-50/50 px-4 py-6 text-center text-sm text-slate-500">
+            <p className="rounded-ft-lg border border-dashed border-ft-line bg-ft-surface-1/50 px-4 py-6 text-center text-sm text-ft-ink-3">
               {t("certificationsEmpty")}
             </p>
           )}
@@ -393,17 +400,17 @@ export default function TutorCVSection({
             {cvData.certifications.map((item) => (
               <div
                 key={item.id}
-                className="group flex items-center justify-between rounded-2xl border border-amber-100 bg-white px-4 py-3 transition-colors hover:border-amber-200 hover:bg-amber-50/30"
+                className="group flex items-center justify-between rounded-ft-lg border border-ft-line bg-ft-surface-1 px-4 py-3 transition-colors hover:bg-ft-surface-2"
               >
                 <div className="flex min-w-0 flex-1 items-center gap-2">
-                  <Award className="hidden h-4 w-4 shrink-0 text-amber-400 sm:block" />
-                  <span className="truncate text-sm text-slate-700">
-                    <span className="font-medium text-slate-800">{item.name}</span>
+                  <Award className="hidden h-4 w-4 shrink-0 text-amber-500 sm:block" />
+                  <span className="truncate text-sm text-ft-ink-2">
+                    <span className="font-medium text-ft-ink">{item.name}</span>
                     {item.issuer && (
-                      <span className="text-slate-400"> · {item.issuer}</span>
+                      <span className="text-ft-ink-3"> · {item.issuer}</span>
                     )}
                     {item.year && (
-                      <span className="text-slate-400"> · {item.year}</span>
+                      <span className="text-ft-ink-3"> · {item.year}</span>
                     )}
                   </span>
                 </div>
@@ -411,7 +418,7 @@ export default function TutorCVSection({
                   <button
                     type="button"
                     onClick={() => startEditCert(item)}
-                    className="rounded-lg p-1.5 text-slate-400 hover:bg-amber-100 hover:text-amber-700"
+                    className="rounded-ft p-1.5 text-ft-ink-3 hover:bg-ft-surface-2 hover:text-ft-ink"
                   >
                     <Pencil className="h-3.5 w-3.5" />
                   </button>
@@ -419,7 +426,7 @@ export default function TutorCVSection({
                     type="button"
                     onClick={() => deleteCert(item.id)}
                     disabled={saving}
-                    className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                    className="rounded-ft p-1.5 text-ft-ink-3 hover:bg-red-50 hover:text-red-600"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -429,39 +436,39 @@ export default function TutorCVSection({
           </div>
 
           {isEditing("certifications") && (
-            <div className="mt-2 space-y-3 rounded-2xl border border-amber-200 bg-amber-50/50 p-4">
+            <div className="mt-2 space-y-3 rounded-ft-lg border border-ft-line bg-ft-surface-1/50 p-4">
               <div className="grid gap-3 sm:grid-cols-[1fr_1fr_100px]">
                 <div className="space-y-1.5">
-                  <Label className="text-xs">{t("certName")} *</Label>
+                  <Label className="text-xs text-ft-ink-2">{t("certName")} *</Label>
                   <Input
                     value={certDraft.name}
                     onChange={(e) =>
                       setCertDraft((d) => ({ ...d, name: e.target.value }))
                     }
                     placeholder={t("certNamePlaceholder")}
-                    className="h-9 rounded-xl bg-white"
+                    className={FT_FIELD_SM}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">{t("certIssuer")}</Label>
+                  <Label className="text-xs text-ft-ink-2">{t("certIssuer")}</Label>
                   <Input
                     value={certDraft.issuer}
                     onChange={(e) =>
                       setCertDraft((d) => ({ ...d, issuer: e.target.value }))
                     }
                     placeholder={t("certIssuerPlaceholder")}
-                    className="h-9 rounded-xl bg-white"
+                    className={FT_FIELD_SM}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">{t("year")}</Label>
+                  <Label className="text-xs text-ft-ink-2">{t("year")}</Label>
                   <Input
                     value={certDraft.year}
                     onChange={(e) =>
                       setCertDraft((d) => ({ ...d, year: e.target.value }))
                     }
                     placeholder={t("yearPlaceholder")}
-                    className="h-9 rounded-xl bg-white"
+                    className={FT_FIELD_SM}
                   />
                 </div>
               </div>
@@ -471,7 +478,7 @@ export default function TutorCVSection({
                   variant="ghost"
                   size="sm"
                   onClick={cancelEditing}
-                  className="h-8 gap-1 rounded-full text-xs"
+                  className={FT_GHOST_SM}
                 >
                   <X className="h-3.5 w-3.5" />
                   {t("cancel")}
@@ -481,7 +488,7 @@ export default function TutorCVSection({
                   size="sm"
                   onClick={saveCert}
                   disabled={saving || !certDraft.name.trim()}
-                  className="h-8 gap-1 rounded-full bg-amber-600 text-xs hover:bg-amber-700"
+                  className={cn(FT_BTN_PRIMARY, "h-8 gap-1 text-xs")}
                 >
                   {saving ? t("saving") : t("save")}
                 </Button>
@@ -490,7 +497,7 @@ export default function TutorCVSection({
           )}
         </section>
 
-        <hr className="border-violet-100" />
+        <hr className="border-ft-line" />
 
         {/* ─── Experience ─── */}
         <section>
@@ -509,7 +516,7 @@ export default function TutorCVSection({
                 variant="outline"
                 size="sm"
                 onClick={startAddExp}
-                className="h-8 gap-1 rounded-full border-emerald-200 text-xs text-emerald-700 hover:bg-emerald-50"
+                className="h-8 gap-1 rounded-ft-md border-ft-line bg-ft-paper text-xs text-ft-ink-2 shadow-none hover:bg-ft-surface-1 hover:text-ft-ink"
               >
                 <Plus className="h-3.5 w-3.5" />
                 {t("add")}
@@ -518,7 +525,7 @@ export default function TutorCVSection({
           </div>
 
           {cvData.experience.length === 0 && !isEditing("experience") && (
-            <p className="rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/50 px-4 py-6 text-center text-sm text-slate-500">
+            <p className="rounded-ft-lg border border-dashed border-ft-line bg-ft-surface-1/50 px-4 py-6 text-center text-sm text-ft-ink-3">
               {t("experienceEmpty")}
             </p>
           )}
@@ -527,18 +534,18 @@ export default function TutorCVSection({
             {cvData.experience.map((item) => (
               <div
                 key={item.id}
-                className="group rounded-2xl border border-emerald-100 bg-white px-4 py-3 transition-colors hover:border-emerald-200 hover:bg-emerald-50/30"
+                className="group rounded-ft-lg border border-ft-line bg-ft-surface-1 px-4 py-3 transition-colors hover:bg-ft-surface-2"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex min-w-0 flex-1 items-center gap-2">
-                    <Briefcase className="hidden h-4 w-4 shrink-0 text-emerald-400 sm:block" />
-                    <span className="truncate text-sm text-slate-700">
-                      <span className="font-medium text-slate-800">{item.role}</span>
+                    <Briefcase className="hidden h-4 w-4 shrink-0 text-emerald-500 sm:block" />
+                    <span className="truncate text-sm text-ft-ink-2">
+                      <span className="font-medium text-ft-ink">{item.role}</span>
                       {item.institution && (
-                        <span className="text-slate-400"> · {item.institution}</span>
+                        <span className="text-ft-ink-3"> · {item.institution}</span>
                       )}
                       {item.period && (
-                        <span className="text-slate-400"> · {item.period}</span>
+                        <span className="text-ft-ink-3"> · {item.period}</span>
                       )}
                     </span>
                   </div>
@@ -546,7 +553,7 @@ export default function TutorCVSection({
                     <button
                       type="button"
                       onClick={() => startEditExp(item)}
-                      className="rounded-lg p-1.5 text-slate-400 hover:bg-emerald-100 hover:text-emerald-700"
+                      className="rounded-ft p-1.5 text-ft-ink-3 hover:bg-ft-surface-2 hover:text-ft-ink"
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
@@ -554,14 +561,14 @@ export default function TutorCVSection({
                       type="button"
                       onClick={() => deleteExp(item.id)}
                       disabled={saving}
-                      className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                      className="rounded-ft p-1.5 text-ft-ink-3 hover:bg-red-50 hover:text-red-600"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </div>
                 {item.description && (
-                  <p className="mt-1 pl-0 text-xs leading-relaxed text-slate-400 sm:pl-6">
+                  <p className="mt-1 pl-0 text-xs leading-relaxed text-ft-ink-3 sm:pl-6">
                     {item.description}
                   </p>
                 )}
@@ -570,21 +577,21 @@ export default function TutorCVSection({
           </div>
 
           {isEditing("experience") && (
-            <div className="mt-2 space-y-3 rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4">
+            <div className="mt-2 space-y-3 rounded-ft-lg border border-ft-line bg-ft-surface-1/50 p-4">
               <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
                 <div className="space-y-1.5">
-                  <Label className="text-xs">{t("role")} *</Label>
+                  <Label className="text-xs text-ft-ink-2">{t("role")} *</Label>
                   <Input
                     value={expDraft.role}
                     onChange={(e) =>
                       setExpDraft((d) => ({ ...d, role: e.target.value }))
                     }
                     placeholder={t("rolePlaceholder")}
-                    className="h-9 rounded-xl bg-white"
+                    className={FT_FIELD_SM}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">{t("institution")}</Label>
+                  <Label className="text-xs text-ft-ink-2">{t("institution")}</Label>
                   <Input
                     value={expDraft.institution}
                     onChange={(e) =>
@@ -594,30 +601,30 @@ export default function TutorCVSection({
                       }))
                     }
                     placeholder={t("expInstitutionPlaceholder")}
-                    className="h-9 rounded-xl bg-white"
+                    className={FT_FIELD_SM}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">{t("period")}</Label>
+                  <Label className="text-xs text-ft-ink-2">{t("period")}</Label>
                   <Input
                     value={expDraft.period}
                     onChange={(e) =>
                       setExpDraft((d) => ({ ...d, period: e.target.value }))
                     }
                     placeholder={t("periodPlaceholder")}
-                    className="h-9 rounded-xl bg-white"
+                    className={FT_FIELD_SM}
                   />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">{t("expDescription")}</Label>
+                <Label className="text-xs text-ft-ink-2">{t("expDescription")}</Label>
                 <Textarea
                   value={expDraft.description}
                   onChange={(e) =>
                     setExpDraft((d) => ({ ...d, description: e.target.value }))
                   }
                   placeholder={t("expDescriptionPlaceholder")}
-                  className="min-h-[60px] resize-y rounded-xl bg-white"
+                  className="min-h-[60px] resize-y rounded-ft border-ft-line bg-ft-paper text-ft-ink placeholder:text-ft-ink-3 shadow-none focus-visible:ring-2 focus-visible:ring-ft-accent/40"
                 />
               </div>
               <div className="flex justify-end gap-2">
@@ -626,7 +633,7 @@ export default function TutorCVSection({
                   variant="ghost"
                   size="sm"
                   onClick={cancelEditing}
-                  className="h-8 gap-1 rounded-full text-xs"
+                  className={FT_GHOST_SM}
                 >
                   <X className="h-3.5 w-3.5" />
                   {t("cancel")}
@@ -636,7 +643,7 @@ export default function TutorCVSection({
                   size="sm"
                   onClick={saveExp}
                   disabled={saving || !expDraft.role.trim()}
-                  className="h-8 gap-1 rounded-full bg-emerald-600 text-xs hover:bg-emerald-700"
+                  className={cn(FT_BTN_PRIMARY, "h-8 gap-1 text-xs")}
                 >
                   {saving ? t("saving") : t("save")}
                 </Button>

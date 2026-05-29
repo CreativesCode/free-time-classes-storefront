@@ -10,6 +10,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SelectMenu } from "@/components/ui/select-menu";
+import {
+  FT_BTN_OUTLINE,
+  FT_BTN_PRIMARY,
+  FT_FIELD,
+  FT_LABEL,
+  FT_SELECT_TRIGGER,
+} from "@/components/teacher/ftStyles";
 import { useAuth } from "@/context/UserContext";
 import { useTranslations } from "@/i18n/translations";
 import { createLesson } from "@/lib/supabase/queries/lessons";
@@ -154,9 +161,14 @@ export default function AddAvailabilityModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="flex max-h-[calc(100dvh-1rem)] flex-col overflow-hidden p-0 sm:max-w-[525px]">
+      <DialogContent
+        data-theme="freetime"
+        className="flex max-h-[calc(100dvh-1rem)] flex-col overflow-hidden border-ft-line bg-ft-paper p-0 text-ft-ink sm:max-w-[525px] sm:rounded-ft-2xl"
+      >
         <DialogHeader className="px-4 pt-6 sm:px-6">
-          <DialogTitle>{t("title")}</DialogTitle>
+          <DialogTitle className="text-[20px] font-semibold tracking-[-0.02em] text-ft-ink">
+            {t("title")}
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <div
@@ -164,13 +176,13 @@ export default function AddAvailabilityModal({
             className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-1 sm:px-6"
           >
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              <div className="rounded-ft border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {error}
               </div>
             )}
 
           <div className="space-y-2">
-            <Label htmlFor="subject">{t("subject")}</Label>
+            <Label htmlFor="subject" className={FT_LABEL}>{t("subject")}</Label>
             <SelectMenu
               id="subject"
               value={formData.subject_id}
@@ -179,12 +191,12 @@ export default function AddAvailabilityModal({
               disabled={loading}
               aria-label={t("subject")}
               nestedScrollParentRef={dialogBodyScrollRef}
-              triggerClassName="h-10 rounded-md border border-gray-300 bg-white shadow-sm hover:bg-gray-50/90"
+              triggerClassName={FT_SELECT_TRIGGER}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="datetime">{t("dateTime")}</Label>
+            <Label htmlFor="datetime" className={FT_LABEL}>{t("dateTime")}</Label>
             <Input
               id="datetime"
               type="datetime-local"
@@ -193,11 +205,12 @@ export default function AddAvailabilityModal({
                 handleChange("scheduled_date_time", e.target.value)
               }
               required
+              className={FT_FIELD}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="duration">{t("duration")}</Label>
+            <Label htmlFor="duration" className={FT_LABEL}>{t("duration")}</Label>
             <SelectMenu
               id="duration"
               value={formData.duration_minutes}
@@ -206,12 +219,12 @@ export default function AddAvailabilityModal({
               disabled={loading}
               aria-label={t("duration")}
               nestedScrollParentRef={dialogBodyScrollRef}
-              triggerClassName="h-10 rounded-md border border-gray-300 bg-white shadow-sm hover:bg-gray-50/90"
+              triggerClassName={FT_SELECT_TRIGGER}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="price">{t("price")}</Label>
+            <Label htmlFor="price" className={FT_LABEL}>{t("price")}</Label>
             <Input
               id="price"
               type="number"
@@ -220,20 +233,22 @@ export default function AddAvailabilityModal({
               value={formData.price}
               onChange={(e) => handleChange("price", e.target.value)}
               required
+              className={FT_FIELD}
             />
           </div>
 
           </div>
-          <div className="mt-2 flex shrink-0 justify-end gap-2 border-t bg-background px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-6">
+          <div className="mt-2 flex shrink-0 justify-end gap-2 border-t border-ft-line bg-ft-paper px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-6">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
               disabled={loading}
+              className={FT_BTN_OUTLINE}
             >
               {t("cancel")}
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className={FT_BTN_PRIMARY}>
               {loading ? t("creating") : t("create")}
             </Button>
           </div>

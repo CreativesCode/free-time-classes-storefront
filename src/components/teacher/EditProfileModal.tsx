@@ -13,6 +13,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  FT_BTN_OUTLINE,
+  FT_BTN_PRIMARY,
+  FT_FIELD,
+  FT_LABEL,
+  FT_SELECT_TRIGGER,
+  FT_TEXTAREA,
+} from "@/components/teacher/ftStyles";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/UserContext";
 import { useTranslations } from "@/i18n/translations";
 import { COUNTRIES } from "@/lib/constants/countries";
@@ -162,10 +171,15 @@ export default function EditProfileModal({
         }
       }}
     >
-      <DialogContent className="flex min-h-0 max-h-[calc(100dvh-1.5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col overflow-hidden p-0 sm:max-w-[600px]">
+      <DialogContent
+        data-theme="freetime"
+        className="flex min-h-0 max-h-[calc(100dvh-1.5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col overflow-hidden border-ft-line bg-ft-paper p-0 text-ft-ink sm:max-w-[600px] sm:rounded-ft-2xl"
+      >
         <DialogHeader className="shrink-0 px-4 pt-6 sm:px-6">
-          <DialogTitle>{t("editProfile")}</DialogTitle>
-          <DialogDescription>{t("editProfileDescription")}</DialogDescription>
+          <DialogTitle className="text-[20px] font-semibold tracking-[-0.02em] text-ft-ink">
+            {t("editProfile")}
+          </DialogTitle>
+          <DialogDescription className="text-ft-ink-3">{t("editProfileDescription")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <div
@@ -173,18 +187,19 @@ export default function EditProfileModal({
             className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-1 sm:px-6"
           >
             <div className="space-y-2">
-            <Label htmlFor="username">{t("name")}</Label>
+            <Label htmlFor="username" className={FT_LABEL}>{t("name")}</Label>
             <Input
               id="username"
               name="username"
               value={formData.username}
               onChange={handleChange}
               placeholder={t("namePlaceholder") || "Nombre completo"}
+              className={FT_FIELD}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">{t("phone")}</Label>
+            <Label htmlFor="phone" className={FT_LABEL}>{t("phone")}</Label>
             <Input
               id="phone"
               name="phone"
@@ -192,11 +207,12 @@ export default function EditProfileModal({
               value={formData.phone}
               onChange={handleChange}
               placeholder="+34 123 456 789"
+              className={FT_FIELD}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="country">{t("country")}</Label>
+            <Label htmlFor="country" className={FT_LABEL}>{t("country")}</Label>
             <SelectMenu
               id="country"
               value={formData.country}
@@ -209,33 +225,34 @@ export default function EditProfileModal({
               searchable
               searchPlaceholder={t("countrySearchPlaceholder")}
               emptySearchMessage={t("countrySearchEmpty")}
-              triggerClassName="h-10 rounded-md border border-input bg-background shadow-sm hover:bg-accent/40"
+              triggerClassName={FT_SELECT_TRIGGER}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="bio">{t("bio")}</Label>
+            <Label htmlFor="bio" className={FT_LABEL}>{t("bio")}</Label>
             <Textarea
               id="bio"
               name="bio"
               value={formData.bio}
               onChange={handleChange}
               placeholder={t("bioPlaceholder")}
-              className="min-h-[100px] resize-y"
+              className={cn(FT_TEXTAREA, "min-h-[100px] resize-y")}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="avatar_file">{t("uploadNewPhoto")}</Label>
+            <Label htmlFor="avatar_file" className={FT_LABEL}>{t("uploadNewPhoto")}</Label>
             <Input
               id="avatar_file"
               name="avatar_file"
               type="file"
               accept="image/*"
               onChange={handleAvatarChange}
+              className={cn(FT_FIELD, "file:mr-3 file:text-ft-ink-2")}
             />
             {avatarPreviewUrl ? (
-              <div className="relative h-16 w-16 overflow-hidden rounded-full border">
+              <div className="relative h-16 w-16 overflow-hidden rounded-full border border-ft-line">
                 <Image
                   src={avatarPreviewUrl}
                   alt={t("profilePicturePreviewAlt")}
@@ -248,7 +265,7 @@ export default function EditProfileModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="yearsOfExperience">{t("experience")}</Label>
+            <Label htmlFor="yearsOfExperience" className={FT_LABEL}>{t("experience")}</Label>
             <Input
               id="yearsOfExperience"
               name="yearsOfExperience"
@@ -258,15 +275,16 @@ export default function EditProfileModal({
               value={formData.yearsOfExperience}
               onChange={handleChange}
               placeholder={t("experiencePlaceholder")}
+              className={FT_FIELD}
             />
           </div>
 
           </div>
-          <DialogFooter className="mt-auto flex shrink-0 flex-col gap-2 border-t bg-background px-4 pt-3 pb-[max(1rem,calc(env(safe-area-inset-bottom)+0.75rem))] sm:flex-row sm:justify-end sm:px-6">
-            <Button type="button" variant="outline" onClick={onClose}>
+          <DialogFooter className="mt-auto flex shrink-0 flex-col gap-2 border-t border-ft-line bg-ft-paper px-4 pt-3 pb-[max(1rem,calc(env(safe-area-inset-bottom)+0.75rem))] sm:flex-row sm:justify-end sm:px-6">
+            <Button type="button" variant="outline" onClick={onClose} className={FT_BTN_OUTLINE}>
               {t("cancel")}
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className={FT_BTN_PRIMARY}>
               {loading ? t("saving") : t("save")}
             </Button>
           </DialogFooter>

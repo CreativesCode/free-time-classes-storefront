@@ -262,7 +262,7 @@ export default function UpcomingLessonsCard(props: {
                             sizes="48px"
                           />
                         ) : (
-                          <div className="h-full w-full flex items-center justify-center text-primary-800 font-semibold">
+                          <div className="h-full w-full flex items-center justify-center text-ft-ink font-semibold">
                             {(tutor?.username?.[0] || "U").toUpperCase()}
                           </div>
                         )}
@@ -288,8 +288,8 @@ export default function UpcomingLessonsCard(props: {
                         className={cn(
                           "h-9 w-9 shrink-0 rounded-full border transition-colors",
                           isFavorited
-                            ? "border-violet-500 bg-violet-100 text-violet-700 hover:bg-violet-200 hover:text-violet-900"
-                            : "border-violet-200/90 bg-white text-violet-400 hover:border-violet-400 hover:bg-violet-50 hover:text-violet-600"
+                            ? "border-ft-accent bg-ft-accent-soft text-ft-accent-deep hover:bg-ft-accent-soft hover:text-ft-accent-deep"
+                            : "border-ft-line bg-ft-paper text-ft-ink-3 hover:border-ft-accent hover:bg-ft-surface-1 hover:text-ft-accent-deep"
                         )}
                         onClick={() => void toggleFavorite(lesson.tutor_id)}
                         disabled={favoriteActionLoading === lesson.tutor_id}
@@ -302,8 +302,8 @@ export default function UpcomingLessonsCard(props: {
                           className={cn(
                             "h-4 w-4",
                             isFavorited
-                              ? "fill-violet-600 text-violet-600"
-                              : "text-violet-400"
+                              ? "fill-ft-accent text-ft-accent"
+                              : "text-ft-ink-3"
                           )}
                           fill={isFavorited ? "currentColor" : "none"}
                           strokeWidth={isFavorited ? 0 : 2}
@@ -329,7 +329,7 @@ export default function UpcomingLessonsCard(props: {
                     </div>
                     <div className="flex items-center gap-2">
                       <DollarSign className="h-4 w-4 text-gray-500" />
-                      <span className="font-semibold text-primary-600">
+                      <span className="font-semibold text-ft-accent-deep">
                         ${lesson.price}
                       </span>
                     </div>
@@ -339,7 +339,7 @@ export default function UpcomingLessonsCard(props: {
                       {lesson.meet_link ? (
                         <Button
                           size="sm"
-                          className="gap-1.5 bg-violet-600 hover:bg-violet-700"
+                          className="gap-1.5 bg-gradient-to-br from-ft-accent to-ft-accent-deep text-ft-paper hover:opacity-90"
                           onClick={() => window.open(lesson.meet_link!, "_blank")}
                         >
                           <Video className="h-4 w-4" />

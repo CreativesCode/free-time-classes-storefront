@@ -12,6 +12,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SelectMenu } from "@/components/ui/select-menu";
+import {
+  FT_BTN_OUTLINE,
+  FT_BTN_PRIMARY,
+  FT_CARD,
+  FT_FIELD,
+  FT_SELECT_TRIGGER,
+} from "@/components/teacher/ftStyles";
+import { cn } from "@/lib/utils";
 import { useLocale, useTranslations } from "@/i18n/translations";
 import { createClient } from "@/lib/supabase/client";
 import { getSubjects } from "@/lib/supabase/queries/subjects";
@@ -175,8 +183,7 @@ export default function RecurringAvailabilityManager({
     [t]
   );
 
-  const raSelectTrigger =
-    "h-10 rounded-md border border-input bg-background shadow-sm hover:bg-accent/40";
+  const raSelectTrigger = FT_SELECT_TRIGGER;
 
   const submitRule = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -367,7 +374,7 @@ export default function RecurringAvailabilityManager({
 
   if (loading && rules.length === 0 && exceptions.length === 0) {
     return (
-      <div className="flex justify-center py-8 text-sm text-muted-foreground">
+      <div className="flex justify-center py-8 text-sm text-ft-ink-3">
         {t("loading")}
       </div>
     );
@@ -397,13 +404,13 @@ export default function RecurringAvailabilityManager({
         onConfirm={() => void performDeleteException()}
       />
 
-      <Card>
+      <Card className={FT_CARD}>
         <CardHeader>
-          <CardTitle>{t("weeklyTitle")}</CardTitle>
-          <CardDescription>{t("weeklyDescription")}</CardDescription>
+          <CardTitle className="text-ft-ink">{t("weeklyTitle")}</CardTitle>
+          <CardDescription className="text-ft-ink-3">{t("weeklyDescription")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          <div className="rounded-ft border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
             {t("weeklyGenerationNote")}
           </div>
           <form onSubmit={submitRule} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -431,6 +438,7 @@ export default function RecurringAvailabilityManager({
                   setRuleForm((p) => ({ ...p, start_time: e.target.value }))
                 }
                 required
+                className={FT_FIELD}
               />
             </div>
             <div className="space-y-2">
@@ -443,6 +451,7 @@ export default function RecurringAvailabilityManager({
                   setRuleForm((p) => ({ ...p, end_time: e.target.value }))
                 }
                 required
+                className={FT_FIELD}
               />
             </div>
             <div className="space-y-2 sm:col-span-2 lg:col-span-1">
@@ -485,17 +494,18 @@ export default function RecurringAvailabilityManager({
                   setRuleForm((p) => ({ ...p, price: e.target.value }))
                 }
                 required
+                className={FT_FIELD}
               />
             </div>
             <div className="flex items-end">
-              <Button type="submit" disabled={ruleSaving} className="w-full sm:w-auto">
+              <Button type="submit" disabled={ruleSaving} className={cn(FT_BTN_PRIMARY, "w-full sm:w-auto")}>
                 {ruleSaving ? t("saving") : t("addRule")}
               </Button>
             </div>
           </form>
 
           {rules.length > 0 && (
-            <ul className="divide-y rounded-md border text-sm">
+            <ul className="divide-y divide-ft-line rounded-ft border border-ft-line text-sm text-ft-ink-2">
               {rules.map((r) => (
                 <li
                   key={r.id}
@@ -515,6 +525,7 @@ export default function RecurringAvailabilityManager({
                     variant="outline"
                     size="sm"
                     onClick={() => openDeleteRuleDialog(r.id)}
+                    className={FT_BTN_OUTLINE}
                   >
                     {t("remove")}
                   </Button>
@@ -525,13 +536,13 @@ export default function RecurringAvailabilityManager({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className={FT_CARD}>
         <CardHeader>
-          <CardTitle>{t("exceptionsTitle")}</CardTitle>
-          <CardDescription>{t("exceptionsDescription")}</CardDescription>
+          <CardTitle className="text-ft-ink">{t("exceptionsTitle")}</CardTitle>
+          <CardDescription className="text-ft-ink-3">{t("exceptionsDescription")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-8">
-          <div className="rounded-md border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+          <div className="rounded-ft border border-ft-line bg-ft-surface-1/50 px-3 py-2 text-xs text-ft-ink-3">
             <p>
               <span className="font-medium text-red-700">{t("typeBlocked")}</span>:{" "}
               {t("typeBlockedHelp")}
@@ -542,7 +553,7 @@ export default function RecurringAvailabilityManager({
             </p>
           </div>
           <div>
-            <h4 className="mb-3 text-sm font-semibold text-primary-800">
+            <h4 className="mb-3 text-sm font-semibold text-ft-ink">
               {t("blockTitle")}
             </h4>
             <form
@@ -559,6 +570,7 @@ export default function RecurringAvailabilityManager({
                     setBlockForm((p) => ({ ...p, exception_date: e.target.value }))
                   }
                   required
+                  className={FT_FIELD}
                 />
               </div>
               <div className="space-y-2">
@@ -570,6 +582,7 @@ export default function RecurringAvailabilityManager({
                   onChange={(e) =>
                     setBlockForm((p) => ({ ...p, start_time: e.target.value }))
                   }
+                  className={FT_FIELD}
                 />
               </div>
               <div className="space-y-2">
@@ -581,6 +594,7 @@ export default function RecurringAvailabilityManager({
                   onChange={(e) =>
                     setBlockForm((p) => ({ ...p, end_time: e.target.value }))
                   }
+                  className={FT_FIELD}
                 />
               </div>
               <div className="space-y-2 sm:col-span-2">
@@ -592,10 +606,11 @@ export default function RecurringAvailabilityManager({
                     setBlockForm((p) => ({ ...p, reason: e.target.value }))
                   }
                   placeholder={t("reasonPlaceholder")}
+                  className={FT_FIELD}
                 />
               </div>
               <div className="flex items-end sm:col-span-2 lg:col-span-4">
-                <Button type="submit" disabled={blockSaving}>
+                <Button type="submit" disabled={blockSaving} className={FT_BTN_PRIMARY}>
                   {blockSaving ? t("saving") : t("saveBlock")}
                 </Button>
               </div>
@@ -603,7 +618,7 @@ export default function RecurringAvailabilityManager({
           </div>
 
           <div>
-            <h4 className="mb-3 text-sm font-semibold text-primary-800">
+            <h4 className="mb-3 text-sm font-semibold text-ft-ink">
               {t("extraTitle")}
             </h4>
             <form
@@ -620,6 +635,7 @@ export default function RecurringAvailabilityManager({
                     setExtraForm((p) => ({ ...p, exception_date: e.target.value }))
                   }
                   required
+                  className={FT_FIELD}
                 />
               </div>
               <div className="space-y-2">
@@ -632,6 +648,7 @@ export default function RecurringAvailabilityManager({
                     setExtraForm((p) => ({ ...p, start_time: e.target.value }))
                   }
                   required
+                  className={FT_FIELD}
                 />
               </div>
               <div className="space-y-2">
@@ -644,6 +661,7 @@ export default function RecurringAvailabilityManager({
                     setExtraForm((p) => ({ ...p, end_time: e.target.value }))
                   }
                   required
+                  className={FT_FIELD}
                 />
               </div>
               <div className="space-y-2">
@@ -689,6 +707,7 @@ export default function RecurringAvailabilityManager({
                     setExtraForm((p) => ({ ...p, price: e.target.value }))
                   }
                   required
+                  className={FT_FIELD}
                 />
               </div>
               <div className="space-y-2 sm:col-span-2 lg:col-span-3">
@@ -699,10 +718,11 @@ export default function RecurringAvailabilityManager({
                   onChange={(e) =>
                     setExtraForm((p) => ({ ...p, reason: e.target.value }))
                   }
+                  className={FT_FIELD}
                 />
               </div>
               <div>
-                <Button type="submit" disabled={extraSaving}>
+                <Button type="submit" disabled={extraSaving} className={FT_BTN_PRIMARY}>
                   {extraSaving ? t("saving") : t("saveExtra")}
                 </Button>
               </div>
@@ -710,7 +730,7 @@ export default function RecurringAvailabilityManager({
           </div>
 
           {exceptions.length > 0 && (
-            <ul className="divide-y rounded-md border text-sm">
+            <ul className="divide-y divide-ft-line rounded-ft border border-ft-line text-sm text-ft-ink-2">
               {exceptions.map((ex) => (
                 <li
                   key={ex.id}
@@ -740,6 +760,7 @@ export default function RecurringAvailabilityManager({
                     variant="outline"
                     size="sm"
                     onClick={() => openDeleteExceptionDialog(ex.id)}
+                    className={FT_BTN_OUTLINE}
                   >
                     {t("remove")}
                   </Button>

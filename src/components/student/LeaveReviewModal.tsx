@@ -100,14 +100,17 @@ export default function LeaveReviewModal(props: {
 
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent className="flex max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] flex-col overflow-hidden rounded-3xl border-0 bg-white p-0 shadow-[0_28px_80px_rgba(112,42,225,0.22)] sm:max-w-[640px] [&>button]:hidden">
+      <DialogContent
+        data-theme="freetime"
+        className="flex max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] flex-col overflow-hidden rounded-ft-2xl border border-ft-line bg-ft-paper p-0 text-ft-ink shadow-[0_28px_80px_rgba(45,36,26,0.18)] sm:max-w-[640px] [&>button]:hidden"
+      >
         <DialogHeader className="mb-1 px-5 pt-5 text-left sm:px-8 sm:pt-8">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <DialogTitle className="font-plus-jakarta text-xl font-extrabold tracking-tight text-zinc-900 sm:text-2xl">
+              <DialogTitle className="text-xl font-extrabold tracking-tight text-ft-ink sm:text-2xl">
                 {t("leaveReviewTitle")}
               </DialogTitle>
-              <DialogDescription className="mt-2 max-w-[54ch] text-sm leading-relaxed text-zinc-600">
+              <DialogDescription className="mt-2 max-w-[54ch] text-sm leading-relaxed text-ft-ink-3">
                 {t("leaveReviewDescription")}
               </DialogDescription>
             </div>
@@ -116,8 +119,8 @@ export default function LeaveReviewModal(props: {
 
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 pb-4 pt-2 sm:px-8">
-            <div className="rounded-lg bg-violet-50/70 p-4 sm:p-5">
-            <div className="text-xs font-semibold uppercase tracking-[0.14em] text-violet-700">
+            <div className="rounded-ft bg-ft-surface-1 p-4 sm:p-5">
+            <div className="text-xs font-semibold uppercase tracking-[0.14em] text-ft-accent-deep">
               {t("reviewRating")}
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-1.5 sm:gap-2">
@@ -130,13 +133,13 @@ export default function LeaveReviewModal(props: {
                     type="button"
                     className={cn(
                       "rounded-full p-1 transition-transform hover:scale-110",
-                      active ? "text-violet-600" : "text-violet-200"
+                      active ? "text-ft-accent" : "text-ft-surface-2"
                     )}
                     onClick={() => setRating(value)}
                     aria-label={`${value}/5`}
                   >
                     <Star
-                      className={cn("h-8 w-8 sm:h-9 sm:w-9", active ? "text-violet-600" : "text-violet-200")}
+                      className={cn("h-8 w-8 sm:h-9 sm:w-9", active ? "text-ft-accent" : "text-ft-surface-2")}
                       fill={active ? "currentColor" : "transparent"}
                     />
                   </button>
@@ -146,7 +149,7 @@ export default function LeaveReviewModal(props: {
           </div>
 
           <div>
-            <div className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">
+            <div className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-ft-ink-3">
               Lo que más destacó
             </div>
             <div className="flex flex-wrap gap-2">
@@ -160,8 +163,8 @@ export default function LeaveReviewModal(props: {
                     className={cn(
                       "rounded-full px-4 py-2 text-xs font-semibold transition-colors sm:text-sm",
                       isActive
-                        ? "bg-violet-600 text-white shadow-[0_8px_24px_rgba(112,42,225,0.24)]"
-                        : "bg-zinc-100 text-zinc-600 hover:bg-violet-100 hover:text-violet-700"
+                        ? "bg-gradient-to-br from-ft-accent to-ft-accent-deep text-ft-paper shadow-none"
+                        : "bg-ft-surface-1 text-ft-ink-2 hover:bg-ft-surface-2 hover:text-ft-ink"
                     )}
                   >
                     {option}
@@ -172,32 +175,32 @@ export default function LeaveReviewModal(props: {
           </div>
 
           <div className="space-y-2">
-            <div className="text-sm font-semibold text-zinc-700">{t("reviewComment")}</div>
+            <div className="text-sm font-semibold text-ft-ink-2">{t("reviewComment")}</div>
             <Textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder={t("reviewCommentPlaceholder")}
               maxLength={MAX_COMMENT_LENGTH}
-              className="min-h-[140px] resize-none rounded-lg border border-zinc-200/80 bg-zinc-100/70 px-4 py-3 text-zinc-900 placeholder:text-zinc-500 focus-visible:border-violet-300 focus-visible:ring-2 focus-visible:ring-violet-200"
+              className="min-h-[140px] resize-none rounded-ft border border-ft-line bg-ft-surface-1 px-4 py-3 text-ft-ink placeholder:text-ft-ink-3 shadow-none focus-visible:border-ft-accent-deep focus-visible:ring-2 focus-visible:ring-ft-accent/40"
             />
-            <div className="text-right text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
+            <div className="text-right text-[11px] font-semibold uppercase tracking-[0.12em] text-ft-ink-3">
               {comment.length} / {MAX_COMMENT_LENGTH}
             </div>
           </div>
 
           </div>
-          <DialogFooter className="mt-2 flex shrink-0 flex-col gap-3 border-t bg-white px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:gap-3 sm:px-8">
+          <DialogFooter className="mt-2 flex shrink-0 flex-col gap-3 border-t border-ft-line bg-ft-paper px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:gap-3 sm:px-8">
             <Button
               type="button"
               variant="ghost"
-              className="h-12 w-full rounded-full text-zinc-600 hover:bg-zinc-100 sm:order-1 sm:w-auto sm:min-w-[160px]"
+              className="h-12 w-full rounded-ft-md text-ft-ink-2 hover:bg-ft-surface-1 hover:text-ft-ink sm:order-1 sm:w-auto sm:min-w-[160px]"
               onClick={() => props.onOpenChange(false)}
             >
               {t("cancel")}
             </Button>
             <Button
               type="submit"
-              className="h-12 w-full rounded-full bg-gradient-to-r from-violet-600 to-violet-700 font-semibold text-white shadow-[0_12px_30px_rgba(112,42,225,0.26)] hover:opacity-95 sm:order-2 sm:w-auto sm:min-w-[190px]"
+              className="h-12 w-full rounded-ft-md bg-gradient-to-br from-ft-accent to-ft-accent-deep font-semibold text-ft-paper shadow-none hover:opacity-90 sm:order-2 sm:w-auto sm:min-w-[190px]"
               disabled={!isReady || submitting}
             >
               {submitting ? t("reviewSubmitting") : t("reviewSubmit")}

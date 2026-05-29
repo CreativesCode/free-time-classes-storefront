@@ -21,6 +21,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  FT_BTN_OUTLINE,
+  FT_BTN_PRIMARY,
+  FT_FIELD,
+  FT_LABEL,
+  FT_SELECT_TRIGGER,
+  FT_TEXTAREA,
+} from "@/components/teacher/ftStyles";
+import { cn } from "@/lib/utils";
 import { useTranslations } from "@/i18n/translations";
 import {
   createCourse,
@@ -229,8 +238,7 @@ export default function TutorCoursesManager({
     [t]
   );
 
-  const courseFormSelectTrigger =
-    "h-10 rounded-md border border-gray-300 bg-white shadow-sm hover:bg-gray-50/90 disabled:opacity-50";
+  const courseFormSelectTrigger = FT_SELECT_TRIGGER;
 
   const courseBeingEdited = useMemo(
     () => courses.find((c) => c.id === editCourseId) ?? null,
@@ -455,34 +463,34 @@ export default function TutorCoursesManager({
 
   return (
     <div className="space-y-6 lg:space-y-8">
-      <section className="relative overflow-hidden rounded-2xl border border-primary-100 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-6 sm:p-8">
-        <div className="absolute -right-16 -top-20 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute -left-16 -bottom-20 h-48 w-48 rounded-full bg-fuchsia-300/20 blur-3xl" />
+      <section className="relative overflow-hidden rounded-ft-2xl border border-ft-line bg-gradient-to-br from-ft-surface-2 via-ft-surface-1 to-ft-paper p-6 sm:p-8">
+        <div className="absolute -right-16 -top-20 h-48 w-48 rounded-full bg-ft-accent/15 blur-3xl" />
+        <div className="absolute -left-16 -bottom-20 h-48 w-48 rounded-full bg-ft-accent-soft/30 blur-3xl" />
         <div className="relative flex flex-col gap-6">
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-700">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ft-accent-deep">
               {t("heroEyebrow")}
             </p>
-            <h2 className="text-2xl font-extrabold tracking-tight text-primary-950 sm:text-3xl lg:text-4xl">
+            <h2 className="text-2xl font-extrabold tracking-tight text-ft-ink sm:text-3xl lg:text-4xl">
               {t("heroTitle")}
             </h2>
-            <p className="max-w-2xl text-sm text-gray-600 sm:text-base">
+            <p className="max-w-2xl text-sm text-ft-ink-2 sm:text-base">
               {t("heroDescription")}
             </p>
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-white/70 bg-white/80 p-5 backdrop-blur">
-              <p className="text-xs uppercase tracking-wide text-gray-500">{t("statTotalCourses")}</p>
-              <p className="mt-2 text-2xl font-bold text-primary-900">{courses.length}</p>
+            <div className="rounded-ft-base border border-ft-line bg-ft-paper/80 p-5 backdrop-blur">
+              <p className="text-xs uppercase tracking-wide text-ft-ink-3">{t("statTotalCourses")}</p>
+              <p className="mt-2 text-2xl font-bold text-ft-ink">{courses.length}</p>
             </div>
-            <div className="rounded-xl border border-white/70 bg-white/80 p-5 backdrop-blur">
-              <p className="text-xs uppercase tracking-wide text-gray-500">{t("statPublished")}</p>
-              <p className="mt-2 text-2xl font-bold text-primary-900">{totalPublished}</p>
+            <div className="rounded-ft-base border border-ft-line bg-ft-paper/80 p-5 backdrop-blur">
+              <p className="text-xs uppercase tracking-wide text-ft-ink-3">{t("statPublished")}</p>
+              <p className="mt-2 text-2xl font-bold text-ft-ink">{totalPublished}</p>
             </div>
-            <div className="rounded-xl border border-white/70 bg-white/80 p-5 backdrop-blur">
-              <p className="text-xs uppercase tracking-wide text-gray-500">{t("statStatus")}</p>
-              <p className="mt-2 text-sm font-semibold text-primary-900">
+            <div className="rounded-ft-base border border-ft-line bg-ft-paper/80 p-5 backdrop-blur">
+              <p className="text-xs uppercase tracking-wide text-ft-ink-3">{t("statStatus")}</p>
+              <p className="mt-2 text-sm font-semibold text-ft-ink">
                 {isLoadingCatalog ? t("loading") : t("readyToCreate")}
               </p>
             </div>
@@ -491,33 +499,33 @@ export default function TutorCoursesManager({
       </section>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
-        <Card className="w-full border-violet-100 xl:col-span-8">
+        <Card className="w-full rounded-ft-2xl border-ft-line bg-ft-paper shadow-none xl:col-span-8">
           <CardHeader className="space-y-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <CardTitle className="text-primary-900">{t("title")}</CardTitle>
-                <CardDescription>{t("description")}</CardDescription>
+                <CardTitle className="text-ft-ink">{t("title")}</CardTitle>
+                <CardDescription className="text-ft-ink-3">{t("description")}</CardDescription>
               </div>
               <Button
                 type="button"
                 onClick={() => setCreateOpen(true)}
                 disabled={isLoadingCatalog}
-                className="w-full rounded-full sm:w-auto"
+                className={cn(FT_BTN_PRIMARY, "w-full sm:w-auto")}
               >
                 {t("createAction")}
               </Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {error ? <p className="text-sm text-destructive">{error}</p> : null}
+            {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
             {isLoadingCatalog ? (
-              <div className="flex h-24 items-center justify-center text-sm text-gray-600">
+              <div className="flex h-24 items-center justify-center text-sm text-ft-ink-3">
                 {t("loading")}
               </div>
             ) : courses.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-violet-200 bg-violet-50/40 p-8 text-center">
-                <p className="text-sm text-gray-600">{t("noCourses")}</p>
+              <div className="rounded-ft-base border border-dashed border-ft-line bg-ft-surface-1/50 p-8 text-center">
+                <p className="text-sm text-ft-ink-3">{t("noCourses")}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -526,10 +534,10 @@ export default function TutorCoursesManager({
                   return (
                     <article
                       key={course.id}
-                      className="overflow-hidden rounded-xl border border-violet-100 bg-white shadow-sm"
+                      className="overflow-hidden rounded-ft-lg border border-ft-line bg-ft-surface-1 shadow-none"
                     >
                       <div className="flex flex-col sm:flex-row">
-                        <div className="relative h-36 w-full shrink-0 bg-gradient-to-br from-primary/85 via-violet-500/85 to-fuchsia-500/85 sm:h-auto sm:min-h-[132px] sm:w-40 md:w-44">
+                        <div className="relative h-36 w-full shrink-0 bg-gradient-to-br from-ft-accent to-ft-accent-deep sm:h-auto sm:min-h-[132px] sm:w-40 md:w-44">
                           {listCoverUrl ? (
                             <Image
                               src={listCoverUrl}
@@ -540,25 +548,25 @@ export default function TutorCoursesManager({
                             />
                           ) : (
                             <div className="flex h-full min-h-[9rem] items-center justify-center sm:min-h-[132px]">
-                              <ImageIcon className="h-12 w-12 text-white/45" aria-hidden />
+                              <ImageIcon className="h-12 w-12 text-ft-paper/55" aria-hidden />
                             </div>
                           )}
                         </div>
                         <div className="flex min-w-0 flex-1 flex-col gap-4 p-5 sm:p-6">
                           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                             <div className="min-w-0 flex-1 space-y-2">
-                              <h3 className="truncate text-base font-bold text-primary-950 sm:text-lg">
+                              <h3 className="truncate text-base font-bold text-ft-ink sm:text-lg">
                                 {course.title}
                               </h3>
-                              <p className="text-sm text-gray-600">
+                              <p className="text-sm text-ft-ink-3">
                                 {subjectNameById.get(course.subject_id ?? -1) ?? "—"} ·{" "}
                                 {course.duration_minutes ?? 60} min · ${course.price_per_session} ·{" "}
                                 {getLevelLabel(course.level)}
                               </p>
-                              <div className="mt-1 flex items-center gap-1 text-sm text-gray-700">
-                                <Star className="h-4 w-4 text-primary-600" fill="currentColor" />
+                              <div className="mt-1 flex items-center gap-1 text-sm text-ft-ink-2">
+                                <Star className="h-4 w-4 text-ft-accent" fill="currentColor" />
                                 <span>{(course.rating ?? 0).toFixed(1)}</span>
-                                <span className="text-gray-500">
+                                <span className="text-ft-ink-3">
                                   ({course.total_reviews ?? 0} {t("reviewsLabel")})
                                 </span>
                               </div>
@@ -568,8 +576,8 @@ export default function TutorCoursesManager({
                               <Badge
                                 className={
                                   course.is_active
-                                    ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100"
-                                    : "bg-gray-200 text-gray-700 hover:bg-gray-200"
+                                    ? "border-transparent bg-emerald-100 text-emerald-800 hover:bg-emerald-100"
+                                    : "border-transparent bg-ft-surface-2 text-ft-ink-2 hover:bg-ft-surface-2"
                                 }
                               >
                                 {course.is_active ? t("active") : t("inactive")}
@@ -580,7 +588,7 @@ export default function TutorCoursesManager({
                                 variant="outline"
                                 disabled={isSaving}
                                 onClick={() => openEditForCourse(course)}
-                                className="rounded-full"
+                                className={FT_BTN_OUTLINE}
                               >
                                 {t("edit")}
                               </Button>
@@ -590,7 +598,7 @@ export default function TutorCoursesManager({
                                 variant="destructive"
                                 disabled={isSaving}
                                 onClick={() => void handleDelete(course.id)}
-                                className="rounded-full"
+                                className="rounded-ft-md shadow-none"
                               >
                                 {t("delete")}
                               </Button>
@@ -608,8 +616,8 @@ export default function TutorCoursesManager({
 
         <aside className="xl:col-span-4">
           <div className="sticky top-24 space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 xl:grid-cols-1">
-            <div className="overflow-hidden rounded-xl border border-violet-100 bg-white shadow-sm">
-              <div className="relative h-28 bg-gradient-to-br from-primary via-violet-500 to-fuchsia-500 md:h-32">
+            <div className="overflow-hidden rounded-ft-lg border border-ft-line bg-ft-surface-1 shadow-none">
+              <div className="relative h-28 bg-gradient-to-br from-ft-accent to-ft-accent-deep md:h-32">
                 {createCoverPreview ? (
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -623,39 +631,39 @@ export default function TutorCoursesManager({
               </div>
               <div className="space-y-4 p-5">
                 <div className="flex items-center justify-between">
-                  <span className="rounded-md bg-violet-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-violet-700">
+                  <span className="rounded-ft-xs bg-ft-accent-soft px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-ft-accent-deep">
                     Preview
                   </span>
-                  <span className="text-lg font-bold text-primary-900">
+                  <span className="text-lg font-bold text-ft-ink">
                     ${createForm.price || "0"}
                   </span>
                 </div>
-                <h4 className="line-clamp-2 text-base font-bold text-primary-950">
+                <h4 className="line-clamp-2 text-base font-bold text-ft-ink">
                   {createForm.title.trim() || "Titulo de tu curso..."}
                 </h4>
-                <div className="space-y-2 text-xs text-gray-600">
+                <div className="space-y-2 text-xs text-ft-ink-3">
                   <div className="flex items-center gap-2">
-                    <Clock3 className="h-3.5 w-3.5 text-primary-600" />
+                    <Clock3 className="h-3.5 w-3.5 text-ft-accent-deep" />
                     <span>{createForm.duration_minutes || "60"} min</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <BookOpen className="h-3.5 w-3.5 text-primary-600" />
+                    <BookOpen className="h-3.5 w-3.5 text-ft-accent-deep" />
                     <span>{createForm.level ? getLevelLabel(createForm.level) : t("level.none")}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Users className="h-3.5 w-3.5 text-primary-600" />
+                    <Users className="h-3.5 w-3.5 text-ft-accent-deep" />
                     <span>{createForm.max_students || "1"} estudiantes</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-xl border border-violet-100 bg-violet-50/50 p-5 shadow-sm">
-              <p className="mb-2 flex items-center gap-2 text-sm font-bold text-primary-900">
-                <Sparkles className="h-4 w-4" />
+            <div className="rounded-ft-lg border border-ft-line bg-ft-surface-1/60 p-5 shadow-none">
+              <p className="mb-2 flex items-center gap-2 text-sm font-bold text-ft-ink">
+                <Sparkles className="h-4 w-4 text-ft-accent-deep" />
                 Consejo editorial
               </p>
-              <p className="text-xs leading-relaxed text-gray-600">
+              <p className="text-xs leading-relaxed text-ft-ink-3">
                 Los cursos con una descripcion clara y objetivos concretos suelen
                 convertir mejor.
               </p>
@@ -676,10 +684,13 @@ export default function TutorCoursesManager({
           }
         }}
       >
-        <DialogContent className="flex max-h-[calc(100dvh-1rem)] flex-col overflow-hidden p-0 sm:max-w-[650px]">
+        <DialogContent
+          data-theme="freetime"
+          className="flex max-h-[calc(100dvh-1rem)] flex-col overflow-hidden border-ft-line bg-ft-paper p-0 text-ft-ink sm:max-w-[650px] sm:rounded-ft-2xl"
+        >
           <DialogHeader className="px-4 pt-6 sm:px-6">
-            <DialogTitle>{t("createTitle")}</DialogTitle>
-            <DialogDescription>{t("createDescription")}</DialogDescription>
+            <DialogTitle className="text-[20px] font-semibold tracking-[-0.02em] text-ft-ink">{t("createTitle")}</DialogTitle>
+            <DialogDescription className="text-ft-ink-3">{t("createDescription")}</DialogDescription>
           </DialogHeader>
 
           <form
@@ -694,7 +705,7 @@ export default function TutorCoursesManager({
               className="min-h-0 flex-1 space-y-4 overflow-y-auto overflow-x-visible px-4 pb-4 pt-1 sm:px-6"
             >
               <div className="space-y-2">
-                <Label htmlFor="course-title">{t("fieldTitle")}</Label>
+                <Label htmlFor="course-title" className={FT_LABEL}>{t("fieldTitle")}</Label>
                 <Input
                   id="course-title"
                   value={createForm.title}
@@ -704,11 +715,12 @@ export default function TutorCoursesManager({
                   placeholder={t("fieldTitlePlaceholder")}
                   disabled={isSaving}
                   required
+                  className={FT_FIELD}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="course-description">{t("fieldDescription")}</Label>
+                <Label htmlFor="course-description" className={FT_LABEL}>{t("fieldDescription")}</Label>
                 <Textarea
                   id="course-description"
                   value={createForm.description}
@@ -716,22 +728,22 @@ export default function TutorCoursesManager({
                     setCreateForm((p) => ({ ...p, description: e.target.value }))
                   }
                   placeholder={t("fieldDescriptionPlaceholder")}
-                  className="min-h-[110px]"
+                  className={cn(FT_TEXTAREA, "min-h-[110px]")}
                   disabled={isSaving}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="course-cover">{t("fieldCoverImage")}</Label>
-                <p className="text-xs text-gray-500">{t("fieldCoverImageHint")}</p>
+                <Label htmlFor="course-cover" className={FT_LABEL}>{t("fieldCoverImage")}</Label>
+                <p className="text-xs text-ft-ink-3">{t("fieldCoverImageHint")}</p>
                 <div className="flex flex-wrap items-center gap-3">
                   <Input
                     id="course-cover"
                     type="file"
                     accept="image/*"
                     disabled={isSaving}
-                    className="cursor-pointer text-sm file:mr-3"
+                    className={cn(FT_FIELD, "cursor-pointer text-sm file:mr-3 file:text-ft-ink-2")}
                     onChange={(e) => {
                       const file = e.target.files?.[0] ?? null;
                       e.target.value = "";
@@ -745,13 +757,14 @@ export default function TutorCoursesManager({
                       size="sm"
                       disabled={isSaving}
                       onClick={clearCreateCover}
+                      className={FT_BTN_OUTLINE}
                     >
                       {t("removeCover")}
                     </Button>
                   ) : null}
                 </div>
                 {createCoverPreview ? (
-                  <div className="relative mt-2 aspect-[16/9] max-h-36 w-full overflow-hidden rounded-lg border border-violet-100 bg-violet-50">
+                  <div className="relative mt-2 aspect-[16/9] max-h-36 w-full overflow-hidden rounded-ft border border-ft-line bg-ft-surface-1">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={createCoverPreview}
@@ -764,7 +777,7 @@ export default function TutorCoursesManager({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="course-subject">{t("fieldSubject")}</Label>
+                  <Label htmlFor="course-subject" className={FT_LABEL}>{t("fieldSubject")}</Label>
                   <SelectMenu
                     id="course-subject"
                     value={createForm.subject_id}
@@ -780,7 +793,7 @@ export default function TutorCoursesManager({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="course-level">{t("fieldLevel")}</Label>
+                  <Label htmlFor="course-level" className={FT_LABEL}>{t("fieldLevel")}</Label>
                   <SelectMenu
                     id="course-level"
                     value={createForm.level}
@@ -801,7 +814,7 @@ export default function TutorCoursesManager({
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="course-price">{t("fieldPrice")}</Label>
+                  <Label htmlFor="course-price" className={FT_LABEL}>{t("fieldPrice")}</Label>
                   <Input
                     id="course-price"
                     type="number"
@@ -813,11 +826,12 @@ export default function TutorCoursesManager({
                     }
                     disabled={isSaving}
                     required
+                    className={FT_FIELD}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="course-duration">{t("fieldDurationMinutes")}</Label>
+                  <Label htmlFor="course-duration" className={FT_LABEL}>{t("fieldDurationMinutes")}</Label>
                   <Input
                     id="course-duration"
                     type="number"
@@ -832,11 +846,12 @@ export default function TutorCoursesManager({
                     }
                     disabled={isSaving}
                     required
+                    className={FT_FIELD}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="course-max">{t("fieldMaxStudents")}</Label>
+                  <Label htmlFor="course-max" className={FT_LABEL}>{t("fieldMaxStudents")}</Label>
                   <Input
                     id="course-max"
                     type="number"
@@ -851,33 +866,35 @@ export default function TutorCoursesManager({
                     }
                     disabled={isSaving}
                     required
+                    className={FT_FIELD}
                   />
                 </div>
               </div>
 
               <div className="flex items-center justify-between gap-4">
                 <div className="space-y-1">
-                  <Label htmlFor="course-active">{t("fieldStatus")}</Label>
-                  <p className="text-xs text-gray-500">
+                  <Label htmlFor="course-active" className={FT_LABEL}>{t("fieldStatus")}</Label>
+                  <p className="text-xs text-ft-ink-3">
                     {createForm.is_active ? t("activeHint") : t("inactiveHint")}
                   </p>
                 </div>
                 <Button
                   type="button"
-                  variant={createForm.is_active ? "default" : "outline"}
+                  variant="outline"
                   disabled={isSaving}
                   onClick={() =>
                     setCreateForm((p) => ({ ...p, is_active: !p.is_active }))
                   }
+                  className={createForm.is_active ? FT_BTN_PRIMARY : FT_BTN_OUTLINE}
                 >
                   {createForm.is_active ? t("active") : t("inactive")}
                 </Button>
               </div>
 
-              {error ? <p className="text-sm text-destructive">{error}</p> : null}
+              {error ? <p className="text-sm text-red-600">{error}</p> : null}
             </div>
 
-            <DialogFooter className="mt-2 flex shrink-0 flex-col gap-2 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:px-6">
+            <DialogFooter className="mt-2 flex shrink-0 flex-col gap-2 border-t border-ft-line bg-ft-paper px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:px-6">
               <Button
                 type="button"
                 variant="outline"
@@ -886,10 +903,11 @@ export default function TutorCoursesManager({
                   setError(null);
                 }}
                 disabled={isSaving}
+                className={FT_BTN_OUTLINE}
               >
                 {t("cancel")}
               </Button>
-              <Button type="submit" disabled={isSaving}>
+              <Button type="submit" disabled={isSaving} className={FT_BTN_PRIMARY}>
                 {isSaving ? t("creating") : t("create")}
               </Button>
             </DialogFooter>
@@ -910,10 +928,13 @@ export default function TutorCoursesManager({
           }
         }}
       >
-        <DialogContent className="flex max-h-[calc(100dvh-1rem)] flex-col overflow-hidden p-0 sm:max-w-[650px]">
+        <DialogContent
+          data-theme="freetime"
+          className="flex max-h-[calc(100dvh-1rem)] flex-col overflow-hidden border-ft-line bg-ft-paper p-0 text-ft-ink sm:max-w-[650px] sm:rounded-ft-2xl"
+        >
           <DialogHeader className="px-4 pt-6 sm:px-6">
-            <DialogTitle>{t("editTitle")}</DialogTitle>
-            <DialogDescription>{t("editDescription")}</DialogDescription>
+            <DialogTitle className="text-[20px] font-semibold tracking-[-0.02em] text-ft-ink">{t("editTitle")}</DialogTitle>
+            <DialogDescription className="text-ft-ink-3">{t("editDescription")}</DialogDescription>
           </DialogHeader>
 
           <form
@@ -928,7 +949,7 @@ export default function TutorCoursesManager({
               className="min-h-0 flex-1 space-y-4 overflow-y-auto overflow-x-visible px-4 pb-4 pt-1 sm:px-6"
             >
               <div className="space-y-2">
-                <Label htmlFor="edit-course-title">{t("fieldTitle")}</Label>
+                <Label htmlFor="edit-course-title" className={FT_LABEL}>{t("fieldTitle")}</Label>
                 <Input
                   id="edit-course-title"
                   value={editForm.title}
@@ -937,11 +958,12 @@ export default function TutorCoursesManager({
                   }
                   disabled={isSaving}
                   required
+                  className={FT_FIELD}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-course-description">
+                <Label htmlFor="edit-course-description" className={FT_LABEL}>
                   {t("fieldDescription")}
                 </Label>
                 <Textarea
@@ -953,22 +975,22 @@ export default function TutorCoursesManager({
                       description: e.target.value,
                     }))
                   }
-                  className="min-h-[110px]"
+                  className={cn(FT_TEXTAREA, "min-h-[110px]")}
                   disabled={isSaving}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-course-cover">{t("fieldCoverImage")}</Label>
-                <p className="text-xs text-gray-500">{t("fieldCoverImageHint")}</p>
+                <Label htmlFor="edit-course-cover" className={FT_LABEL}>{t("fieldCoverImage")}</Label>
+                <p className="text-xs text-ft-ink-3">{t("fieldCoverImageHint")}</p>
                 <div className="flex flex-wrap items-center gap-3">
                   <Input
                     id="edit-course-cover"
                     type="file"
                     accept="image/*"
                     disabled={isSaving}
-                    className="cursor-pointer text-sm file:mr-3"
+                    className={cn(FT_FIELD, "cursor-pointer text-sm file:mr-3 file:text-ft-ink-2")}
                     onChange={(e) => {
                       const file = e.target.files?.[0] ?? null;
                       e.target.value = "";
@@ -982,6 +1004,7 @@ export default function TutorCoursesManager({
                       size="sm"
                       disabled={isSaving}
                       onClick={markEditCoverRemoved}
+                      className={FT_BTN_OUTLINE}
                     >
                       {t("removeCover")}
                     </Button>
@@ -991,7 +1014,7 @@ export default function TutorCoursesManager({
                   <p className="text-xs text-amber-700">{t("coverWillBeRemoved")}</p>
                 ) : null}
                 {editCoverDisplayUrl ? (
-                  <div className="relative mt-2 aspect-[16/9] max-h-36 w-full overflow-hidden rounded-lg border border-violet-100 bg-violet-50">
+                  <div className="relative mt-2 aspect-[16/9] max-h-36 w-full overflow-hidden rounded-ft border border-ft-line bg-ft-surface-1">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={editCoverDisplayUrl}
@@ -1000,7 +1023,7 @@ export default function TutorCoursesManager({
                     />
                   </div>
                 ) : (
-                  <div className="mt-2 flex aspect-[16/9] max-h-36 w-full items-center justify-center rounded-lg border border-dashed border-violet-200 bg-violet-50/50 text-gray-400">
+                  <div className="mt-2 flex aspect-[16/9] max-h-36 w-full items-center justify-center rounded-ft border border-dashed border-ft-line bg-ft-surface-1/50 text-ft-ink-3">
                     <ImageIcon className="h-10 w-10" aria-hidden />
                   </div>
                 )}
@@ -1008,7 +1031,7 @@ export default function TutorCoursesManager({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-course-subject">{t("fieldSubject")}</Label>
+                  <Label htmlFor="edit-course-subject" className={FT_LABEL}>{t("fieldSubject")}</Label>
                   <SelectMenu
                     id="edit-course-subject"
                     value={editForm.subject_id}
@@ -1024,7 +1047,7 @@ export default function TutorCoursesManager({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="edit-course-level">{t("fieldLevel")}</Label>
+                  <Label htmlFor="edit-course-level" className={FT_LABEL}>{t("fieldLevel")}</Label>
                   <SelectMenu
                     id="edit-course-level"
                     value={editForm.level}
@@ -1045,7 +1068,7 @@ export default function TutorCoursesManager({
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-course-price">{t("fieldPrice")}</Label>
+                  <Label htmlFor="edit-course-price" className={FT_LABEL}>{t("fieldPrice")}</Label>
                   <Input
                     id="edit-course-price"
                     type="number"
@@ -1057,11 +1080,12 @@ export default function TutorCoursesManager({
                     }
                     disabled={isSaving}
                     required
+                    className={FT_FIELD}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="edit-course-duration">
+                  <Label htmlFor="edit-course-duration" className={FT_LABEL}>
                     {t("fieldDurationMinutes")}
                   </Label>
                   <Input
@@ -1078,11 +1102,12 @@ export default function TutorCoursesManager({
                     }
                     disabled={isSaving}
                     required
+                    className={FT_FIELD}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="edit-course-max">{t("fieldMaxStudents")}</Label>
+                  <Label htmlFor="edit-course-max" className={FT_LABEL}>{t("fieldMaxStudents")}</Label>
                   <Input
                     id="edit-course-max"
                     type="number"
@@ -1097,33 +1122,35 @@ export default function TutorCoursesManager({
                     }
                     disabled={isSaving}
                     required
+                    className={FT_FIELD}
                   />
                 </div>
               </div>
 
               <div className="flex items-center justify-between gap-4">
                 <div className="space-y-1">
-                  <Label htmlFor="edit-course-active">{t("fieldStatus")}</Label>
-                  <p className="text-xs text-gray-500">
+                  <Label htmlFor="edit-course-active" className={FT_LABEL}>{t("fieldStatus")}</Label>
+                  <p className="text-xs text-ft-ink-3">
                     {editForm.is_active ? t("activeHint") : t("inactiveHint")}
                   </p>
                 </div>
                 <Button
                   type="button"
-                  variant={editForm.is_active ? "default" : "outline"}
+                  variant="outline"
                   disabled={isSaving}
                   onClick={() =>
                     setEditForm((p) => ({ ...p, is_active: !p.is_active }))
                   }
+                  className={editForm.is_active ? FT_BTN_PRIMARY : FT_BTN_OUTLINE}
                 >
                   {editForm.is_active ? t("active") : t("inactive")}
                 </Button>
               </div>
 
-              {error ? <p className="text-sm text-destructive">{error}</p> : null}
+              {error ? <p className="text-sm text-red-600">{error}</p> : null}
             </div>
 
-            <DialogFooter className="mt-2 flex shrink-0 flex-col gap-2 border-t bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:px-6">
+            <DialogFooter className="mt-2 flex shrink-0 flex-col gap-2 border-t border-ft-line bg-ft-paper px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:px-6">
               <Button
                 type="button"
                 variant="outline"
@@ -1132,10 +1159,11 @@ export default function TutorCoursesManager({
                   setError(null);
                 }}
                 disabled={isSaving}
+                className={FT_BTN_OUTLINE}
               >
                 {t("cancel")}
               </Button>
-              <Button type="submit" disabled={isSaving}>
+              <Button type="submit" disabled={isSaving} className={FT_BTN_PRIMARY}>
                 {isSaving ? t("updating") : t("update")}
               </Button>
             </DialogFooter>
@@ -1144,18 +1172,21 @@ export default function TutorCoursesManager({
       </Dialog>
 
       <Dialog open={publishedSuccessOpen} onOpenChange={setPublishedSuccessOpen}>
-        <DialogContent className="max-w-md overflow-hidden border-violet-100 p-0">
-          <div className="bg-gradient-to-br from-primary to-violet-500 p-8 text-white">
-            <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-white/20">
+        <DialogContent
+          data-theme="freetime"
+          className="max-w-md overflow-hidden border-ft-line bg-ft-paper p-0 sm:rounded-ft-2xl"
+        >
+          <div className="bg-gradient-to-br from-ft-accent to-ft-accent-deep p-8 text-ft-paper">
+            <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-ft-paper/20">
               <CheckCircle2 className="h-8 w-8" />
             </div>
             <h3 className="text-2xl font-extrabold tracking-tight">Curso publicado</h3>
-            <p className="mt-2 text-sm text-violet-100">
+            <p className="mt-2 text-sm text-ft-paper/80">
               Tu curso ya esta disponible para tus estudiantes.
             </p>
           </div>
           <div className="space-y-4 p-6">
-            <div className="rounded-xl bg-violet-50 p-4 text-sm text-violet-900">
+            <div className="rounded-ft bg-ft-surface-1 p-4 text-sm text-ft-ink-2">
               Comparte el curso y sigue creando nuevas experiencias de aprendizaje.
             </div>
             <DialogFooter className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
@@ -1163,7 +1194,7 @@ export default function TutorCoursesManager({
                 type="button"
                 variant="outline"
                 onClick={() => setPublishedSuccessOpen(false)}
-                className="w-full rounded-full sm:w-auto"
+                className={cn(FT_BTN_OUTLINE, "w-full sm:w-auto")}
               >
                 Cerrar
               </Button>
@@ -1173,7 +1204,7 @@ export default function TutorCoursesManager({
                   setPublishedSuccessOpen(false);
                   setCreateOpen(true);
                 }}
-                className="w-full rounded-full sm:w-auto"
+                className={cn(FT_BTN_PRIMARY, "w-full sm:w-auto")}
               >
                 Crear otro
               </Button>

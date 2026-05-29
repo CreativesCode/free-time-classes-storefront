@@ -13,6 +13,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { FT_BTN_OUTLINE, FT_BTN_PRIMARY } from "@/components/teacher/ftStyles";
 import { useAuth } from "@/context/UserContext";
 import { useLocale, useTranslations } from "@/i18n/translations";
 import {
@@ -242,21 +243,20 @@ export default function AvailabilityCalendar({
   };
 
   return (
-    <Card>
+    <Card className="rounded-ft-2xl border-ft-line bg-ft-paper shadow-none">
       <CardHeader>
-        <CardTitle className="text-primary-800">{t("availability")}</CardTitle>
+        <CardTitle className="text-ft-ink">{t("availability")}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="mb-4 flex gap-2">
           <Button
-            variant="ghost"
-            className="btn-primary"
+            className={FT_BTN_PRIMARY}
             onClick={() => setShowAddModal(true)}
           >
             {t("addAvailability")}
           </Button>
         </div>
-        <div className="mb-4 flex flex-wrap gap-3 text-xs text-gray-700">
+        <div className="mb-4 flex flex-wrap gap-3 text-xs text-ft-ink-2">
           <div className="inline-flex items-center gap-2">
             <span
               className="inline-block h-3 w-3 rounded-full"
@@ -279,14 +279,14 @@ export default function AvailabilityCalendar({
             <span>{t("calendarStatus.confirmed")}</span>
           </div>
         </div>
-        <p className="mb-3 text-xs text-muted-foreground">
+        <p className="mb-3 text-xs text-ft-ink-3">
           {t("calendarGenerationHint")}
         </p>
-        <div className="relative h-[600px]">
+        <div className="ft-calendar relative h-[600px]">
           {calendarLoading && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-background/70 backdrop-blur-[1px]">
-              <div className="flex items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm text-muted-foreground shadow-sm">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-ft bg-ft-paper/70 backdrop-blur-[1px]">
+              <div className="flex items-center gap-2 rounded-ft border border-ft-line bg-ft-paper px-3 py-2 text-sm text-ft-ink-2 shadow-sm">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-ft-accent border-t-transparent" />
                 <span>{t("calendarLoading")}</span>
               </div>
             </div>
@@ -337,14 +337,19 @@ export default function AvailabilityCalendar({
         </div>
       </CardContent>
       <Dialog open={!!selectedLessonId} onOpenChange={handleCloseDialog}>
-        <DialogContent className="flex max-h-[calc(100dvh-1rem)] flex-col overflow-hidden p-0 sm:max-w-[525px]">
+        <DialogContent
+          data-theme="freetime"
+          className="flex max-h-[calc(100dvh-1rem)] flex-col overflow-hidden border-ft-line bg-ft-paper p-0 text-ft-ink sm:max-w-[525px] sm:rounded-ft-2xl"
+        >
           <DialogHeader className="px-4 pt-6 sm:px-6">
-            <DialogTitle>{t("lessonDetails")}</DialogTitle>
+            <DialogTitle className="text-[20px] font-semibold tracking-[-0.02em] text-ft-ink">
+              {t("lessonDetails")}
+            </DialogTitle>
           </DialogHeader>
           {lessonLoading ? (
             <div className="min-h-0 flex-1 px-4 pb-4 pt-1 sm:px-6">
               <div className="flex justify-center py-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ft-accent"></div>
             </div>
             </div>
           ) : selectedLesson ? (
@@ -352,10 +357,10 @@ export default function AvailabilityCalendar({
               <div className="space-y-4">
               {selectedLesson.tutor?.user && (
                 <div>
-                  <h3 className="font-semibold text-primary-800">
+                  <h3 className="font-semibold text-ft-ink">
                     {t("tutor")} {selectedLesson.tutor.user.username}
                   </h3>
-                  <p className="text-sm text-gray-600 flex items-center gap-2">
+                  <p className="text-sm text-ft-ink-3 flex items-center gap-2">
                     <Mail className="w-4 h-4" />
                     <Link href={`mailto:${selectedLesson.tutor.user.email}`}>
                       {selectedLesson.tutor.user.email}
@@ -366,11 +371,11 @@ export default function AvailabilityCalendar({
               {selectedLesson.subject && (
                 <>
                   <div>
-                    <h3 className="font-semibold text-primary-800">
+                    <h3 className="font-semibold text-ft-ink">
                       {selectedLesson.subject.name}
                     </h3>
                     {selectedLesson.subject.language && (
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-ft-ink-3">
                         {selectedLesson.subject.language.name}
                         {selectedLesson.subject.language.level &&
                           ` - ${selectedLesson.subject.language.level}`}
@@ -382,7 +387,7 @@ export default function AvailabilityCalendar({
                     <div>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <p className="text-sm">
+                          <p className="text-sm text-ft-ink-2">
                             {selectedLesson.subject.description}
                           </p>
                         </TooltipTrigger>
@@ -397,10 +402,10 @@ export default function AvailabilityCalendar({
               <div className="grid grid-cols-2 gap-4">
                 {selectedLesson.scheduled_date_time && (
                   <div>
-                    <p className="text-sm font-medium text-primary-800">
+                    <p className="text-sm font-medium text-ft-ink">
                       {t("date")}
                     </p>
-                    <p className="text-sm">
+                    <p className="text-sm text-ft-ink-2">
                       {new Date(
                         selectedLesson.scheduled_date_time
                       ).toLocaleString()}
@@ -408,37 +413,37 @@ export default function AvailabilityCalendar({
                   </div>
                 )}
                 <div>
-                  <p className="text-sm font-medium text-primary-800">
+                  <p className="text-sm font-medium text-ft-ink">
                     {t("duration")}
                   </p>
-                  <p className="text-sm">
+                  <p className="text-sm text-ft-ink-2">
                     {selectedLesson.duration_minutes} {t("minutes")}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-primary-800">
+                  <p className="text-sm font-medium text-ft-ink">
                     {t("price")}
                   </p>
-                  <p className="text-sm">${selectedLesson.price}</p>
+                  <p className="text-sm text-ft-ink-2">${selectedLesson.price}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-primary-800">
+                  <p className="text-sm font-medium text-ft-ink">
                     {t("status")}
                   </p>
-                  <p className="text-sm">{t(selectedLesson.status)}</p>
+                  <p className="text-sm text-ft-ink-2">{t(selectedLesson.status)}</p>
                 </div>
               </div>
               {user?.email === selectedLesson.tutor?.user?.email && (
-                <div className="mt-2 flex justify-end gap-2 border-t pt-3">
+                <div className="mt-2 flex justify-end gap-2 border-t border-ft-line pt-3">
                   <Button
                     variant="outline"
-                    className="btn-secondary"
+                    className={FT_BTN_OUTLINE}
                     onClick={handleDeleteClick}
                     disabled={deleteLoading}
                   >
                     {deleteLoading ? t("deleting") : t("delete")}
                   </Button>
-                  <Button variant="outline" className="btn-primary">
+                  <Button className={FT_BTN_PRIMARY}>
                     {t("edit")}
                   </Button>
                 </div>

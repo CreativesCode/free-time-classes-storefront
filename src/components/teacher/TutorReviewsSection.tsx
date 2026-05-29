@@ -87,9 +87,9 @@ export default function TutorReviewsSection() {
   }
 
   return (
-    <Card className="w-full rounded-md border border-violet-100 bg-white/80 shadow-none">
+    <Card className="w-full rounded-ft-lg border-ft-line bg-ft-paper shadow-none">
       <CardHeader>
-        <CardTitle>{t("reviewsTitle")}</CardTitle>
+        <CardTitle className="text-ft-ink">{t("reviewsTitle")}</CardTitle>
       </CardHeader>
       <CardContent>
         {loading ? (
@@ -106,11 +106,11 @@ export default function TutorReviewsSection() {
               return (
                 <div
                   key={review.id}
-                  className="space-y-3 rounded-md border border-violet-100 bg-white/80 p-4"
+                  className="space-y-3 rounded-ft border border-ft-line bg-ft-surface-1 p-4"
                 >
                   <div className="flex items-center justify-between gap-4">
-                    <div className="font-medium text-gray-900">{studentName}</div>
-                    <div className="flex items-center gap-1 text-sm text-primary-700">
+                    <div className="font-medium text-ft-ink">{studentName}</div>
+                    <div className="flex items-center gap-1 text-sm text-ft-accent">
                       <Star className="h-4 w-4" fill="currentColor" />
                       <span className="font-medium">{review.rating}/5</span>
                     </div>

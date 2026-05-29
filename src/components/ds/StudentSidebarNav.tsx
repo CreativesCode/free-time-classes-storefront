@@ -8,6 +8,7 @@ import {
   GraduationCap,
   Heart,
   Home,
+  LogOut,
   MessageCircle,
   Receipt,
   Settings as SettingsIcon,
@@ -15,6 +16,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
+import { useAuth } from "@/context/UserContext";
 import { cn } from "@/lib/utils";
 
 interface StudentSidebarNavProps {
@@ -54,6 +56,7 @@ export function StudentSidebarNav({
   const locale = useLocale();
   const pathname = usePathname();
   const suffix = stripLocale(pathname);
+  const { logout } = useAuth();
 
   const profileHref = isTutor
     ? `/${locale}/teacher-profile`
@@ -106,8 +109,8 @@ export function StudentSidebarNav({
         },
         {
           id: "settings",
-          href: profileHref,
-          match: ["/teacher-profile"],
+          href: `/${locale}/settings`,
+          match: ["/settings"],
           label: t("settings"),
           icon: SettingsIcon,
         },
@@ -191,6 +194,15 @@ export function StudentSidebarNav({
             </Link>
           );
         })}
+
+        <button
+          type="button"
+          onClick={() => void logout()}
+          className="mt-1 flex items-center gap-2.5 rounded-ft-sm border border-transparent px-3 py-2.5 text-left text-[13px] font-medium text-red-700 transition-colors hover:bg-red-50"
+        >
+          <LogOut width={15} height={15} />
+          <span className="flex-1">{t("signOut")}</span>
+        </button>
       </nav>
     </aside>
   );

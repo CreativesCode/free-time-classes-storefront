@@ -33,7 +33,7 @@ export function PageRefreshButton({ className }: PageRefreshButtonProps) {
           variant="ghost"
           size="icon"
           className={cn(
-            "h-10 w-10 shrink-0 rounded-full text-muted-foreground hover:bg-primary/10 hover:text-foreground dark:hover:bg-primary/20",
+            "h-10 w-10 shrink-0 rounded-full text-ft-ink-3 hover:bg-ft-surface-1 hover:text-ft-ink",
             className,
           )}
           onClick={handleRefresh}

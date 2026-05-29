@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import { COUNTRIES } from "@/lib/constants/countries";
 import { getPublicUrl, uploadAvatar } from "@/lib/supabase/storage";
 import { updateStudentProfile } from "@/lib/supabase/queries/students";
@@ -44,6 +45,16 @@ const LANGUAGE_LEVEL_OPTIONS: Array<{
   { value: "advanced", tKey: "languageLevels.advanced" },
   { value: "proficient", tKey: "languageLevels.proficient" },
 ];
+
+// FreeTime field styling — overrides the legacy shadcn primitives so the
+// dialog matches the redesign (warm paper surfaces, ft tokens, soft radius).
+const FT_FIELD =
+  "h-10 rounded-ft border-ft-line bg-ft-surface-1 text-ft-ink placeholder:text-ft-ink-3 shadow-none focus-visible:ring-2 focus-visible:ring-ft-accent/40";
+const FT_TEXTAREA =
+  "rounded-ft border-ft-line bg-ft-surface-1 text-ft-ink placeholder:text-ft-ink-3 shadow-none focus-visible:ring-2 focus-visible:ring-ft-accent/40";
+const FT_SELECT_TRIGGER =
+  "h-10 rounded-ft border border-ft-line bg-ft-surface-1 text-ft-ink shadow-none hover:bg-ft-surface-2 focus:ring-2 focus:ring-ft-accent/40";
+const FT_LABEL = "text-[13px] font-medium text-ft-ink-2";
 
 function getTimezones(): string[] {
   try {
@@ -227,10 +238,17 @@ export default function StudentProfileEdit({
         if (!open) onClose();
       }}
     >
-      <DialogContent className="flex min-h-0 max-h-[calc(100dvh-1.5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col overflow-hidden p-0 sm:max-w-[700px]">
+      <DialogContent
+        data-theme="freetime"
+        className="flex min-h-0 max-h-[calc(100dvh-1.5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col overflow-hidden border-ft-line bg-ft-paper p-0 text-ft-ink sm:max-w-[700px] sm:rounded-ft-2xl"
+      >
         <DialogHeader className="shrink-0 px-4 pt-6 sm:px-6">
-          <DialogTitle>{t("editProfile")}</DialogTitle>
-          <DialogDescription>{t("editProfileDescription")}</DialogDescription>
+          <DialogTitle className="text-[20px] font-semibold tracking-[-0.02em] text-ft-ink">
+            {t("editProfile")}
+          </DialogTitle>
+          <DialogDescription className="text-ft-ink-3">
+            {t("editProfileDescription")}
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSave} className="flex min-h-0 flex-1 flex-col">
@@ -240,17 +258,18 @@ export default function StudentProfileEdit({
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="username">{t("name")}</Label>
+              <Label htmlFor="username" className={FT_LABEL}>{t("name")}</Label>
               <Input
                 id="username"
                 name="username"
                 value={formData.username}
                 onChange={handleInputChange}
+                className={FT_FIELD}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">{t("phone")}</Label>
+              <Label htmlFor="phone" className={FT_LABEL}>{t("phone")}</Label>
               <Input
                 id="phone"
                 name="phone"
@@ -258,11 +277,12 @@ export default function StudentProfileEdit({
                 value={formData.phone}
                 onChange={handleInputChange}
                 placeholder="+34 123 456 789"
+                className={FT_FIELD}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="country">{t("country")}</Label>
+              <Label htmlFor="country" className={FT_LABEL}>{t("country")}</Label>
               <SelectMenu
                 id="country"
                 value={formData.country}
@@ -275,12 +295,12 @@ export default function StudentProfileEdit({
                 searchPlaceholder={t("selectSearchPlaceholder")}
                 emptySearchMessage={t("selectNoResults")}
                 nestedScrollParentRef={dialogBodyScrollRef}
-                triggerClassName="h-10 rounded-md border border-input bg-background shadow-sm hover:bg-accent/40"
+                triggerClassName={FT_SELECT_TRIGGER}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="timezone">{t("timezone")}</Label>
+              <Label htmlFor="timezone" className={FT_LABEL}>{t("timezone")}</Label>
               <SelectMenu
                 id="timezone"
                 value={formData.timezone}
@@ -293,38 +313,38 @@ export default function StudentProfileEdit({
                 searchPlaceholder={t("selectSearchPlaceholder")}
                 emptySearchMessage={t("selectNoResults")}
                 nestedScrollParentRef={dialogBodyScrollRef}
-                triggerClassName="h-10 rounded-md border border-input bg-background shadow-sm hover:bg-accent/40"
+                triggerClassName={FT_SELECT_TRIGGER}
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="bio">{t("bio")}</Label>
+            <Label htmlFor="bio" className={FT_LABEL}>{t("bio")}</Label>
             <Textarea
               id="bio"
               name="bio"
               value={formData.bio}
               onChange={handleInputChange}
               placeholder={t("bioPlaceholder")}
-              className="min-h-[110px]"
+              className={cn(FT_TEXTAREA, "min-h-[110px]")}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="learningGoals">{t("learningGoals")}</Label>
+            <Label htmlFor="learningGoals" className={FT_LABEL}>{t("learningGoals")}</Label>
             <Textarea
               id="learningGoals"
               name="learningGoals"
               value={formData.learningGoals}
               onChange={handleInputChange}
               placeholder={t("learningGoalsPlaceholder")}
-              className="min-h-[90px]"
+              className={cn(FT_TEXTAREA, "min-h-[90px]")}
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="languageLevel">{t("languageLevel")}</Label>
+              <Label htmlFor="languageLevel" className={FT_LABEL}>{t("languageLevel")}</Label>
               <SelectMenu
                 id="languageLevel"
                 value={formData.languageLevel}
@@ -337,24 +357,25 @@ export default function StudentProfileEdit({
                 options={languageLevelMenuOptions}
                 aria-label={t("languageLevel")}
                 nestedScrollParentRef={dialogBodyScrollRef}
-                triggerClassName="h-10 rounded-md border border-input bg-background shadow-sm hover:bg-accent/40"
+                triggerClassName={FT_SELECT_TRIGGER}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>{t("preferredCommunication")}</Label>
+              <Label className={FT_LABEL}>{t("preferredCommunication")}</Label>
               <div className="flex flex-col gap-2 pt-1">
-                <label className="flex items-center gap-2 text-sm">
+                <label className="flex items-center gap-2 text-sm text-ft-ink-2">
                   <input
                     type="checkbox"
                     checked={formData.prefersAudioCalls}
                     onChange={(e) =>
                       handleCheckboxChange("prefersAudioCalls", e.target.checked)
                     }
+                    className="h-4 w-4 rounded border-ft-line accent-ft-accent"
                   />
                   {t("prefersAudioCalls")}
                 </label>
-                <label className="flex items-center gap-2 text-sm">
+                <label className="flex items-center gap-2 text-sm text-ft-ink-2">
                   <input
                     type="checkbox"
                     checked={formData.prefersVideoCalls}
@@ -364,16 +385,18 @@ export default function StudentProfileEdit({
                         e.target.checked
                       )
                     }
+                    className="h-4 w-4 rounded border-ft-line accent-ft-accent"
                   />
                   {t("prefersVideoCalls")}
                 </label>
-                <label className="flex items-center gap-2 text-sm">
+                <label className="flex items-center gap-2 text-sm text-ft-ink-2">
                   <input
                     type="checkbox"
                     checked={formData.prefersTextChat}
                     onChange={(e) =>
                       handleCheckboxChange("prefersTextChat", e.target.checked)
                     }
+                    className="h-4 w-4 rounded border-ft-line accent-ft-accent"
                   />
                   {t("prefersTextChat")}
                 </label>
@@ -382,17 +405,18 @@ export default function StudentProfileEdit({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="avatar_file">{t("uploadNewPhoto")}</Label>
+            <Label htmlFor="avatar_file" className={FT_LABEL}>{t("uploadNewPhoto")}</Label>
             <Input
               id="avatar_file"
               name="avatar_file"
               type="file"
               accept="image/*"
               onChange={handleAvatarChange}
+              className={cn(FT_FIELD, "file:mr-3 file:text-ft-ink-2")}
             />
 
             {avatarPreviewUrl ? (
-              <div className="relative h-16 w-16 overflow-hidden rounded-full border">
+              <div className="relative h-16 w-16 overflow-hidden rounded-full border border-ft-line">
                 <Image
                   src={avatarPreviewUrl}
                   alt={t("profilePicturePreviewAlt")}
@@ -405,11 +429,20 @@ export default function StudentProfileEdit({
           </div>
 
           </div>
-          <DialogFooter className="mt-auto flex shrink-0 flex-col gap-2 border-t bg-background px-4 pt-3 pb-[max(1rem,calc(env(safe-area-inset-bottom)+0.75rem))] sm:flex-row sm:justify-end sm:px-6">
-            <Button type="button" variant="outline" onClick={onClose}>
+          <DialogFooter className="mt-auto flex shrink-0 flex-col gap-2 border-t border-ft-line bg-ft-paper px-4 pt-3 pb-[max(1rem,calc(env(safe-area-inset-bottom)+0.75rem))] sm:flex-row sm:justify-end sm:px-6">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="rounded-ft-md border-ft-line bg-ft-paper text-ft-ink-2 shadow-none hover:bg-ft-surface-1 hover:text-ft-ink"
+            >
               {t("cancel")}
             </Button>
-            <Button type="submit" disabled={isSaving}>
+            <Button
+              type="submit"
+              disabled={isSaving}
+              className="rounded-ft-md bg-gradient-to-br from-ft-accent to-ft-accent-deep text-ft-paper shadow-none hover:opacity-90"
+            >
               {isSaving ? t("saving") : t("save")}
             </Button>
           </DialogFooter>

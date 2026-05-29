@@ -462,8 +462,8 @@ export default function TutorDashboardClient({
       label: td("avgRating"),
       value: stats.avgRating != null ? stats.avgRating.toFixed(1) : "—",
       icon: Star,
-      color: "bg-purple-100 text-purple-600",
-      accent: "border-purple-200",
+      color: "bg-ft-accent-soft text-ft-accent-deep",
+      accent: "border-ft-line",
       suffix: stats.avgRating != null ? "/5" : "",
     },
     {

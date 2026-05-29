@@ -317,3 +317,48 @@
 .fc-timegrid-slot-label-frame {
   @apply text-on-surface-variant;
 }
+
+/* ── FreeTime redesign theme for FullCalendar ──────────────────────────────
+   Scoped to `.ft-calendar`. Overrides the legacy purple `.fc-button-primary`
+   / `.fc-toolbar-title` rules above (which use !important) with warm paper
+   tokens. Specificity + !important beats the unscoped legacy rules.        */
+.ft-calendar {
+  --fc-border-color: var(--ft-line);
+  --fc-today-bg-color: rgba(201, 168, 106, 0.1);
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: var(--ft-surface-1);
+}
+.ft-calendar .fc-toolbar-title {
+  color: var(--ft-ink) !important;
+}
+.ft-calendar .fc-button-primary {
+  background-color: var(--ft-surface-1) !important;
+  border-color: var(--ft-line) !important;
+  color: var(--ft-ink) !important;
+  box-shadow: none !important;
+  text-transform: capitalize;
+}
+.ft-calendar .fc-button-primary:hover {
+  background-color: var(--ft-surface-2) !important;
+}
+.ft-calendar .fc-button-primary:disabled {
+  opacity: 0.5;
+}
+.ft-calendar .fc-button-primary:not(:disabled).fc-button-active,
+.ft-calendar .fc-button-primary:not(:disabled):active {
+  background-color: var(--ft-ink) !important;
+  border-color: var(--ft-ink) !important;
+  color: var(--ft-paper) !important;
+}
+.ft-calendar .fc-button-primary:focus,
+.ft-calendar .fc-button-primary:focus-visible {
+  box-shadow: 0 0 0 2px rgba(201, 168, 106, 0.4) !important;
+}
+.ft-calendar .fc-col-header-cell-cushion {
+  color: var(--ft-ink-2) !important;
+}
+.ft-calendar .fc-timegrid-slot-label-frame,
+.ft-calendar .fc-timegrid-axis-cushion,
+.ft-calendar .fc-daygrid-day-number {
+  color: var(--ft-ink-3) !important;
+}

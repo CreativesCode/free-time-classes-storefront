@@ -423,7 +423,7 @@ export default function LessonHistoryTable(props: {
                                 sizes="40px"
                               />
                             ) : (
-                              <div className="h-full w-full flex items-center justify-center text-primary-800 font-semibold">
+                              <div className="h-full w-full flex items-center justify-center text-ft-ink font-semibold">
                                 {(tutor?.username?.[0] || "U").toUpperCase()}
                               </div>
                             )}
@@ -454,14 +454,14 @@ export default function LessonHistoryTable(props: {
                       <td className="py-3">
                         {lesson.duration_minutes} {t("availabilities.minutes")}
                       </td>
-                      <td className="py-3 font-medium text-primary-600">
+                      <td className="py-3 font-medium text-ft-accent-deep">
                         ${lesson.price}
                       </td>
 
                       <td className="py-3">
                         {review ? (
                           <div className="flex items-center gap-2">
-                            <Star className="h-4 w-4 text-primary-600" fill="currentColor" />
+                            <Star className="h-4 w-4 text-ft-accent-deep" fill="currentColor" />
                             <span className="text-xs text-gray-700">
                               {review.rating}/5
                             </span>
@@ -470,7 +470,7 @@ export default function LessonHistoryTable(props: {
                           <Button
                             type="button"
                             size="sm"
-                            className="h-9 gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-r from-violet-600 to-violet-700 px-3.5 text-xs font-semibold text-white shadow-sm hover:opacity-95 sm:text-sm"
+                            className="h-9 gap-1.5 whitespace-nowrap rounded-ft-md bg-gradient-to-br from-ft-accent to-ft-accent-deep px-3.5 text-xs font-semibold text-ft-paper shadow-none hover:opacity-90 sm:text-sm"
                             onClick={() => {
                               if (bookingForNewReview) {
                                 setSelectedReviewTarget({
@@ -488,7 +488,7 @@ export default function LessonHistoryTable(props: {
                               setLeaveReviewOpen(true);
                             }}
                           >
-                            <Star className="h-3.5 w-3.5 shrink-0 fill-white text-white" />
+                            <Star className="h-3.5 w-3.5 shrink-0 fill-ft-paper text-ft-paper" />
                             {t("leaveReview")}
                           </Button>
                         ) : hasBookingButCannotReview ? (
@@ -516,8 +516,8 @@ export default function LessonHistoryTable(props: {
                           className={cn(
                             "h-9 w-9 shrink-0 rounded-full border transition-colors",
                             isFavorited
-                              ? "border-violet-500 bg-violet-100 text-violet-700 hover:bg-violet-200 hover:text-violet-900"
-                              : "border-violet-200/90 bg-white text-violet-400 hover:border-violet-400 hover:bg-violet-50 hover:text-violet-600"
+                              ? "border-ft-accent bg-ft-accent-soft text-ft-accent-deep hover:bg-ft-accent-soft hover:text-ft-accent-deep"
+                              : "border-ft-line bg-ft-paper text-ft-ink-3 hover:border-ft-accent hover:bg-ft-surface-1 hover:text-ft-accent-deep"
                           )}
                           onClick={() => toggleFavorite(lesson.tutor_id)}
                           disabled={favoriteActionLoading === lesson.tutor_id}
@@ -530,8 +530,8 @@ export default function LessonHistoryTable(props: {
                             className={cn(
                               "h-4 w-4",
                               isFavorited
-                                ? "fill-violet-600 text-violet-600"
-                                : "text-violet-400"
+                                ? "fill-ft-accent text-ft-accent"
+                                : "text-ft-ink-3"
                             )}
                             fill={isFavorited ? "currentColor" : "none"}
                             strokeWidth={isFavorited ? 0 : 2}

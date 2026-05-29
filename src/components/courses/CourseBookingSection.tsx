@@ -30,9 +30,9 @@ export default function CourseBookingSection({
       <section
         id="course-booking"
         data-course-booking
-        className="scroll-mt-28 rounded-2xl border border-violet-100/80 bg-white/90 p-10 shadow-sm"
+        className="scroll-mt-28 rounded-ft-lg border border-ft-line bg-ft-paper p-10 shadow-none"
       >
-        <div className="mx-auto flex h-12 w-12 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
+        <div className="mx-auto flex h-12 w-12 animate-spin rounded-full border-4 border-ft-line border-t-ft-accent" />
       </section>
     );
   }
@@ -44,10 +44,10 @@ export default function CourseBookingSection({
         data-course-booking
         className="scroll-mt-28"
       >
-        <Card className="border-violet-100/80 bg-white/90 shadow-sm">
+        <Card className="rounded-ft-lg border-ft-line bg-ft-paper shadow-none">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg font-bold md:text-xl">
-              <Calendar className="h-5 w-5 text-primary-500" />
+            <CardTitle className="flex items-center gap-2 text-lg font-bold md:text-xl text-ft-ink">
+              <Calendar className="h-5 w-5 text-ft-accent-deep" />
               {t("bookingSectionTitle")}
             </CardTitle>
           </CardHeader>
@@ -71,10 +71,10 @@ export default function CourseBookingSection({
         data-course-booking
         className="scroll-mt-28"
       >
-        <Card className="border-violet-100/80 bg-white/90 shadow-sm">
+        <Card className="rounded-ft-lg border-ft-line bg-ft-paper shadow-none">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg font-bold md:text-xl">
-              <Calendar className="h-5 w-5 text-primary-500" />
+            <CardTitle className="flex items-center gap-2 text-lg font-bold md:text-xl text-ft-ink">
+              <Calendar className="h-5 w-5 text-ft-accent-deep" />
               {t("bookingSectionTitle")}
             </CardTitle>
           </CardHeader>

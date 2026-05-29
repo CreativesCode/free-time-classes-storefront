@@ -109,7 +109,7 @@ export default function NotificationBell() {
                 e.preventDefault();
                 markAllAsRead();
               }}
-              className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              className="inline-flex items-center gap-1 text-xs font-medium text-ft-accent-deep hover:underline"
             >
               <CheckCheck className="h-3.5 w-3.5" />
               {t("markAllRead")}
@@ -130,8 +130,8 @@ export default function NotificationBell() {
             <DropdownMenuItem
               key={n.id}
               className={cn(
-                "flex items-start gap-3 px-4 py-3 cursor-pointer focus:bg-primary/5",
-                !n.is_read && "bg-primary/[0.03]",
+                "flex items-start gap-3 px-4 py-3 cursor-pointer focus:bg-ft-surface-1",
+                !n.is_read && "bg-ft-accent/[0.06]",
               )}
               onSelect={() => {
                 if (!n.is_read) markAsRead(n.id);
@@ -162,7 +162,7 @@ export default function NotificationBell() {
                 )}
               </div>
               {!n.is_read && (
-                <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-ft-accent" />
               )}
             </DropdownMenuItem>
           ))
@@ -174,7 +174,7 @@ export default function NotificationBell() {
         <div className="p-2">
           <Link
             href={`/${locale}/notifications`}
-            className="flex items-center justify-center rounded-lg py-2 text-xs font-semibold text-primary hover:bg-primary/5 transition-colors"
+            className="flex items-center justify-center rounded-ft py-2 text-xs font-semibold text-ft-accent-deep hover:bg-ft-surface-1 transition-colors"
           >
             {t("viewAll")}
           </Link>

@@ -8,6 +8,7 @@ import {
   CalendarDays,
   GraduationCap,
   Inbox,
+  LogOut,
   MessageSquare,
   Sparkles,
   Star,
@@ -24,6 +25,7 @@ import TutorReviewsSection from "@/components/teacher/TutorReviewsSection";
 import TutorCVSection from "@/components/teacher/TutorCVSection";
 import InternalMessagingPanel from "@/components/messages/InternalMessagingPanel";
 import { StudentSidebarNav } from "@/components/ds/StudentSidebarNav";
+import { useAuth } from "@/context/UserContext";
 import { useTranslations } from "@/i18n/translations";
 import { getPublicUrl } from "@/lib/supabase/storage";
 import { cn, getAvatarColor } from "@/lib/utils";
@@ -55,6 +57,7 @@ export default function TeacherProfileClient({
 }) {
   const router = useRouter();
   const t = useTranslations("teacherProfile");
+  const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>("profile");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [tutorProfile, setTutorProfile] = useState<TutorProfile | null>(
@@ -376,6 +379,18 @@ export default function TeacherProfileClient({
             {activeTab === "messages" && (
               <InternalMessagingPanel namespace="teacherProfile" />
             )}
+
+            {/* Mobile sign-out — desktop uses the sidebar */}
+            <button
+              type="button"
+              onClick={() => void logout()}
+              className="mt-2 flex w-full items-center gap-3.5 rounded-ft-lg border border-ft-line-soft bg-ft-paper px-4 py-3.5 text-left text-red-700 transition-colors hover:bg-red-50 lg:hidden"
+            >
+              <span className="grid h-[38px] w-[38px] flex-shrink-0 place-items-center rounded-ft border border-red-100 bg-red-50">
+                <LogOut width={16} height={16} />
+              </span>
+              <span className="text-[14px] font-medium">{t("signOut")}</span>
+            </button>
           </div>
         </div>
       </div>

@@ -32,7 +32,7 @@ export default function DashboardDeferredRecommended({
   const t = useTranslations("dashboard");
 
   return (
-    <Card className="rounded-xl border-violet-100/70 bg-white/85 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+    <Card className="rounded-ft-lg border-ft-line bg-ft-paper shadow-none dark:border-slate-800 dark:bg-slate-900/70">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <p className="text-lg font-bold text-slate-900 dark:text-white">
@@ -40,7 +40,7 @@ export default function DashboardDeferredRecommended({
           </p>
           <Button
             variant="ghost"
-            className="text-violet-700 dark:text-violet-300"
+            className="text-ft-accent-deep dark:text-violet-300"
             onClick={() => router.push(`/${locale}/courses`)}
           >
             {t("seeAll")}
@@ -49,7 +49,7 @@ export default function DashboardDeferredRecommended({
       </CardHeader>
       <CardContent className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {courses.length === 0 ? (
-          <div className="col-span-full rounded-lg border border-dashed border-violet-200 bg-violet-50/40 py-10 text-center text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800/30 dark:text-slate-400">
+          <div className="col-span-full rounded-ft border border-dashed border-ft-line bg-ft-surface-1/50 py-10 text-center text-sm text-ft-ink-3 dark:border-slate-700 dark:bg-slate-800/30 dark:text-slate-400">
             {t("recommendedEmpty")}
           </div>
         ) : (
@@ -72,9 +72,9 @@ export default function DashboardDeferredRecommended({
                 key={course.id}
                 type="button"
                 onClick={() => router.push(`/${locale}/courses/${course.id}`)}
-                className="overflow-hidden rounded-lg border border-violet-100 bg-white text-left transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+                className="overflow-hidden rounded-ft-lg border border-ft-line bg-ft-surface-1 text-left transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
               >
-                <div className="relative h-32 w-full bg-gradient-to-br from-violet-600/90 via-purple-600/85 to-fuchsia-500/80">
+                <div className="relative h-32 w-full bg-gradient-to-br from-ft-accent to-ft-accent-deep">
                   {coverUrl ? (
                     <Image
                       src={coverUrl}
@@ -90,7 +90,7 @@ export default function DashboardDeferredRecommended({
                   />
                 </div>
                 <div className="space-y-2 p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-violet-600 dark:text-violet-300">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-ft-accent-deep dark:text-violet-300">
                     {category}
                   </p>
                   <p className="line-clamp-2 text-base font-bold text-slate-900 dark:text-white">

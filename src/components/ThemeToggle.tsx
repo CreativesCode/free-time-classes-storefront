@@ -44,13 +44,13 @@ export function ThemeToggle({ variant = "icon" }: { variant?: Variant }) {
       <button
         type="button"
         onClick={toggle}
-        className="flex w-full items-center justify-between rounded-2xl px-4 py-3.5 text-left text-sm text-foreground transition-colors hover:bg-primary/10 dark:hover:bg-primary/20"
+        className="flex w-full items-center justify-between rounded-ft-lg px-4 py-3.5 text-left text-sm text-ft-ink transition-colors hover:bg-ft-surface-1"
       >
         <span className="flex items-center gap-3 font-medium">
           {isDark ? (
-            <Moon className="h-4 w-4 text-primary" />
+            <Moon className="h-4 w-4 text-ft-accent-deep" />
           ) : (
-            <Sun className="h-4 w-4 text-primary" />
+            <Sun className="h-4 w-4 text-ft-accent-deep" />
           )}
           {t("theme")}
         </span>
@@ -66,7 +66,7 @@ export function ThemeToggle({ variant = "icon" }: { variant?: Variant }) {
       type="button"
       variant="ghost"
       size="icon"
-      className="h-10 w-10 shrink-0 rounded-full text-foreground hover:bg-primary/10 dark:hover:bg-primary/20"
+      className="h-10 w-10 shrink-0 rounded-full text-ft-ink hover:bg-ft-surface-1"
       onClick={toggle}
       aria-label={t("themeToggleAria")}
     >
