@@ -3,7 +3,8 @@ export type NotificationType =
   | "booking_custom_request"
   | "booking_confirmed"
   | "booking_rejected"
-  | "booking_cancelled";
+  | "booking_cancelled"
+  | "message_received";
 
 export interface Notification {
   id: number;

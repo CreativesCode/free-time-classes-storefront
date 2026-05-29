@@ -6,6 +6,7 @@ import {
   CalendarCheck2,
   CalendarPlus,
   CalendarX2,
+  MessageCircle,
   Sparkles,
   XCircle,
 } from "lucide-react";
@@ -29,6 +30,8 @@ function IconByType({ type }: { type: NotificationType }) {
       return <XCircle className="h-4 w-4" />;
     case "booking_cancelled":
       return <CalendarX2 className="h-4 w-4" />;
+    case "message_received":
+      return <MessageCircle className="h-4 w-4" />;
     default:
       return <Bell className="h-4 w-4" />;
   }
@@ -45,6 +48,8 @@ function iconTone(type: NotificationType): string {
     case "booking_request":
     case "booking_custom_request":
       return "bg-ft-accent-soft text-ft-accent-deep";
+    case "message_received":
+      return "bg-sky-50 text-sky-700";
     default:
       return "bg-ft-surface-2 text-ft-ink-2";
   }
@@ -70,6 +75,8 @@ function getNotificationHref(n: Notification, locale: string): string {
     case "booking_rejected":
     case "booking_cancelled":
       return `/${locale}/bookings`;
+    case "message_received":
+      return `/${locale}/messages`;
     default:
       return `/${locale}/notifications`;
   }

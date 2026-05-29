@@ -145,7 +145,7 @@ export async function getConversationMessages(
 
 export async function sendMessage(
   conversationId: number,
-  senderId: string,
+  _senderId: string,
   content: string
 ): Promise<DirectMessage> {
   const text = content.trim();
@@ -153,18 +153,24 @@ export async function sendMessage(
     throw new Error("El mensaje no puede estar vacío.");
   }
 
-  const { data, error } = await supabase
-    .from("messages")
-    .insert({
-      conversation_id: conversationId,
-      sender_id: senderId,
-      content: text,
-    })
-    .select("id, conversation_id, sender_id, content, created_at")
-    .single();
+  // Routed through the server so it can notify the other participant (in-app +
+  // WhatsApp). The sender is derived from the session there, so _senderId is
+  // kept only for signature compatibility.
+  const res = await fetch("/api/messages/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ conversationId, content: text }),
+  });
 
-  if (error) throw error;
-  return data as DirectMessage;
+  const payload = (await res.json().catch(() => null)) as
+    | (DirectMessage & { error?: string })
+    | null;
+
+  if (!res.ok || !payload || payload.error) {
+    throw new Error(payload?.error || "No se pudo enviar el mensaje.");
+  }
+
+  return payload as DirectMessage;
 }
 
 export async function markConversationAsRead(
