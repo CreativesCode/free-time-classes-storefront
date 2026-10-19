@@ -127,7 +127,7 @@ export default function TutorSubjectsManager({
       const res = await fetch(`/api/subjects/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tutorId, name: normalizedName }),
+        body: JSON.stringify({ name: normalizedName }),
       });
 
       const json = (await res.json()) as { error?: string; createdSubjectId?: number };
