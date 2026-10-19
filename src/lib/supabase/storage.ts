@@ -143,7 +143,7 @@ export function getCourseCoverPublicUrl(
  * Sube la imagen de portada del curso (el curso ya debe existir; RLS exige tutor titular).
  */
 export async function uploadCourseCover(
-  courseId: string,
+  courseId: number | string,
   file: File
 ): Promise<string> {
   const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";

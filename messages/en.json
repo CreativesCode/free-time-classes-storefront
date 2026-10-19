@@ -1625,5 +1625,11 @@
     "tutorTitleSuffix": "Tutor on Free Time Classes",
     "tutorDescription": "Book lessons with {name}. {excerpt}",
     "tutorExcerptFallback": "Verified tutor on Free Time Classes."
+  },
+  "errorPage": {
+    "title": "Something went wrong",
+    "description": "We couldn't load this page. Please try again in a few seconds.",
+    "retry": "Try again",
+    "home": "Go home"
   }
 }

@@ -292,7 +292,7 @@ export async function createCourse(
  * Update course
  */
 export async function updateCourse(
-  id: string,
+  id: number | string,
   updates: Partial<Omit<Course, "id" | "created_at">>
 ): Promise<Course> {
   const { data, error } = await browserClient
@@ -312,7 +312,7 @@ export async function updateCourse(
 /**
  * Delete course
  */
-export async function deleteCourse(id: string): Promise<void> {
+export async function deleteCourse(id: number | string): Promise<void> {
   const { error } = await browserClient.from("courses").delete().eq("id", id);
 
   if (error) {

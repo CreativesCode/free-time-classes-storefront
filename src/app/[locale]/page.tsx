@@ -76,7 +76,7 @@ const getHomePageDataCached = unstable_cache(
       .order("created_at", { ascending: false });
 
     const courses: HomeCourseCard[] = ((data ?? []) as Array<{
-      id: string;
+      id: number;
       title: string;
       description: string;
       level: HomeCourseCard["level"];

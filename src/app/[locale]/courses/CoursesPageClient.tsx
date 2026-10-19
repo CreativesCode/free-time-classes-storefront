@@ -665,7 +665,7 @@ export default function CoursesPageClient({
                         <div
                           className="absolute inset-0"
                           style={{
-                            background: getAvatarColor(course.id ?? course.title),
+                            background: getAvatarColor(String(course.id ?? course.title)),
                           }}
                         />
                       )}

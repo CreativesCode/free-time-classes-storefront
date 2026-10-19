@@ -161,7 +161,7 @@ export default function TutorCoursesManager({
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [publishedSuccessOpen, setPublishedSuccessOpen] = useState(false);
-  const [editCourseId, setEditCourseId] = useState<string | null>(null);
+  const [editCourseId, setEditCourseId] = useState<number | null>(null);
 
   const [createForm, setCreateForm] = useState<CourseFormState>(emptyCourseForm);
   const [editForm, setEditForm] = useState<CourseFormState>(emptyCourseForm);
@@ -438,7 +438,7 @@ export default function TutorCoursesManager({
     }
   };
 
-  const handleDelete = async (courseId: string) => {
+  const handleDelete = async (courseId: number) => {
     setError(null);
     setIsSaving(true);
     try {

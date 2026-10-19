@@ -2,7 +2,7 @@ import type { Subject } from "./subject";
 
 // Course type matching Supabase courses table
 export interface Course {
-  id: string; // UUID primary key
+  id: number; // bigint primary key
   title: string;
   description: string;
   tutor_id: string; // References users(id)

@@ -1625,5 +1625,11 @@
     "tutorTitleSuffix": "Tutor en Free Time Classes",
     "tutorDescription": "Reserva clases con {name}. {excerpt}",
     "tutorExcerptFallback": "Tutor verificado en Free Time Classes."
+  },
+  "errorPage": {
+    "title": "Algo ha fallado",
+    "description": "No pudimos cargar esta página. Vuelve a intentarlo en unos segundos.",
+    "retry": "Reintentar",
+    "home": "Ir al inicio"
   }
 }
