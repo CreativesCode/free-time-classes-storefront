@@ -6,6 +6,7 @@ import { ArrowRight } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { BrandLogo } from "./BrandLogo";
 
 function stripLocale(pathname: string): string {
@@ -76,8 +77,9 @@ export function FreetimeNavbar() {
           </div>
         </div>
 
-        {/* Right: auth area */}
+        {/* Right: language + auth area */}
         <div className="flex items-center gap-3.5">
+          <LanguageSwitcher />
           {user ? (
             <Link
               href={profileHref}

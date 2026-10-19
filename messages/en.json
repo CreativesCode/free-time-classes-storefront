@@ -1012,7 +1012,9 @@
     "googleCalendarDisconnectError": "Could not disconnect Google account",
     "googleCalendarDisconnected": "Google account disconnected",
     "googleCalendarIntegrationsTitle": "Integrations",
-    "googleCalendarAutoMeetHint": "When you confirm a booking without a manual link, a Google Meet link will be automatically generated."
+    "googleCalendarAutoMeetHint": "When you confirm a booking without a manual link, a Google Meet link will be automatically generated.",
+    "languageSectionTitle": "Language",
+    "languageSectionDescription": "Choose the app language."
   },
   "becomeTutor": {
     "title": "Share Your Knowledge, Inspire Others",

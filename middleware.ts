@@ -73,9 +73,10 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Handle root path - redirect to default locale
+  // Root path: let next-intl pick the locale (NEXT_LOCALE cookie, then
+  // Accept-Language, then the default) and redirect.
   if (pathname === "/") {
-    return NextResponse.redirect(new URL(`/${routing.defaultLocale}`, req.url));
+    return intlMiddleware(req);
   }
 
   // Extract locale from pathname

@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import ConfirmActionDialog from "@/components/common/ConfirmActionDialog";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { StudentSidebarNav } from "@/components/ds/StudentSidebarNav";
 import { useAuth } from "@/context/UserContext";
 import { useTranslations } from "@/i18n/translations";
@@ -415,6 +416,19 @@ export default function SettingsClient({ locale }: { locale: string }) {
         {/* ACCOUNT */}
         {currentTab === "account" && (
           <div className="space-y-4">
+            {/* Language */}
+            <section className="flex items-center justify-between gap-3 rounded-ft-lg border border-ft-line-soft bg-ft-paper p-5">
+              <div>
+                <h2 className="text-[15px] font-semibold tracking-tight text-ft-ink">
+                  {t("languageSectionTitle")}
+                </h2>
+                <p className="mt-1 text-[13px] text-ft-ink-2">
+                  {t("languageSectionDescription")}
+                </p>
+              </div>
+              <LanguageSwitcher />
+            </section>
+
             {/* Email change */}
             <section className="rounded-ft-lg border border-ft-line-soft bg-ft-paper p-5">
               <div className="mb-3 flex items-center gap-3">
