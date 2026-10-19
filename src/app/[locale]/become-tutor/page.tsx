@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import BecomeTutorClient, {
   type BecomeTutorCopy,
@@ -20,9 +20,14 @@ export async function generateMetadata({
   });
 }
 
-export default async function BecomeTutorPage() {
-  const t = await getTranslations("becomeTutor");
-  const locale = await getLocale();
+export default async function BecomeTutorPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  unstable_setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: "becomeTutor" });
 
   const copy: BecomeTutorCopy = {
     title: t("title"),

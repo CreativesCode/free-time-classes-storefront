@@ -1,4 +1,4 @@
-import { getTranslations } from "next-intl/server";
+import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -155,7 +155,8 @@ export default async function TutorPublicProfilePage({
   params: Promise<{ locale: string; id: string }>;
 }) {
   const { locale, id } = await params;
-  const t = await getTranslations("tutorPublicProfile");
+  unstable_setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: "tutorPublicProfile" });
 
   if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {
     notFound();

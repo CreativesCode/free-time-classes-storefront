@@ -1,4 +1,4 @@
-import { getTranslations } from "next-intl/server";
+import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AlertCircle, ArrowLeft, BookOpen } from "lucide-react";
@@ -95,7 +95,8 @@ export default async function CourseDetailPage({
   params: Promise<{ locale: string; id: string }>;
 }) {
   const { locale, id } = await params;
-  const t = await getTranslations("courseDetail");
+  unstable_setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: "courseDetail" });
   const supabase = createCatalogServerClient();
 
   let hasError = false;
