@@ -2,6 +2,8 @@
 
 **Proyecto:** ref `nqetxsifeulhfkwjdsbp` (plan free). MCP configurado en `.mcp.json`; requiere la variable de
 entorno `SUPABASE_ACCESS_TOKEN` en la maquina de cada dev (personal access token, nunca en el repo).
+Ojo: en la maquina de Roberto ese `SUPABASE_ACCESS_TOKEN` es de otra cuenta y da 403 en este proyecto (el MCP
+tampoco sirve); usar `SUPABASE_FTC_ACCESS_TOKEN` de `.env.local` con la Management API. Ver `local-verification.md`.
 
 **Claves:** el codigo usa `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (formato nuevo 2025) con fallback a
 `NEXT_PUBLIC_SUPABASE_ANON_KEY` (JWT legacy). `SUPABASE_SERVICE_ROLE_KEY` solo en route handlers (cliente admin).

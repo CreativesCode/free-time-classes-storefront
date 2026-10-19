@@ -22,3 +22,4 @@
 - [Mapa de docs/](reference/docs-map.md) — que doc esta vigente y cual es historico; docs/ no esta en git
 - [Supabase setup](reference/supabase-setup.md) — claves, clientes, migraciones (ultima 027), keepalive (GitHub lo desactiva por inactividad), MCP token
 - [Gotchas de OpenWA](reference/openwa-gotchas.md) — 10 errores tipicos (@lid, UUID de sesion, idempotencia...)
+- [Verificacion local](reference/local-verification.md) — middleware en src/, server paralelo :3001, sesion de prueba sin navegador, token Supabase propio (SUPABASE_FTC_ACCESS_TOKEN)
