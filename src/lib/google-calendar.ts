@@ -1,4 +1,8 @@
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
+import {
+  addMinutesToLessonTimestamp,
+  BUSINESS_TIMEZONE,
+} from "@/lib/datetime/lessonTime";
 
 function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -203,8 +207,10 @@ export async function createMeetEvent(
 ): Promise<MeetEventResult | null> {
   const accessToken = await getValidAccessToken(params.tutorId);
   if (!accessToken) return null;
-  const start = new Date(params.startTime);
-  const end = new Date(start.getTime() + params.durationMinutes * 60_000);
+  // startTime is a Madrid wall-clock timestamp (lessons.scheduled_date_time),
+  // so send it as-is with the business timezone instead of parsing it as UTC.
+  const start = params.startTime.slice(0, 19);
+  const end = addMinutesToLessonTimestamp(start, params.durationMinutes);
 
   const response = await fetch(
     "https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1&sendUpdates=all",
@@ -218,12 +224,12 @@ export async function createMeetEvent(
         summary: params.summary,
         description: params.description ?? "",
         start: {
-          dateTime: start.toISOString(),
-          timeZone: "UTC",
+          dateTime: start,
+          timeZone: BUSINESS_TIMEZONE,
         },
         end: {
-          dateTime: end.toISOString(),
-          timeZone: "UTC",
+          dateTime: end,
+          timeZone: BUSINESS_TIMEZONE,
         },
         attendees: params.attendeeEmails.map((email) => ({ email })),
         conferenceData: {

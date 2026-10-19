@@ -40,6 +40,18 @@ export function startOfMonthAsLessonTimestamp(): string {
   return `${nowAsLessonTimestamp().slice(0, 7)}-01T00:00:00`;
 }
 
+/**
+ * Adds minutes to a Madrid wall-clock timestamp without going through the
+ * server timezone (pure calendar arithmetic on the `YYYY-MM-DDTHH:mm:ss` parts).
+ */
+export function addMinutesToLessonTimestamp(timestamp: string, minutes: number): string {
+  const [datePart, timePart = "00:00:00"] = timestamp.slice(0, 19).split("T");
+  const [y, mo, d] = datePart.split("-").map(Number);
+  const [h, mi, s = 0] = timePart.split(":").map(Number);
+  const shifted = new Date(Date.UTC(y, mo - 1, d, h, mi + minutes, s));
+  return shifted.toISOString().slice(0, 19);
+}
+
 export function isLessonInPast(scheduledDateTime: string | null | undefined): boolean {
   if (!scheduledDateTime) return false;
   return scheduledDateTime < nowAsLessonTimestamp();
