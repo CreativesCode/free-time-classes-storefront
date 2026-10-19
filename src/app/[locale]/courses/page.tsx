@@ -67,7 +67,6 @@ const getCoursesPageDataCached = unstable_cache(
         user:users!tutor_profiles_id_fkey (
           id,
           username,
-          email,
           profile_picture
         )
       ),

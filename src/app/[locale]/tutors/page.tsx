@@ -31,7 +31,6 @@ export async function generateMetadata({
 interface TutorUser {
   id: string;
   username: string;
-  email: string;
   profile_picture: string | null;
   country: string | null;
 }
@@ -113,7 +112,7 @@ const getTutorsPageDataCached = unstable_cache(
             `
         *,
         user:users!tutor_profiles_id_fkey (
-          id, username, email, profile_picture, country
+          id, username, profile_picture, country
         )
       `
           )

@@ -21,7 +21,6 @@ import { useEffect, useMemo, useState } from "react";
 interface TutorUser {
   id: string;
   username: string;
-  email: string;
   profile_picture: string | null;
   country: string | null;
 }

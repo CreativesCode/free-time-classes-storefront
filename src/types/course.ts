@@ -25,7 +25,6 @@ export interface CourseWithRelations extends Course {
   tutor?: {
     id: string;
     username: string;
-    email: string;
     profile_picture?: string | null;
   } | null;
   subject?: Subject | null;

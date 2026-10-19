@@ -108,7 +108,6 @@ export async function getCoursesWithRelations(
         user:users!tutor_profiles_id_fkey (
           id,
           username,
-          email,
           profile_picture
         )
       ),
@@ -183,7 +182,6 @@ export async function getCoursesWithRelations(
         user?: {
           id: string;
           username: string;
-          email: string;
           profile_picture?: string | null;
         } | null;
       } | null;
@@ -233,7 +231,6 @@ export async function getCourseWithRelations(
         user:users!tutor_profiles_id_fkey (
           id,
           username,
-          email,
           profile_picture
         )
       ),
@@ -260,7 +257,6 @@ export async function getCourseWithRelations(
       user?: {
         id: string;
         username: string;
-        email: string;
         profile_picture?: string | null;
       } | null;
     } | null;
