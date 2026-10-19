@@ -59,21 +59,33 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     initializeUser();
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    async function syncUser(userId: string) {
       try {
-        if (session?.user) {
-          const userData = await getCurrentUser(session.user.id);
-          setUser(userData);
-        } else {
-          setUser(null);
-        }
+        const userData = await getCurrentUser(userId);
+        setUser(userData);
       } catch (err) {
         setError(err as Error);
         setUser(null);
       } finally {
+        setIsLoading(false);
+      }
+    }
+
+    // Listen for auth changes. The callback must stay synchronous: awaiting
+    // Supabase calls inside it deadlocks the auth client's internal lock
+    // (every query then hangs after a token refresh).
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      // initializeUser() already covers the initial session, and a token
+      // refresh does not change the profile.
+      if (event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") return;
+
+      if (session?.user) {
+        const userId = session.user.id;
+        setTimeout(() => void syncUser(userId), 0);
+      } else {
+        setUser(null);
         setIsLoading(false);
       }
     });
