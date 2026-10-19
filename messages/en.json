@@ -1635,5 +1635,29 @@
     "description": "We couldn't load this page. Please try again in a few seconds.",
     "retry": "Try again",
     "home": "Go home"
+  },
+  "passwordReset": {
+    "forgotTitle": "Reset your password",
+    "forgotDescription": "Enter your account email and we'll send you a link to create a new password.",
+    "sentDescription": "If an account exists for that email, we've sent you a link. Open it on this same device to create your new password.",
+    "email": "Email",
+    "invalidEmail": "Enter a valid email.",
+    "sendLink": "Send link",
+    "sending": "Sending...",
+    "rateLimited": "Too many requests. Wait a few minutes and try again.",
+    "genericError": "Something went wrong. Please try again.",
+    "backToLogin": "Back to sign in",
+    "resetTitle": "Create a new password",
+    "resetDescription": "Choose a password you haven't used before.",
+    "newPassword": "New password",
+    "confirmPassword": "Repeat password",
+    "passwordTooShort": "The password must have at least {min} characters.",
+    "passwordMismatch": "Passwords don't match.",
+    "samePassword": "The new password must be different from the old one.",
+    "saving": "Saving...",
+    "savePassword": "Save password",
+    "updated": "Password updated",
+    "linkExpired": "The link expired or was opened on another device. Request a new one.",
+    "requestNewLink": "Request a new link"
   }
 }

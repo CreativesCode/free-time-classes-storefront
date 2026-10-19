@@ -1635,5 +1635,29 @@
     "description": "No pudimos cargar esta página. Vuelve a intentarlo en unos segundos.",
     "retry": "Reintentar",
     "home": "Ir al inicio"
+  },
+  "passwordReset": {
+    "forgotTitle": "Recupera tu contraseña",
+    "forgotDescription": "Escribe el correo de tu cuenta y te enviaremos un enlace para crear una contraseña nueva.",
+    "sentDescription": "Si existe una cuenta con ese correo, te hemos enviado un enlace. Ábrelo en este mismo dispositivo para crear la contraseña nueva.",
+    "email": "Correo electrónico",
+    "invalidEmail": "Introduce un correo válido.",
+    "sendLink": "Enviar enlace",
+    "sending": "Enviando...",
+    "rateLimited": "Has pedido demasiados enlaces. Espera unos minutos y vuelve a intentarlo.",
+    "genericError": "Algo ha fallado. Inténtalo de nuevo.",
+    "backToLogin": "Volver a iniciar sesión",
+    "resetTitle": "Crea una contraseña nueva",
+    "resetDescription": "Elige una contraseña que no hayas usado antes.",
+    "newPassword": "Nueva contraseña",
+    "confirmPassword": "Repite la contraseña",
+    "passwordTooShort": "La contraseña debe tener al menos {min} caracteres.",
+    "passwordMismatch": "Las contraseñas no coinciden.",
+    "samePassword": "La nueva contraseña debe ser distinta de la anterior.",
+    "saving": "Guardando...",
+    "savePassword": "Guardar contraseña",
+    "updated": "Contraseña actualizada",
+    "linkExpired": "El enlace ha caducado o se abrió en otro dispositivo. Pide uno nuevo.",
+    "requestNewLink": "Pedir un enlace nuevo"
   }
 }
