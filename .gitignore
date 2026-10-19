@@ -45,4 +45,8 @@ next-env.d.ts
 
 # documentation
 docs/**
-.claude/*
+
+# Claude Code / Titan Factory: .claude/ is versioned (shared memory, skills, agents).
+# Only machine-local files stay out.
+.claude/settings.local.json
+.claude/logs/

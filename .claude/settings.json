@@ -1,0 +1,31 @@
+{
+  "autoMemoryEnabled": false,
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(npx eslint *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Local-Disc-D\\\\Project\\\\enterpreneurship\\\\free-time-classes\\\\free-time-classes-storefront\" -Directory)",
+      "Bash(Select-Object Name)",
+      "PowerShell(npx tsc --noEmit)",
+      "PowerShell(npx tsc --noEmit 2>&1)",
+      "PowerShell($out = npx tsc --noEmit 2>&1; \"EXIT=$LASTEXITCODE\"; $out)",
+      "PowerShell($out = npx tsc --noEmit 2>&1; \"EXIT=$LASTEXITCODE\"; $out | Select-Object -Last 30)",
+      "Bash(stat -c \"%y %n\" \"c:\\\\Local-Disc-D\\\\Project\\\\enterpreneurship\\\\free-time-classes\\\\free-time-classes-storefront\\\\docs\\\\design\\\\desktop.jsx\" 2>&1)",
+      "Read(//c/Local-Disc-D/Project/enterpreneurship/free-time-classes/free-time-classes-storefront/**)",
+      "Bash(stat -c \"%y %n\" \"c:\\\\Local-Disc-D\\\\Project\\\\enterpreneurship\\\\free-time-classes\\\\free-time-classes-storefront\\\\docs\\\\design\\\\screens.jsx\" \"c:\\\\Local-Disc-D\\\\Project\\\\enterpreneurship\\\\free-time-classes\\\\free-time-classes-storefront\\\\docs\\\\design\\\\screens-a.jsx\" \"c:\\\\Local-Disc-D\\\\Project\\\\enterpreneurship\\\\free-time-classes\\\\free-time-classes-storefront\\\\docs\\\\design\\\\screens-b.jsx\" \"c:\\\\Local-Disc-D\\\\Project\\\\enterpreneurship\\\\free-time-classes\\\\free-time-classes-storefront\\\\docs\\\\design\\\\app.jsx\" \"c:\\\\Local-Disc-D\\\\Project\\\\enterpreneurship\\\\free-time-classes\\\\free-time-classes-storefront\\\\docs\\\\design\\\\index.html\" 2>&1)",
+      "PowerShell($es = Get-Content -Raw -Encoding UTF8 messages/es.json; $en = Get-Content -Raw -Encoding UTF8 messages/en.json; try { $null = $es | ConvertFrom-Json; \"ES OK\" } catch { \"ES ERR: $_\" }; try { $null = $en | ConvertFrom-Json; \"EN OK\" } catch { \"EN ERR: $_\" })",
+      "PowerShell($out = npx tsc --noEmit 2>&1; \"EXIT=$LASTEXITCODE\"; if \\($LASTEXITCODE -ne 0\\) { $out | Select-Object -First 30 })",
+      "PowerShell($es = Get-Content -Raw -Encoding UTF8 messages/es.json; $en = Get-Content -Raw -Encoding UTF8 messages/en.json; try { $null = $es | ConvertFrom-Json; \"ES OK\" } catch { \"ES ERR: $_\" }; try { $null = $en | ConvertFrom-Json; \"EN OK\" } catch { \"EN ERR: $_\" }; $out = npx tsc --noEmit 2>&1; \"TSC EXIT=$LASTEXITCODE\")",
+      "PowerShell($es = Get-Content -Raw -Encoding UTF8 messages/es.json; $en = Get-Content -Raw -Encoding UTF8 messages/en.json; try { $null = $es | ConvertFrom-Json; \"ES OK\" } catch { \"ES ERR: $_\" }; try { $null = $en | ConvertFrom-Json; \"EN OK\" } catch { \"EN ERR: $_\" }; $out = npx tsc --noEmit 2>&1; \"TSC EXIT=$LASTEXITCODE\"; if \\($LASTEXITCODE -ne 0\\) { $out | Select-Object -First 30 })",
+      "PowerShell($out = npx tsc --noEmit 2>&1; \"EXIT=$LASTEXITCODE\"; if \\($LASTEXITCODE -ne 0\\) { $out | Select-Object -First 20 })",
+      "PowerShell($out = & node_modules/.bin/tsc --noEmit 2>&1; \"EXIT=$LASTEXITCODE\"; if \\($LASTEXITCODE -ne 0\\) { $out | Select-Object -First 20 })",
+      "PowerShell($out = & node_modules/.bin/tsc --noEmit 2>&1; \"EXIT=$LASTEXITCODE\"; if \\($LASTEXITCODE -ne 0\\) { $out | Select-Object -First 30 })",
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('messages/es.json','utf8'\\)\\); JSON.parse\\(require\\('fs'\\).readFileSync\\('messages/en.json','utf8'\\)\\); console.log\\('OK'\\);\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\Local-Disc-D\\\\Project\\\\enterpreneurship\\\\free-time-classes\\\\free-time-classes-storefront\" -Force -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object -First 20)",
+      "Bash(rm \"src/components/NavbarWrapper.tsx\" \"src/components/FooterWrapper.tsx\" \"src/components/Footer.tsx\" \"src/lib/redesign/freetime-routes.ts\")",
+      "Bash(rmdir \"src/lib/redesign\")"
+    ]
+  }
+}
