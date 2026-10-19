@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getGoogleAuthUrl } from "@/lib/google-calendar";
+import { getGoogleAuthUrl, GOOGLE_OAUTH_STATE_COOKIE } from "@/lib/google-calendar";
 
 export async function GET() {
   try {
@@ -24,8 +24,18 @@ export async function GET() {
       return NextResponse.json({ error: "Only tutors can connect Google Calendar." }, { status: 403 });
     }
 
-    const url = getGoogleAuthUrl(user.id);
-    return NextResponse.json({ url });
+    // Random state bound to this browser; the callback checks it against the
+    // cookie and takes the user from the session, never from the state.
+    const state = crypto.randomUUID();
+    const response = NextResponse.json({ url: getGoogleAuthUrl(state) });
+    response.cookies.set(GOOGLE_OAUTH_STATE_COOKIE, state, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/api/google/callback",
+      maxAge: 10 * 60,
+    });
+    return response;
   } catch (err) {
     console.error("[google/auth] error:", err);
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });

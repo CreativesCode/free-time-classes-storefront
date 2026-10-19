@@ -19,11 +19,14 @@ function getOAuth2Client() {
   return { clientId, clientSecret, redirectUri };
 }
 
+/** httpOnly cookie holding the OAuth state between /auth and /callback. */
+export const GOOGLE_OAUTH_STATE_COOKIE = "google_oauth_state";
+
 const SCOPES = [
   "https://www.googleapis.com/auth/calendar.events",
 ];
 
-export function getGoogleAuthUrl(userId: string): string {
+export function getGoogleAuthUrl(state: string): string {
   const { clientId, redirectUri } = getOAuth2Client();
   const params = new URLSearchParams({
     client_id: clientId,
@@ -32,7 +35,7 @@ export function getGoogleAuthUrl(userId: string): string {
     access_type: "offline",
     prompt: "consent",
     scope: SCOPES.join(" "),
-    state: userId,
+    state,
   });
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 }
