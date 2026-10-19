@@ -22,12 +22,8 @@ import { useTranslations, useLocale } from "@/i18n/translations";
 import { createClient } from "@/lib/supabase/client";
 import { fetchTutorReviewStatsMap } from "@/lib/supabase/tutor-review-stats";
 import { getAvatarColor } from "@/lib/utils";
-import {
-  createBookingRejection,
-  getBookingsByTutor,
-  updateBooking,
-} from "@/lib/supabase/queries/bookings";
-import { getLessonWithRelations, updateLesson } from "@/lib/supabase/queries/lessons";
+import { getBookingsByTutor } from "@/lib/supabase/queries/bookings";
+import { getLessonWithRelations } from "@/lib/supabase/queries/lessons";
 import type {
   Booking,
   BookingRejectionReason,
@@ -402,26 +398,21 @@ export default function TutorDashboardClient({
     if (!rejectTarget || !effectiveUser.id) return;
 
     const { booking } = rejectTarget;
-    const lessonId = booking.lesson_id;
 
     setActionLoadingBookingId(booking.id);
     try {
-      await updateBooking(booking.id, { status: "rejected" });
-
-      await createBookingRejection({
-        booking_id: booking.id,
-        student_id: booking.student_id,
-        tutor_id: booking.tutor_id,
-        reason: rejectReason,
+      // The API frees the slot, stores the reason and notifies the student.
+      const response = await fetch("/api/bookings/tutor/respond", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookingId: booking.id,
+          action: "reject",
+          reason: rejectReason,
+        }),
       });
-
-      // Custom requests have no pre-existing lesson to revert.
-      if (typeof lessonId === "number") {
-        await updateLesson(lessonId, {
-          student_id: null,
-          status: "available",
-        });
-      }
+      const result = (await response.json()) as { error?: string };
+      if (!response.ok) throw new Error(result.error || t("rejectError"));
 
       setRejectDialogOpen(false);
       setRejectTarget(null);

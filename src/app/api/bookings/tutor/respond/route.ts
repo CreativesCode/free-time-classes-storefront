@@ -71,6 +71,7 @@ export async function POST(request: NextRequest) {
       tutorId: user.id,
       action,
       meetLink: typeof body.meetLink === "string" ? body.meetLink : undefined,
+      reason: typeof body.reason === "string" ? body.reason : undefined,
     });
 
     return noStoreJson(payload, { status: httpStatus });

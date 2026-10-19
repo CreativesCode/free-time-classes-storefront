@@ -30,6 +30,8 @@ export async function respondToBooking(
     action: RespondAction;
     /** Optional manual Meet link; when absent, auto-create via Google if connected. */
     meetLink?: string;
+    /** Optional rejection reason, stored in booking_rejections. */
+    reason?: string;
   },
 ): Promise<RespondResult> {
   const { bookingId, tutorId, action } = args;
@@ -286,6 +288,19 @@ export async function respondToBooking(
         updated_at: new Date().toISOString(),
       })
       .eq("id", booking.lesson_id);
+  }
+
+  const reason = args.reason?.trim();
+  if (reason) {
+    const { error: reasonError } = await admin.from("booking_rejections").insert({
+      booking_id: bookingId,
+      student_id: booking.student_id,
+      tutor_id: tutorId,
+      reason: reason.slice(0, 1000),
+    });
+    if (reasonError) {
+      console.error("[respondToBooking] rejection reason insert failed:", reasonError);
+    }
   }
 
   // Notify student about rejection
