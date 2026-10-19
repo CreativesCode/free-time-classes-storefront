@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/UserContext";
+import { getSafeRedirectNext } from "@/lib/auth/safeRedirect";
 import { cn } from "@/lib/utils";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -9,21 +10,6 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
-
-function getSafeRedirectNext(locale: string, raw: string | null): string | null {
-  if (!raw) return null;
-  let decoded: string;
-  try {
-    decoded = decodeURIComponent(raw);
-  } catch {
-    return null;
-  }
-  if (!decoded.startsWith("/")) return null;
-  if (decoded.includes("//")) return null;
-  if (decoded.includes("\\")) return null;
-  if (!decoded.startsWith(`/${locale}/`)) return null;
-  return decoded;
-}
 
 const LABEL =
   "text-[11px] font-semibold uppercase tracking-[0.06em] text-ft-ink-3";
@@ -196,7 +182,7 @@ export default function LoginClient({ locale }: { locale: string }) {
           </div>
 
           <Link
-            href={`/${locale}/contact`}
+            href={`/${locale}/auth/forgot-password`}
             className="-mt-1 self-end text-xs text-ft-ink-3 transition-colors hover:text-ft-ink"
           >
             {tAuth("forgotPassword")}

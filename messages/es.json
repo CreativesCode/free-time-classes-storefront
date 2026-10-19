@@ -110,7 +110,9 @@
     "missingCode": "Falta el código de verificación en el enlace.",
     "autoRedirect": "Redirigiendo a iniciar sesión en {seconds, plural, one {# segundo} other {# segundos}}…",
     "goToLogin": "Ir a iniciar sesión",
-    "goToDashboard": "Ir al dashboard"
+    "goToDashboard": "Ir al dashboard",
+    "confirmedOtherDevice": "Tu correo está confirmado. Inicia sesión para continuar.",
+    "recoveryOtherDevice": "Abre el enlace de recuperación en el mismo navegador donde lo pediste, o solicita uno nuevo."
   },
   "studentProfile": {
     "profile": "Perfil",

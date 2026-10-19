@@ -110,7 +110,9 @@
     "missingCode": "The verification link is missing the code parameter.",
     "autoRedirect": "Redirecting to login in {seconds, plural, one {# second} other {# seconds}}…",
     "goToLogin": "Go to login",
-    "goToDashboard": "Go to dashboard"
+    "goToDashboard": "Go to dashboard",
+    "confirmedOtherDevice": "Your email is confirmed. Sign in to continue.",
+    "recoveryOtherDevice": "Open the recovery link in the same browser where you requested it, or request a new one."
   },
   "studentProfile": {
     "profile": "Profile",

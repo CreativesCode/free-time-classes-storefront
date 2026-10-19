@@ -16,10 +16,15 @@ export default function AuthCallbackClient({ locale }: { locale: string }) {
 
   const [redirectSeconds, setRedirectSeconds] = useState<number | null>(null);
 
+  // Signup link opened on another device: the email is confirmed anyway, so
+  // show the success screen and send the user to sign in.
+  const confirmedElsewhere = params.get("error") === "confirmed_other_device";
+
   const errorMessage = useMemo(() => {
     const err = params.get("error");
-    if (!err) return null;
+    if (!err || err === "confirmed_other_device") return null;
     if (err === "missing_code") return t("missingCode");
+    if (err === "recovery_other_device") return t("recoveryOtherDevice");
     return decodeURIComponent(err);
   }, [params, t]);
 
@@ -63,7 +68,7 @@ export default function AuthCallbackClient({ locale }: { locale: string }) {
         {status === "success" ? (
           <>
             <p className="mb-2 mt-3 text-sm text-ft-ink-2">
-              {t("successDescription")}
+              {confirmedElsewhere ? t("confirmedOtherDevice") : t("successDescription")}
             </p>
             {redirectSeconds !== null && (
               <p className="mb-8 text-xs text-ft-ink-3">
