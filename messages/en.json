@@ -310,7 +310,6 @@
     "privacySub": "Visibility and data",
     "signOut": "Sign out"
   },
-
   "navigation": {
     "home": "Home",
     "about": "About",
@@ -1305,7 +1304,15 @@
     "minutesShort": "min",
     "inMinutes": "in {minutes} min",
     "inHours": "in {hours} h",
-    "inDays": "in {days} days"
+    "inDays": "in {days} days",
+    "rejectBooking": "Reject",
+    "rejectSuccess": "Request rejected",
+    "rejectError": "Could not reject the request",
+    "cancelConfirmTitle": "Cancel this booking?",
+    "cancelConfirmBody": "The tutor will be notified and the time slot will be freed. Confirmed classes can only be cancelled with enough notice.",
+    "rejectConfirmTitle": "Reject this request?",
+    "rejectConfirmBody": "The student will be notified and the time slot will become available again.",
+    "keepBooking": "Go back"
   },
   "messagesPage": {
     "title": "Messages",

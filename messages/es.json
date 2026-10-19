@@ -1304,7 +1304,15 @@
     "minutesShort": "min",
     "inMinutes": "en {minutes} min",
     "inHours": "en {hours} h",
-    "inDays": "en {days} días"
+    "inDays": "en {days} días",
+    "rejectBooking": "Rechazar",
+    "rejectSuccess": "Solicitud rechazada",
+    "rejectError": "No se pudo rechazar la solicitud",
+    "cancelConfirmTitle": "¿Cancelar esta reserva?",
+    "cancelConfirmBody": "El profesor recibirá un aviso y el horario quedará libre. Las clases confirmadas solo se pueden cancelar con antelación suficiente.",
+    "rejectConfirmTitle": "¿Rechazar esta solicitud?",
+    "rejectConfirmBody": "El estudiante recibirá un aviso y el horario volverá a quedar disponible.",
+    "keepBooking": "Volver"
   },
   "messagesPage": {
     "title": "Mensajes",

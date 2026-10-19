@@ -14,6 +14,14 @@ import {
 import { toast } from "sonner";
 
 import { Avatar } from "@/components/ds/Avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { StudentSidebarNav } from "@/components/ds/StudentSidebarNav";
 import { useAuth } from "@/context/UserContext";
 import { useTranslations } from "@/i18n/translations";
@@ -84,10 +92,13 @@ export default function BookingsClient({ locale }: { locale: string }) {
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("upcoming");
   const [cancellingId, setCancellingId] = useState<number | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<Booking | null>(null);
 
   const supabaseRef = useRef(createClient());
   const isBothRoles = !!user?.is_student && !!user?.is_tutor;
-  const [viewRole, setViewRole] = useState<ViewRole>("student");
+  const [viewRole, setViewRole] = useState<ViewRole | null>(() =>
+    user?.is_student ? "student" : user?.is_tutor ? "tutor" : null
+  );
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -97,13 +108,15 @@ export default function BookingsClient({ locale }: { locale: string }) {
 
   useEffect(() => {
     if (user) {
-      if (user.is_student) setViewRole("student");
-      else if (user.is_tutor) setViewRole("tutor");
+      // Keep the role the user picked; only pick a default once.
+      setViewRole((current) =>
+        current ?? (user.is_student ? "student" : user.is_tutor ? "tutor" : null)
+      );
     }
   }, [user]);
 
   const fetchBookings = useCallback(async () => {
-    if (!user) return;
+    if (!user || !viewRole) return;
     setLoading(true);
     setError(null);
 
@@ -139,8 +152,11 @@ export default function BookingsClient({ locale }: { locale: string }) {
             *,
             lesson:lessons(
               id, scheduled_date_time, duration_minutes, price, status, meet_link,
-              subject:subjects(name),
-              student:users!bookings_student_id_fkey(id, username, profile_picture)
+              subject:subjects(name)
+            ),
+            student:student_profiles!bookings_student_id_fkey(
+              id,
+              user:users!student_profiles_id_fkey(id, username, profile_picture)
             )
           `
           )
@@ -151,12 +167,13 @@ export default function BookingsClient({ locale }: { locale: string }) {
 
         const mapped = (data ?? []).map((b: Record<string, unknown>) => {
           const lesson = b.lesson as Record<string, unknown> | null;
+          const student = b.student as { user?: unknown } | null;
           return {
             ...b,
             lesson: lesson
               ? {
                   ...lesson,
-                  student: lesson.student,
+                  student: student?.user ?? null,
                 }
               : null,
           };
@@ -211,25 +228,35 @@ export default function BookingsClient({ locale }: { locale: string }) {
     );
   }, [upcoming]);
 
-  const handleCancel = async (bookingId: number) => {
-    setCancellingId(bookingId);
+  // Students cancel; tutors can only reject pending requests (confirmed
+  // classes have no tutor-side cancel API yet). Both go through the API so the
+  // slot is released and the other party is notified.
+  const isTutorView = viewRole === "tutor";
+
+  const handleCancel = async (booking: Booking) => {
+    setCancellingId(booking.id);
     try {
-      const supabase = supabaseRef.current;
-      const { error: updateError } = await supabase
-        .from("bookings")
-        .update({ status: "cancelled" })
-        .eq("id", bookingId);
-
-      if (updateError) throw updateError;
-
-      setBookings((prev) =>
-        prev.map((b) =>
-          b.id === bookingId ? { ...b, status: "cancelled" as BookingStatus } : b
-        )
+      const response = await fetch(
+        isTutorView ? "/api/bookings/tutor/respond" : "/api/bookings/student/cancel",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(
+            isTutorView
+              ? { bookingId: booking.id, action: "reject" }
+              : { bookingId: booking.id }
+          ),
+        }
       );
-      toast.success(t("cancelSuccess"));
-    } catch {
-      toast.error(t("cancelError"));
+      const result = (await response.json()) as { error?: string };
+      if (!response.ok) throw new Error(result.error);
+
+      setCancelTarget(null);
+      toast.success(t(isTutorView ? "rejectSuccess" : "cancelSuccess"));
+      await fetchBookings();
+    } catch (err) {
+      const message = err instanceof Error && err.message ? err.message : null;
+      toast.error(message ?? t(isTutorView ? "rejectError" : "cancelError"));
     } finally {
       setCancellingId(null);
     }
@@ -454,7 +481,8 @@ export default function BookingsClient({ locale }: { locale: string }) {
                 : null;
               const isCancelable =
                 tab === "upcoming" &&
-                (booking.status === "pending" || booking.status === "confirmed");
+                (booking.status === "pending" ||
+                  (!isTutorView && booking.status === "confirmed"));
 
               return (
                 <article
@@ -515,7 +543,7 @@ export default function BookingsClient({ locale }: { locale: string }) {
                       {isCancelable && (
                         <button
                           type="button"
-                          onClick={() => void handleCancel(booking.id)}
+                          onClick={() => setCancelTarget(booking)}
                           disabled={cancellingId === booking.id}
                           className="inline-flex items-center gap-1 rounded-ft-sm border border-ft-line bg-ft-paper px-3 py-2 text-[11px] font-semibold text-ft-ink-2 hover:bg-ft-surface-1 disabled:opacity-60"
                         >
@@ -524,7 +552,7 @@ export default function BookingsClient({ locale }: { locale: string }) {
                           ) : (
                             <XCircle width={12} height={12} />
                           )}
-                          {t("cancelBooking")}
+                          {t(isTutorView ? "rejectBooking" : "cancelBooking")}
                         </button>
                       )}
                     </div>
@@ -543,6 +571,45 @@ export default function BookingsClient({ locale }: { locale: string }) {
       </div>
         </div>
       </div>
+
+      <Dialog
+        open={cancelTarget !== null}
+        onOpenChange={(open) => {
+          if (!open && cancellingId === null) setCancelTarget(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle>
+              {t(isTutorView ? "rejectConfirmTitle" : "cancelConfirmTitle")}
+            </DialogTitle>
+            <DialogDescription>
+              {t(isTutorView ? "rejectConfirmBody" : "cancelConfirmBody")}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <button
+              type="button"
+              onClick={() => setCancelTarget(null)}
+              disabled={cancellingId !== null}
+              className="inline-flex items-center justify-center rounded-ft-sm border border-ft-line bg-ft-paper px-4 py-2 text-[12px] font-semibold text-ft-ink-2 hover:bg-ft-surface-1 disabled:opacity-60"
+            >
+              {t("keepBooking")}
+            </button>
+            <button
+              type="button"
+              onClick={() => cancelTarget && void handleCancel(cancelTarget)}
+              disabled={cancellingId !== null}
+              className="inline-flex items-center justify-center gap-1.5 rounded-ft-sm bg-ft-ink px-4 py-2 text-[12px] font-semibold text-ft-paper hover:opacity-90 disabled:opacity-60"
+            >
+              {cancellingId !== null && (
+                <Loader2 width={12} height={12} className="animate-spin" />
+              )}
+              {t(isTutorView ? "rejectBooking" : "cancelBooking")}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
