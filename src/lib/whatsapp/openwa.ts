@@ -38,6 +38,9 @@ export function phoneToChatId(phone: string, countryCode = ""): string {
   return `${full}@c.us`;
 }
 
+// A hung VPS must never block the API route that triggered the message.
+const REQUEST_TIMEOUT_MS = 4000;
+
 async function call<T>(path: string, init: RequestInit): Promise<OpenWaResult<T>> {
   if (!isOpenWaConfigured()) {
     return {
@@ -49,6 +52,7 @@ async function call<T>(path: string, init: RequestInit): Promise<OpenWaResult<T>
   let res: Response;
   try {
     res = await fetch(`${BASE_URL}${path}`, {
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       ...init,
       headers: {
         "Content-Type": "application/json",
@@ -57,7 +61,11 @@ async function call<T>(path: string, init: RequestInit): Promise<OpenWaResult<T>
       },
     });
   } catch (err) {
-    return { success: false, error: { code: "NETWORK_ERROR", message: String(err) } };
+    const timedOut = err instanceof Error && err.name === "TimeoutError";
+    return {
+      success: false,
+      error: { code: timedOut ? "TIMEOUT" : "NETWORK_ERROR", message: String(err) },
+    };
   }
 
   const text = await res.text();

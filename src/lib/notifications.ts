@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { NotificationType } from "@/types/notification";
 import { isOpenWaConfigured, phoneToChatId, sendText } from "@/lib/whatsapp/openwa";
@@ -44,11 +45,20 @@ export async function insertNotification(
   console.log("[insertNotification] OK, id:", data?.id);
 
   // Best-effort WhatsApp mirror. Never let a WhatsApp failure break the
-  // in-app notification or the calling API route.
-  await sendWhatsAppNotification(admin, {
-    ...params,
-    notificationId: data?.id ?? null,
-  });
+  // in-app notification or the calling API route: run it after the
+  // response is sent when we are inside a request.
+  const send = () =>
+    sendWhatsAppNotification(admin, {
+      ...params,
+      notificationId: data?.id ?? null,
+    });
+
+  try {
+    after(send);
+  } catch {
+    // Outside a request scope (scripts): send inline.
+    await send();
+  }
 }
 
 async function sendWhatsAppNotification(
