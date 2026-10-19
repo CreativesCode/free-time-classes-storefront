@@ -11,6 +11,10 @@ export const runtime = "nodejs";
 
 const WEBHOOK_SECRET = process.env.OPENWA_WEBHOOK_SECRET ?? "";
 
+// WhatsApp sender ids are numeric with a known suffix (e.g. 34600111222@c.us,
+// 123456789012345@lid). Anything else is rejected before it reaches a query.
+const SENDER_ID_PATTERN = /^\d{5,20}@(c\.us|lid|s\.whatsapp\.net)$/i;
+
 const isBogusKey = (k?: string | null) => !k || k === "msg_unknown" || k === "unknown";
 
 function adminClient() {
@@ -26,7 +30,11 @@ export async function POST(request: NextRequest) {
   // Read the RAW body — HMAC must be verified against it, not re-serialized JSON.
   const rawBody = await request.text();
 
-  // 1. Signature (when a secret is configured)
+  // 1. Signature. Fail closed in production when no secret is configured.
+  if (!WEBHOOK_SECRET && process.env.NODE_ENV === "production") {
+    console.error("[wa-webhook] OPENWA_WEBHOOK_SECRET is not set; rejecting request.");
+    return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });
+  }
   if (WEBHOOK_SECRET) {
     const ok = verifySignature(
       rawBody,
@@ -89,7 +97,10 @@ export async function POST(request: NextRequest) {
         ? `msgid:${dataId}`
         : `dlv:${deliveryId}`;
 
-  const from = typeof data.from === "string" ? data.from : "";
+  const from = typeof data.from === "string" ? data.from.trim() : "";
+  if (!SENDER_ID_PATTERN.test(from)) {
+    return NextResponse.json({ ok: true, skip: "invalid_sender" });
+  }
 
   const { error: insertError } = await admin
     .from("wa_inbound_events")

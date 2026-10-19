@@ -20,7 +20,10 @@ export async function matchPendingBooking(
 
   // The bare identifier without the @c.us / @lid suffix.
   const bareId = fromTrimmed.replace(/@(c\.us|lid|s\.whatsapp\.net)$/i, "");
-  const digits = bareId.replace(/[^\d]/g, "");
+  // Only numeric ids are valid; this also keeps LIKE wildcards and PostgREST
+  // filter syntax out of the `.or()` below.
+  if (!/^\d+$/.test(bareId)) return null;
+  const digits = bareId;
 
   // Outbound rows whose delivered message_id embeds this sender id, or whose
   // chat_id shares the same trailing digits. Newest first.
