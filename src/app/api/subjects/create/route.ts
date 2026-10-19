@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 
@@ -140,6 +141,9 @@ export async function POST(
         { status: 400 }
       );
     }
+
+    revalidateTag("subjects");
+    revalidateTag("tutors");
 
     return noStoreJson(
       { createdSubjectId: subjectId },

@@ -17,6 +17,7 @@ import {
 import type { Subject } from "@/types/subject";
 import { useEffect, useMemo, useState } from "react";
 import { Trash2 } from "lucide-react";
+import { requestCatalogRevalidation } from "@/lib/catalog/revalidate";
 
 interface TutorSubjectsManagerProps {
   tutorId: string;
@@ -89,6 +90,7 @@ export default function TutorSubjectsManager({
       } else {
         await addTutorSubject(tutorId, subjectId);
       }
+      void requestCatalogRevalidation();
 
       const updated = await getTutorSubjectDetails(tutorId);
       setSelectedSubjectIds(new Set(updated.map((subject) => subject.id)));

@@ -32,6 +32,7 @@ import { getPublicUrl, uploadAvatar } from "@/lib/supabase/storage";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { requestCatalogRevalidation } from "@/lib/catalog/revalidate";
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -121,6 +122,7 @@ export default function EditProfileModal({
         years_of_experience: Number.isNaN(yearsValue) ? null : yearsValue,
       };
       await updateTutorProfile(tutorId, tutorUpdates);
+      void requestCatalogRevalidation();
       onTutorProfileUpdated?.(tutorUpdates);
       await refreshUser();
       toast.success(t("profileUpdated"));

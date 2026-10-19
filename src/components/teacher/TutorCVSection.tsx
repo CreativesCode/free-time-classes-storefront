@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { requestCatalogRevalidation } from "@/lib/catalog/revalidate";
 
 const FT_FIELD_SM =
   "h-9 rounded-ft border-ft-line bg-ft-paper text-ft-ink placeholder:text-ft-ink-3 shadow-none focus-visible:ring-2 focus-visible:ring-ft-accent/40";
@@ -90,6 +91,7 @@ export default function TutorCVSection({
       try {
         const value = stringifyCVData(next);
         await updateTutorProfile(tutorId, { certifications: value });
+        void requestCatalogRevalidation();
         setCvData(next);
         onTutorProfileUpdated?.({ certifications: value });
         toast.success(t("saved"));

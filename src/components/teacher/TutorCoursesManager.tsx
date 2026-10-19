@@ -55,6 +55,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { requestCatalogRevalidation } from "@/lib/catalog/revalidate";
 
 const MAX_COURSE_COVER_BYTES = 5 * 1024 * 1024;
 
@@ -387,6 +388,7 @@ export default function TutorCoursesManager({
           t("timeoutError")
         );
       }
+      void requestCatalogRevalidation();
       await refreshCourses();
       setCreateOpen(false);
       resetCreateForm();
@@ -425,6 +427,7 @@ export default function TutorCoursesManager({
         updates = { ...updates, cover_image: path };
       }
       await withTimeout(updateCourse(editCourseId, updates), 30000, t("timeoutError"));
+      void requestCatalogRevalidation();
       await refreshCourses();
       setEditOpen(false);
       setEditCourseId(null);
@@ -443,6 +446,7 @@ export default function TutorCoursesManager({
     setIsSaving(true);
     try {
       await withTimeout(deleteCourse(courseId), 30000, t("timeoutError"));
+      void requestCatalogRevalidation();
       await refreshCourses();
     } catch (err) {
       console.error("Error deleting course:", err);
