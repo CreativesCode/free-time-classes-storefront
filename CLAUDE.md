@@ -166,4 +166,7 @@ Error → se arregla → se documenta → no vuelve a ocurrir.
 
 ### Aprendizajes
 
-*(vacio — anadir aqui con fecha absoluta: error, fix, donde aplica)*
+- **2026-10-19 — Repo publico + BD real del piloto.** La auditoria FRE0002 encontro vulnerabilidades y las pruebas
+  dejaron datos huerfanos en la BD real. Regla: nunca escribir detalles explotables ni credenciales en archivos
+  versionados (informes de auditoria → `docs/audits/` local + Tasknic), y probar solo con las cuentas de prueba,
+  prefijo `QA-` y limpieza final. Detalle: `.claude/memory/feedback/qa-testing-safety.md`.

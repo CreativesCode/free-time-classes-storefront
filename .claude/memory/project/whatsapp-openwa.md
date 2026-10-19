@@ -18,5 +18,8 @@ por texto simple ("SI"/"1" confirma, "NO"/"2" rechaza).
 - Dev: `GET /api/dev/wa-register-webhook?url=...` registra el webhook; `api/dev/wa-test` para pruebas.
 - Envs: `OPENWA_BASE_URL`, `OPENWA_API_KEY`, `OPENWA_SESSION_ID` (UUID, no el name), `OPENWA_WEBHOOK_SECRET`.
 
+**Hallazgo auditoria 2026-10-19 (FRE0015):** los envios fallaban sin dejar rastro en `wa_messages` y el fetch a
+OpenWA no tiene timeout (bloquea ~3 s las APIs de reservas). Diagnosticar el envio antes del piloto.
+
 **Pendiente (checklist de produccion):** reverse proxy HTTPS en el VPS, alerta ante `session.disconnected`,
 backend publicamente alcanzable para el webhook (en dev: ngrok/Cloudflare Tunnel).

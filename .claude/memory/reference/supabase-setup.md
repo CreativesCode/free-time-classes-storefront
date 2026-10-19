@@ -16,6 +16,12 @@ Hay dos `019_*` (prefijo duplicado historico, no renombrar). El esquema real dif
 
 **Keepalive:** el plan free pausa el proyecto tras ~7 dias sin actividad. `.github/workflows/keep-supabase-alive.yml`
 llama a diario (06:00 UTC) al RPC `public.ping()` (migracion `025`) con los secrets `SUPABASE_URL` y `SUPABASE_ANON_KEY` del repo.
+Gotcha: GitHub desactiva los workflows programados tras 60 dias sin actividad en el repo (`disabled_inactivity`);
+paso entre julio y octubre de 2026 y se reactivo el 2026-10-19 via API de GitHub. Plan: moverlo a Vercel Cron junto
+con el cron de slots (FRE0017).
+
+**Acceso a datos reales:** la BD es la del piloto (usuarios reales). Ver `feedback/qa-testing-safety.md` antes de
+probar flujos que escriban datos.
 
 **Otras envs del proyecto:** `GOOGLE_CLIENT_ID/SECRET/REDIRECT_URI` (Calendar/Meet), `OPENWA_*` (WhatsApp),
 `BOOKING_STUDENT_CANCEL_HOURS` (opcional, def. 24), `CAPACITOR_SERVER_URL`, `CAPACITOR_ANDROID_CLEARTEXT`.
