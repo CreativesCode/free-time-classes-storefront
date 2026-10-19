@@ -1,7 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import createMiddleware from "next-intl/middleware";
 import { NextRequest, NextResponse } from "next/server";
-import { routing } from "./src/i18n/routing";
+import { routing } from "@/i18n/routing";
 
 // List of paths that should not be processed by the middleware
 const PUBLIC_PATHS = [
@@ -24,6 +24,8 @@ const PROTECTED_ROUTES = [
   "/bookings",
   "/messages",
   "/courses/create",
+  "/saved-tutors",
+  "/notifications",
 ];
 
 const STUDENT_ONLY_ROUTES = ["/student-profile"];
@@ -198,8 +200,13 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL(`/${locale}/dashboard`, req.url));
   }
 
-  // Then handle internationalization
-  return intlMiddleware(req);
+  // Then handle internationalization, keeping any session cookies Supabase
+  // refreshed above (otherwise the rotated tokens never reach the browser).
+  const intlResponse = intlMiddleware(req);
+  for (const cookie of response.cookies.getAll()) {
+    intlResponse.cookies.set(cookie);
+  }
+  return intlResponse;
 }
 
 /**

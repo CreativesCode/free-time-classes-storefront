@@ -71,7 +71,7 @@ src/
 └── i18n/
 messages/es.json, messages/en.json   # TODOS los textos de UI
 supabase/migrations/NNN_descripcion.sql   # Migraciones numeradas (siguiente: 028)
-middleware.ts              # next-intl + sesion Supabase + proteccion por rol (is_student / is_tutor)
+src/middleware.ts          # next-intl + sesion Supabase + proteccion por rol (is_student / is_tutor)
 ```
 
 ---
