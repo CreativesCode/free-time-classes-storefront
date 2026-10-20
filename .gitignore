@@ -50,3 +50,6 @@ docs/**
 # Only machine-local files stay out.
 .claude/settings.local.json
 .claude/logs/
+
+# Supabase CLI cache
+supabase/.temp/
