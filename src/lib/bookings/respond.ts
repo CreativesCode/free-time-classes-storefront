@@ -2,10 +2,22 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createMeetEvent, hasGoogleConnection } from "@/lib/google-calendar";
 import { insertNotification } from "@/lib/notifications";
 import { nowPlusMinutesAsLessonTimestamp } from "@/lib/datetime/lessonTime";
+import type { BookingRejectionReason } from "@/types/booking";
 
 export const CUSTOM_REQUEST_EXPIRY_MINUTES = 15;
 
 export type RespondAction = "confirm" | "reject";
+
+// Mirrors booking_rejections_reason_check.
+const REJECTION_REASONS: readonly BookingRejectionReason[] = [
+  "tutor unavailable",
+  "sick tutor",
+  "sick student",
+  "scheduling conflict",
+  "emergency",
+  "technical issues",
+  "other",
+];
 
 export interface RespondResult {
   httpStatus: number;
@@ -30,7 +42,7 @@ export async function respondToBooking(
     action: RespondAction;
     /** Optional manual Meet link; when absent, auto-create via Google if connected. */
     meetLink?: string;
-    /** Optional rejection reason, stored in booking_rejections. */
+    /** Optional rejection reason (one of booking_rejections_reason_check). */
     reason?: string;
   },
 ): Promise<RespondResult> {
@@ -290,13 +302,13 @@ export async function respondToBooking(
       .eq("id", booking.lesson_id);
   }
 
-  const reason = args.reason?.trim();
+  const reason = REJECTION_REASONS.find((r) => r === args.reason?.trim());
   if (reason) {
     const { error: reasonError } = await admin.from("booking_rejections").insert({
       booking_id: bookingId,
       student_id: booking.student_id,
       tutor_id: tutorId,
-      reason: reason.slice(0, 1000),
+      reason,
     });
     if (reasonError) {
       console.error("[respondToBooking] rejection reason insert failed:", reasonError);
