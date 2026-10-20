@@ -32,6 +32,7 @@ const ROLE_OPTIONS: ReadonlyArray<{ value: AccountType; icon: LucideIcon }> = [
 ];
 
 export default function RegisterClient({ locale }: { locale: string }) {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [accountType, setAccountType] = useState<AccountType>("student");
@@ -85,6 +86,7 @@ export default function RegisterClient({ locale }: { locale: string }) {
           : undefined;
       const result = await register(email, password, accountType, {
         emailRedirectTo,
+        username: name,
       });
 
       if (result === "email_confirmation_required") {
@@ -110,6 +112,7 @@ export default function RegisterClient({ locale }: { locale: string }) {
       const { error } = await supabase.auth.resend({
         type: "signup",
         email,
+        options: { emailRedirectTo: `${window.location.origin}/${locale}/auth/callback` },
       });
       if (error) throw error;
       setResendState("sent");
@@ -236,6 +239,23 @@ export default function RegisterClient({ locale }: { locale: string }) {
           </div>
 
           <div className="flex flex-col gap-3">
+            <div>
+              <label htmlFor="name" className={LABEL}>
+                {t("name")}
+              </label>
+              <input
+                id="name"
+                type="text"
+                autoComplete="name"
+                placeholder={t("input.name")}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                maxLength={60}
+                required
+                className={INPUT}
+              />
+            </div>
+
             <div>
               <label htmlFor="email" className={LABEL}>
                 {t("email")}

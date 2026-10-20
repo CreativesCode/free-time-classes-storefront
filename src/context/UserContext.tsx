@@ -20,7 +20,7 @@ interface UserContextType {
     email: string,
     password: string,
     role: "student" | "tutor" | "both",
-    options?: { emailRedirectTo?: string }
+    options?: { emailRedirectTo?: string; username?: string }
   ) => Promise<"signed_in" | "email_confirmation_required">;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -132,7 +132,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       email: string,
       password: string,
       role: "student" | "tutor" | "both",
-      options?: { emailRedirectTo?: string }
+      options?: { emailRedirectTo?: string; username?: string }
     ) => {
       try {
         setError(null);
@@ -150,6 +150,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             data: {
               is_student: isStudent,
               is_tutor: isTutor,
+              // Read by the handle_new_user trigger (migration 040).
+              ...(options?.username?.trim() ? { username: options.username.trim() } : {}),
             },
           },
         });

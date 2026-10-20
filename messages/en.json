@@ -48,9 +48,11 @@
       "mobileSubtitle": "Choose how you'll use FreeTime and set up your sign-in details.",
       "backAria": "Go back"
     },
+    "name": "Name",
     "email": "Email",
     "password": "Password",
     "input": {
+      "name": "How others will see you",
       "email": "Enter your email",
       "password": "Enter your password"
     },
