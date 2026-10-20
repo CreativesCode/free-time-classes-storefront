@@ -12,8 +12,9 @@ profesor real le llega al movil.
 - Prefijar todo dato creado con `QA-<codigo tarea>` y apuntar cada id creado para limpiarlo al final.
 - Mutaciones minimas. La limpieza que la API no permite se hace con la service role desde un script local
   (fuera del repo), filtrando por id + cuentas de prueba + fecha, y avisando al usuario antes.
-- Las pruebas suelen dejar slots huerfanos reservables (bugs de cancelacion/excepciones): revisar `lessons`
-  tras cada sesion de pruebas.
+- Revisar tras cada sesion de pruebas que no queden filas QA en `lessons`, `bookings`, `notifications`,
+  `tutor_availability`/`availability_exceptions` ni cursos `QA-` (y sus imagenes en Storage). Desde PRP-001 una
+  franja de agenda de prueba hace reservables horas reales del tutor QA: borrarla al acabar.
 - El repo es publico (decision 2026-10-19, no se va a privatizar): nunca escribir credenciales, ni detalles
   explotables de vulnerabilidades, en archivos versionados (codigo, memoria, PRPs, commits). Los informes de
   auditoria van a `docs/audits/` (local) y a Tasknic.

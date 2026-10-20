@@ -22,20 +22,18 @@ Al cerrar un item: marcarlo en la descripcion de su WP y citar el commit.
 slots + completado (WP4/WP5), Cancelar/Rechazar via API (WP5), crash del catalogo e invalidacion de cache
 (WP6/WP7), i18n bajo /es (WP9), sesion (WP2), OAuth Google (WP3) y timeout de OpenWA (WP8). Despues Fases 1-3.
 
-**Problemas estructurales a recordar (no explotables):**
-- Los slots (`lessons`) se generan una sola vez a 12 semanas y nada los renueva: hace falta un cron diario
-  idempotente en hora de Madrid, que tambien marque clases `completed` y caduque pendientes.
-- Curso y slot no estan vinculados (las lecciones no tienen `course_id`): precio/duracion mostrados en el curso no
-  son los reservados. Es decision de producto (opcion A: `course_id` en reglas/lecciones/reservas; B: quitar
-  precio/duracion del curso).
-- Las caches del catalogo (`unstable_cache`/ISR) no se invalidan nunca: cualquier mutacion de cursos/perfil debe
-  llamar a `revalidateTag`.
-- Varias acciones de UI escriben directo en Supabase saltandose las rutas `/api/...` (y con ello notificaciones y
-  reglas): al arreglar, pasar siempre por la API existente.
+**Problemas estructurales que encontro la auditoria y como quedaron resueltos:**
+- Slots pregenerados que nadie renovaba -> ya no hay huecos pregenerados: las horas libres se calculan al pedirlas
+  (`src/lib/availability/openStartTimes.ts`) y la clase se crea al reservar (PRP-001, `.claude/PRPs/prp-course-booking-unit.md`).
+  El cron diario solo completa clases y purga datos.
+- Curso y clase sin vincular -> `course_id` en clases y reservas (migracion 041); el curso fija precio y duracion.
+- Caches del catalogo sin invalidar -> `revalidateCatalog()` tras cada mutacion; detalles ISR. Ver `reference/caching-performance.md`.
+- UI escribiendo directo en Supabase -> cursos solo via `/api/courses` (042), reservas solo via `/api/bookings/*`.
+  Regla que sigue vigente: al arreglar algo, pasar siempre por la API existente.
 
 **Como se ataca (desde 2026-10-20):** un commit por hallazgo, marcado en el checklist de su WP con el hash; las
-migraciones de WP1 son 028-038 (una por hallazgo, probadas en seco y con roles simulados antes de aplicar, con OK
-del usuario). F021/F022 (curso como unidad de reserva) van con PRP propio; F036 sigue bloqueado por la decision de resenas. Hallazgo nuevo anadido: G-new-1
+migraciones del plan van de la 028 a la 042 (una por hallazgo, probadas en seco y con roles simulados antes de aplicar, con OK
+del usuario). F021/F022 se hicieron con el PRP-001 (migraciones 041-042); F036 sigue bloqueado por la decision de resenas. Hallazgo nuevo anadido: G-new-1
 en FRE0012. El estado vivo esta en el borrador/comentarios de FRE0007, no aqui.
 
 **Decisiones tomadas (2026-10-19):** el repo se queda publico (cuentas gratuitas para publicar); datos QA de la
@@ -43,4 +41,7 @@ auditoria borrados; keepalive de Supabase reactivado (moverlo a Vercel Cron va e
 **Decisiones tomadas (2026-10-20):** curso = unidad de reserva al estilo italki (agenda general del tutor, el curso fija
 precio y duracion, `course_id` en clase y reserva); cancelacion 24 h; horas convertidas a la zona del usuario (BD sigue
 en Madrid); EUR para todo. Recogidas tambien en BUSINESS_LOGIC.md §5.
+**Decisiones del PRP-001 (2026-10-20):** inicio cada 30 min, sin margen, 8 semanas; duraciones 30/45/60/90/120;
+sin cursos gratuitos; la solicitud de otra hora va ligada a un curso; curso con historial se archiva; las horas libres
+son publicas. La agenda del tutor sigue en hora de Madrid (mostrarla en su zona es decision pendiente).
 Las decisiones de producto que siguen pendientes estan listadas en FRE0007: preguntar, no inventar.

@@ -20,7 +20,7 @@ Hay dos `019_*` (prefijo duplicado historico, no renombrar). El esquema real dif
 llama a diario (06:00 UTC) al RPC `public.ping()` (migracion `025`) con los secrets `SUPABASE_URL` y `SUPABASE_ANON_KEY` del repo.
 Gotcha: GitHub desactiva los workflows programados tras 60 dias sin actividad en el repo (`disabled_inactivity`);
 paso entre julio y octubre de 2026 y se reactivo el 2026-10-19 via API de GitHub. Plan: moverlo a Vercel Cron junto
-con el cron de slots (FRE0017).
+con el cron diario (`/api/cron/daily`, que ya no genera huecos: completa clases y purga datos) (FRE0017).
 
 **Acceso a datos reales:** la BD es la del piloto (usuarios reales). Ver `feedback/qa-testing-safety.md` antes de
 probar flujos que escriban datos.

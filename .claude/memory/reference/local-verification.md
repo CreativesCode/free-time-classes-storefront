@@ -15,13 +15,19 @@ y construir la cookie de `@supabase/ssr` (`sb-<ref>-auth-token=base64-<json de l
 chars en `.0`, `.1`...). Las credenciales se leen en el script desde la tarea de Tasknic y nunca se imprimen.
 
 **Gotchas de scripting en esta maquina:** `$TEMP` de bash y `TEMP` de Python son carpetas distintas (llamar a
-`q.sh` desde Python con su ruta de bash via `cygpath -m`); los `print` de Python en Windows anaden `` (usar
-`tr -d ''`); las cookies troceadas de Supabase llevan espacios (no usar `read A B` para separarlas); dentro de
+`q.sh` desde Python con su ruta de bash via `cygpath -m`); los `print` de Python en Windows anaden `
+` (usar
+`tr -d '
+'`); las cookies troceadas de Supabase llevan espacios (no usar `read A B` para separarlas); dentro de
 heredocs los `\` de regex se pierden: editar esas lineas con la herramienta Edit. Datos QA: prefijo `QA-<tarea>`
 en `notes` y borrar reserva + notificaciones + wa_messages + leccion al acabar.
 
 **E2E con navegador real:** `playwright-core` de la cache de npx (`~/AppData/Local/npm-cache/_npx/*/node_modules/playwright-core`)
 con `executablePath` a un `chromium_headless_shell-*` ya instalado en `~/AppData/Local/ms-playwright`.
+Para medir o probar en build de produccion: `npm run build` + `npx next start -p 3005` en background; pararlo con
+PowerShell `Get-NetTCPConnection -LocalPort 3005 -State Listen | Stop-Process`. Zona horaria del navegador con
+`browser.newContext({ timezoneId })`. Scripts `tsx` que importan codigo del proyecto deben estar en la raiz del repo
+(temporal, borrarlo despues): desde el scratchpad no resuelven `@/` ni los paquetes.
 
 **Lecturas de BD:** PostgREST con la service role solo para lecturas (`limit=0` para comprobar columnas). Para
 SQL de catalogo y DDL: `env -u SUPABASE_ACCESS_TOKEN supabase db query --linked --project-ref nqetxsifeulhfkwjdsbp "<sql>"`
