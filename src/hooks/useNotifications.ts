@@ -9,7 +9,10 @@ const supabase = createClient();
 export function useNotifications(userId: string | undefined) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [loading, setLoading] = useState(true);
+  // Loading is derived from which user the list belongs to, so the first render
+  // after sign-in never shows an empty list as loaded (F099).
+  const [loadedUserId, setLoadedUserId] = useState<string | null>(null);
+  const loading = !!userId && loadedUserId !== userId;
   // Most recent notification received through realtime (lets screens react
   // to new booking events without polling).
   const [latest, setLatest] = useState<Notification | null>(null);
@@ -33,16 +36,13 @@ export function useNotifications(userId: string | undefined) {
     } catch (err) {
       console.error("[useNotifications] fetch error:", err);
     } finally {
-      setLoading(false);
+      setLoadedUserId(userId);
     }
   }, [userId]);
 
   // Subscribe to realtime inserts for this user
   useEffect(() => {
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
+    if (!userId) return;
 
     fetchNotifications();
 

@@ -21,7 +21,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const MESSAGING_LOAD_TIMEOUT_MS = 45_000;
 import { toast } from "sonner";
-import { ArrowLeft, MessageCircle, Search, SendHorizontal } from "lucide-react";
+import { ArrowLeft, Loader2, MessageCircle, Search, SendHorizontal } from "lucide-react";
 
 /** Evita desfase horario: ISO sin zona se interpreta como local; timestamptz de Supabase es UTC. */
 function dateFromSupabaseTimestamptz(value: string): Date {
@@ -59,6 +59,8 @@ export default function InternalMessagingPanel({
     null
   );
   const [messages, setMessages] = useState<DirectMessage[]>([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
   const [messageText, setMessageText] = useState("");
   const [sending, setSending] = useState(false);
   const [creatingConversationWith, setCreatingConversationWith] = useState<string | null>(
@@ -247,6 +249,7 @@ export default function InternalMessagingPanel({
     let cancelled = false;
     async function loadMessages() {
       if (!user?.id || !selectedConversationId) return;
+      setMessagesLoading(true);
       try {
         const list = await getConversationMessages(selectedConversationId);
         if (cancelled) return;
@@ -255,6 +258,8 @@ export default function InternalMessagingPanel({
       } catch (e) {
         console.error("Error loading conversation messages:", e);
         toast.error(tmRef.current("loadMessagesError"));
+      } finally {
+        if (!cancelled) setMessagesLoading(false);
       }
     }
     void loadMessages();
@@ -262,6 +267,12 @@ export default function InternalMessagingPanel({
       cancelled = true;
     };
   }, [selectedConversationId, user?.id, markReadIfVisible]);
+
+  // Keep the newest message in view when a conversation opens or a message arrives.
+  useEffect(() => {
+    const el = messagesScrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages, messagesLoading]);
 
   // Opening the chat on mobile reveals the selected conversation.
   useEffect(() => {
@@ -578,8 +589,15 @@ export default function InternalMessagingPanel({
 
             {selectedConversationId ? (
               <>
-                <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-5 sm:px-6">
-                  {messages.length === 0 ? (
+                <div
+                  ref={messagesScrollRef}
+                  className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-5 sm:px-6"
+                >
+                  {messagesLoading ? (
+                    <div className="flex justify-center py-8">
+                      <Loader2 className="h-5 w-5 animate-spin text-ft-ink-3" />
+                    </div>
+                  ) : messages.length === 0 ? (
                     <div className="rounded-ft border border-dashed border-ft-line bg-ft-paper p-4 text-[13px] text-ft-ink-3">
                       {tm("noMessagesYet")}
                     </div>

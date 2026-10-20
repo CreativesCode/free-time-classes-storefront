@@ -96,8 +96,10 @@ export default function NotificationsClient() {
   const t = useTranslations("notificationsPage");
   const locale = useLocale();
   const router = useRouter();
-  const { user } = useAuth();
-  const { notifications, markAsRead, markAllAsRead } = useNotificationsContext();
+  const { user, isLoading: authLoading } = useAuth();
+  const { notifications, loading, markAsRead, markAllAsRead } = useNotificationsContext();
+  // Skeleton until the first load ends, so the empty state never flashes (F099).
+  const showSkeleton = authLoading || (loading && notifications.length === 0);
 
   const grouped = useMemo(() => {
     const today: typeof notifications = [];
@@ -149,7 +151,16 @@ export default function NotificationsClient() {
 
           {/* Content */}
           <div className="px-5 pb-6 md:px-9 lg:px-0">
-            {notifications.length === 0 ? (
+            {showSkeleton ? (
+              <div className="space-y-2.5" aria-busy="true">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="h-[72px] animate-pulse rounded-ft-lg border border-ft-line-soft bg-ft-surface-1"
+                  />
+                ))}
+              </div>
+            ) : notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center rounded-ft-lg border border-dashed border-ft-line bg-ft-paper py-16 text-center md:py-20">
                 <div className="mb-4 grid h-14 w-14 place-items-center rounded-full bg-ft-surface-2">
                   <Bell className="h-7 w-7 text-ft-ink-3" />

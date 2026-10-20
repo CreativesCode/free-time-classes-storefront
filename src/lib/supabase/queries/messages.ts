@@ -131,6 +131,10 @@ export async function getOrCreateDirectConversationId(
   return data as number;
 }
 
+/** Messages shown when a conversation opens (F099); older ones are not loaded yet. */
+export const CONVERSATION_MESSAGES_LIMIT = 50;
+
+/** The latest messages of a conversation, oldest first. */
 export async function getConversationMessages(
   conversationId: number
 ): Promise<DirectMessage[]> {
@@ -138,9 +142,10 @@ export async function getConversationMessages(
     .from("messages")
     .select("id, conversation_id, sender_id, content, created_at")
     .eq("conversation_id", conversationId)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false })
+    .limit(CONVERSATION_MESSAGES_LIMIT);
   if (error) throw error;
-  return (data || []) as DirectMessage[];
+  return ((data || []) as DirectMessage[]).reverse();
 }
 
 export async function sendMessage(
