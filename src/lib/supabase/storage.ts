@@ -15,37 +15,21 @@ export async function uploadAvatar(
 ): Promise<string> {
   const file = await downscaleImage(originalFile, 512);
   const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
-  const preferredPath = `${userId}.${fileExt}`;
-  const fallbackPath = `${userId}/${Date.now()}.${fileExt}`;
+  // A new path per upload: reusing `${userId}.ext` kept serving the cached
+  // old picture (same URL), so the object can now be cached for a year.
+  const path = `${userId}/${Date.now()}.${fileExt}`;
 
-  // Prefer flat filename because many RLS policies for avatars
-  // validate object.name against auth.uid() without folder support.
-  const preferredUpload = await supabase.storage
-    .from("avatars")
-    .upload(preferredPath, file, {
-      cacheControl: "3600",
-      upsert: true,
-      contentType: file.type || "image/jpeg",
-    });
+  const { error } = await supabase.storage.from("avatars").upload(path, file, {
+    cacheControl: "31536000",
+    upsert: false,
+    contentType: file.type || "image/jpeg",
+  });
 
-  if (!preferredUpload.error) {
-    return preferredPath;
+  if (error) {
+    throw error;
   }
 
-  // Fallback for projects that use folder-based policies.
-  const fallbackUpload = await supabase.storage
-    .from("avatars")
-    .upload(fallbackPath, file, {
-      cacheControl: "3600",
-      upsert: false,
-      contentType: file.type || "image/jpeg",
-    });
-
-  if (fallbackUpload.error) {
-    throw fallbackUpload.error;
-  }
-
-  return fallbackPath;
+  return path;
 }
 
 /**
