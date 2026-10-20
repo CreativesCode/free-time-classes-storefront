@@ -3,6 +3,7 @@
 import RequestCustomClassButton from "@/components/student/RequestCustomClassButton";
 import { useTranslations } from "@/i18n/translations";
 import { cn, getAvatarColor } from "@/lib/utils";
+import { STUDENT_CANCEL_HOURS } from "@/lib/bookings/cancellationPolicy";
 import {
   ArrowLeft,
   Award,
@@ -431,7 +432,7 @@ export default function TutorProfileClient({
                   </span>
                 </div>
                 <div className="mt-1.5 text-[12px] text-ft-ink-3">
-                  {t("priceFromHourHint")}
+                  {t("priceFromHourHint", { hours: STUDENT_CANCEL_HOURS })}
                 </div>
               </>
             )}

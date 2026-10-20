@@ -4,6 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import { deleteMeetEvent } from "@/lib/google-calendar";
 import { insertNotification } from "@/lib/notifications";
 import { releaseLesson } from "@/lib/bookings/releaseLesson";
+import {
+  STUDENT_CANCEL_HOURS,
+  canStudentCancelConfirmed,
+} from "@/lib/bookings/cancellationPolicy";
 
 const noStoreJson = (body: unknown, init?: ResponseInit) =>
   NextResponse.json(body, {
@@ -17,17 +21,6 @@ const noStoreJson = (body: unknown, init?: ResponseInit) =>
 type Body = {
   bookingId: number;
 };
-
-const DEFAULT_STUDENT_CANCEL_HOURS = 24;
-
-function getStudentCancelHours(): number {
-  const rawValue = process.env.BOOKING_STUDENT_CANCEL_HOURS;
-  if (!rawValue) return DEFAULT_STUDENT_CANCEL_HOURS;
-
-  const parsed = Number(rawValue);
-  if (!Number.isFinite(parsed) || parsed <= 0) return DEFAULT_STUDENT_CANCEL_HOURS;
-  return parsed;
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -108,22 +101,10 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const cancelHours = getStudentCancelHours();
-      const nowMs = Date.now();
-      const lessonMs = new Date(lesson.scheduled_date_time).getTime();
-
-      if (!Number.isFinite(lessonMs)) {
-        return noStoreJson(
-          { error: "Lesson date/time is invalid." },
-          { status: 409 }
-        );
-      }
-
-      const requiredNoticeMs = cancelHours * 60 * 60 * 1000;
-      if (lessonMs - nowMs < requiredNoticeMs) {
+      if (!canStudentCancelConfirmed(lesson.scheduled_date_time)) {
         return noStoreJson(
           {
-            error: `You can only cancel confirmed bookings at least ${cancelHours} hours before the class.`,
+            error: `You can only cancel confirmed bookings at least ${STUDENT_CANCEL_HOURS} hours before the class.`,
           },
           { status: 409 }
         );

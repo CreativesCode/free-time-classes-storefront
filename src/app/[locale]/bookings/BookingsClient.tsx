@@ -26,6 +26,10 @@ import { StudentSidebarNav } from "@/components/ds/StudentSidebarNav";
 import { useAuth } from "@/context/UserContext";
 import { useTranslations } from "@/i18n/translations";
 import { isLessonInPast } from "@/lib/datetime/lessonTime";
+import {
+  STUDENT_CANCEL_HOURS,
+  canStudentCancelConfirmed,
+} from "@/lib/bookings/cancellationPolicy";
 import { createClient } from "@/lib/supabase/client";
 import { getPublicUrl } from "@/lib/supabase/storage";
 import { cn } from "@/lib/utils";
@@ -479,10 +483,14 @@ export default function BookingsClient({ locale }: { locale: string }) {
               const dateTime = lesson?.scheduled_date_time
                 ? formatDateTime(lesson.scheduled_date_time)
                 : null;
+              const cancelWindowClosed =
+                !isTutorView &&
+                booking.status === "confirmed" &&
+                !canStudentCancelConfirmed(lesson?.scheduled_date_time);
               const isCancelable =
                 tab === "upcoming" &&
                 (booking.status === "pending" ||
-                  (!isTutorView && booking.status === "confirmed"));
+                  (!isTutorView && booking.status === "confirmed" && !cancelWindowClosed));
 
               return (
                 <article
@@ -554,6 +562,11 @@ export default function BookingsClient({ locale }: { locale: string }) {
                           )}
                           {t(isTutorView ? "rejectBooking" : "cancelBooking")}
                         </button>
+                      )}
+                      {tab === "upcoming" && cancelWindowClosed && (
+                        <span className="text-[11px] text-ft-ink-3">
+                          {t("cancelWindowClosed", { hours: STUDENT_CANCEL_HOURS })}
+                        </span>
                       )}
                     </div>
                   </div>

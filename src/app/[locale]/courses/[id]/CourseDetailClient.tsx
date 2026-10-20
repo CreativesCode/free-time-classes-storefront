@@ -4,6 +4,7 @@ import { BookingPicker } from "@/components/ds/BookingPicker";
 import CourseBookingFocus from "@/components/courses/CourseBookingFocus";
 import { useTranslations } from "@/i18n/translations";
 import { cn, getAvatarColor } from "@/lib/utils";
+import { STUDENT_CANCEL_HOURS } from "@/lib/bookings/cancellationPolicy";
 import {
   ArrowLeft,
   ArrowRight,
@@ -434,9 +435,8 @@ export default function CourseDetailClient({
                 </a>
                 <div className="mt-3 grid grid-cols-1 gap-1.5 border-t border-ft-line-soft pt-3 text-[12px] text-ft-ink-2">
                   {[
-                    t("perkCancelFlexible"),
+                    t("perkCancelFlexible", { hours: STUDENT_CANCEL_HOURS }),
                     t("perkLifetimeAccess"),
-                    t("perkCompletionCertificate"),
                   ].map((perk) => (
                     <div key={perk} className="flex items-center gap-2">
                       <span className="grid h-4 w-4 flex-shrink-0 place-items-center rounded-full bg-ft-accent">

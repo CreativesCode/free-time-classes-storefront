@@ -1159,9 +1159,8 @@
     "totalReviews": "reseñas",
     "shareClass": "Compartir",
     "relatedCourses": "Cursos relacionados",
-    "perkCancelFlexible": "Cancelación flexible hasta 6h antes",
-    "perkLifetimeAccess": "Acceso a tus reservas en cualquier momento",
-    "perkCompletionCertificate": "Certificado al finalizar el curso"
+    "perkCancelFlexible": "Cancelación gratuita hasta {hours} h antes",
+    "perkLifetimeAccess": "Acceso a tus reservas en cualquier momento"
   },
   "tutorsPage": {
     "title": "Encuentra Profesores",
@@ -1223,7 +1222,7 @@
     "requestCustomDescription": "Pídele al profesor una clase fuera de su disponibilidad publicada. Aprovecha tu tiempo libre.",
     "tabReviews": "Reseñas",
     "priceFromHour": "desde {price}€",
-    "priceFromHourHint": "Cancela hasta 6h antes sin coste."
+    "priceFromHourHint": "Cancela hasta {hours} h antes sin coste."
   },
   "requestCustomClass": {
     "ctaOpen": "Pedir clase fuera de disponibilidad",
@@ -1307,6 +1306,7 @@
     "rejectError": "No se pudo rechazar la solicitud",
     "cancelConfirmTitle": "¿Cancelar esta reserva?",
     "cancelConfirmBody": "El profesor recibirá un aviso y el horario quedará libre. Las clases confirmadas solo se pueden cancelar con antelación suficiente.",
+    "cancelWindowClosed": "Ya no se puede cancelar (menos de {hours} h)",
     "rejectConfirmTitle": "¿Rechazar esta solicitud?",
     "rejectConfirmBody": "El estudiante recibirá un aviso y el horario volverá a quedar disponible.",
     "keepBooking": "Volver"

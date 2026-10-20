@@ -1159,9 +1159,8 @@
     "totalReviews": "reviews",
     "shareClass": "Share",
     "relatedCourses": "Related courses",
-    "perkCancelFlexible": "Flexible cancellation up to 6h before",
-    "perkLifetimeAccess": "Anytime access to your bookings",
-    "perkCompletionCertificate": "Certificate on course completion"
+    "perkCancelFlexible": "Free cancellation up to {hours}h before",
+    "perkLifetimeAccess": "Anytime access to your bookings"
   },
   "tutorsPage": {
     "title": "Find Tutors",
@@ -1223,7 +1222,7 @@
     "requestCustomDescription": "Ask the tutor for a class outside their published availability. Make the most of your free time.",
     "tabReviews": "Reviews",
     "priceFromHour": "from {price}€",
-    "priceFromHourHint": "Cancel up to 6h before at no cost."
+    "priceFromHourHint": "Cancel up to {hours}h before at no cost."
   },
   "requestCustomClass": {
     "ctaOpen": "Request a class outside availability",
@@ -1307,6 +1306,7 @@
     "rejectError": "Could not reject the request",
     "cancelConfirmTitle": "Cancel this booking?",
     "cancelConfirmBody": "The tutor will be notified and the time slot will be freed. Confirmed classes can only be cancelled with enough notice.",
+    "cancelWindowClosed": "Can no longer be cancelled (less than {hours}h)",
     "rejectConfirmTitle": "Reject this request?",
     "rejectConfirmBody": "The student will be notified and the time slot will become available again.",
     "keepBooking": "Go back"

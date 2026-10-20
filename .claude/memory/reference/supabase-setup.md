@@ -26,4 +26,4 @@ con el cron de slots (FRE0017).
 probar flujos que escriban datos.
 
 **Otras envs del proyecto:** `GOOGLE_CLIENT_ID/SECRET/REDIRECT_URI` (Calendar/Meet), `OPENWA_*` (WhatsApp),
-`BOOKING_STUDENT_CANCEL_HOURS` (opcional, def. 24), `CAPACITOR_SERVER_URL`, `CAPACITOR_ANDROID_CLEARTEXT`.
+`CAPACITOR_SERVER_URL`, `CAPACITOR_ANDROID_CLEARTEXT`.

@@ -71,7 +71,7 @@ Uso principal en movil (BottomNav, app nativa via Capacitor) y desktop para prof
 ## 5. Reglas de Negocio
 
 - **Estados de booking:** `pending` → `confirmed` | `rejected` | `cancelled` → `completed`.
-- **Cancelacion del estudiante:** puede cancelar `pending` siempre y `confirmed` hasta N horas antes (`BOOKING_STUDENT_CANCEL_HOURS`, por defecto 24h).
+- **Cancelacion del estudiante:** puede cancelar `pending` siempre y `confirmed` hasta N horas antes (`STUDENT_CANCEL_HOURS` en `src/lib/bookings/cancellationPolicy.ts`).
   Regla oficial (decision 2026-10-20): **24 h** antes del inicio, contadas en hora de Madrid.
 - **Custom request:** expira si el inicio esta a menos de 15 min (`CUSTOM_REQUEST_EXPIRY_MINUTES`).
 - **Horas:** todo se guarda e interpreta en hora de Madrid (wall-clock), independientemente de donde corra el servidor.
