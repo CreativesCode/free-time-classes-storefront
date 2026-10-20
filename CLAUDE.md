@@ -80,7 +80,7 @@ src/middleware.ts          # next-intl + sesion Supabase + proteccion por rol (i
 
 - **Hora de negocio = Europe/Madrid.** `lessons.scheduled_date_time` es wall-clock de Madrid sin offset. Nunca compares con `new Date().toISOString()` ni hora local del servidor: usa `src/lib/datetime/lessonTime.ts`. Para MOSTRAR horas al usuario usa `src/lib/datetime/viewerTime.ts` (zona del navegador); nunca `new Date(scheduled_date_time)`. Detalle: `.claude/memory/project/business-timezone-madrid.md`.
 - **Radios FreeTime:** solo `rounded-ft-*`, `rounded-full` o `rounded-[Npx]`. NUNCA `rounded-md/lg/xl/2xl` (la config legacy los infla a 24–64px). Detalle: `.claude/memory/feedback/freetime-radius-scale.md`.
-- **i18n:** ningun string de UI hardcodeado; anade la clave en `messages/es.json` Y `messages/en.json`.
+- **i18n:** ningun string de UI hardcodeado; anade la clave en `messages/es.json` Y `messages/en.json`. Al navegador solo viajan los namespaces de la shell y los de cada ruta (`src/i18n/clientMessages.ts`, F094): si un componente cliente usa un namespace nuevo, anadelo ahi y pasa `npm run check:i18n-scopes`.
 - **Capacitor:** API en `src/app/api/` (nunca bajo `[locale]`), secretos solo en route handlers, cliente browser de Supabase en componentes `'use client'`, assets en `/public`. Nunca `output: 'standalone'` ni `output: 'export'`.
 - **Supabase:** RLS siempre activo. `SUPABASE_SERVICE_ROLE_KEY` solo en route handlers. La clave publica es `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (ANON solo como fallback).
 - **`public.users` (migraciones 031/032):** los clientes solo pueden leer `id, username, profile_picture, country, is_student, is_tutor`. Nunca `select('*')` ni `users(*)` ni `email`/`phone` de otros usuarios; el perfil propio completo se lee con `rpc('get_my_profile')`. Las filas de `users` son visibles para el dueño, los tutores y, desde la 039, para el tutor de un estudiante con reserva; `student_profiles` es privado (sus embeds salen null para terceros): los nombres de estudiantes se leen con `fetchStudentNames()`. El cliente solo puede actualizar columnas de perfil/preferencias de su fila (roles y email via service role). `bookings` es de solo lectura para clientes: toda transicion va por `/api/bookings/*`. `rating`/`total_reviews` solo los cambian los triggers de `reviews`. Los cursos solo se escriben via `/api/courses` (042). La disponibilidad se calcula (`src/lib/availability/openStartTimes.ts`): no se pregeneran huecos; una clase se crea al reservar un curso.
@@ -95,6 +95,7 @@ src/middleware.ts          # next-intl + sesion Supabase + proteccion por rol (i
 npm run dev            # next dev --turbo (puerto 3000)
 npm run build          # build produccion
 npm run lint           # next lint
+npm run check:i18n-scopes  # namespaces de traduccion enviados a cada ruta
 npx tsc --noEmit       # typecheck (no hay script npm)
 npm run analyze        # bundle analyzer
 npm run build:mobile   # build + assets nativos + cap sync

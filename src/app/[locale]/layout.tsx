@@ -1,6 +1,7 @@
 import LocaleLayoutWrapper from "@/components/LocaleLayoutWrapper";
 import AppToaster from "@/components/AppToaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { SHELL_NAMESPACES, pickMessages } from "@/i18n/clientMessages";
 import { routing } from "@/i18n/routing";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, unstable_setRequestLocale } from "next-intl/server";
@@ -26,7 +27,7 @@ export default async function LocaleLayout({
   return (
     <NextIntlClientProvider
       locale={locale}
-      messages={messages}
+      messages={pickMessages(messages, SHELL_NAMESPACES)}
       timeZone="Europe/Madrid"
       now={new Date()}
     >
