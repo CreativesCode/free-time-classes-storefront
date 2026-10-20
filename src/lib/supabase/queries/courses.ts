@@ -5,6 +5,20 @@ import { createClient } from "../client";
 
 const browserClient = createClient();
 
+const MAX_SEARCH_LENGTH = 80;
+
+/**
+ * Keeps letters, digits, spaces, apostrophes and hyphens. Commas, dots,
+ * parentheses or wildcards would otherwise break the PostgREST `or()` filter.
+ */
+function sanitizeSearch(raw: string | undefined): string {
+  return (raw ?? "")
+    .replace(/[^\p{L}\p{N}\s'-]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, MAX_SEARCH_LENGTH);
+}
+
 export interface CourseFilters {
   tutor_id?: string;
   subject_id?: number;
@@ -53,10 +67,9 @@ export async function getCourses(filters?: CourseFilters): Promise<Course[]> {
     query = query.eq("is_active", filters.is_active);
   }
 
-  if (filters?.search) {
-    query = query.or(
-      `title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`
-    );
+  const search = sanitizeSearch(filters?.search);
+  if (search) {
+    query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
   }
 
   if (filters?.min_price_per_session !== undefined) {
@@ -143,10 +156,9 @@ export async function getCoursesWithRelations(
     query = query.eq("is_active", filters.is_active);
   }
 
-  if (filters?.search) {
-    query = query.or(
-      `title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`
-    );
+  const search = sanitizeSearch(filters?.search);
+  if (search) {
+    query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
   }
 
   if (filters?.min_price_per_session !== undefined) {
