@@ -9,6 +9,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { routing } from "@/i18n/routing";
@@ -32,6 +33,11 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  // Id of the profile already in state, read inside the auth listener.
+  const loadedUserIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    loadedUserIdRef.current = user?.id ?? null;
+  }, [user]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const supabase = useMemo(() => createClient(), []);
@@ -81,6 +87,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       // initializeUser() already covers the initial session, and a token
       // refresh does not change the profile.
       if (event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") return;
+      // SIGNED_IN also fires on load and right after login(), which already
+      // loaded this same profile: skip the duplicate users fetch.
+      if (event === "SIGNED_IN" && session?.user.id === loadedUserIdRef.current) return;
 
       if (session?.user) {
         const userId = session.user.id;
