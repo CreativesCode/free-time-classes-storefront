@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { devRoutesEnabled } from "@/lib/dev/devRoutes";
 
 /**
  * DEV-ONLY helper to register this app's webhook with the OpenWA session.
@@ -18,8 +19,8 @@ const noStoreJson = (body: unknown, init?: ResponseInit) =>
   });
 
 export async function GET(request: NextRequest) {
-  if (process.env.NODE_ENV === "production") {
-    return noStoreJson({ error: "Not available in production." }, { status: 404 });
+  if (!devRoutesEnabled()) {
+    return noStoreJson({ error: "Not found." }, { status: 404 });
   }
 
   const supabase = await createClient();
@@ -67,16 +68,10 @@ export async function GET(request: NextRequest) {
     return noStoreJson({ error: "Network error", details: String(err) }, { status: 502 });
   }
 
-  const text = await res.text();
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(text);
-  } catch {
-    parsed = text.slice(0, 500);
-  }
-
+  // OpenWA echoes the webhook config (including the signing secret): never
+  // relay its body back to the browser.
   return noStoreJson(
-    { ok: res.ok, status: res.status, registeredUrl: webhookUrl, signed: Boolean(secret), response: parsed },
+    { ok: res.ok, status: res.status, registeredUrl: webhookUrl, signed: Boolean(secret) },
     { status: res.ok ? 200 : 502 },
   );
 }

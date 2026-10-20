@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isOpenWaConfigured, phoneToChatId, sendText } from "@/lib/whatsapp/openwa";
 import { buildWhatsAppMessage } from "@/lib/whatsapp/messages";
+import { devRoutesEnabled } from "@/lib/dev/devRoutes";
 
 /**
  * DEV-ONLY smoke test for the outbound WhatsApp path.
@@ -56,8 +57,8 @@ async function sendTest(phoneRaw: string, customText?: string) {
 }
 
 async function guard() {
-  if (process.env.NODE_ENV === "production") {
-    return noStoreJson({ error: "Not available in production." }, { status: 404 });
+  if (!devRoutesEnabled()) {
+    return noStoreJson({ error: "Not found." }, { status: 404 });
   }
   const supabase = await createClient();
   const {
