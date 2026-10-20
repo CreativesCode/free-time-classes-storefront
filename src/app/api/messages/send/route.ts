@@ -22,8 +22,9 @@ const PREVIEW_MAX = 120;
 // A recipient who read this conversation within this window is treated as
 // "active" (still looking) and is NOT pinged again — avoids spamming in-app +
 // WhatsApp during an active back-and-forth. Sending a message refreshes the
-// sender's own last_read_at, so both sides stay "active" while chatting.
-const ACTIVE_WINDOW_MS = 3 * 60_000;
+// sender's own last_read_at, and the open chat marks incoming realtime
+// messages as read, so both sides stay "active" while actually chatting.
+const ACTIVE_WINDOW_MS = 60_000;
 
 type Body = { conversationId?: number | string; content?: string };
 

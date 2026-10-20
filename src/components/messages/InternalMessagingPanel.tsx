@@ -221,6 +221,28 @@ export default function InternalMessagingPanel({
     };
   }, [searchTerm, user?.id]);
 
+  // Only mark as read what the user can actually see: on mobile the first
+  // conversation is pre-selected but hidden behind the list.
+  const showMobileChatRef = useRef(showMobileChat);
+  showMobileChatRef.current = showMobileChat;
+  const isChatVisible = useCallback(
+    () =>
+      document.visibilityState === "visible" &&
+      (showMobileChatRef.current || window.matchMedia("(min-width: 768px)").matches),
+    []
+  );
+
+  const markReadIfVisible = useCallback(
+    async (conversationId: number) => {
+      if (!user?.id || !isChatVisible()) return;
+      await markConversationAsRead(conversationId, user.id);
+      setConversations((prev) =>
+        prev.map((c) => (c.id === conversationId ? { ...c, unread_count: 0 } : c))
+      );
+    },
+    [isChatVisible, user?.id]
+  );
+
   useEffect(() => {
     let cancelled = false;
     async function loadMessages() {
@@ -229,11 +251,7 @@ export default function InternalMessagingPanel({
         const list = await getConversationMessages(selectedConversationId);
         if (cancelled) return;
         setMessages(list);
-        await markConversationAsRead(selectedConversationId, user.id);
-        if (cancelled) return;
-        setConversations((prev) =>
-          prev.map((c) => (c.id === selectedConversationId ? { ...c, unread_count: 0 } : c))
-        );
+        await markReadIfVisible(selectedConversationId);
       } catch (e) {
         console.error("Error loading conversation messages:", e);
         toast.error(tmRef.current("loadMessagesError"));
@@ -243,12 +261,21 @@ export default function InternalMessagingPanel({
     return () => {
       cancelled = true;
     };
-  }, [selectedConversationId, user?.id]);
+  }, [selectedConversationId, user?.id, markReadIfVisible]);
+
+  // Opening the chat on mobile reveals the selected conversation.
+  useEffect(() => {
+    if (showMobileChat && selectedConversationId) {
+      void markReadIfVisible(selectedConversationId).catch(() => {});
+    }
+  }, [showMobileChat, selectedConversationId, markReadIfVisible]);
 
   // Realtime: new messages in any of my conversations (RLS-filtered), plus a
   // refetch when the tab regains focus (covers dropped sockets / sleep).
   const selectedConversationIdRef = useRef(selectedConversationId);
   selectedConversationIdRef.current = selectedConversationId;
+  const markReadIfVisibleRef = useRef(markReadIfVisible);
+  markReadIfVisibleRef.current = markReadIfVisible;
 
   useEffect(() => {
     if (!user?.id) return;
@@ -275,7 +302,7 @@ export default function InternalMessagingPanel({
               prev.some((m) => m.id === incoming.id) ? prev : [...prev, incoming]
             );
             if (incoming.sender_id !== userId) {
-              void markConversationAsRead(incoming.conversation_id, userId).catch(() => {});
+              void markReadIfVisibleRef.current(incoming.conversation_id).catch(() => {});
             }
           }
           void refreshConversations();
