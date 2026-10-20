@@ -181,13 +181,7 @@ export default function CoursesPageClient({
           return (await res.json()) as CourseWithRelations[];
         }
 
-        let data = await loadViaCatalog(courseFilters);
-        if (data.length === 0) {
-          const relaxedFilters: CourseFilters = { ...courseFilters };
-          delete relaxedFilters.is_active;
-          data = await loadViaCatalog(relaxedFilters);
-        }
-        setCourses(data);
+        setCourses(await loadViaCatalog(courseFilters));
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load courses");
         setCourses([]);

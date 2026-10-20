@@ -19,6 +19,9 @@ export interface CourseFilters {
   max_duration_minutes?: number;
   min_rating?: number;
 
+  /** Max rows to return. */
+  limit?: number;
+
   // Sorting
   sort?:
     | "created_desc"
@@ -72,6 +75,10 @@ export async function getCourses(filters?: CourseFilters): Promise<Course[]> {
 
   if (filters?.min_rating !== undefined) {
     query = query.gte("rating", filters.min_rating);
+  }
+
+  if (filters?.limit !== undefined) {
+    query = query.limit(filters.limit);
   }
 
   const sort = filters?.sort ?? "created_desc";
@@ -158,6 +165,10 @@ export async function getCoursesWithRelations(
 
   if (filters?.min_rating !== undefined) {
     query = query.gte("rating", filters.min_rating);
+  }
+
+  if (filters?.limit !== undefined) {
+    query = query.limit(filters.limit);
   }
 
   const sort = filters?.sort ?? "created_desc";
