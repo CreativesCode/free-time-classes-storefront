@@ -23,3 +23,4 @@
 - [Supabase setup](reference/supabase-setup.md) — claves, clientes, migraciones (ultima 027), keepalive (GitHub lo desactiva por inactividad), MCP token
 - [Gotchas de OpenWA](reference/openwa-gotchas.md) — 10 errores tipicos (@lid, UUID de sesion, idempotencia...)
 - [Verificacion local](reference/local-verification.md) — middleware en src/, server paralelo :3001, sesion de prueba sin navegador, SQL via `supabase db query` sin el token del entorno
+- [Cache y rendimiento](reference/caching-performance.md) — ISR (generateStaticParams vacio), getClaims, i18n por ruta, SIGNED_IN duplicado, limpieza de Storage
