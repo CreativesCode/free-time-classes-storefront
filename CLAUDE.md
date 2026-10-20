@@ -70,7 +70,7 @@ src/
 ├── types/                 # Tipos del dominio
 └── i18n/
 messages/es.json, messages/en.json   # TODOS los textos de UI
-supabase/migrations/NNN_descripcion.sql   # Migraciones numeradas (siguiente: 028)
+supabase/migrations/NNN_descripcion.sql   # Migraciones numeradas (siguiente: 034)
 src/middleware.ts          # next-intl + sesion Supabase + proteccion por rol (is_student / is_tutor)
 ```
 
@@ -83,6 +83,7 @@ src/middleware.ts          # next-intl + sesion Supabase + proteccion por rol (i
 - **i18n:** ningun string de UI hardcodeado; anade la clave en `messages/es.json` Y `messages/en.json`.
 - **Capacitor:** API en `src/app/api/` (nunca bajo `[locale]`), secretos solo en route handlers, cliente browser de Supabase en componentes `'use client'`, assets en `/public`. Nunca `output: 'standalone'` ni `output: 'export'`.
 - **Supabase:** RLS siempre activo. `SUPABASE_SERVICE_ROLE_KEY` solo en route handlers. La clave publica es `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (ANON solo como fallback).
+- **`public.users` (migraciones 031/032):** los clientes solo pueden leer `id, username, profile_picture, country, is_student, is_tutor`. Nunca `select('*')` ni `users(*)` ni `email`/`phone` de otros usuarios; el perfil propio completo se lee con `rpc('get_my_profile')`. `bookings` es de solo lectura para clientes: toda transicion va por `/api/bookings/*`.
 - **Notificaciones:** se crean SOLO via `insertNotification()`. El envio por WhatsApp va en try/catch y nunca rompe la notificacion in-app ni la respuesta de la API.
 - **Codigo:** nunca `any` (usa `unknown`); `camelCase` vars/funciones, `PascalCase` componentes; nunca exponer secretos.
 

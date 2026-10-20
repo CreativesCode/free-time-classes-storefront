@@ -12,7 +12,7 @@ tampoco sirve); usar el CLI con `env -u SUPABASE_ACCESS_TOKEN supabase db query 
 `next/headers`, solo route handlers/server), `server-public.ts` (lecturas publicas en server), `queries/` (cliente)
 y `server-queries/` (server).
 
-**Migraciones:** `supabase/migrations/NNN_descripcion.sql`, numeracion secuencial; la ultima es `027_whatsapp_inbound.sql`.
+**Migraciones:** `supabase/migrations/NNN_descripcion.sql`, numeracion secuencial; la ultima es `033_unique_subject_names_and_lesson_slots.sql` (la `032` se aplica solo tras desplegar el codigo que usa `get_my_profile()`).
 Hay dos `019_*` (prefijo duplicado historico, no renombrar). El esquema real difiere del SQL de
 `docs/proyecto-maestro.md` §4 (ej. ids, `scheduled_date_time`, conversaciones): fiarse de las migraciones / MCP.
 
