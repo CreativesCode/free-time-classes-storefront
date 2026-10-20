@@ -11,7 +11,7 @@ const envPath = join(dirname(fileURLToPath(import.meta.url)), "..", ".env.local"
 
 const env = { ...process.env };
 if (existsSync(envPath)) {
-  for (const line of readFileSync(envPath, "utf8").split("\n")) {
+  for (const line of readFileSync(envPath, "utf8").split(/\r?\n/)) {
     const match = line.match(/^SUPABASE_ACCESS_TOKEN=(.*)$/);
     if (match) env.SUPABASE_ACCESS_TOKEN = match[1].trim();
   }
