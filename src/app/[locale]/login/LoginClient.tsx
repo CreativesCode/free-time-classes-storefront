@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/context/UserContext";
 import { getSafeRedirectNext } from "@/lib/auth/safeRedirect";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -23,6 +24,8 @@ export default function LoginClient({ locale }: { locale: string }) {
   const [emailError, setEmailError] = useState("");
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [resendState, setResendState] = useState<"idle" | "sending" | "sent">("idle");
   const { login, user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -57,6 +60,17 @@ export default function LoginClient({ locale }: { locale: string }) {
     }
   }, [shouldRedirectAfterLogin, user, router, locale, safeNext]);
 
+  const handleResend = async () => {
+    setResendState("sending");
+    const { error } = await createClient().auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/${locale}/auth/callback` },
+    });
+    setResendState(error ? "idle" : "sent");
+    if (error) setLoginError(t("genericError"));
+  };
+
   const validateEmail = (value: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(value);
@@ -78,6 +92,8 @@ export default function LoginClient({ locale }: { locale: string }) {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoginError(null);
+    setNeedsConfirmation(false);
+    setResendState("idle");
     setShouldRedirectAfterLogin(false);
 
     if (!validateEmail(email)) {
@@ -90,6 +106,18 @@ export default function LoginClient({ locale }: { locale: string }) {
       await login(email, password);
       setShouldRedirectAfterLogin(true);
     } catch (error: unknown) {
+      const code =
+        error && typeof error === "object" && "code" in error
+          ? String((error as { code?: unknown }).code)
+          : "";
+      if (
+        code === "email_not_confirmed" ||
+        (error instanceof Error && error.message.includes("Email not confirmed"))
+      ) {
+        setNeedsConfirmation(true);
+        setLoginError(t("emailNotConfirmed"));
+        return;
+      }
       setLoginError(
         error instanceof Error &&
           (error.message === "Invalid login credentials" ||
@@ -196,6 +224,20 @@ export default function LoginClient({ locale }: { locale: string }) {
           {loginError && (
             <div className="rounded-ft border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-800">
               {loginError}
+              {needsConfirmation && (
+                <button
+                  type="button"
+                  onClick={() => void handleResend()}
+                  disabled={resendState !== "idle"}
+                  className="mt-2 block font-semibold underline disabled:no-underline disabled:opacity-70"
+                >
+                  {resendState === "sent"
+                    ? t("confirmationResent")
+                    : resendState === "sending"
+                      ? t("resendingConfirmation")
+                      : t("resendConfirmation")}
+                </button>
+              )}
             </div>
           )}
 
