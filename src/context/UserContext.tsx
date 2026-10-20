@@ -11,6 +11,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { routing } from "@/i18n/routing";
 
 interface UserContextType {
   user: User | null;
@@ -205,6 +206,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       throw error;
     } finally {
       setIsLoading(false);
+      // Full navigation so no page keeps rendering the previous user's data.
+      const locale =
+        routing.locales.find((l) => l === document.documentElement.lang) ??
+        routing.defaultLocale;
+      window.location.replace(`/${locale}/login`);
     }
   }, [supabase]);
 
