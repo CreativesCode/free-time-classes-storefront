@@ -14,6 +14,12 @@ sin commitear, junction de `node_modules` (`New-Item -ItemType Junction`) y `nex
 y construir la cookie de `@supabase/ssr` (`sb-<ref>-auth-token=base64-<json de la sesion>`, troceada a ~3180
 chars en `.0`, `.1`...). Las credenciales se leen en el script desde la tarea de Tasknic y nunca se imprimen.
 
+**Gotchas de scripting en esta maquina:** `$TEMP` de bash y `TEMP` de Python son carpetas distintas (llamar a
+`q.sh` desde Python con su ruta de bash via `cygpath -m`); los `print` de Python en Windows anaden `` (usar
+`tr -d ''`); las cookies troceadas de Supabase llevan espacios (no usar `read A B` para separarlas); dentro de
+heredocs los `\` de regex se pierden: editar esas lineas con la herramienta Edit. Datos QA: prefijo `QA-<tarea>`
+en `notes` y borrar reserva + notificaciones + wa_messages + leccion al acabar.
+
 **E2E con navegador real:** `playwright-core` de la cache de npx (`~/AppData/Local/npm-cache/_npx/*/node_modules/playwright-core`)
 con `executablePath` a un `chromium_headless_shell-*` ya instalado en `~/AppData/Local/ms-playwright`.
 
