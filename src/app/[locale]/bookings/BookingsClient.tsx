@@ -50,6 +50,12 @@ interface Booking {
   notes?: string | null;
   created_at: string;
   updated_at: string;
+  // Custom requests have no lesson until the tutor confirms them.
+  requested_scheduled_date_time?: string | null;
+  requested_duration_minutes?: number | null;
+  requested_subject?: { name: string } | null;
+  tutor?: { id: string; user?: PersonUser | null } | null;
+  student?: { id: string; user?: PersonUser | null } | null;
   lesson?: {
     id: number;
     scheduled_date_time: string;
@@ -58,21 +64,34 @@ interface Booking {
     status: string;
     meet_link?: string | null;
     subject?: { name: string } | null;
-    tutor?: {
-      id: string;
-      user?: {
-        id: string;
-        username: string;
-        profile_picture?: string | null;
-      } | null;
-    } | null;
-    student?: {
-      id: string;
-      username: string;
-      profile_picture?: string | null;
-    } | null;
   } | null;
 }
+
+type PersonUser = {
+  id: string;
+  username: string | null;
+  profile_picture?: string | null;
+};
+
+function bookingStart(b: Booking): string | null {
+  return b.lesson?.scheduled_date_time ?? b.requested_scheduled_date_time ?? null;
+}
+
+function bookingSubjectName(b: Booking): string | null {
+  return b.lesson?.subject?.name ?? b.requested_subject?.name ?? null;
+}
+
+function bookingDuration(b: Booking): number | null {
+  return b.lesson?.duration_minutes ?? b.requested_duration_minutes ?? null;
+}
+
+const STATUS_LABEL_KEYS: Record<BookingStatus, string> = {
+  pending: "statusPending",
+  confirmed: "statusConfirmed",
+  rejected: "statusRejected",
+  cancelled: "statusCancelled",
+  completed: "statusCompleted",
+};
 
 type Tab = "upcoming" | "past" | "cancelled";
 type ViewRole = "student" | "tutor";
@@ -135,11 +154,12 @@ export default function BookingsClient({ locale }: { locale: string }) {
             *,
             lesson:lessons(
               id, scheduled_date_time, duration_minutes, price, status, meet_link,
-              subject:subjects(name),
-              tutor:tutor_profiles!lessons_tutor_id_fkey(
-                id,
-                user:users!tutor_profiles_id_fkey(id, username, profile_picture)
-              )
+              subject:subjects(name)
+            ),
+            requested_subject:subjects!bookings_requested_subject_id_fkey(name),
+            tutor:tutor_profiles!bookings_tutor_id_fkey(
+              id,
+              user:users!tutor_profiles_id_fkey(id, username, profile_picture)
             )
           `
           )
@@ -158,6 +178,7 @@ export default function BookingsClient({ locale }: { locale: string }) {
               id, scheduled_date_time, duration_minutes, price, status, meet_link,
               subject:subjects(name)
             ),
+            requested_subject:subjects!bookings_requested_subject_id_fkey(name),
             student:student_profiles!bookings_student_id_fkey(
               id,
               user:users!student_profiles_id_fkey(id, username, profile_picture)
@@ -168,22 +189,7 @@ export default function BookingsClient({ locale }: { locale: string }) {
           .order("created_at", { ascending: false });
 
         if (fetchError) throw fetchError;
-
-        const mapped = (data ?? []).map((b: Record<string, unknown>) => {
-          const lesson = b.lesson as Record<string, unknown> | null;
-          const student = b.student as { user?: unknown } | null;
-          return {
-            ...b,
-            lesson: lesson
-              ? {
-                  ...lesson,
-                  student: student?.user ?? null,
-                }
-              : null,
-          };
-        }) as Booking[];
-
-        setBookings(mapped);
+        setBookings((data as Booking[]) ?? []);
       }
     } catch {
       setError(t("loadError"));
@@ -196,12 +202,20 @@ export default function BookingsClient({ locale }: { locale: string }) {
     if (user) void fetchBookings();
   }, [user, fetchBookings]);
 
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void fetchBookings();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [fetchBookings]);
+
   const upcoming = useMemo(
     () =>
       bookings.filter(
         (b) =>
           (b.status === "pending" || b.status === "confirmed") &&
-          !isLessonInPast(b.lesson?.scheduled_date_time)
+          !isLessonInPast(bookingStart(b))
       ),
     [bookings]
   );
@@ -211,7 +225,7 @@ export default function BookingsClient({ locale }: { locale: string }) {
         (b) =>
           b.status === "completed" ||
           ((b.status === "pending" || b.status === "confirmed") &&
-            isLessonInPast(b.lesson?.scheduled_date_time))
+            isLessonInPast(bookingStart(b)))
       ),
     [bookings]
   );
@@ -268,16 +282,16 @@ export default function BookingsClient({ locale }: { locale: string }) {
 
   function getPersonName(booking: Booking): string {
     if (viewRole === "student") {
-      return booking.lesson?.tutor?.user?.username ?? t("tutor");
+      return booking.tutor?.user?.username || t("tutor");
     }
-    return booking.lesson?.student?.username ?? t("student");
+    return booking.student?.user?.username || t("student");
   }
 
   function getPersonAvatar(booking: Booking): string | null {
     const pic =
       viewRole === "student"
-        ? booking.lesson?.tutor?.user?.profile_picture
-        : booking.lesson?.student?.profile_picture;
+        ? booking.tutor?.user?.profile_picture
+        : booking.student?.user?.profile_picture;
     if (!pic) return null;
     return pic.startsWith("http") ? pic : getPublicUrl("avatars", pic);
   }
@@ -480,9 +494,9 @@ export default function BookingsClient({ locale }: { locale: string }) {
               const personName = getPersonName(booking);
               const personAvatar = getPersonAvatar(booking);
               const lesson = booking.lesson;
-              const dateTime = lesson?.scheduled_date_time
-                ? formatDateTime(lesson.scheduled_date_time)
-                : null;
+              const startsAt = bookingStart(booking);
+              const dateTime = startsAt ? formatDateTime(startsAt) : null;
+              const durationMinutes = bookingDuration(booking);
               const cancelWindowClosed =
                 !isTutorView &&
                 booking.status === "confirmed" &&
@@ -505,8 +519,20 @@ export default function BookingsClient({ locale }: { locale: string }) {
                       <div className="text-[11px] text-ft-ink-3">{dateTime.countdown}</div>
                     )}
                   </div>
-                  <div className="text-[16px] font-semibold tracking-[-0.02em] text-ft-ink">
-                    {lesson?.subject?.name ?? t("lesson")}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0 truncate text-[16px] font-semibold tracking-[-0.02em] text-ft-ink">
+                      {bookingSubjectName(booking) ?? t("lesson")}
+                    </div>
+                    <span
+                      className={cn(
+                        "flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                        booking.status === "confirmed" || booking.status === "completed"
+                          ? "bg-ft-accent-soft text-ft-accent-deep"
+                          : "bg-ft-surface-2 text-ft-ink-2"
+                      )}
+                    >
+                      {t(STATUS_LABEL_KEYS[booking.status])}
+                    </span>
                   </div>
 
                   <div className="mt-3.5 flex items-center justify-between gap-2">
@@ -523,8 +549,8 @@ export default function BookingsClient({ locale }: { locale: string }) {
                           {personName}
                         </div>
                         <div className="flex items-center gap-1 text-[10px] text-ft-ink-3">
-                          {lesson?.duration_minutes
-                            ? `${lesson.duration_minutes} ${t("minutesShort")}`
+                          {durationMinutes
+                            ? `${durationMinutes} ${t("minutesShort")}`
                             : null}
                           {lesson?.price != null && (
                             <>
