@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
-import { syncRuleSlots } from "@/lib/availability/syncRuleSlots";
 import { completeFinishedBookings } from "@/lib/bookings/completeFinished";
-import type {
-  AvailabilityException,
-  TutorAvailabilityRule,
-} from "@/types/availability";
 
 // Daily job (Vercel Cron, see vercel.json). Idempotent:
-// - keeps the rolling 12-week slot window filled for every active rule;
-// - marks confirmed bookings whose class already ended as completed.
+// - marks confirmed bookings whose class already ended as completed;
+// - purges old WhatsApp inbound events.
 export const maxDuration = 60;
 
 const noStoreJson = (body: unknown, init?: ResponseInit) =>
@@ -44,47 +39,8 @@ export async function GET(request: NextRequest) {
     auth: { persistSession: false },
   });
 
-  const { data: rules, error: rulesError } = await admin
-    .from("tutor_availability")
-    .select("*")
-    .eq("is_active", true);
-
-  if (rulesError) {
-    console.error("[cron/daily] could not load rules:", rulesError);
-    return noStoreJson({ error: "Could not load rules." }, { status: 500 });
-  }
-
-  const activeRules = (rules || []) as TutorAvailabilityRule[];
-  const tutorIds = [...new Set(activeRules.map((r) => r.tutor_id))];
-
-  const exceptionsByTutor = new Map<string, AvailabilityException[]>();
-  if (tutorIds.length > 0) {
-    const { data: exceptions, error: exError } = await admin
-      .from("availability_exceptions")
-      .select("*")
-      .in("tutor_id", tutorIds);
-    if (exError) {
-      console.error("[cron/daily] could not load exceptions:", exError);
-      return noStoreJson({ error: "Could not load exceptions." }, { status: 500 });
-    }
-    for (const ex of (exceptions || []) as AvailabilityException[]) {
-      const list = exceptionsByTutor.get(ex.tutor_id) ?? [];
-      list.push(ex);
-      exceptionsByTutor.set(ex.tutor_id, list);
-    }
-  }
-
-  let slotsCreated = 0;
+  // PRP-001: open times are computed on demand, so no slots are generated.
   const failures: Array<{ ruleId: string; error: string }> = [];
-  for (const rule of activeRules) {
-    const result = await syncRuleSlots(
-      admin,
-      rule,
-      exceptionsByTutor.get(rule.tutor_id) ?? []
-    );
-    slotsCreated += result.slotsCreated;
-    if (result.error) failures.push({ ruleId: rule.id, error: result.error });
-  }
 
   const completion = await completeFinishedBookings(admin);
   if (completion.error) {
@@ -110,8 +66,6 @@ export async function GET(request: NextRequest) {
   return noStoreJson(
     {
       ok: failures.length === 0,
-      rules: activeRules.length,
-      slotsCreated,
       bookingsCompleted: completion.bookingsCompleted,
       failures,
     },
