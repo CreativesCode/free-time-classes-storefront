@@ -139,7 +139,7 @@ export default function TutorSubjectsManager({
       }
 
       const [updatedCatalog, updatedSelectedSubjects] = await Promise.all([
-        getSubjects(),
+        getSubjects({ fresh: true }),
         getTutorSubjectDetails(tutorId),
       ]);
 
@@ -187,7 +187,7 @@ export default function TutorSubjectsManager({
       }
 
       const [updatedCatalog, updatedSelectedSubjects] = await Promise.all([
-        getSubjects(),
+        getSubjects({ fresh: true }),
         getTutorSubjectDetails(tutorId),
       ]);
 
