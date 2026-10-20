@@ -20,7 +20,8 @@ import type { ReviewWithStudent } from "@/types/review";
 
 import CourseDetailClient from "./CourseDetailClient";
 
-const COURSE_PAGE_ID_RE = /^[0-9a-f-]{36}$/i;
+// courses.id is an integer; anything else is a 404 without hitting the DB.
+const COURSE_PAGE_ID_RE = /^\d{1,10}$/;
 
 export async function generateMetadata({
   params,
@@ -53,6 +54,7 @@ export async function generateMetadata({
     `
     )
     .eq("id", id)
+    .eq("is_active", true)
     .maybeSingle();
 
   if (error || !data) {
@@ -101,11 +103,15 @@ export default async function CourseDetailPage({
 
   let hasError = false;
   let course: CourseWithRelations | null = null;
+  const isValidId = COURSE_PAGE_ID_RE.test(id);
   let tutorProfile: (TutorProfile & { user: User }) | null = null;
   let reviews: ReviewWithStudent[] = [];
 
   try {
-    const { data: courseData, error: courseError } = await supabase
+    // Inactive courses are hidden from the catalog and cannot be booked.
+    const { data: courseData, error: courseError } = !isValidId
+      ? { data: null, error: null }
+      : await supabase
       .from("courses")
       .select(
         `
@@ -127,9 +133,10 @@ export default async function CourseDetailPage({
       `
       )
       .eq("id", id)
-      .single();
+      .eq("is_active", true)
+      .maybeSingle();
 
-    if (courseError && courseError.code !== "PGRST116") {
+    if (courseError) {
       throw courseError;
     }
 
