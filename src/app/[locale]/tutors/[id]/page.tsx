@@ -1,8 +1,7 @@
 import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { cache } from "react";
 
 import { buildPageMetadata, truncateForMeta } from "@/lib/seo/page-metadata";
 import { createCatalogServerClient } from "@/lib/supabase/server-public";
@@ -17,7 +16,33 @@ import { parseCVData } from "@/types/tutor-cv";
 
 import TutorProfileClient from "./TutorProfileClient";
 
+// ISR: rendered on first visit, then cached; revalidateCatalog() refreshes it
+// after any catalog change (F053).
 export const revalidate = 3600;
+export function generateStaticParams() {
+  return [];
+}
+
+const TUTOR_ID_RE = /^[0-9a-f-]{36}$/i;
+
+/** One query per request, shared by generateMetadata and the page. */
+const loadTutorProfile = cache(async (id: string) =>
+  createCatalogServerClient()
+    .from("tutor_profiles")
+    .select(
+      `
+        id, bio, years_of_experience, certifications, hourly_rate, rating, total_reviews, created_at,
+        user:users!tutor_profiles_id_fkey (
+          id,
+          username,
+          profile_picture,
+          country
+        )
+      `
+    )
+    .eq("id", id)
+    .maybeSingle()
+);
 
 export async function generateMetadata({
   params,
@@ -27,7 +52,7 @@ export async function generateMetadata({
   const { locale, id } = await params;
   const t = await getTranslations({ locale, namespace: "seo" });
 
-  if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {
+  if (!id || !TUTOR_ID_RE.test(id)) {
     return buildPageMetadata({
       locale,
       path: `/tutors/${id}`,
@@ -36,17 +61,7 @@ export async function generateMetadata({
     });
   }
 
-  const supabase = createCatalogServerClient();
-  const { data, error } = await supabase
-    .from("tutor_profiles")
-    .select(
-      `
-      bio,
-      user:users!tutor_profiles_id_fkey ( username, profile_picture )
-    `
-    )
-    .eq("id", id)
-    .maybeSingle();
+  const { data, error } = await loadTutorProfile(id);
 
   if (error || !data) {
     return buildPageMetadata({
@@ -158,61 +173,21 @@ export default async function TutorPublicProfilePage({
   unstable_setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "tutorPublicProfile" });
 
-  if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {
+  if (!id || !TUTOR_ID_RE.test(id)) {
     notFound();
   }
 
   const supabase = createCatalogServerClient();
 
-  const { data: profileData, error: profileError } = await supabase
-    .from("tutor_profiles")
-    .select(
-      `
-        *,
-        user:users!tutor_profiles_id_fkey (
-          id,
-          username,
-          profile_picture,
-          country
-        )
-      `
-    )
-    .eq("id", id)
-    .maybeSingle();
-
-  if (profileError) {
-    if (process.env.NODE_ENV === "development") {
-      console.error(
-        "[tutor profile] tutor_profiles:",
-        profileError.message,
-        profileError
-      );
-    }
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 bg-ft-paper px-4">
-        <p className="text-base text-ft-ink-3">{t("loadError")}</p>
-        <Link
-          href={`/${locale}/tutors`}
-          className="inline-flex items-center gap-2 rounded-full border border-ft-line bg-ft-paper px-4 py-2 text-sm font-semibold text-ft-ink transition-colors hover:bg-ft-surface-1"
-        >
-          <ArrowLeft width={14} height={14} />
-          {t("backToTutors")}
-        </Link>
-      </div>
-    );
-  }
-
-  if (!profileData) {
-    notFound();
-  }
-
-  const tutorReviewStats = await fetchTutorReviewStatsMap(supabase, [id]);
-  const profile = mergeTutorProfileReviewStats(
-    profileData as TutorRow,
-    tutorReviewStats
-  );
-
-  const [subjectsResult, coursesResult] = await Promise.all([
+  // Profile, review stats, subjects and courses in parallel (F053).
+  const [
+    { data: profileData, error: profileError },
+    tutorReviewStats,
+    subjectsResult,
+    coursesResult,
+  ] = await Promise.all([
+    loadTutorProfile(id),
+    fetchTutorReviewStatsMap(supabase, [id]),
     supabase
       .from("tutor_subjects")
       .select("subject:subjects(id, name)")
@@ -232,6 +207,18 @@ export default async function TutorPublicProfilePage({
       .eq("is_active", true)
       .order("created_at", { ascending: false }),
   ]);
+
+  // Throwing keeps the last good ISR copy instead of caching an error page.
+  if (profileError) throw profileError;
+
+  if (!profileData) {
+    notFound();
+  }
+
+  const profile = mergeTutorProfileReviewStats(
+    profileData as unknown as TutorRow,
+    tutorReviewStats
+  );
 
   const subjects = mapSubjectRows(
     subjectsResult.data as { subject: unknown }[] | null,

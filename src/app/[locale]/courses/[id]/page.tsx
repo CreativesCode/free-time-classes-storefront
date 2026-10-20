@@ -1,7 +1,8 @@
 import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertCircle, ArrowLeft, BookOpen } from "lucide-react";
+import { cache } from "react";
+import { ArrowLeft, BookOpen } from "lucide-react";
 
 import { buildPageMetadata, truncateForMeta } from "@/lib/seo/page-metadata";
 import { resolveCourseTutorUser } from "@/lib/supabase/course-tutor";
@@ -23,6 +24,56 @@ import CourseDetailClient from "./CourseDetailClient";
 // courses.id is an integer; anything else is a 404 without hitting the DB.
 const COURSE_PAGE_ID_RE = /^\d{1,10}$/;
 
+// ISR: rendered on first visit, then cached; revalidateCatalog() refreshes it
+// after any catalog change (F053).
+export const revalidate = 3600;
+export function generateStaticParams() {
+  return [];
+}
+
+const COURSE_DETAIL_SELECT = `
+  id,
+  tutor_id,
+  subject_id,
+  title,
+  description,
+  level,
+  duration_minutes,
+  max_students,
+  price_per_session,
+  cover_image,
+  is_active,
+  rating,
+  total_reviews,
+  created_at,
+  updated_at,
+  tutor_profile:tutor_profiles!courses_tutor_id_fkey (
+    id,
+    user:users!tutor_profiles_id_fkey (
+      id,
+      username,
+      profile_picture
+    )
+  ),
+  subject:subjects (
+    id,
+    name,
+    description,
+    icon
+  )
+`;
+
+/** One query per request, shared by generateMetadata and the page. */
+const loadActiveCourse = cache(async (id: string) => {
+  if (!COURSE_PAGE_ID_RE.test(id)) return { data: null, error: null };
+  return createCatalogServerClient()
+    .from("courses")
+    .select(COURSE_DETAIL_SELECT)
+    .eq("id", id)
+    .eq("is_active", true)
+    .maybeSingle();
+});
+
 export async function generateMetadata({
   params,
 }: {
@@ -40,22 +91,7 @@ export async function generateMetadata({
     });
   }
 
-  const supabase = createCatalogServerClient();
-  const { data, error } = await supabase
-    .from("courses")
-    .select(
-      `
-      title,
-      description,
-      cover_image,
-      tutor_profile:tutor_profiles!courses_tutor_id_fkey (
-        user:users!tutor_profiles_id_fkey ( username )
-      )
-    `
-    )
-    .eq("id", id)
-    .eq("is_active", true)
-    .maybeSingle();
+  const { data, error } = await loadActiveCourse(id);
 
   if (error || !data) {
     return buildPageMetadata({
@@ -67,7 +103,7 @@ export async function generateMetadata({
   }
 
   const tCourse = await getTranslations({ locale, namespace: "courseDetail" });
-  const tp = data.tutor_profile as
+  const tp = data.tutor_profile as unknown as
     | { user?: { username: string } | null }
     | null
     | undefined;
@@ -101,132 +137,85 @@ export default async function CourseDetailPage({
   const t = await getTranslations({ locale, namespace: "courseDetail" });
   const supabase = createCatalogServerClient();
 
-  let hasError = false;
   let course: CourseWithRelations | null = null;
-  const isValidId = COURSE_PAGE_ID_RE.test(id);
   let tutorProfile: (TutorProfile & { user: User }) | null = null;
   let reviews: ReviewWithStudent[] = [];
 
-  try {
-    // Inactive courses are hidden from the catalog and cannot be booked.
-    const { data: courseData, error: courseError } = !isValidId
-      ? { data: null, error: null }
-      : await supabase
-      .from("courses")
-      .select(
-        `
-        *,
-        tutor_profile:tutor_profiles!courses_tutor_id_fkey (
-          id,
-          user:users!tutor_profiles_id_fkey (
-            id,
-            username,
-            profile_picture
-          )
-        ),
-        subject:subjects (
-          id,
-          name,
-          description,
-          icon
-        )
-      `
-      )
-      .eq("id", id)
-      .eq("is_active", true)
-      .maybeSingle();
+  // Inactive courses are hidden from the catalog and cannot be booked.
+  const { data: courseData, error: courseError } = await loadActiveCourse(id);
 
-    if (courseError) {
-      throw courseError;
-    }
-
-    if (courseData) {
-      const row = courseData as CourseWithRelations & {
-        tutor_profile?: {
-          user?: {
-            id: string;
-            username: string;
-            profile_picture?: string | null;
-          } | null;
-        } | null;
-      };
-
-      course = {
-        ...row,
-        tutor: resolveCourseTutorUser(row.tutor_profile),
-      };
-
-      const [
-        { data: profileData, error: profileError },
-        { data: reviewsData, error: reviewsError },
-        tutorReviewStats,
-      ] = await Promise.all([
-        supabase
-          .from("tutor_profiles")
-          .select(
-            `
-              *,
-              user:users!tutor_profiles_id_fkey (id, username, profile_picture, country, is_student, is_tutor)
-            `
-          )
-          .eq("id", course.tutor_id)
-          .single(),
-        supabase
-          .from("reviews")
-          .select(
-            `
-              *,
-              student:student_profiles!reviews_student_id_fkey(
-                id,
-                user:users!student_profiles_id_fkey(
-                  id,
-                  username,
-                  profile_picture
-                )
-              )
-            `
-          )
-          .eq("tutor_id", course.tutor_id)
-          .order("created_at", { ascending: false })
-          .limit(10),
-        fetchTutorReviewStatsMap(supabase, [course.tutor_id]),
-      ]);
-
-      if (profileError && profileError.code !== "PGRST116") {
-        throw profileError;
-      }
-      if (reviewsError) {
-        throw reviewsError;
-      }
-
-      tutorProfile =
-        (profileData as (TutorProfile & { user: User }) | null) ?? null;
-      if (tutorProfile) {
-        tutorProfile = mergeTutorProfileReviewStats(
-          tutorProfile,
-          tutorReviewStats
-        );
-      }
-      reviews = (reviewsData as ReviewWithStudent[] | null) ?? [];
-    }
-  } catch {
-    hasError = true;
+  if (courseError) {
+    throw courseError;
   }
 
-  if (hasError) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 bg-ft-paper px-4">
-        <AlertCircle width={36} height={36} className="text-red-600" />
-        <p className="text-base text-ft-ink-3">{t("loadError")}</p>
-        <Link
-          href={`/${locale}/courses`}
-          className="inline-flex items-center gap-2 rounded-full border border-ft-line bg-ft-paper px-4 py-2 text-sm font-semibold text-ft-ink transition-colors hover:bg-ft-surface-1"
-        >
-          <ArrowLeft width={14} height={14} />
-          {t("backToCourses")}
-        </Link>
-      </div>
-    );
+  if (courseData) {
+    const row = courseData as unknown as CourseWithRelations & {
+      tutor_profile?: {
+        user?: {
+          id: string;
+          username: string;
+          profile_picture?: string | null;
+        } | null;
+      } | null;
+    };
+
+    course = {
+      ...row,
+      tutor: resolveCourseTutorUser(row.tutor_profile),
+    };
+
+    const [
+      { data: profileData, error: profileError },
+      { data: reviewsData, error: reviewsError },
+      tutorReviewStats,
+    ] = await Promise.all([
+      supabase
+        .from("tutor_profiles")
+        .select(
+          `
+            id, bio, years_of_experience, certifications, hourly_rate, rating, total_reviews, created_at,
+            user:users!tutor_profiles_id_fkey (id, username, profile_picture, country, is_student, is_tutor)
+          `
+        )
+        .eq("id", course.tutor_id)
+        .single(),
+      supabase
+        .from("reviews")
+        .select(
+          `
+            id, rating, comment, tutor_response, created_at,
+            student:student_profiles!reviews_student_id_fkey(
+              id,
+              user:users!student_profiles_id_fkey(
+                id,
+                username,
+                profile_picture
+              )
+            )
+          `
+        )
+        .eq("tutor_id", course.tutor_id)
+        .order("created_at", { ascending: false })
+        .limit(10),
+      fetchTutorReviewStatsMap(supabase, [course.tutor_id]),
+    ]);
+
+    if (profileError && profileError.code !== "PGRST116") {
+      throw profileError;
+    }
+    if (reviewsError) {
+      throw reviewsError;
+    }
+
+    tutorProfile =
+      (profileData as (TutorProfile & { user: User }) | null) ?? null;
+    if (tutorProfile) {
+      tutorProfile = mergeTutorProfileReviewStats(
+        tutorProfile,
+        tutorReviewStats
+      );
+    }
+    reviews = (reviewsData as unknown as ReviewWithStudent[] | null) ?? [];
   }
 
   if (!course) {
