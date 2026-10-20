@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { insertNotification } from "@/lib/notifications";
@@ -25,6 +25,9 @@ const PREVIEW_MAX = 120;
 // sender's own last_read_at, and the open chat marks incoming realtime
 // messages as read, so both sides stay "active" while actually chatting.
 const ACTIVE_WINDOW_MS = 60_000;
+// One pending (unread) message notification per conversation and recipient
+// in this window: a burst of messages produces a single in-app + WhatsApp ping.
+const GROUP_WINDOW_MS = 10 * 60_000;
 
 type Body = { conversationId?: number | string; content?: string };
 
@@ -72,11 +75,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Notifications are best-effort: never fail the send if they error.
-    void notifyOtherParticipants({
-      conversationId,
-      senderId: user.id,
-      content,
-    }).catch((err) => console.error("[messages/send] notify error:", err));
+    // after() keeps the function alive until they finish on Vercel.
+    after(() =>
+      notifyOtherParticipants({
+        conversationId,
+        senderId: user.id,
+        content,
+      }).catch((err) => console.error("[messages/send] notify error:", err))
+    );
 
     return noStoreJson(message, { status: 200 });
   } catch (err) {
@@ -119,10 +125,26 @@ async function notifyOtherParticipants(args: {
 
   // Skip recipients who are currently active (read very recently).
   const now = Date.now();
-  const toNotify = participants.filter((p) => {
+  const inactive = participants.filter((p) => {
     const lastRead = p.last_read_at ? new Date(p.last_read_at as string).getTime() : 0;
     return now - lastRead >= ACTIVE_WINDOW_MS;
   });
+
+  if (!inactive.length) return;
+
+  const { data: recentUnread } = await admin
+    .from("notifications")
+    .select("user_id")
+    .in(
+      "user_id",
+      inactive.map((p) => p.user_id as string)
+    )
+    .eq("type", "message_received")
+    .eq("is_read", false)
+    .eq("data->>conversation_id", String(args.conversationId))
+    .gte("created_at", new Date(now - GROUP_WINDOW_MS).toISOString());
+  const alreadyPinged = new Set((recentUnread ?? []).map((n) => n.user_id as string));
+  const toNotify = inactive.filter((p) => !alreadyPinged.has(p.user_id as string));
 
   if (!toNotify.length) return;
 
