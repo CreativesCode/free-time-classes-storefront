@@ -874,6 +874,7 @@
       "saveExtra": "Add extra window",
       "windowSaved": "Window saved. Your courses can now be booked in it.",
       "extraWindowSaved": "Extra window saved.",
+      "windowInPast": "That window has already passed. Pick a future date and time.",
       "blockOverlapsBooked": "Heads up: {count, plural, one {# booked class falls} other {# booked classes fall}} inside this block. They are not cancelled automatically: manage them from your bookings.",
       "blockSaved": "Block saved: those hours are no longer offered.",
       "extraSaved": "Exception saved. {count} new slots.",
@@ -901,6 +902,7 @@
       "end": "To",
       "endAfterStart": "The end time must be after the start time.",
       "createError": "Could not save the window.",
+      "windowInPast": "That window has already passed. Pick a future date and time.",
       "cancel": "Cancel",
       "create": "Create",
       "creating": "Creating..."

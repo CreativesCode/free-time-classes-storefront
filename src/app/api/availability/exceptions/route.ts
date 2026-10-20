@@ -4,6 +4,7 @@ import {
   type SupabaseClient,
 } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import { nowAsLessonTimestamp } from "@/lib/datetime/lessonTime";
 
 const noStoreJson = (body: unknown, init?: ResponseInit) =>
   NextResponse.json(body, {
@@ -310,6 +311,14 @@ export async function POST(request: NextRequest) {
 
       if (!st || !et || et <= st || !/^\d{4}-\d{2}-\d{2}$/.test(exceptionDate)) {
         return noStoreJson({ error: "Invalid extra exception payload." }, { status: 400 });
+      }
+
+      // A window that has already ended can never be booked (F047).
+      if (`${exceptionDate}T${et.slice(0, 5)}` <= nowAsLessonTimestamp().slice(0, 16)) {
+        return noStoreJson(
+          { error: "This window is in the past.", code: "window_in_past" },
+          { status: 400 }
+        );
       }
 
       const { data: inserted, error: insErr } = await admin

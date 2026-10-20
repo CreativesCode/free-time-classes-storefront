@@ -263,9 +263,11 @@ export default function RecurringAvailabilityManager({
           reason: extraForm.reason || null,
         }),
       });
-      const json = (await res.json()) as { error?: string };
+      const json = (await res.json()) as { error?: string; code?: string };
       if (!res.ok) {
-        throw new Error(json.error || t("exceptionSaveError"));
+        throw new Error(
+          json.code === "window_in_past" ? t("windowInPast") : json.error || t("exceptionSaveError")
+        );
       }
       toast.success(t("extraWindowSaved"));
       onChanged?.();

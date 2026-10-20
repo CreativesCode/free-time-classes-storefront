@@ -874,6 +874,7 @@
       "saveExtra": "Añadir franja extra",
       "windowSaved": "Franja guardada. Tus cursos ya se pueden reservar en ella.",
       "extraWindowSaved": "Franja extra guardada.",
+      "windowInPast": "Esa franja ya ha pasado. Elige una fecha y hora futuras.",
       "blockOverlapsBooked": "Ojo: hay {count, plural, one {# clase ya reservada} other {# clases ya reservadas}} en ese bloqueo. No se cancelan solas: gestiónalas desde tus reservas.",
       "blockSaved": "Bloqueo guardado: esas horas ya no se ofrecen.",
       "extraSaved": "Excepción guardada. {count} huecos nuevos.",
@@ -901,6 +902,7 @@
       "end": "Hasta",
       "endAfterStart": "La hora de fin debe ser posterior a la de inicio.",
       "createError": "No se pudo guardar la franja.",
+      "windowInPast": "Esa franja ya ha pasado. Elige una fecha y hora futuras.",
       "cancel": "Cancelar",
       "create": "Crear",
       "creating": "Creando..."

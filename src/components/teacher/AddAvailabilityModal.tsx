@@ -90,8 +90,11 @@ export default function AddAvailabilityModal({
           end_time: formData.end,
         }),
       });
-      const json = (await res.json()) as { error?: string };
-      if (!res.ok) throw new Error(json.error || t("createError"));
+      const json = (await res.json()) as { error?: string; code?: string };
+      if (!res.ok) {
+        setError(json.code === "window_in_past" ? t("windowInPast") : t("createError"));
+        return;
+      }
       onSuccess();
       onClose();
     } catch (err) {
