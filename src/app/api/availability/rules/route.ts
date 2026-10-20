@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
-import { syncRuleSlots } from "@/lib/availability/syncRuleSlots";
-import type {
-  AvailabilityException,
-  TutorAvailabilityRule,
-} from "@/types/availability";
 
 const noStoreJson = (body: unknown, init?: ResponseInit) =>
   NextResponse.json(body, {
@@ -16,31 +11,21 @@ const noStoreJson = (body: unknown, init?: ResponseInit) =>
     },
   });
 
+// PRP-001: a rule is only a weekly time window. Courses decide subject,
+// duration and price; open times are computed on demand (no pre-generated
+// slots).
 type CreateBody = {
   day_of_week: number;
   start_time: string;
   end_time: string;
-  subject_id: number;
-  duration_minutes: number;
-  price: number;
 };
+
+const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d(:00)?$/;
 
 function normalizeTime(value: string): string {
   const v = value.trim();
   if (v.length === 5) return `${v}:00`;
   return v;
-}
-
-function isMissingColumnInSchemaCache(
-  err: { message?: string } | null | undefined,
-  column: string
-): boolean {
-  const message = err?.message || "";
-  return (
-    message.includes("schema cache") &&
-    message.includes(`'${column}'`) &&
-    message.includes("'tutor_availability'")
-  );
 }
 
 export async function POST(request: NextRequest) {
@@ -67,24 +52,16 @@ export async function POST(request: NextRequest) {
 
     const body = (await request.json()) as Partial<CreateBody>;
     const dayOfWeek = Number(body.day_of_week);
-    const subjectId = Number(body.subject_id);
-    const durationMinutes = Number(body.duration_minutes);
-    const price = Number(body.price);
-    const startTime = typeof body.start_time === "string" ? body.start_time : "";
-    const endTime = typeof body.end_time === "string" ? body.end_time : "";
+    const startTime = typeof body.start_time === "string" ? body.start_time.trim() : "";
+    const endTime = typeof body.end_time === "string" ? body.end_time.trim() : "";
 
     if (
       !Number.isInteger(dayOfWeek) ||
       dayOfWeek < 0 ||
       dayOfWeek > 6 ||
-      !Number.isInteger(subjectId) ||
-      subjectId <= 0 ||
-      !Number.isInteger(durationMinutes) ||
-      durationMinutes < 30 ||
-      !Number.isFinite(price) ||
-      price < 0 ||
-      !startTime ||
-      !endTime
+      !TIME_RE.test(startTime) ||
+      !TIME_RE.test(endTime) ||
+      normalizeTime(endTime) <= normalizeTime(startTime)
     ) {
       return noStoreJson({ error: "Invalid payload." }, { status: 400 });
     }
@@ -102,37 +79,17 @@ export async function POST(request: NextRequest) {
       auth: { persistSession: false },
     });
 
-    const st = normalizeTime(startTime);
-    const et = normalizeTime(endTime);
-
     const { data: ruleRow, error: insertRuleError } = await admin
       .from("tutor_availability")
       .insert({
         tutor_id: user.id,
         day_of_week: dayOfWeek,
-        start_time: st,
-        end_time: et,
-        subject_id: subjectId,
-        duration_minutes: durationMinutes,
-        price,
+        start_time: normalizeTime(startTime),
+        end_time: normalizeTime(endTime),
         is_active: true,
       })
-      .select()
+      .select("id")
       .single();
-
-    if (
-      isMissingColumnInSchemaCache(insertRuleError, "duration_minutes") ||
-      isMissingColumnInSchemaCache(insertRuleError, "subject_id") ||
-      isMissingColumnInSchemaCache(insertRuleError, "price")
-    ) {
-      return noStoreJson(
-        {
-          error:
-            "Supabase schema desactualizado. Aplica la migración 004_tutor_availability_exceptions.sql y recarga el schema cache de PostgREST.",
-        },
-        { status: 400 }
-      );
-    }
 
     if (insertRuleError || !ruleRow) {
       return noStoreJson(
@@ -141,37 +98,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const rule = ruleRow as TutorAvailabilityRule;
-
-    const { data: exceptions, error: exError } = await admin
-      .from("availability_exceptions")
-      .select("*")
-      .eq("tutor_id", user.id);
-
-    if (exError) {
-      return noStoreJson(
-        { error: "Could not load exceptions." },
-        { status: 400 }
-      );
-    }
-
-    const blocked = (exceptions || []) as AvailabilityException[];
-    const sync = await syncRuleSlots(admin, rule, blocked);
-
-    if (sync.error) {
-      await admin.from("tutor_availability").delete().eq("id", rule.id);
-      return noStoreJson({ error: sync.error }, { status: 400 });
-    }
-
-    return noStoreJson(
-      {
-        ruleId: rule.id,
-        slotsCreated: sync.slotsCreated,
-        generationStart: sync.generationStart,
-        generationEnd: sync.generationEnd,
-      },
-      { status: 200 }
-    );
+    return noStoreJson({ ruleId: ruleRow.id }, { status: 200 });
   } catch (err) {
     console.error("[availability/rules POST] error:", err);
     return noStoreJson({ error: "Unexpected server error." }, { status: 500 });

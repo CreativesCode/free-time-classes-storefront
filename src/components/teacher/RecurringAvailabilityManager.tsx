@@ -20,11 +20,9 @@ import {
   FT_SELECT_TRIGGER,
 } from "@/components/teacher/ftStyles";
 import { cn } from "@/lib/utils";
-import { useLocale, useTranslations } from "@/i18n/translations";
+import { useTranslations } from "@/i18n/translations";
 import { createClient } from "@/lib/supabase/client";
-import { getSubjects } from "@/lib/supabase/queries/subjects";
 import type { AvailabilityException, TutorAvailabilityRule } from "@/types/availability";
-import type { Subject } from "@/types/subject";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -38,27 +36,13 @@ function formatTimeHm(value: string | null | undefined): string {
   return value.slice(0, 5);
 }
 
-function formatIsoDate(value: string | undefined, locale: string): string {
-  if (!value) return "";
-  const normalized = value.includes("T") ? value : `${value}T00:00:00`;
-  const d = new Date(normalized);
-  if (Number.isNaN(d.getTime())) return value.slice(0, 10);
-  return new Intl.DateTimeFormat(locale, {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(d);
-}
-
 export default function RecurringAvailabilityManager({
   tutorId,
   onChanged,
 }: RecurringAvailabilityManagerProps) {
-  const locale = useLocale();
   const t = useTranslations("teacherProfile.recurringAvailability");
   const tTeacher = useTranslations("teacherProfile");
 
-  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [rules, setRules] = useState<TutorAvailabilityRule[]>([]);
   const [exceptions, setExceptions] = useState<AvailabilityException[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,9 +51,6 @@ export default function RecurringAvailabilityManager({
     day_of_week: "1",
     start_time: "16:00",
     end_time: "18:00",
-    subject_id: "",
-    duration_minutes: "60",
-    price: "25",
   });
   const [ruleSaving, setRuleSaving] = useState(false);
 
@@ -85,9 +66,6 @@ export default function RecurringAvailabilityManager({
     exception_date: "",
     start_time: "10:00",
     end_time: "12:00",
-    subject_id: "",
-    duration_minutes: "60",
-    price: "25",
     reason: "",
   });
   const [extraSaving, setExtraSaving] = useState(false);
@@ -107,8 +85,7 @@ export default function RecurringAvailabilityManager({
     const supabase = createClient();
     try {
       setLoading(true);
-      const [subjectsData, rulesRes, exRes] = await Promise.all([
-        getSubjects(),
+      const [rulesRes, exRes] = await Promise.all([
         supabase
           .from("tutor_availability")
           .select("*")
@@ -121,8 +98,6 @@ export default function RecurringAvailabilityManager({
           .eq("tutor_id", tutorId)
           .order("exception_date", { ascending: false }),
       ]);
-
-      setSubjects(subjectsData);
 
       if (rulesRes.error) {
         console.error(rulesRes.error);
@@ -151,9 +126,6 @@ export default function RecurringAvailabilityManager({
     void loadData();
   }, [loadData]);
 
-  const subjectName = (id: number) =>
-    subjects.find((s) => s.id === id)?.name ?? `#${id}`;
-
   const weekdayLabel = (d: number) => t(`weekdays.${d}`);
 
   const weekdayMenuOptions = useMemo(
@@ -165,32 +137,10 @@ export default function RecurringAvailabilityManager({
     [t]
   );
 
-  const subjectMenuOptions = useMemo(
-    () => [
-      { value: "", label: t("selectSubject") },
-      ...subjects.map((s) => ({ value: String(s.id), label: s.name })),
-    ],
-    [subjects, t]
-  );
-
-  const durationMenuOptions = useMemo(
-    () => [
-      { value: "30", label: `30 ${t("minutes")}` },
-      { value: "60", label: `60 ${t("minutes")}` },
-      { value: "90", label: `90 ${t("minutes")}` },
-      { value: "120", label: `120 ${t("minutes")}` },
-    ],
-    [t]
-  );
-
   const raSelectTrigger = FT_SELECT_TRIGGER;
 
   const submitRule = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!ruleForm.subject_id) {
-      toast.error(t("pickSubject"));
-      return;
-    }
     try {
       setRuleSaving(true);
       const res = await fetch(`/api/availability/rules`, {
@@ -200,27 +150,13 @@ export default function RecurringAvailabilityManager({
           day_of_week: parseInt(ruleForm.day_of_week, 10),
           start_time: ruleForm.start_time,
           end_time: ruleForm.end_time,
-          subject_id: parseInt(ruleForm.subject_id, 10),
-          duration_minutes: parseInt(ruleForm.duration_minutes, 10),
-          price: parseFloat(ruleForm.price),
         }),
       });
-      const json = (await res.json()) as {
-        error?: string;
-        slotsCreated?: number;
-        generationStart?: string;
-        generationEnd?: string;
-      };
+      const json = (await res.json()) as { error?: string };
       if (!res.ok) {
         throw new Error(json.error || t("ruleSaveError"));
       }
-      toast.success(
-        t("ruleSavedDetailed", {
-          count: json.slotsCreated ?? 0,
-          start: formatIsoDate(json.generationStart, locale),
-          end: formatIsoDate(json.generationEnd, locale),
-        })
-      );
+      toast.success(t("windowSaved"));
       onChanged?.();
       await loadData();
     } catch (err) {
@@ -285,11 +221,14 @@ export default function RecurringAvailabilityManager({
           reason: blockForm.reason || null,
         }),
       });
-      const json = (await res.json()) as { error?: string };
+      const json = (await res.json()) as { error?: string; bookedConflicts?: number };
       if (!res.ok) {
         throw new Error(json.error || t("exceptionSaveError"));
       }
       toast.success(t("blockSaved"));
+      if (json.bookedConflicts) {
+        toast.warning(t("blockOverlapsBooked", { count: json.bookedConflicts }));
+      }
       setBlockForm({
         exception_date: "",
         start_time: "",
@@ -307,8 +246,8 @@ export default function RecurringAvailabilityManager({
 
   const submitExtra = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!extraForm.exception_date || !extraForm.subject_id) {
-      toast.error(t("pickDateAndSubject"));
+    if (!extraForm.exception_date) {
+      toast.error(t("pickDate"));
       return;
     }
     try {
@@ -321,20 +260,14 @@ export default function RecurringAvailabilityManager({
           exception_date: extraForm.exception_date,
           start_time: extraForm.start_time,
           end_time: extraForm.end_time,
-          subject_id: parseInt(extraForm.subject_id, 10),
-          duration_minutes: parseInt(extraForm.duration_minutes, 10),
-          price: parseFloat(extraForm.price),
           reason: extraForm.reason || null,
         }),
       });
-      const json = (await res.json()) as {
-        error?: string;
-        slotsCreated?: number;
-      };
+      const json = (await res.json()) as { error?: string };
       if (!res.ok) {
         throw new Error(json.error || t("exceptionSaveError"));
       }
-      toast.success(t("extraSaved", { count: json.slotsCreated ?? 0 }));
+      toast.success(t("extraWindowSaved"));
       onChanged?.();
       await loadData();
     } catch (err) {
@@ -454,49 +387,6 @@ export default function RecurringAvailabilityManager({
                 className={FT_FIELD}
               />
             </div>
-            <div className="space-y-2 sm:col-span-2 lg:col-span-1">
-              <Label htmlFor="ra-subject">{t("subject")}</Label>
-              <SelectMenu
-                id="ra-subject"
-                value={ruleForm.subject_id}
-                onValueChange={(subject_id) =>
-                  setRuleForm((p) => ({ ...p, subject_id }))
-                }
-                options={subjectMenuOptions}
-                disabled={ruleSaving}
-                aria-label={t("subject")}
-                triggerClassName={raSelectTrigger}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ra-dur">{t("slotDuration")}</Label>
-              <SelectMenu
-                id="ra-dur"
-                value={ruleForm.duration_minutes}
-                onValueChange={(duration_minutes) =>
-                  setRuleForm((p) => ({ ...p, duration_minutes }))
-                }
-                options={durationMenuOptions}
-                disabled={ruleSaving}
-                aria-label={t("slotDuration")}
-                triggerClassName={raSelectTrigger}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ra-price">{t("price")}</Label>
-              <Input
-                id="ra-price"
-                type="number"
-                min="0"
-                step="0.01"
-                value={ruleForm.price}
-                onChange={(e) =>
-                  setRuleForm((p) => ({ ...p, price: e.target.value }))
-                }
-                required
-                className={FT_FIELD}
-              />
-            </div>
             <div className="flex items-end">
               <Button type="submit" disabled={ruleSaving} className={cn(FT_BTN_PRIMARY, "w-full sm:w-auto")}>
                 {ruleSaving ? t("saving") : t("addRule")}
@@ -515,10 +405,6 @@ export default function RecurringAvailabilityManager({
                     <span className="font-medium">{weekdayLabel(r.day_of_week)}</span>
                     {" · "}
                     {formatTimeHm(r.start_time)}–{formatTimeHm(r.end_time)}
-                    {" · "}
-                    {subjectName(r.subject_id)}
-                    {" · "}
-                    {r.duration_minutes} {t("minutes")} · {Number(r.price)}€
                   </span>
                   <Button
                     type="button"
@@ -664,52 +550,6 @@ export default function RecurringAvailabilityManager({
                   className={FT_FIELD}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="ex-sub">{t("subject")}</Label>
-                <SelectMenu
-                  id="ex-sub"
-                  value={extraForm.subject_id}
-                  onValueChange={(subject_id) =>
-                    setExtraForm((p) => ({ ...p, subject_id }))
-                  }
-                  options={subjectMenuOptions}
-                  disabled={extraSaving}
-                  aria-label={t("subject")}
-                  triggerClassName={raSelectTrigger}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="ex-dur">{t("slotDuration")}</Label>
-                <SelectMenu
-                  id="ex-dur"
-                  value={extraForm.duration_minutes}
-                  onValueChange={(duration_minutes) =>
-                    setExtraForm((p) => ({
-                      ...p,
-                      duration_minutes,
-                    }))
-                  }
-                  options={durationMenuOptions}
-                  disabled={extraSaving}
-                  aria-label={t("slotDuration")}
-                  triggerClassName={raSelectTrigger}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="ex-price">{t("price")}</Label>
-                <Input
-                  id="ex-price"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={extraForm.price}
-                  onChange={(e) =>
-                    setExtraForm((p) => ({ ...p, price: e.target.value }))
-                  }
-                  required
-                  className={FT_FIELD}
-                />
-              </div>
               <div className="space-y-2 sm:col-span-2 lg:col-span-3">
                 <Label htmlFor="ex-reason">{t("reasonOptional")}</Label>
                 <Input
@@ -751,9 +591,6 @@ export default function RecurringAvailabilityManager({
                       : ex.type === "blocked"
                         ? ` · ${t("fullDay")}`
                         : ""}
-                    {ex.type === "extra" && ex.subject_id
-                      ? ` · ${subjectName(ex.subject_id)}`
-                      : ""}
                   </span>
                   <Button
                     type="button"

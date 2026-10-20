@@ -4,13 +4,6 @@ import {
   type SupabaseClient,
 } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
-import {
-  DEFAULT_GENERATION_WEEKS,
-  getGenerationHorizon,
-  slotKey,
-  slotsFromExtraException,
-} from "@/lib/availability/ruleExpansion";
-import type { AvailabilityException } from "@/types/availability";
 
 const noStoreJson = (body: unknown, init?: ResponseInit) =>
   NextResponse.json(body, {
@@ -284,28 +277,38 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      return noStoreJson({ id: inserted.id }, { status: 200 });
+      // Booked classes are never cancelled by a block: tell the tutor how
+      // many of them fall inside it so they can handle them.
+      const { data: committed } = await admin
+        .from("lessons")
+        .select("scheduled_date_time, duration_minutes")
+        .eq("tutor_id", user.id)
+        .in("status", ["scheduled", "in_progress"])
+        .gte("scheduled_date_time", dayStart)
+        .lt("scheduled_date_time", dayEnd);
+      const blockStart = st ?? "00:00:00";
+      const blockEnd = et ?? "24:00:00";
+      const bookedConflicts = (committed ?? []).filter((row) => {
+        const startStr = String(row.scheduled_date_time).replace(" ", "T").slice(11, 19);
+        const endMin =
+          Number(startStr.slice(0, 2)) * 60 +
+          Number(startStr.slice(3, 5)) +
+          ((row.duration_minutes as number) ?? 0);
+        const endStr = `${String(Math.floor(endMin / 60)).padStart(2, "0")}:${String(endMin % 60).padStart(2, "0")}:00`;
+        return startStr < blockEnd && endStr > blockStart;
+      }).length;
+
+      return noStoreJson({ id: inserted.id, bookedConflicts }, { status: 200 });
     }
 
     if (body.type === "extra") {
+      // PRP-001: an extra window is only time; open times are computed.
       const exceptionDate =
         typeof body.exception_date === "string" ? body.exception_date : "";
-      const subjectId = Number(body.subject_id);
-      const durationMinutes = Number(body.duration_minutes);
-      const price = Number(body.price);
       const st = normalizeTime(body.start_time);
       const et = normalizeTime(body.end_time);
 
-      if (
-        subjectId <= 0 ||
-        !Number.isInteger(durationMinutes) ||
-        durationMinutes < 30 ||
-        !Number.isFinite(price) ||
-        price < 0 ||
-        !st ||
-        !et ||
-        !/^\d{4}-\d{2}-\d{2}$/.test(exceptionDate)
-      ) {
+      if (!st || !et || et <= st || !/^\d{4}-\d{2}-\d{2}$/.test(exceptionDate)) {
         return noStoreJson({ error: "Invalid extra exception payload." }, { status: 400 });
       }
 
@@ -318,11 +321,8 @@ export async function POST(request: NextRequest) {
           end_time: et,
           type: "extra",
           reason: body.reason ?? null,
-          subject_id: subjectId,
-          duration_minutes: durationMinutes,
-          price,
         })
-        .select()
+        .select("id")
         .single();
 
       if (insErr || !inserted) {
@@ -332,69 +332,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const ex = inserted as AvailabilityException;
-      const slots = slotsFromExtraException(ex);
-
-      const { start, end } = getGenerationHorizon(DEFAULT_GENERATION_WEEKS);
-      const startStr = `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}T00:00:00`;
-      const endBound = new Date(end);
-      endBound.setDate(endBound.getDate() + 1);
-      const endStr = `${endBound.getFullYear()}-${pad(endBound.getMonth() + 1)}-${pad(endBound.getDate())}T00:00:00`;
-
-      const { data: existingLessons, error: existingError } = await admin
-        .from("lessons")
-        .select("scheduled_date_time,subject_id,duration_minutes")
-        .eq("tutor_id", user.id)
-        .gte("scheduled_date_time", startStr)
-        .lt("scheduled_date_time", endStr);
-
-      if (existingError) {
-        return noStoreJson(
-          { error: "Could not check existing slots." },
-          { status: 400 }
-        );
-      }
-
-      const taken = new Set(
-        (existingLessons || []).map((row) =>
-          slotKey({
-            scheduled_date_time: String(row.scheduled_date_time)
-              .replace(" ", "T")
-              .slice(0, 19),
-            subject_id: row.subject_id as number,
-            duration_minutes: row.duration_minutes as number,
-            price: 0,
-          })
-        )
-      );
-
-      const rows = slots
-        .filter((s) => !taken.has(slotKey(s)))
-        .map((s) => ({
-          tutor_id: user.id,
-          subject_id: s.subject_id,
-          scheduled_date_time: s.scheduled_date_time,
-          duration_minutes: s.duration_minutes,
-          price: s.price,
-          status: "available" as const,
-          availability_rule_id: null,
-          updated_at: new Date().toISOString(),
-        }));
-
-      if (rows.length > 0) {
-        const { error: insLessonsErr } = await admin.from("lessons").insert(rows);
-        if (insLessonsErr) {
-          return noStoreJson(
-            { error: insLessonsErr.message || "Could not create extra slots." },
-            { status: 400 }
-          );
-        }
-      }
-
-      return noStoreJson(
-        { id: inserted.id, slotsCreated: rows.length },
-        { status: 200 }
-      );
+      return noStoreJson({ id: inserted.id }, { status: 200 });
     }
 
     return noStoreJson({ error: "Invalid type." }, { status: 400 });

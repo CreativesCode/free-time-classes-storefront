@@ -20,6 +20,7 @@ import {
   deleteLesson,
   getLessonWithRelations,
 } from "@/lib/supabase/queries/lessons";
+import { createClient } from "@/lib/supabase/client";
 import type { LessonWithRelations } from "@/types/lesson";
 import { DateSelectArg, DatesSetArg, EventClickArg } from "@fullcalendar/core";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -48,6 +49,74 @@ interface Event {
   start: Date;
   end: Date;
   backgroundColor: string;
+  /** "background" for availability windows and blocks (not clickable). */
+  display?: "background";
+}
+
+type WindowRule = { day_of_week: number; start_time: string; end_time: string };
+type WindowException = {
+  exception_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  type: "blocked" | "extra";
+};
+
+const WINDOW_COLOR = "#BBF7D0";
+const BLOCK_COLOR = "#FECACA";
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
+const localDateKey = (d: Date) =>
+  `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const atTime = (dateKey: string, time: string) => new Date(`${dateKey}T${time.slice(0, 5)}:00`);
+
+/**
+ * Background events for the tutor's weekly windows and extras (green) and
+ * blocks (red) in the visible range. Courses are booked inside the green
+ * areas; open times are computed on the server (PRP-001).
+ */
+function windowBackgroundEvents(
+  rules: WindowRule[],
+  exceptions: WindowException[],
+  start: Date,
+  end: Date
+): Event[] {
+  const out: Event[] = [];
+  for (const d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+    const key = localDateKey(d);
+    const dayExceptions = exceptions.filter((e) => e.exception_date === key);
+    const fullDayBlock = dayExceptions.some(
+      (e) => e.type === "blocked" && (e.start_time == null || e.end_time == null)
+    );
+    const windows = fullDayBlock
+      ? []
+      : [
+          ...rules.filter((r) => r.day_of_week === d.getDay()),
+          ...dayExceptions.filter((e) => e.type === "extra" && e.start_time && e.end_time),
+        ];
+    windows.forEach((w, i) =>
+      out.push({
+        id: `window-${key}-${i}`,
+        title: "",
+        start: atTime(key, w.start_time as string),
+        end: atTime(key, w.end_time as string),
+        backgroundColor: WINDOW_COLOR,
+        display: "background",
+      })
+    );
+    dayExceptions
+      .filter((e) => e.type === "blocked")
+      .forEach((e, i) =>
+        out.push({
+          id: `block-${key}-${i}`,
+          title: "",
+          start: e.start_time ? atTime(key, e.start_time) : atTime(key, "00:00"),
+          end: e.end_time ? atTime(key, e.end_time) : atTime(key, "23:59"),
+          backgroundColor: BLOCK_COLOR,
+          display: "background",
+        })
+      );
+  }
+  return out;
 }
 
 type CalendarApiItem = {
@@ -139,7 +208,31 @@ export default function AvailabilityCalendar({
             } satisfies Event;
           });
 
-        setEvents(lessonEvents);
+        let backgroundEvents: Event[] = [];
+        if (user?.id) {
+          const supabase = createClient();
+          const [rulesRes, exRes] = await Promise.all([
+            supabase
+              .from("tutor_availability")
+              .select("day_of_week, start_time, end_time")
+              .eq("tutor_id", user.id)
+              .eq("is_active", true),
+            supabase
+              .from("availability_exceptions")
+              .select("exception_date, start_time, end_time, type")
+              .eq("tutor_id", user.id)
+              .gte("exception_date", localDateKey(start))
+              .lte("exception_date", localDateKey(end)),
+          ]);
+          backgroundEvents = windowBackgroundEvents(
+            (rulesRes.data ?? []) as WindowRule[],
+            (exRes.data ?? []) as WindowException[],
+            start,
+            end
+          );
+        }
+
+        setEvents([...backgroundEvents, ...lessonEvents]);
       } catch (error) {
         console.error("Error loading calendar events:", error);
         setEvents([]);
@@ -147,7 +240,7 @@ export default function AvailabilityCalendar({
         setCalendarLoading(false);
       }
     },
-    []
+    [user?.id]
   );
 
   const handleDatesSet = (arg: DatesSetArg) => {

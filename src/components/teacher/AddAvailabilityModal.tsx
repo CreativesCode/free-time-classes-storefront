@@ -9,20 +9,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SelectMenu } from "@/components/ui/select-menu";
 import {
   FT_BTN_OUTLINE,
   FT_BTN_PRIMARY,
   FT_FIELD,
   FT_LABEL,
-  FT_SELECT_TRIGGER,
 } from "@/components/teacher/ftStyles";
-import { useAuth } from "@/context/UserContext";
 import { useTranslations } from "@/i18n/translations";
-import { createLesson } from "@/lib/supabase/queries/lessons";
-import { getSubjects } from "@/lib/supabase/queries/subjects";
-import type { Subject } from "@/types/subject";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 interface AddAvailabilityModalProps {
   isOpen: boolean;
@@ -31,27 +25,27 @@ interface AddAvailabilityModalProps {
   initialDate?: Date;
 }
 
-function toLocalDateTimeInputValue(date: Date): string {
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-    .toISOString()
-    .slice(0, 16);
+const pad = (n: number) => String(n).padStart(2, "0");
+
+function toDateValue(d: Date): string {
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-function toDatabaseLocalDateTime(value: string): string {
-  // `datetime-local` has no timezone; keep local wall-clock time as-is.
-  // Postgres timestamp columns expect "YYYY-MM-DDTHH:mm:ss" here.
-  if (!value) return value;
-  return value.length === 16 ? `${value}:00` : value;
+function toTimeValue(d: Date): string {
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 function getNextHourDate(): Date {
-  const now = new Date();
-  const nextHour = new Date(now);
-  nextHour.setMinutes(0, 0, 0);
-  nextHour.setHours(nextHour.getHours() + 1);
-  return nextHour;
+  const next = new Date();
+  next.setMinutes(0, 0, 0);
+  next.setHours(next.getHours() + 1);
+  return next;
 }
 
+/**
+ * Adds a one-off availability window (an "extra" exception) on a date.
+ * Students book courses inside it; open times are computed (PRP-001).
+ */
 export default function AddAvailabilityModal({
   isOpen,
   onClose,
@@ -59,105 +53,54 @@ export default function AddAvailabilityModal({
   initialDate,
 }: AddAvailabilityModalProps) {
   const t = useTranslations("teacherProfile.addAvailabilityModal");
-  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const dialogBodyScrollRef = useRef<HTMLDivElement>(null);
+  const [formData, setFormData] = useState({ date: "", start: "", end: "" });
 
-  // Form state
-  const [formData, setFormData] = useState({
-    subject_id: "",
-    scheduled_date_time: initialDate ? toLocalDateTimeInputValue(initialDate) : "",
-    duration_minutes: "60",
-    price: "10.00",
-  });
-
-  // Keep date/time input synced when opening modal from calendar selection.
+  // Keep the form synced when opening the modal from a calendar selection.
   useEffect(() => {
     if (!isOpen) return;
-
-    setFormData((prev) => ({
-      ...prev,
-      scheduled_date_time: initialDate
-        ? toLocalDateTimeInputValue(initialDate)
-        : toLocalDateTimeInputValue(getNextHourDate()),
-    }));
+    const start = initialDate ?? getNextHourDate();
+    const end = new Date(start.getTime() + 60 * 60_000);
+    setFormData({
+      date: toDateValue(start),
+      start: toTimeValue(start),
+      end: toTimeValue(end),
+    });
+    setError(null);
   }, [isOpen, initialDate]);
-
-  // Load subjects from database
-  useEffect(() => {
-    async function loadSubjects() {
-      try {
-        const data = await getSubjects();
-        setSubjects(data);
-      } catch (err) {
-        console.error("Error loading subjects:", err);
-      }
-    }
-    loadSubjects();
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
-    if (!user?.id) {
-      setError("User not authenticated");
+    if (formData.end <= formData.start) {
+      setError(t("endAfterStart"));
       return;
     }
 
     try {
       setLoading(true);
-
-      // Create the lesson (availability) in the database
-      await createLesson({
-        tutor_id: user.id,
-        subject_id: parseInt(formData.subject_id),
-        scheduled_date_time: toDatabaseLocalDateTime(formData.scheduled_date_time),
-        duration_minutes: parseInt(formData.duration_minutes),
-        price: parseFloat(formData.price),
-        status: "available",
+      const res = await fetch("/api/availability/exceptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "extra",
+          exception_date: formData.date,
+          start_time: formData.start,
+          end_time: formData.end,
+        }),
       });
-
-      // Reset form and close modal
-      setFormData({
-        subject_id: "",
-        scheduled_date_time: "",
-        duration_minutes: "60",
-        price: "10.00",
-      });
+      const json = (await res.json()) as { error?: string };
+      if (!res.ok) throw new Error(json.error || t("createError"));
       onSuccess();
       onClose();
     } catch (err) {
-      console.error("Error creating availability:", err);
-      setError(err instanceof Error ? err.message : "Failed to create availability");
+      console.error("Error creating availability window:", err);
+      setError(t("createError"));
     } finally {
       setLoading(false);
     }
   };
-
-  const handleChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const subjectMenuOptions = useMemo(
-    () => [
-      { value: "", label: t("selectSubject") },
-      ...subjects.map((s) => ({ value: String(s.id), label: s.name })),
-    ],
-    [subjects, t]
-  );
-
-  const durationMenuOptions = useMemo(
-    () => [
-      { value: "30", label: `30 ${t("minutes")}` },
-      { value: "60", label: `60 ${t("minutes")}` },
-      { value: "90", label: `90 ${t("minutes")}` },
-      { value: "120", label: `120 ${t("minutes")}` },
-    ],
-    [t]
-  );
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -171,72 +114,52 @@ export default function AddAvailabilityModal({
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <div
-            ref={dialogBodyScrollRef}
-            className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-1 sm:px-6"
-          >
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-1 sm:px-6">
+            <p className="text-sm text-ft-ink-3">{t("description")}</p>
             {error && (
               <div className="rounded-ft border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {error}
               </div>
             )}
 
-          <div className="space-y-2">
-            <Label htmlFor="subject" className={FT_LABEL}>{t("subject")}</Label>
-            <SelectMenu
-              id="subject"
-              value={formData.subject_id}
-              onValueChange={(v) => handleChange("subject_id", v)}
-              options={subjectMenuOptions}
-              disabled={loading}
-              aria-label={t("subject")}
-              nestedScrollParentRef={dialogBodyScrollRef}
-              triggerClassName={FT_SELECT_TRIGGER}
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="extra-date" className={FT_LABEL}>{t("date")}</Label>
+              <Input
+                id="extra-date"
+                type="date"
+                value={formData.date}
+                onChange={(e) => setFormData((p) => ({ ...p, date: e.target.value }))}
+                required
+                className={FT_FIELD}
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="datetime" className={FT_LABEL}>{t("dateTime")}</Label>
-            <Input
-              id="datetime"
-              type="datetime-local"
-              value={formData.scheduled_date_time}
-              onChange={(e) =>
-                handleChange("scheduled_date_time", e.target.value)
-              }
-              required
-              className={FT_FIELD}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="duration" className={FT_LABEL}>{t("duration")}</Label>
-            <SelectMenu
-              id="duration"
-              value={formData.duration_minutes}
-              onValueChange={(v) => handleChange("duration_minutes", v)}
-              options={durationMenuOptions}
-              disabled={loading}
-              aria-label={t("duration")}
-              nestedScrollParentRef={dialogBodyScrollRef}
-              triggerClassName={FT_SELECT_TRIGGER}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="price" className={FT_LABEL}>{t("price")}</Label>
-            <Input
-              id="price"
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.price}
-              onChange={(e) => handleChange("price", e.target.value)}
-              required
-              className={FT_FIELD}
-            />
-          </div>
-
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="extra-start" className={FT_LABEL}>{t("start")}</Label>
+                <Input
+                  id="extra-start"
+                  type="time"
+                  step={1800}
+                  value={formData.start}
+                  onChange={(e) => setFormData((p) => ({ ...p, start: e.target.value }))}
+                  required
+                  className={FT_FIELD}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="extra-end" className={FT_LABEL}>{t("end")}</Label>
+                <Input
+                  id="extra-end"
+                  type="time"
+                  step={1800}
+                  value={formData.end}
+                  onChange={(e) => setFormData((p) => ({ ...p, end: e.target.value }))}
+                  required
+                  className={FT_FIELD}
+                />
+              </div>
+            </div>
           </div>
           <div className="mt-2 flex shrink-0 justify-end gap-2 border-t border-ft-line bg-ft-paper px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-6">
             <Button
