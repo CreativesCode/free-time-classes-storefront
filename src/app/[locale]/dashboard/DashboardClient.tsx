@@ -19,6 +19,7 @@ import {
 import { Avatar } from "@/components/ds/Avatar";
 import { SectionTitle } from "@/components/ds/SectionTitle";
 import { StudentSidebarNav } from "@/components/ds/StudentSidebarNav";
+import { useNotificationsContext } from "@/context/NotificationsContext";
 import { useTranslations, useLocale } from "@/i18n/translations";
 import { getCourseCoverPublicUrl, getPublicUrl } from "@/lib/supabase/storage";
 import type { StudentProfile } from "@/types/student";
@@ -122,6 +123,7 @@ export default function DashboardClient({
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("dashboard");
+  const { unreadCount } = useNotificationsContext();
   const [audioPlaying, setAudioPlaying] = useState(false);
 
   const next = upcomingLessons[0] ?? null;
@@ -656,7 +658,9 @@ export default function DashboardClient({
                 className="relative grid h-[42px] w-[42px] place-items-center rounded-full border border-ft-line bg-ft-paper transition-colors hover:bg-ft-surface-1"
               >
                 <Bell width={18} height={18} className="text-ft-ink" />
-                <span className="absolute right-2 top-2 h-[7px] w-[7px] rounded-full border-2 border-ft-paper bg-ft-accent" />
+                {unreadCount > 0 && (
+                  <span className="absolute right-2 top-2 h-[7px] w-[7px] rounded-full border-2 border-ft-paper bg-ft-accent" />
+                )}
               </button>
               {userAvatarUrl ? (
                 <Avatar src={userAvatarUrl} name={user.username ?? "U"} size={42} />

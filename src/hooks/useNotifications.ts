@@ -10,6 +10,9 @@ export function useNotifications(userId: string | undefined) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  // Most recent notification received through realtime (lets screens react
+  // to new booking events without polling).
+  const [latest, setLatest] = useState<Notification | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   // Fetch initial notifications
@@ -65,6 +68,7 @@ export function useNotifications(userId: string | undefined) {
           const newNotif = payload.new as Notification;
           setNotifications((prev) => [newNotif, ...prev]);
           setUnreadCount((prev) => prev + 1);
+          setLatest(newNotif);
         },
       )
       .subscribe();
@@ -112,6 +116,7 @@ export function useNotifications(userId: string | undefined) {
     notifications,
     unreadCount,
     loading,
+    latest,
     markAsRead,
     markAllAsRead,
     refetch: fetchNotifications,

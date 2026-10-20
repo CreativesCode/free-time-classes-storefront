@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { StudentSidebarNav } from "@/components/ds/StudentSidebarNav";
 import { useAuth } from "@/context/UserContext";
+import { useNotificationsContext } from "@/context/NotificationsContext";
 import { useTranslations, useLocale } from "@/i18n/translations";
 import { createClient } from "@/lib/supabase/client";
 import { fetchTutorReviewStatsMap } from "@/lib/supabase/tutor-review-stats";
@@ -330,6 +331,17 @@ export default function TutorDashboardClient({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveUser.id, initialData]);
+
+  // Refresh pending requests, stats and today's classes when a booking event
+  // arrives through realtime (new request, cancellation...).
+  const { latest: latestNotification } = useNotificationsContext();
+  useEffect(() => {
+    if (!latestNotification?.type.startsWith("booking_")) return;
+    void loadPending();
+    void loadStats();
+    void loadTodayLessons();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [latestNotification?.id]);
 
   const openRejectDialog = (item: PendingBookingItem) => {
     setRejectTarget(item);

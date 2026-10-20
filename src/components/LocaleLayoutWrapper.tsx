@@ -1,6 +1,7 @@
 "use client";
 
 import { AppProvider } from "@/context/AppContext";
+import { NotificationsProvider } from "@/context/NotificationsContext";
 import { UserProvider } from "@/context/UserContext";
 import { useLocale } from "next-intl";
 import { ReactNode, useEffect } from "react";
@@ -24,6 +25,7 @@ export default function LocaleLayoutWrapper({
 
   return (
     <UserProvider>
+      <NotificationsProvider>
       <AppProvider>
         <ThemeProvider
           attribute="class"
@@ -34,6 +36,7 @@ export default function LocaleLayoutWrapper({
           <FreetimeShell>{children}</FreetimeShell>
         </ThemeProvider>
       </AppProvider>
+      </NotificationsProvider>
     </UserProvider>
   );
 }

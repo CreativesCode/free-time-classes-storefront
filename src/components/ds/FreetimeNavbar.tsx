@@ -2,7 +2,8 @@
 
 import { useAuth } from "@/context/UserContext";
 import { getPublicUrl } from "@/lib/supabase/storage";
-import { ArrowRight } from "lucide-react";
+import { useNotificationsContext } from "@/context/NotificationsContext";
+import { ArrowRight, Bell } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -19,6 +20,7 @@ export function FreetimeNavbar() {
   const locale = useLocale();
   const pathname = usePathname();
   const { user } = useAuth();
+  const { unreadCount } = useNotificationsContext();
   const t = useTranslations("navbar");
   const suffix = stripLocale(pathname);
 
@@ -80,6 +82,20 @@ export function FreetimeNavbar() {
         {/* Right: language + auth area */}
         <div className="flex items-center gap-3.5">
           <LanguageSwitcher />
+          {user && (
+            <Link
+              href={`/${locale}/notifications`}
+              aria-label={t("notifications")}
+              className="relative grid h-9 w-9 place-items-center rounded-full border border-ft-line bg-ft-paper text-ft-ink transition-colors hover:bg-ft-surface-1"
+            >
+              <Bell width={16} height={16} />
+              {unreadCount > 0 && (
+                <span className="absolute -right-1 -top-1 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-ft-accent px-1 text-[10px] font-bold text-ft-ink">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </Link>
+          )}
           {user ? (
             <Link
               href={profileHref}

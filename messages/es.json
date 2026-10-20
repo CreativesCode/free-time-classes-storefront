@@ -97,7 +97,8 @@
     "themeDark": "Oscuro",
     "themeToggleAria": "Cambiar entre modo claro y oscuro",
     "refreshAria": "Actualizar la página",
-    "refreshTooltip": "Actualizar"
+    "refreshTooltip": "Actualizar",
+    "notifications": "Notificaciones"
   },
   "authCallback": {
     "verifyingTitle": "Verificando tu cuenta",

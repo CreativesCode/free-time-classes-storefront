@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import { StudentSidebarNav } from "@/components/ds/StudentSidebarNav";
 import { useTranslations, useLocale } from "@/i18n/translations";
 import { useAuth } from "@/context/UserContext";
-import { useNotifications } from "@/hooks/useNotifications";
+import { useNotificationsContext } from "@/context/NotificationsContext";
 import { cn } from "@/lib/utils";
 import type { Notification, NotificationType } from "@/types/notification";
 
@@ -97,9 +97,7 @@ export default function NotificationsClient() {
   const locale = useLocale();
   const router = useRouter();
   const { user } = useAuth();
-  const { notifications, markAsRead, markAllAsRead } = useNotifications(
-    user?.id
-  );
+  const { notifications, markAsRead, markAllAsRead } = useNotificationsContext();
 
   const grouped = useMemo(() => {
     const today: typeof notifications = [];
