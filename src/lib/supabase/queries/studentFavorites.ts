@@ -1,8 +1,6 @@
 import type { TutorProfile } from "@/types/tutor";
 import type { User } from "@/types/user";
 import { createClient } from "../client";
-import { fetchTutorReviewStatsMap, mergeTutorProfileReviewStats } from "../tutor-review-stats";
-import { getTutorProfileWithUser } from "./tutors";
 
 const supabase = createClient();
 
@@ -73,23 +71,35 @@ export type FavoriteTutorWithProfile = TutorProfile & {
 };
 
 /**
- * Returns full tutor profiles for a student's favorites.
+ * Returns the tutor profiles of a student's favorites in one query (F107).
+ * `rating`/`total_reviews` are kept current by the reviews triggers.
  */
 export async function getFavoriteTutorsWithProfile(
   studentId: string
 ): Promise<FavoriteTutorWithProfile[]> {
   const tutorIds = await getFavoriteTutorIds(studentId);
-  const reviewStats = await fetchTutorReviewStatsMap(supabase, tutorIds);
-  const out: FavoriteTutorWithProfile[] = [];
+  if (tutorIds.length === 0) return [];
 
-  for (const favoriteTutorId of tutorIds) {
-    const tutor = await getTutorProfileWithUser(favoriteTutorId);
-    if (tutor) {
-      const merged = mergeTutorProfileReviewStats(tutor, reviewStats);
-      out.push({ ...merged, favoriteTutorId });
-    }
+  const { data, error } = await supabase
+    .from("tutor_profiles")
+    .select(
+      `
+      id, bio, years_of_experience, hourly_rate, rating, total_reviews, created_at,
+      user:users!tutor_profiles_id_fkey (id, username, profile_picture, country, is_student, is_tutor)
+    `
+    )
+    .in("id", tutorIds);
+
+  if (error) {
+    throw error;
   }
 
-  return out;
+  const byId = new Map(
+    ((data ?? []) as unknown as (TutorProfile & { user: User })[]).map((row) => [row.id, row])
+  );
+  // Keep the favorites order; tutors that no longer exist are skipped.
+  return tutorIds.flatMap((favoriteTutorId) => {
+    const tutor = byId.get(favoriteTutorId);
+    return tutor ? [{ ...tutor, favoriteTutorId }] : [];
+  });
 }
-
