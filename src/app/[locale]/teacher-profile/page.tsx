@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import { resolveCourseTutorUser } from "@/lib/supabase/course-tutor";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getSessionUser } from "@/lib/supabase/server";
 import {
   fetchTutorReviewStatsMap,
   mergeTutorProfileReviewStats,
@@ -53,45 +53,27 @@ export default async function TeacherProfilePage({
 }) {
   const { locale } = await params;
   const supabase = await createClient();
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser();
+  const authUser = await getSessionUser(supabase);
 
   if (!authUser) {
     redirect(`/${locale}/login`);
   }
 
-  // Own private columns are only exposed through get_my_profile().
-  const { data: userRow, error: userRowError } = await supabase
-    .rpc("get_my_profile")
-    .maybeSingle<{
-      id: string;
-      username: string;
-      email: string;
-      phone: string | null;
-      country: string | null;
-      profile_picture: string | null;
-      is_tutor: boolean;
-    }>();
-
-  if (userRowError || !userRow) {
-    redirect(`/${locale}/login`);
-  }
-
-  if (!userRow.is_tutor) {
-    redirect(`/${locale}/dashboard`);
-  }
-
-  const teacherUser: TeacherProfilePageUser = {
-    id: userRow.id,
-    username: userRow.username,
-    email: userRow.email,
-    phone: userRow.phone ?? null,
-    country: userRow.country ?? null,
-    profile_picture: userRow.profile_picture ?? null,
-  };
-
-  const [profileRes, subjectsRes, coursesRes, reviewStats] = await Promise.all([
+  // The profile and the page data are fetched in parallel (G-sess-2).
+  const [{ data: userRow, error: userRowError }, profileRes, subjectsRes, coursesRes, reviewStats] =
+    await Promise.all([
+    // Own private columns are only exposed through get_my_profile().
+    supabase
+      .rpc("get_my_profile")
+      .maybeSingle<{
+        id: string;
+        username: string;
+        email: string;
+        phone: string | null;
+        country: string | null;
+        profile_picture: string | null;
+        is_tutor: boolean;
+      }>(),
     supabase.from("tutor_profiles").select("*").eq("id", authUser.id).maybeSingle(),
     supabase
       .from("tutor_subjects")
@@ -133,6 +115,24 @@ export default async function TeacherProfilePage({
       .order("created_at", { ascending: false }),
     fetchTutorReviewStatsMap(supabase, [authUser.id]),
   ]);
+
+  if (userRowError || !userRow) {
+    redirect(`/${locale}/login`);
+  }
+
+  if (!userRow.is_tutor) {
+    redirect(`/${locale}/dashboard`);
+  }
+
+  const teacherUser: TeacherProfilePageUser = {
+    id: userRow.id,
+    username: userRow.username,
+    email: userRow.email,
+    phone: userRow.phone ?? null,
+    country: userRow.country ?? null,
+    profile_picture: userRow.profile_picture ?? null,
+  };
+
 
   let initialTutorProfile = (profileRes.data ?? null) as TutorProfile | null;
   if (initialTutorProfile) {

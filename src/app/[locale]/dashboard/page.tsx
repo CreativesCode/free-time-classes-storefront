@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { createCatalogServerClient } from "@/lib/supabase/server-public";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getSessionUser } from "@/lib/supabase/server";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import DashboardClient from "./DashboardClient";
 import { resolveCourseTutorUser } from "@/lib/supabase/course-tutor";
@@ -81,24 +81,22 @@ export default async function DashboardPage({
 }) {
   const { locale } = await params;
   const supabase = await createClient();
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser();
+  const authUser = await getSessionUser(supabase);
 
   if (!authUser) {
     redirect(`/${locale}/login`);
   }
 
-  const { data: userRow } = await supabase
-    .from("users")
-    .select("username, is_tutor, profile_picture")
-    .eq("id", authUser.id)
-    .single();
-
   const catalog = createCatalogServerClient();
 
-  const [completedRes, pendingRes, upcomingRes, recommendedRes, profileRes] =
+  const [{ data: userRow }, completedRes, pendingRes, upcomingRes, recommendedRes, profileRes] =
     await Promise.all([
+      supabase
+        .from("users")
+        .select("username, is_tutor, profile_picture")
+        .eq("id", authUser.id)
+        .single(),
+
       supabase
         .from("lessons")
         .select("id, scheduled_date_time, duration_minutes, tutor_id")

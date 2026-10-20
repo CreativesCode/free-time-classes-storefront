@@ -43,3 +43,19 @@ export async function createClient() {
     }
   );
 }
+
+export type SessionUser = { id: string; email: string | null };
+
+/**
+ * Signed-in user from the verified JWT claims. The project signs tokens with
+ * an asymmetric key, so getClaims() checks them locally (cached JWKS) instead
+ * of the Auth round trip getUser() makes on every page (G-sess-2).
+ */
+export async function getSessionUser(
+  supabase: Awaited<ReturnType<typeof createClient>>
+): Promise<SessionUser | null> {
+  const { data, error } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  if (error || !claims?.sub) return null;
+  return { id: claims.sub, email: typeof claims.email === "string" ? claims.email : null };
+}

@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getSessionUser } from "@/lib/supabase/server";
 
 import RegisterClient from "./RegisterClient";
 
@@ -30,9 +30,7 @@ export default async function RegisterPage({
 }) {
   const { locale } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser(supabase);
 
   if (user) {
     const { data: profile } = await supabase

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getSessionUser } from "@/lib/supabase/server";
 
 import MessagesClient from "./MessagesClient";
 
@@ -30,9 +30,7 @@ export default async function MessagesPage({
 }) {
   const { locale } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser(supabase);
 
   if (!user) {
     redirect(`/${locale}/login`);

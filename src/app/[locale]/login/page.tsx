@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getSessionUser } from "@/lib/supabase/server";
 
 import LoginClient from "./LoginClient";
 
@@ -31,9 +31,7 @@ export default async function LoginPage({
 }) {
   const { locale } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser(supabase);
 
   if (user) {
     const { data: profile } = await supabase

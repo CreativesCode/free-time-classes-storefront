@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getSessionUser } from "@/lib/supabase/server";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import { fetchTutorReviewStatsMap } from "@/lib/supabase/tutor-review-stats";
 import { fetchStudentNames } from "@/lib/supabase/student-names";
@@ -64,30 +64,27 @@ export default async function TutorDashboardPage({
 }) {
   const { locale } = await params;
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser(supabase);
 
   if (!user) {
     redirect(`/${locale}/login`);
-  }
-
-  const { data: userProfile } = await supabase
-    .from("users")
-    .select("is_tutor")
-    .eq("id", user.id)
-    .single();
-
-  if (!userProfile?.is_tutor) {
-    redirect(`/${locale}/dashboard`);
   }
 
   const startOfMonth = startOfMonthAsLessonTimestamp();
   const todayStartTs = startOfTodayAsLessonTimestamp();
   const todayEndTs = endOfTodayAsLessonTimestamp();
 
-  const [pendingRes, lessonsStatsRes, tutorProfileRes, todayLessonsRes, reviewStatsMap] =
+  // The role check runs with the data queries (RLS already limits them to own rows).
+  const [
+    { data: userProfile },
+    pendingRes,
+    lessonsStatsRes,
+    tutorProfileRes,
+    todayLessonsRes,
+    reviewStatsMap,
+  ] =
     await Promise.all([
+      supabase.from("users").select("is_tutor").eq("id", user.id).single(),
       supabase
         .from("bookings")
         .select("*")
@@ -113,6 +110,10 @@ export default async function TutorDashboardPage({
         .order("scheduled_date_time", { ascending: true }),
       fetchTutorReviewStatsMap(supabase, [user.id]),
     ]);
+
+  if (!userProfile?.is_tutor) {
+    redirect(`/${locale}/dashboard`);
+  }
 
   const expiryCutoff = nowPlusMinutesAsLessonTimestamp(CUSTOM_REQUEST_EXPIRY_MINUTES);
   const allPending = (pendingRes.data ?? []) as Booking[];

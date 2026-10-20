@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getSessionUser } from "@/lib/supabase/server";
 import type { StudentProfile } from "@/types/student";
 
 import StudentProfilePageClient, {
@@ -43,28 +43,44 @@ export default async function StudentProfilePage({
 }) {
   const { locale } = await params;
   const supabase = await createClient();
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser();
+  const authUser = await getSessionUser(supabase);
 
   if (!authUser) {
     redirect(`/${locale}/login`);
   }
 
-  // Own private columns are only exposed through get_my_profile().
-  const { data: userRow, error: userRowError } = await supabase
-    .rpc("get_my_profile")
-    .maybeSingle<{
-      id: string;
-      username: string;
-      email: string;
-      phone: string | null;
-      country: string | null;
-      profile_picture: string | null;
-      is_student: boolean;
-      created_at: string;
-      updated_at: string;
-    }>();
+  // The profile and the page data are fetched in parallel (G-sess-2).
+  const [
+    { data: userRow, error: userRowError },
+    { data: profileRow, error: profileError },
+    { data: completedLessons },
+  ] =
+    await Promise.all([
+      // Own private columns are only exposed through get_my_profile().
+      supabase
+        .rpc("get_my_profile")
+        .maybeSingle<{
+          id: string;
+          username: string;
+          email: string;
+          phone: string | null;
+          country: string | null;
+          profile_picture: string | null;
+          is_student: boolean;
+          created_at: string;
+          updated_at: string;
+        }>(),
+      supabase
+        .from("student_profiles")
+        .select("*")
+        .eq("id", authUser.id)
+        .maybeSingle(),
+      supabase
+        .from("lessons")
+        .select("id, duration_minutes, tutor_id")
+        .eq("student_id", authUser.id)
+        .eq("status", "completed"),
+    ]);
 
   if (userRowError || !userRow) {
     redirect(`/${locale}/login`);
@@ -85,19 +101,6 @@ export default async function StudentProfilePage({
     updated_at: userRow.updated_at,
   };
 
-  const [{ data: profileRow, error: profileError }, { data: completedLessons }] =
-    await Promise.all([
-      supabase
-        .from("student_profiles")
-        .select("*")
-        .eq("id", authUser.id)
-        .maybeSingle(),
-      supabase
-        .from("lessons")
-        .select("id, duration_minutes, tutor_id")
-        .eq("student_id", authUser.id)
-        .eq("status", "completed"),
-    ]);
 
   if (profileError) {
     console.error("student_profiles fetch:", profileError);

@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import { resolveCourseTutorUser } from "@/lib/supabase/course-tutor";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getSessionUser } from "@/lib/supabase/server";
 import type { Course, CourseWithRelations } from "@/types/course";
 
 import CoursesCreateClient from "./CoursesCreateClient";
@@ -32,9 +32,7 @@ export default async function TutorCoursesCreatePage({
 }) {
   const { locale } = await params;
   const supabase = await createClient();
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser();
+  const authUser = await getSessionUser(supabase);
 
   if (!authUser) {
     redirect(`/${locale}/login`);
