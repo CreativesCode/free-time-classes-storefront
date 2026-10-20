@@ -100,7 +100,6 @@ export default function CourseDetailClient({
   coverUrl,
   createdAtLabel,
   subjectName,
-  subjectId,
   tutorId,
   tutor,
   reviews,
@@ -279,9 +278,9 @@ export default function CourseDetailClient({
           {/* Booking */}
           <BookingPicker
             locale={locale}
+            courseId={Number(courseId)}
             tutorId={tutorId}
             tutorName={tutor?.username ?? null}
-            subjectId={subjectId ?? null}
             coursePath={`/${locale}/courses/${courseId}`}
             onSelectionChange={setHasBookingSelection}
           />

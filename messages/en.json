@@ -243,6 +243,13 @@
       "loadError": "Could not load your requests."
     },
     "availabilities": {
+      "slotTaken": "Someone just booked that time. Pick another one.",
+      "youAreBusy": "You already have a class at that time.",
+      "contactTutorInstead": "Message the tutor or request another time",
+      "previousWeek": "Previous week",
+      "nextWeek": "Next week",
+      "noTimesThisWeek": "No open times on this day. Try another week.",
+      "madridTimeNote": "Times shown in Madrid (Spain) time.",
       "tab": "Available Classes",
       "title": "Find Available Classes",
       "searchPlaceholder": "Search by subject or tutor...",
@@ -1259,6 +1266,8 @@
     "priceFromHourHint": "Cancel up to {hours}h before at no cost."
   },
   "requestCustomClass": {
+    "courseLabel": "Course",
+    "errorCourseRequired": "Choose a course.",
     "ctaOpen": "Request a class outside availability",
     "ctaLoginToRequest": "Sign in to request",
     "dialogTitle": "Request a class outside availability",

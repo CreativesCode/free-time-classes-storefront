@@ -54,6 +54,7 @@ interface Booking {
   requested_scheduled_date_time?: string | null;
   requested_duration_minutes?: number | null;
   requested_subject?: { name: string } | null;
+  course?: { title: string } | null;
   tutor?: { id: string; user?: PersonUser | null } | null;
   student?: { id: string; user?: PersonUser | null } | null;
   lesson?: {
@@ -78,7 +79,7 @@ function bookingStart(b: Booking): string | null {
 }
 
 function bookingSubjectName(b: Booking): string | null {
-  return b.lesson?.subject?.name ?? b.requested_subject?.name ?? null;
+  return b.course?.title ?? b.lesson?.subject?.name ?? b.requested_subject?.name ?? null;
 }
 
 function bookingDuration(b: Booking): number | null {
@@ -157,6 +158,7 @@ export default function BookingsClient({ locale }: { locale: string }) {
               subject:subjects(name)
             ),
             requested_subject:subjects!bookings_requested_subject_id_fkey(name),
+            course:courses!bookings_course_id_fkey(title),
             tutor:tutor_profiles!bookings_tutor_id_fkey(
               id,
               user:users!tutor_profiles_id_fkey(id, username, profile_picture)
@@ -178,7 +180,8 @@ export default function BookingsClient({ locale }: { locale: string }) {
               id, scheduled_date_time, duration_minutes, price, status, meet_link,
               subject:subjects(name)
             ),
-            requested_subject:subjects!bookings_requested_subject_id_fkey(name)
+            requested_subject:subjects!bookings_requested_subject_id_fkey(name),
+            course:courses!bookings_course_id_fkey(title)
           `
           )
           .eq("tutor_id", user.id)

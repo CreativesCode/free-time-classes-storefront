@@ -2,12 +2,12 @@
 
 import { useAuth } from "@/context/UserContext";
 import { useTranslations } from "@/i18n/translations";
-import { isLessonInPast } from "@/lib/datetime/lessonTime";
 import { cn } from "@/lib/utils";
-import type { LessonWithRelations } from "@/types/lesson";
 import {
   ArrowRight,
   Calendar,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Loader2,
   LogIn,
@@ -20,55 +20,45 @@ import { toast } from "sonner";
 
 interface Props {
   locale: string;
+  courseId: number;
   tutorId: string;
-  /** Used as fallback "view tutor" / informational header text */
+  /** Used as informational header text */
   tutorName?: string | null;
-  /** Pre-filter slots by subject when present and > 0 */
-  subjectId?: number | null;
-  /** Path to redirect back to after login. e.g. /es/courses/uuid */
+  /** Path to redirect back to after login. e.g. /es/courses/12 */
   coursePath?: string;
-  /** Called whenever the picker's slot selection changes — useful so the
-   *  parent page can hide its own sticky CTA while the picker shows its own. */
+  /** Called whenever the picker's selection changes — useful so the parent
+   *  page can hide its own sticky CTA while the picker shows its own. */
   onSelectionChange?: (hasSelection: boolean) => void;
 }
 
-const DAYS_LOOKAHEAD = 14;
+type OpenTimesResponse = {
+  course?: { id: number; durationMinutes: number; pricePerSession: number };
+  times?: string[];
+  error?: string;
+};
 
-function localDayKey(d: Date): string {
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
-function pad(n: number): string {
-  return n < 10 ? `0${n}` : String(n);
+const DAYS_PER_PAGE = 7;
+
+/** Day number of a `YYYY-MM-DD` key (calendar arithmetic, no timezone). */
+function dayNumber(key: string): number {
+  const [y, m, d] = key.split("-").map(Number);
+  return Math.floor(Date.UTC(y, m - 1, d) / 86_400_000);
 }
 
-async function fetchAvailableSlots(
-  tutorId: string,
-  subjectId?: number | null
-): Promise<LessonWithRelations[]> {
-  const params = new URLSearchParams();
-  params.set("tutorId", tutorId);
-  if (subjectId && subjectId > 0) {
-    params.set("subjectId", String(subjectId));
-  }
-  const res = await fetch(`/api/lessons/available?${params}`, {
-    method: "GET",
-    credentials: "include",
-    cache: "no-store",
-  });
-  const json = (await res.json().catch(() => null)) as
-    | { items?: LessonWithRelations[]; error?: string }
-    | null;
-  if (!res.ok) {
-    throw new Error(json?.error || "Failed to load available slots.");
-  }
-  return json?.items ?? [];
+function dayKey(day: number): string {
+  return new Date(day * 86_400_000).toISOString().slice(0, 10);
+}
+
+/** Formats a wall-clock day key without letting the browser shift it. */
+function formatDay(key: string, locale: string, options: Intl.DateTimeFormatOptions): string {
+  return new Date(`${key}T12:00:00Z`).toLocaleDateString(locale, { ...options, timeZone: "UTC" });
 }
 
 export function BookingPicker({
   locale,
+  courseId,
   tutorId,
   tutorName,
-  subjectId,
   coursePath,
   onSelectionChange,
 }: Props) {
@@ -76,180 +66,121 @@ export function BookingPicker({
   const t = useTranslations("studentProfile.availabilities");
   const tCourse = useTranslations("courseDetail");
 
-  const [slots, setSlots] = useState<LessonWithRelations[]>([]);
+  const [times, setTimes] = useState<string[]>([]);
+  const [course, setCourse] = useState<OpenTimesResponse["course"] | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
   const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null);
-  const [selectedSlotId, setSelectedSlotId] = useState<number | null>(null);
+  const [selectedStart, setSelectedStart] = useState<string | null>(null);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingDone, setBookingDone] = useState(false);
 
+  // Open times are public (no login needed); booking requires a student.
   const reload = useCallback(async () => {
     try {
       setLoading(true);
       setLoadError(null);
-      const items = await fetchAvailableSlots(tutorId, subjectId);
-      const future = items.filter(
-        (l) => l.scheduled_date_time && !isLessonInPast(l.scheduled_date_time)
-      );
-      setSlots(future);
-    } catch (err) {
-      setLoadError(
-        err instanceof Error ? err.message : t("loadError")
-      );
+      const res = await fetch(`/api/availability/open-times?courseId=${courseId}`, {
+        cache: "no-store",
+      });
+      const json = (await res.json().catch(() => null)) as OpenTimesResponse | null;
+      if (!res.ok) throw new Error(json?.error || "load_failed");
+      setTimes(json?.times ?? []);
+      setCourse(json?.course ?? null);
+    } catch {
+      setLoadError(t("loadError"));
     } finally {
       setLoading(false);
     }
-  }, [tutorId, subjectId, t]);
+  }, [courseId, t]);
 
   useEffect(() => {
-    if (!user || !user.is_student) return;
     void reload();
-  }, [user, reload]);
+  }, [reload]);
 
-  // Build the next 14 days, starting today, in browser-local time (matches
-  // the way scheduled_date_time strings are interpreted everywhere else).
-  const days = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return Array.from({ length: DAYS_LOOKAHEAD }, (_, i) => {
-      const d = new Date(today);
-      d.setDate(today.getDate() + i);
-      return d;
-    });
-  }, []);
-
-  const slotsByDay = useMemo(() => {
-    const map = new Map<string, LessonWithRelations[]>();
-    for (const slot of slots) {
-      if (!slot.scheduled_date_time) continue;
-      const d = new Date(slot.scheduled_date_time);
-      const key = localDayKey(d);
+  const timesByDay = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const ts of times) {
+      const key = ts.slice(0, 10);
       const list = map.get(key);
-      if (list) list.push(slot);
-      else map.set(key, [slot]);
-    }
-    for (const list of map.values()) {
-      list.sort((a, b) => {
-        const ta = new Date(a.scheduled_date_time ?? 0).getTime();
-        const tb = new Date(b.scheduled_date_time ?? 0).getTime();
-        return ta - tb;
-      });
+      if (list) list.push(ts);
+      else map.set(key, [ts]);
     }
     return map;
-  }, [slots]);
+  }, [times]);
 
-  // Auto-select first day with slots
+  // Days from today (first open day's week) to the last open day.
+  const days = useMemo(() => {
+    if (times.length === 0) return [] as string[];
+    const first = dayNumber(times[0].slice(0, 10));
+    const last = dayNumber(times[times.length - 1].slice(0, 10));
+    return Array.from({ length: last - first + 1 }, (_, i) => dayKey(first + i));
+  }, [times]);
+
+  const pageCount = Math.max(1, Math.ceil(days.length / DAYS_PER_PAGE));
+  const pageDays = useMemo(
+    () => days.slice(page * DAYS_PER_PAGE, (page + 1) * DAYS_PER_PAGE),
+    [days, page]
+  );
+
+  // Auto-select the first day with times on the current page.
   useEffect(() => {
-    if (selectedDayKey != null) return;
-    for (const d of days) {
-      const key = localDayKey(d);
-      if ((slotsByDay.get(key)?.length ?? 0) > 0) {
-        setSelectedDayKey(key);
-        return;
-      }
-    }
-  }, [days, slotsByDay, selectedDayKey]);
+    if (selectedDayKey && pageDays.includes(selectedDayKey)) return;
+    const firstOpen = pageDays.find((key) => (timesByDay.get(key)?.length ?? 0) > 0);
+    setSelectedDayKey(firstOpen ?? null);
+  }, [pageDays, timesByDay, selectedDayKey]);
 
-  // Notify parent of selection changes
   useEffect(() => {
-    onSelectionChange?.(selectedSlotId != null);
-  }, [selectedSlotId, onSelectionChange]);
+    onSelectionChange?.(selectedStart != null);
+  }, [selectedStart, onSelectionChange]);
 
-  const slotsForSelectedDay = selectedDayKey
-    ? slotsByDay.get(selectedDayKey) ?? []
-    : [];
+  const timesForSelectedDay = selectedDayKey ? timesByDay.get(selectedDayKey) ?? [] : [];
 
-  const selectedSlot =
-    selectedSlotId != null
-      ? slots.find((s) => s.id === selectedSlotId) ?? null
-      : null;
+  const loginHref = coursePath
+    ? `/${locale}/login?next=${encodeURIComponent(`${coursePath}#course-booking`)}`
+    : `/${locale}/login`;
 
   const handleBook = useCallback(async () => {
-    if (!selectedSlot || !user) return;
+    if (!selectedStart || !user) return;
     try {
       setBookingLoading(true);
       const res = await fetch("/api/bookings/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lessonId: selectedSlot.id }),
+        body: JSON.stringify({ courseId, start: selectedStart }),
       });
-      const json = (await res.json().catch(() => null)) as {
-        error?: string;
-      } | null;
+      const json = (await res.json().catch(() => null)) as { code?: string } | null;
       if (!res.ok) {
-        throw new Error(json?.error || t("bookingRequestedError"));
+        const code = json?.code ?? "";
+        const key =
+          code === "slot_unavailable" || code === "tutor_busy"
+            ? "slotTaken"
+            : code === "student_busy"
+              ? "youAreBusy"
+              : "bookingRequestedError";
+        toast.error(t(key));
+        if (res.status === 409) {
+          setSelectedStart(null);
+          void reload();
+        }
+        return;
       }
       toast.success(t("bookingRequested"));
       setBookingDone(true);
-      setSelectedSlotId(null);
+      setSelectedStart(null);
       void reload();
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : t("bookingRequestedError")
-      );
+    } catch {
+      toast.error(t("bookingRequestedError"));
     } finally {
       setBookingLoading(false);
     }
-  }, [selectedSlot, user, t, reload]);
+  }, [selectedStart, user, courseId, t, reload]);
 
-  // ── Auth gates ────────────────────────────────────────────────────────
-  if (authLoading) {
-    return (
-      <section
-        id="course-booking"
-        className="scroll-mt-28 rounded-ft-lg border border-ft-line-soft bg-ft-paper p-10 text-center"
-      >
-        <Loader2 className="mx-auto h-8 w-8 animate-spin text-ft-ink-3" />
-      </section>
-    );
-  }
+  const price = course ? Number(course.pricePerSession).toFixed(0) : null;
+  const duration = course?.durationMinutes ?? null;
+  const canBook = !!user?.is_student;
 
-  if (!user) {
-    const next = coursePath
-      ? `/${locale}/login?next=${encodeURIComponent(`${coursePath}#course-booking`)}`
-      : `/${locale}/login`;
-    return (
-      <section
-        id="course-booking"
-        className="scroll-mt-28 rounded-ft-lg border border-ft-line-soft bg-ft-paper p-6"
-      >
-        <div className="mb-3 inline-flex items-center gap-2 text-[15px] font-semibold tracking-tight text-ft-ink">
-          <Calendar width={16} height={16} className="text-ft-accent-deep" />
-          {tCourse("bookingSectionTitle")}
-        </div>
-        <p className="m-0 mb-4 text-[14px] leading-relaxed text-ft-ink-2">
-          {tCourse("bookingLoginPrompt")}
-        </p>
-        <Link
-          href={next}
-          className="inline-flex items-center gap-2 rounded-ft-md bg-ft-ink px-5 py-3 text-[13px] font-semibold text-ft-paper transition-colors hover:bg-[#2a241b]"
-        >
-          <LogIn width={14} height={14} />
-          {tCourse("bookingLoginCta")}
-        </Link>
-      </section>
-    );
-  }
-
-  if (!user.is_student) {
-    return (
-      <section
-        id="course-booking"
-        className="scroll-mt-28 rounded-ft-lg border border-ft-line-soft bg-ft-paper p-6"
-      >
-        <div className="mb-3 inline-flex items-center gap-2 text-[15px] font-semibold tracking-tight text-ft-ink">
-          <Calendar width={16} height={16} className="text-ft-accent-deep" />
-          {tCourse("bookingSectionTitle")}
-        </div>
-        <p className="m-0 text-[14px] leading-relaxed text-ft-ink-2">
-          {tCourse("bookingStudentsOnly")}
-        </p>
-      </section>
-    );
-  }
-
-  // ── Main UI ───────────────────────────────────────────────────────────
   return (
     <>
       <section id="course-booking" className="scroll-mt-28 space-y-5">
@@ -259,9 +190,7 @@ export function BookingPicker({
             {tCourse("bookingSectionTitle")}
           </div>
           {tutorName && (
-            <span className="hidden text-[12px] text-ft-ink-3 md:inline">
-              {tutorName}
-            </span>
+            <span className="hidden text-[12px] text-ft-ink-3 md:inline">{tutorName}</span>
           )}
         </div>
 
@@ -275,82 +204,94 @@ export function BookingPicker({
           <div className="flex items-center justify-center py-10">
             <Loader2 className="h-7 w-7 animate-spin text-ft-ink-3" />
           </div>
+        ) : times.length === 0 ? (
+          <div className="rounded-ft-lg border border-dashed border-ft-line bg-ft-surface-1 p-8 text-center">
+            <Sparkles width={20} height={20} className="mx-auto mb-2 text-ft-ink-3" />
+            <p className="m-0 text-sm text-ft-ink-2">{t("noAvailabilities")}</p>
+            <Link
+              href={`/${locale}/tutors/${tutorId}`}
+              className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-semibold text-ft-accent-deep hover:underline"
+            >
+              {t("contactTutorInstead")}
+              <ArrowRight width={12} height={12} />
+            </Link>
+          </div>
         ) : (
           <>
-            {/* Date picker horizontal */}
-            <div className="hide-scroll -mx-1 flex gap-2 overflow-x-auto py-1 pl-1 pr-1">
-              {days.map((d) => {
-                const key = localDayKey(d);
-                const count = slotsByDay.get(key)?.length ?? 0;
-                const enabled = count > 0;
-                const active = selectedDayKey === key;
-                const dayLabel = d.toLocaleDateString(locale, {
-                  weekday: "short",
-                });
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    disabled={!enabled}
-                    onClick={() => {
-                      setSelectedDayKey(key);
-                      setSelectedSlotId(null);
-                    }}
-                    className={cn(
-                      "relative flex w-[60px] flex-shrink-0 flex-col items-center gap-1 rounded-ft-md border px-2 py-3 transition-colors",
-                      active
-                        ? "border-ft-ink bg-ft-ink text-ft-paper"
-                        : enabled
-                          ? "border-ft-line bg-ft-paper text-ft-ink-2 hover:bg-ft-paper-deep"
-                          : "border-ft-line-soft bg-ft-surface-1 text-ft-ink-3 opacity-50"
-                    )}
-                  >
-                    <span
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={page === 0}
+                aria-label={t("previousWeek")}
+                className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-full border border-ft-line text-ft-ink-2 disabled:opacity-40"
+              >
+                <ChevronLeft width={16} height={16} />
+              </button>
+              <div className="hide-scroll -mx-1 flex flex-1 gap-2 overflow-x-auto py-1 pl-1 pr-1">
+                {pageDays.map((key) => {
+                  const enabled = (timesByDay.get(key)?.length ?? 0) > 0;
+                  const active = selectedDayKey === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      disabled={!enabled}
+                      onClick={() => {
+                        setSelectedDayKey(key);
+                        setSelectedStart(null);
+                      }}
                       className={cn(
-                        "text-[10px] font-semibold uppercase tracking-[0.06em]",
-                        active ? "text-ft-paper/80" : "text-ft-ink-3"
+                        "relative flex w-[56px] flex-shrink-0 flex-col items-center gap-1 rounded-ft-md border px-2 py-3 transition-colors",
+                        active
+                          ? "border-ft-ink bg-ft-ink text-ft-paper"
+                          : enabled
+                            ? "border-ft-line bg-ft-paper text-ft-ink-2 hover:bg-ft-paper-deep"
+                            : "border-ft-line-soft bg-ft-surface-1 text-ft-ink-3 opacity-50"
                       )}
                     >
-                      {dayLabel}
-                    </span>
-                    <span className="text-[18px] font-semibold leading-none tracking-tight">
-                      {d.getDate()}
-                    </span>
-                    {enabled && !active && (
-                      <span className="absolute bottom-1 h-1 w-1 rounded-full bg-ft-accent" />
-                    )}
-                  </button>
-                );
-              })}
+                      <span
+                        className={cn(
+                          "text-[10px] font-semibold uppercase tracking-[0.06em]",
+                          active ? "text-ft-paper/80" : "text-ft-ink-3"
+                        )}
+                      >
+                        {formatDay(key, locale, { weekday: "short" })}
+                      </span>
+                      <span className="text-[18px] font-semibold leading-none tracking-tight">
+                        {Number(key.slice(8, 10))}
+                      </span>
+                      {enabled && !active && (
+                        <span className="absolute bottom-1 h-1 w-1 rounded-full bg-ft-accent" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+                disabled={page >= pageCount - 1}
+                aria-label={t("nextWeek")}
+                className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-full border border-ft-line text-ft-ink-2 disabled:opacity-40"
+              >
+                <ChevronRight width={16} height={16} />
+              </button>
             </div>
 
-            {/* Time slots grid */}
-            {selectedDayKey == null || slotsForSelectedDay.length === 0 ? (
-              <div className="rounded-ft-lg border border-dashed border-ft-line bg-ft-surface-1 p-8 text-center">
-                <Sparkles
-                  width={20}
-                  height={20}
-                  className="mx-auto mb-2 text-ft-ink-3"
-                />
-                <p className="m-0 text-sm text-ft-ink-2">
-                  {t("noAvailabilities")}
-                </p>
+            {timesForSelectedDay.length === 0 ? (
+              <div className="rounded-ft-lg border border-dashed border-ft-line bg-ft-surface-1 p-6 text-center text-sm text-ft-ink-2">
+                {t("noTimesThisWeek")}
               </div>
             ) : (
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                {slotsForSelectedDay.map((slot) => {
-                  const date = new Date(slot.scheduled_date_time ?? 0);
-                  const time = date.toLocaleTimeString(locale, {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    hour12: false,
-                  });
-                  const isSelected = selectedSlotId === slot.id;
+                {timesForSelectedDay.map((ts) => {
+                  const isSelected = selectedStart === ts;
                   return (
                     <button
-                      key={slot.id}
+                      key={ts}
                       type="button"
-                      onClick={() => setSelectedSlotId(slot.id)}
+                      onClick={() => setSelectedStart(ts)}
                       className={cn(
                         "flex flex-col items-center gap-0.5 rounded-ft-md border px-2 py-3 transition-colors",
                         isSelected
@@ -359,24 +300,27 @@ export function BookingPicker({
                       )}
                     >
                       <span className="text-[15px] font-semibold tracking-tight">
-                        {time}
+                        {ts.slice(11, 16)}
                       </span>
-                      <span
-                        className={cn(
-                          "text-[10px]",
-                          isSelected ? "text-ft-paper/80" : "text-ft-ink-3"
-                        )}
-                      >
-                        {slot.duration_minutes} {t("minutes")}
-                      </span>
+                      {duration && (
+                        <span
+                          className={cn(
+                            "text-[10px]",
+                            isSelected ? "text-ft-paper/80" : "text-ft-ink-3"
+                          )}
+                        >
+                          {duration} {t("minutes")}
+                        </span>
+                      )}
                     </button>
                   );
                 })}
               </div>
             )}
 
-            {/* Selected slot detail */}
-            {selectedSlot && (
+            <p className="m-0 text-[11px] text-ft-ink-3">{t("madridTimeNote")}</p>
+
+            {selectedStart && (
               <div className="rounded-ft-lg border border-ft-line bg-ft-paper-deep p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
@@ -384,31 +328,18 @@ export function BookingPicker({
                       {t("dateTime")}
                     </div>
                     <div className="mt-0.5 text-[14px] font-semibold tracking-tight text-ft-ink">
-                      {new Date(
-                        selectedSlot.scheduled_date_time ?? 0
-                      ).toLocaleDateString(locale, {
+                      {formatDay(selectedStart.slice(0, 10), locale, {
                         weekday: "long",
                         day: "numeric",
                         month: "long",
                       })}
                       {" · "}
-                      {new Date(
-                        selectedSlot.scheduled_date_time ?? 0
-                      ).toLocaleTimeString(locale, {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: false,
-                      })}
+                      {selectedStart.slice(11, 16)}
                     </div>
-                    {selectedSlot.subject?.name && (
-                      <div className="mt-0.5 text-[12px] text-ft-ink-3">
-                        {selectedSlot.subject.name}
-                      </div>
-                    )}
                   </div>
                   <button
                     type="button"
-                    onClick={() => setSelectedSlotId(null)}
+                    onClick={() => setSelectedStart(null)}
                     aria-label={t("cancel")}
                     className="grid h-8 w-8 place-items-center rounded-full text-ft-ink-3 hover:bg-ft-paper hover:text-ft-ink"
                   >
@@ -416,18 +347,22 @@ export function BookingPicker({
                   </button>
                 </div>
                 <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-ft-ink-2">
-                  <span className="inline-flex items-center gap-1">
-                    <Clock width={12} height={12} />
-                    {selectedSlot.duration_minutes} {t("minutes")}
-                  </span>
-                  <span className="inline-flex items-center gap-1 font-semibold text-ft-ink">
-                    {Number(selectedSlot.price).toFixed(0)}€
-                  </span>
+                  {duration && (
+                    <span className="inline-flex items-center gap-1">
+                      <Clock width={12} height={12} />
+                      {duration} {t("minutes")}
+                    </span>
+                  )}
+                  {price && (
+                    <span className="inline-flex items-center gap-1 font-semibold text-ft-ink">
+                      {price}€
+                    </span>
+                  )}
                 </div>
               </div>
             )}
 
-            {bookingDone && !selectedSlot && (
+            {bookingDone && !selectedStart && (
               <div className="rounded-ft-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
                 {t("bookingRequested")}
               </div>
@@ -436,8 +371,8 @@ export function BookingPicker({
         )}
       </section>
 
-      {/* Sticky confirm bar — appears only when a slot is selected */}
-      {selectedSlot && (
+      {/* Sticky confirm bar — appears only when a time is selected */}
+      {selectedStart && (
         <div
           className="fixed inset-x-0 bottom-0 z-40 border-t border-ft-line-soft bg-[rgba(252,250,246,0.96)] backdrop-blur-xl"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
@@ -445,41 +380,50 @@ export function BookingPicker({
           <div className="mx-auto flex max-w-screen-2xl items-center gap-3 px-5 py-3.5 md:px-9">
             <div className="min-w-0 flex-1">
               <div className="truncate text-[12px] text-ft-ink-3">
-                {new Date(
-                  selectedSlot.scheduled_date_time ?? 0
-                ).toLocaleDateString(locale, {
+                {formatDay(selectedStart.slice(0, 10), locale, {
                   weekday: "short",
                   day: "numeric",
                   month: "short",
                 })}
                 {" · "}
-                {new Date(
-                  selectedSlot.scheduled_date_time ?? 0
-                ).toLocaleTimeString(locale, {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                })}
-                {" · "}
-                {selectedSlot.duration_minutes} {t("minutes")}
+                {selectedStart.slice(11, 16)}
+                {duration ? ` · ${duration} ${t("minutes")}` : ""}
               </div>
-              <div className="text-[18px] font-semibold leading-tight tracking-tight text-ft-ink">
-                {Number(selectedSlot.price).toFixed(0)}€
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={handleBook}
-              disabled={bookingLoading}
-              className="inline-flex h-12 items-center gap-2 rounded-ft-md bg-ft-ink px-5 text-sm font-semibold text-ft-paper transition-colors hover:bg-[#2a241b] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {bookingLoading ? (
-                <Loader2 width={14} height={14} className="animate-spin" />
-              ) : (
-                <ArrowRight width={14} height={14} />
+              {price && (
+                <div className="text-[18px] font-semibold leading-tight tracking-tight text-ft-ink">
+                  {price}€
+                </div>
               )}
-              {bookingLoading ? t("booking") : t("book")}
-            </button>
+            </div>
+            {authLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin text-ft-ink-3" />
+            ) : !user ? (
+              <Link
+                href={loginHref}
+                className="inline-flex h-12 items-center gap-2 rounded-ft-md bg-ft-ink px-5 text-sm font-semibold text-ft-paper transition-colors hover:bg-[#2a241b]"
+              >
+                <LogIn width={14} height={14} />
+                {tCourse("bookingLoginCta")}
+              </Link>
+            ) : !canBook ? (
+              <span className="max-w-[45%] text-right text-[12px] text-ft-ink-3">
+                {tCourse("bookingStudentsOnly")}
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={handleBook}
+                disabled={bookingLoading}
+                className="inline-flex h-12 items-center gap-2 rounded-ft-md bg-ft-ink px-5 text-sm font-semibold text-ft-paper transition-colors hover:bg-[#2a241b] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {bookingLoading ? (
+                  <Loader2 width={14} height={14} className="animate-spin" />
+                ) : (
+                  <ArrowRight width={14} height={14} />
+                )}
+                {bookingLoading ? t("booking") : t("book")}
+              </button>
+            )}
           </div>
         </div>
       )}

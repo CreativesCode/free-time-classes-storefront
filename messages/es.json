@@ -243,6 +243,13 @@
       "loadError": "No se pudieron cargar tus solicitudes."
     },
     "availabilities": {
+      "slotTaken": "Alguien acaba de reservar esa hora. Elige otra.",
+      "youAreBusy": "Ya tienes una clase a esa hora.",
+      "contactTutorInstead": "Escribe al profesor o pídele otra hora",
+      "previousWeek": "Semana anterior",
+      "nextWeek": "Semana siguiente",
+      "noTimesThisWeek": "No hay horas libres este día. Prueba otra semana.",
+      "madridTimeNote": "Horas en hora de Madrid (España).",
       "tab": "Clases Disponibles",
       "title": "Buscar Clases Disponibles",
       "searchPlaceholder": "Buscar por materia o profesor...",
@@ -1259,6 +1266,8 @@
     "priceFromHourHint": "Cancela hasta {hours} h antes sin coste."
   },
   "requestCustomClass": {
+    "courseLabel": "Curso",
+    "errorCourseRequired": "Elige un curso.",
     "ctaOpen": "Pedir clase fuera de disponibilidad",
     "ctaLoginToRequest": "Inicia sesión para solicitar",
     "dialogTitle": "Solicitar clase fuera de disponibilidad",

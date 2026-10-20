@@ -405,7 +405,7 @@ export default function TutorProfileClient({
             <RequestCustomClassButton
               tutorId={tutorId}
               tutorName={displayName}
-              subjects={[...subjects]}
+              courses={courses}
               triggerClassName="h-12 w-full gap-2 rounded-ft-md bg-ft-ink px-4 text-sm font-semibold text-ft-paper hover:bg-[#2a241b]"
               hideTriggerIcon
             />
@@ -441,7 +441,7 @@ export default function TutorProfileClient({
               <RequestCustomClassButton
                 tutorId={tutorId}
                 tutorName={displayName}
-                subjects={[...subjects]}
+                courses={courses}
                 triggerClassName="h-12 w-full gap-2 rounded-ft-md bg-ft-ink px-4 text-[14px] font-semibold text-ft-paper hover:bg-[#2a241b]"
                 hideTriggerIcon
               />

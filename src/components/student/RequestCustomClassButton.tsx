@@ -32,15 +32,16 @@ import { useAuth } from "@/context/UserContext";
 import { useLocale, useTranslations } from "@/i18n/translations";
 import { MIN_LEAD_MINUTES } from "@/lib/bookings/leadTime";
 
-const ALLOWED_DURATIONS = [15, 30, 45, 60, 90, 120] as const;
 const NOTES_MAX_LENGTH = 500;
 
-type SubjectOption = { id: number; name: string };
+// PRP-001: a request for another time is always for one of the tutor's
+// courses; subject, duration and price come from that course (F023).
+type CourseOption = { id: number | string; title: string };
 
 type Props = {
   tutorId: string;
   tutorName: string;
-  subjects: SubjectOption[];
+  courses: ReadonlyArray<CourseOption>;
   /** Override the default trigger button styling (used by the FreeTime redesign). */
   triggerClassName?: string;
   /** Custom trigger label. Defaults to t("ctaOpen"). */
@@ -66,7 +67,7 @@ function defaultStartLocalValue(): string {
 export default function RequestCustomClassButton({
   tutorId,
   tutorName,
-  subjects,
+  courses,
   triggerClassName,
   triggerLabel,
   hideTriggerIcon = false,
@@ -78,33 +79,23 @@ export default function RequestCustomClassButton({
 
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [subjectId, setSubjectId] = useState<string>(
-    subjects[0] ? String(subjects[0].id) : ""
+  const [courseId, setCourseId] = useState<string>(
+    courses[0] ? String(courses[0].id) : ""
   );
   const [scheduledLocal, setScheduledLocal] = useState<string>(defaultStartLocalValue);
-  const [duration, setDuration] = useState<string>("30");
   const [notes, setNotes] = useState<string>("");
 
-  const subjectOptions = useMemo(
-    () => subjects.map((s) => ({ value: String(s.id), label: s.name })),
-    [subjects]
-  );
-
-  const durationOptions = useMemo(
-    () =>
-      ALLOWED_DURATIONS.map((d) => ({
-        value: String(d),
-        label: `${d} ${t("minutesShort")}`,
-      })),
-    [t]
+  const courseOptions = useMemo(
+    () => courses.map((c) => ({ value: String(c.id), label: c.title })),
+    [courses]
   );
 
   const isStudent = user?.is_student ?? false;
   const canRequest = !!user && isStudent;
 
   const handleSubmit = async () => {
-    if (!subjectId) {
-      toast.error(t("errorSubjectRequired"));
+    if (!courseId) {
+      toast.error(t("errorCourseRequired"));
       return;
     }
     if (!scheduledLocal) {
@@ -119,9 +110,8 @@ export default function RequestCustomClassButton({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           tutorId,
-          subjectId: Number(subjectId),
+          courseId: Number(courseId),
           scheduledDateTime: scheduledLocal,
-          durationMinutes: Number(duration),
           notes: notes.trim() || undefined,
         }),
       });
@@ -148,8 +138,8 @@ export default function RequestCustomClassButton({
     }
   };
 
-  if (subjects.length === 0) {
-    // Tutor doesn't list any subject — can't request anything sensibly.
+  if (courses.length === 0) {
+    // Tutor has no active course — there is nothing to request.
     return null;
   }
 
@@ -208,14 +198,14 @@ export default function RequestCustomClassButton({
 
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 pt-1 sm:px-6">
             <div className="space-y-2">
-              <Label htmlFor="rcc-subject" className={FT_LABEL}>{t("subjectLabel")}</Label>
+              <Label htmlFor="rcc-subject" className={FT_LABEL}>{t("courseLabel")}</Label>
               <SelectMenu
                 id="rcc-subject"
-                value={subjectId}
-                onValueChange={setSubjectId}
-                options={subjectOptions}
+                value={courseId}
+                onValueChange={setCourseId}
+                options={courseOptions}
                 disabled={submitting}
-                aria-label={t("subjectLabel")}
+                aria-label={t("courseLabel")}
                 triggerClassName={FT_SELECT_TRIGGER}
               />
             </div>
@@ -231,19 +221,6 @@ export default function RequestCustomClassButton({
                 className={FT_FIELD}
               />
               <p className="text-xs text-ft-ink-3">{t("whenHintMadrid")}</p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="rcc-duration" className={FT_LABEL}>{t("durationLabel")}</Label>
-              <SelectMenu
-                id="rcc-duration"
-                value={duration}
-                onValueChange={setDuration}
-                options={durationOptions}
-                disabled={submitting}
-                aria-label={t("durationLabel")}
-                triggerClassName={FT_SELECT_TRIGGER}
-              />
             </div>
 
             <div className="space-y-2">
