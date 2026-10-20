@@ -48,3 +48,10 @@ export async function downscaleImage(
   const baseName = file.name.replace(/\.[^.]+$/, "") || "image";
   return new File([blob], `${baseName}.${extension}`, { type: blob.type });
 }
+
+/** Image types the avatars and course_covers buckets accept (migration 038). */
+export const UPLOADABLE_IMAGE_ACCEPT = "image/jpeg,image/png,image/webp";
+
+export function isUploadableImage(file: File): boolean {
+  return /^image\/(jpeg|png|webp)$/.test(file.type);
+}

@@ -56,6 +56,7 @@ import {
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { requestCatalogRevalidation } from "@/lib/catalog/revalidate";
+import { UPLOADABLE_IMAGE_ACCEPT, isUploadableImage } from "@/lib/images/downscale";
 
 const MAX_COURSE_COVER_BYTES = 5 * 1024 * 1024;
 
@@ -274,7 +275,7 @@ export default function TutorCoursesManager({
 
   const onCreateCoverFileSelected = (file: File | null) => {
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
+    if (!isUploadableImage(file)) {
       setError(t("validationCoverNotImage"));
       return;
     }
@@ -292,7 +293,7 @@ export default function TutorCoursesManager({
 
   const onEditCoverFileSelected = (file: File | null) => {
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
+    if (!isUploadableImage(file)) {
       setError(t("validationCoverNotImage"));
       return;
     }
@@ -745,7 +746,7 @@ export default function TutorCoursesManager({
                   <Input
                     id="course-cover"
                     type="file"
-                    accept="image/*"
+                    accept={UPLOADABLE_IMAGE_ACCEPT}
                     disabled={isSaving}
                     className={cn(FT_FIELD, "cursor-pointer text-sm file:mr-3 file:text-ft-ink-2")}
                     onChange={(e) => {
@@ -992,7 +993,7 @@ export default function TutorCoursesManager({
                   <Input
                     id="edit-course-cover"
                     type="file"
-                    accept="image/*"
+                    accept={UPLOADABLE_IMAGE_ACCEPT}
                     disabled={isSaving}
                     className={cn(FT_FIELD, "cursor-pointer text-sm file:mr-3 file:text-ft-ink-2")}
                     onChange={(e) => {

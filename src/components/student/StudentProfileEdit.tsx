@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { StudentProfile } from "@/types/student";
+import { UPLOADABLE_IMAGE_ACCEPT, isUploadableImage } from "@/lib/images/downscale";
 
 type LanguageLevel = NonNullable<StudentProfile["language_level"]>;
 
@@ -180,7 +181,7 @@ export default function StudentProfileEdit({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
+    if (!isUploadableImage(file)) {
       toast.error(t("invalidImageType"));
       return;
     }
@@ -411,7 +412,7 @@ export default function StudentProfileEdit({
               id="avatar_file"
               name="avatar_file"
               type="file"
-              accept="image/*"
+              accept={UPLOADABLE_IMAGE_ACCEPT}
               onChange={handleAvatarChange}
               className={cn(FT_FIELD, "file:mr-3 file:text-ft-ink-2")}
             />
