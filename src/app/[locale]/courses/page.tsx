@@ -8,6 +8,7 @@ import {
 } from "@/lib/supabase/server-public";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { CATALOG_MAX_RESULTS, COURSE_COLUMNS } from "@/lib/supabase/queries/courses";
 import { unstable_cache } from "next/cache";
 import { Suspense } from "react";
 import CoursesPageClient from "./CoursesPageClient";
@@ -56,12 +57,15 @@ const getCoursesPageDataCached = unstable_cache(
     const supabase = createPublicServerClient();
     const catalog = createCatalogServerClient();
     const [{ data: subjectsData }, { data: coursesData }] = await Promise.all([
-      supabase.from("subjects").select("*").order("name", { ascending: true }),
+      supabase
+        .from("subjects")
+        .select("id, name, description, icon")
+        .order("name", { ascending: true }),
       catalog
         .from("courses")
         .select(
           `
-      *,
+      ${COURSE_COLUMNS},
       tutor_profile:tutor_profiles!courses_tutor_id_fkey (
         id,
         user:users!tutor_profiles_id_fkey (
@@ -79,10 +83,11 @@ const getCoursesPageDataCached = unstable_cache(
     `
         )
         .eq("is_active", true)
-        .order("created_at", { ascending: false }),
+        .order("created_at", { ascending: false })
+        .limit(CATALOG_MAX_RESULTS),
     ]);
 
-    const initialCourses = ((coursesData ?? []) as Array<
+    const initialCourses = ((coursesData ?? []) as unknown as Array<
       CourseWithRelations & {
         tutor_profile?: {
           user?: CourseWithRelations["tutor"] | null;

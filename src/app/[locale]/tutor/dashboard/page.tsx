@@ -87,7 +87,9 @@ export default async function TutorDashboardPage({
       supabase.from("users").select("is_tutor").eq("id", user.id).single(),
       supabase
         .from("bookings")
-        .select("*")
+        .select(
+          "id, student_id, tutor_id, lesson_id, course_id, requested_date, status, notes, created_at, updated_at, requested_subject_id, requested_scheduled_date_time, requested_duration_minutes"
+        )
         .eq("tutor_id", user.id)
         .eq("status", "pending")
         .order("created_at", { ascending: false }),

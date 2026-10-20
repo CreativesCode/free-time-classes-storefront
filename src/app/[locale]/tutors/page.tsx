@@ -70,7 +70,10 @@ const getTutorsPageDataCached = unstable_cache(
     const supabase = createCatalogServerClient();
     const [{ data: subjectsData }, { data: courseRows, error: coursesError }] =
       await Promise.all([
-        supabase.from("subjects").select("*").order("name", { ascending: true }),
+        supabase
+          .from("subjects")
+          .select("id, name, description, icon")
+          .order("name", { ascending: true }),
         supabase
           .from("courses")
           .select("tutor_id, price_per_session")
@@ -110,7 +113,7 @@ const getTutorsPageDataCached = unstable_cache(
           .from("tutor_profiles")
           .select(
             `
-        *,
+        id, bio, years_of_experience, hourly_rate, rating, total_reviews, created_at,
         user:users!tutor_profiles_id_fkey (
           id, username, profile_picture, country
         )
@@ -133,7 +136,7 @@ const getTutorsPageDataCached = unstable_cache(
     }
 
     type ProfileRow = TutorProfile & { years_of_experience?: number | null };
-    const profiles = (profilesData ?? []) as ProfileRow[];
+    const profiles = (profilesData ?? []) as unknown as ProfileRow[];
 
     const subjectListsByTutorId = new Map<string, { id: number; name: string }[]>();
 

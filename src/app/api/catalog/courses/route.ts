@@ -1,11 +1,11 @@
 import {
+  CATALOG_MAX_RESULTS,
   getCoursesWithRelations,
   type CourseFilters,
 } from "@/lib/supabase/queries/courses";
 import { createCatalogServerClient } from "@/lib/supabase/server-public";
 import { NextRequest, NextResponse } from "next/server";
 
-const MAX_RESULTS = 100;
 const LEVELS = ["beginner", "intermediate", "advanced"] as const;
 const SORTS = [
   "created_desc",
@@ -30,7 +30,7 @@ function finiteNumber(value: unknown): number | undefined {
  * search is stripped of characters that PostgREST treats as filter syntax.
  */
 function sanitizeFilters(raw: Record<string, unknown>): CourseFilters {
-  const filters: CourseFilters = { is_active: true, limit: MAX_RESULTS };
+  const filters: CourseFilters = { is_active: true, limit: CATALOG_MAX_RESULTS };
 
   if (typeof raw.tutor_id === "string" && UUID_PATTERN.test(raw.tutor_id)) {
     filters.tutor_id = raw.tutor_id;

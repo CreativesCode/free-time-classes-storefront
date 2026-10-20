@@ -48,8 +48,15 @@ export interface CourseFilters {
 /**
  * Get all courses with optional filters
  */
+/** Every course column, listed explicitly (F091: no `select("*")`). */
+export const COURSE_COLUMNS =
+  "id, tutor_id, subject_id, title, description, price_per_session, duration_minutes, max_students, level, is_active, created_at, updated_at, rating, total_reviews, cover_image";
+
+/** Most courses a catalog list returns at once (initial render and the filter API). */
+export const CATALOG_MAX_RESULTS = 100;
+
 export async function getCourses(filters?: CourseFilters): Promise<Course[]> {
-  let query = browserClient.from("courses").select("*");
+  let query = browserClient.from("courses").select(COURSE_COLUMNS);
 
   if (filters?.tutor_id) {
     query = query.eq("tutor_id", filters.tutor_id);
@@ -122,7 +129,7 @@ export async function getCoursesWithRelations(
 ): Promise<CourseWithRelations[]> {
   let query = client.from("courses").select(
     `
-      *,
+      ${COURSE_COLUMNS},
       tutor_profile:tutor_profiles!courses_tutor_id_fkey (
         id,
         user:users!tutor_profiles_id_fkey (
@@ -199,7 +206,7 @@ export async function getCoursesWithRelations(
     throw error;
   }
 
-  const rows = (data || []) as Array<
+  const rows = (data || []) as unknown as Array<
     Course & {
       tutor_profile?: {
         user?: {

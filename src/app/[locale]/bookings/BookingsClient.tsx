@@ -103,6 +103,8 @@ type Tab = "upcoming" | "past" | "cancelled";
 type ViewRole = "student" | "tutor";
 
 const LIVE_WINDOW_MIN = 30;
+// Most recent bookings loaded per view (F091); older history is not shown yet.
+const BOOKINGS_LIMIT = 100;
 
 function isStartingSoon(iso: string | null | undefined): boolean {
   if (!iso) return false;
@@ -158,7 +160,7 @@ export default function BookingsClient({ locale }: { locale: string }) {
           .from("bookings")
           .select(
             `
-            *,
+            id, student_id, tutor_id, lesson_id, course_id, requested_date, status, notes, created_at, updated_at, requested_subject_id, requested_scheduled_date_time, requested_duration_minutes,
             lesson:lessons(
               id, scheduled_date_time, duration_minutes, price, status, meet_link,
               subject:subjects(name)
@@ -172,16 +174,17 @@ export default function BookingsClient({ locale }: { locale: string }) {
           `
           )
           .eq("student_id", user.id)
-          .order("created_at", { ascending: false });
+          .order("created_at", { ascending: false })
+          .limit(BOOKINGS_LIMIT);
 
         if (fetchError) throw fetchError;
-        setBookings((data as Booking[]) ?? []);
+        setBookings((data as unknown as Booking[]) ?? []);
       } else {
         const { data, error: fetchError } = await supabase
           .from("bookings")
           .select(
             `
-            *,
+            id, student_id, tutor_id, lesson_id, course_id, requested_date, status, notes, created_at, updated_at, requested_subject_id, requested_scheduled_date_time, requested_duration_minutes,
             lesson:lessons(
               id, scheduled_date_time, duration_minutes, price, status, meet_link,
               subject:subjects(name)
@@ -191,10 +194,11 @@ export default function BookingsClient({ locale }: { locale: string }) {
           `
           )
           .eq("tutor_id", user.id)
-          .order("created_at", { ascending: false });
+          .order("created_at", { ascending: false })
+          .limit(BOOKINGS_LIMIT);
 
         if (fetchError) throw fetchError;
-        const rows = (data as Booking[]) ?? [];
+        const rows = (data as unknown as Booking[]) ?? [];
 
         // student_profiles is private to its owner; the public users row of
         // a tutor's own students is readable (migration 039).
