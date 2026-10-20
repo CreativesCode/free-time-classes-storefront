@@ -3,6 +3,8 @@ import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js
 import { createClient } from "@/lib/supabase/server";
 import { insertNotification } from "@/lib/notifications";
 import { findScheduleConflict } from "@/lib/bookings/scheduleConflict";
+import { MIN_LEAD_MINUTES } from "@/lib/bookings/leadTime";
+import { nowPlusMinutesAsLessonTimestamp } from "@/lib/datetime/lessonTime";
 
 const noStoreJson = (body: unknown, init?: ResponseInit) =>
   NextResponse.json(body, {
@@ -77,6 +79,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Same minimum notice as custom requests: no booking of past or imminent slots.
+    const minStartTs = nowPlusMinutesAsLessonTimestamp(MIN_LEAD_MINUTES);
+    if (String(lesson.scheduled_date_time).replace(" ", "T") < minStartTs) {
+      return noStoreJson(
+        { error: "This slot starts too soon to be booked.", code: "too_soon" },
+        { status: 409 }
+      );
+    }
+
     const conflict = await findScheduleConflict(supabaseAdmin, {
       tutorId: lesson.tutor_id,
       studentId: user.id,
@@ -107,6 +118,7 @@ export async function POST(request: NextRequest) {
       .eq("id", lessonId)
       .eq("status", "available")
       .is("student_id", null)
+      .gte("scheduled_date_time", minStartTs)
       .select("id,tutor_id")
       .single();
 

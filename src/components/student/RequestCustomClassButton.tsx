@@ -30,9 +30,9 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/UserContext";
 import { useLocale, useTranslations } from "@/i18n/translations";
+import { MIN_LEAD_MINUTES } from "@/lib/bookings/leadTime";
 
 const ALLOWED_DURATIONS = [15, 30, 45, 60, 90, 120] as const;
-const MIN_LEAD_MINUTES = 30;
 const NOTES_MAX_LENGTH = 500;
 
 type SubjectOption = { id: number; name: string };

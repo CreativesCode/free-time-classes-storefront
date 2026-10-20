@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { insertNotification } from "@/lib/notifications";
 import { findScheduleConflict } from "@/lib/bookings/scheduleConflict";
 import { nowPlusMinutesAsLessonTimestamp } from "@/lib/datetime/lessonTime";
+import { MIN_LEAD_MINUTES } from "@/lib/bookings/leadTime";
 
 const noStoreJson = (body: unknown, init?: ResponseInit) =>
   NextResponse.json(body, {
@@ -15,7 +16,6 @@ const noStoreJson = (body: unknown, init?: ResponseInit) =>
   });
 
 const ALLOWED_DURATIONS = [15, 30, 45, 60, 90, 120] as const;
-const MIN_LEAD_MINUTES = 30;
 const MAX_OPEN_REQUESTS_PER_TUTOR = 3;
 const NOTES_MAX_LENGTH = 500;
 const SCHEDULED_DATETIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/;
