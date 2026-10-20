@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Instrument_Serif, Plus_Jakarta_Sans } from "next/font/google";
 import "@/app/[locale]/globals.css";
 import { getMetadataBase } from "@/lib/seo/page-metadata";
@@ -38,6 +38,14 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
     shortcut: "/favicon.ico",
   },
+};
+
+// viewport-fit=cover makes env(safe-area-inset-*) non-zero on iOS (notch,
+// home indicator), which the bottom nav and full-height screens rely on.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
