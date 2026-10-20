@@ -761,7 +761,7 @@ export default function TutorDashboardClient({
 
         {/* Stats grid */}
         <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-          {statCards.map((stat, index) => (
+          {statCards.map((stat) => (
             <Card
               key={stat.label}
               className={`border ${stat.accent} bg-white/90 backdrop-blur transition-shadow hover:shadow-md`}
@@ -782,9 +782,6 @@ export default function TutorDashboardClient({
                       )}
                     </p>
                   )}
-                  <p className="mt-1 text-[11px] font-semibold text-emerald-600">
-                    {index < 2 ? "+12% vs mes pasado" : "Actualizado hoy"}
-                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -1083,30 +1080,6 @@ export default function TutorDashboardClient({
 
           {/* Sidebar */}
           <div className="space-y-6 lg:col-span-4">
-            <Card className="border-ft-line bg-gradient-to-br from-[#2A2520] to-[#1A1714] text-white shadow-[0_18px_60px_-30px_rgba(0,0,0,0.25)]">
-              <CardHeader>
-                <CardTitle className="text-lg">Ganancias Mensuales</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="mb-5 flex h-28 items-end gap-2">
-                  {[38, 56, 50, 75, 64, 90].map((height, idx) => (
-                    <div key={height} className="flex flex-1 flex-col items-center gap-2">
-                      <div
-                        className={`w-full rounded-t-md ${
-                          idx === 5 ? "bg-white" : "bg-white/35"
-                        }`}
-                        style={{ height: `${height}%` }}
-                      />
-                    </div>
-                  ))}
-                </div>
-                <div className="rounded-xl bg-white/10 p-3 backdrop-blur-sm">
-                  <p className="text-xs text-ft-paper/70">Mejor mes hasta ahora</p>
-                  <p className="text-xl font-bold">${stats.earningsThisMonth.toFixed(2)}</p>
-                </div>
-              </CardContent>
-            </Card>
-
             <Card className="border-ft-line-soft">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg">

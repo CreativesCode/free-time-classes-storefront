@@ -801,42 +801,6 @@ export default function SettingsClient({ locale }: { locale: string }) {
         {/* PAYMENTS */}
         {currentTab === "payments" && (
           <div className="space-y-4">
-            {(user.is_student || user.is_tutor) && (
-              <section className="overflow-hidden rounded-ft-2xl bg-gradient-to-br from-[#2A2520] to-[#1A1714] p-6 text-ft-paper">
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-ft-accent-soft">
-                  {t("currentSubscription")}
-                </p>
-                <h2 className="mt-2 text-[22px] font-semibold tracking-[-0.02em] md:text-[26px]">
-                  {user.is_tutor ? t("tutorPlanTitle") : t("studentPlanTitle")}
-                </h2>
-                <div className="mt-5 flex items-end justify-between gap-3">
-                  <div>
-                    <p className="text-[12px] text-white/70">
-                      {t("nextPaymentDateLabel")}
-                    </p>
-                    <p className="text-[13px] font-medium">
-                      {t("nextPaymentDateValue")}
-                    </p>
-                  </div>
-                  <p className="text-[28px] font-semibold tracking-[-0.02em]">$49</p>
-                </div>
-                <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  <button
-                    type="button"
-                    className="rounded-full bg-ft-paper px-3.5 py-2.5 text-[13px] font-semibold text-ft-ink hover:bg-ft-surface-1"
-                  >
-                    {t("upgradePlan")}
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-full border border-white/30 bg-transparent px-3.5 py-2.5 text-[13px] font-semibold text-ft-paper hover:bg-white/10"
-                  >
-                    {t("managePaymentMethod")}
-                  </button>
-                </div>
-              </section>
-            )}
-
             {user.is_tutor && (
               <section className="rounded-ft-lg border border-ft-line-soft bg-ft-paper p-5">
                 <h2 className="text-[15px] font-semibold tracking-tight text-ft-ink">

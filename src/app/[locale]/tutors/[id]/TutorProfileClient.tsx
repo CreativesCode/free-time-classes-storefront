@@ -11,7 +11,6 @@ import {
   Clock,
   GraduationCap,
   MapPin,
-  ShieldCheck,
   Star,
 } from "lucide-react";
 import Image from "next/image";
@@ -133,11 +132,7 @@ export default function TutorProfileClient({
 
         {/* Bottom info overlay */}
         <div className="absolute inset-x-5 bottom-5 text-white md:inset-x-9 md:bottom-9">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/18 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] backdrop-blur-sm">
-            <ShieldCheck width={11} height={11} />
-            {t("verified")}
-          </div>
-          <div className="mt-2.5 text-[28px] font-semibold leading-[1.1] tracking-[-0.025em] md:text-[36px]">
+          <div className="text-[28px] font-semibold leading-[1.1] tracking-[-0.025em] md:text-[36px]">
             {displayName}
           </div>
           {subjects[0]?.name && (
