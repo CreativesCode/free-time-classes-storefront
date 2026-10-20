@@ -5,6 +5,7 @@ import { insertNotification } from "@/lib/notifications";
 import { findScheduleConflict } from "@/lib/bookings/scheduleConflict";
 import { MIN_LEAD_MINUTES } from "@/lib/bookings/leadTime";
 import { nowPlusMinutesAsLessonTimestamp } from "@/lib/datetime/lessonTime";
+import { requestCourseBooking } from "@/lib/bookings/requestCourseBooking";
 
 const noStoreJson = (body: unknown, init?: ResponseInit) =>
   NextResponse.json(body, {
@@ -15,13 +16,21 @@ const noStoreJson = (body: unknown, init?: ResponseInit) =>
     },
   });
 
+// `{ courseId, start }` books a course at an open time (PRP-001).
+// `{ lessonId }` is the legacy pre-generated slot flow, kept until the new
+// picker is live everywhere.
 type Body = {
   lessonId: number;
+  courseId: number;
+  start: string;
 };
 
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as Partial<Body>;
+    if (body.courseId !== undefined) {
+      return handleCourseBooking(body);
+    }
     const lessonId =
       typeof body.lessonId === "number" ? body.lessonId : Number(body.lessonId);
 
@@ -189,3 +198,45 @@ export async function POST(request: NextRequest) {
   }
 }
 
+
+async function handleCourseBooking(body: Partial<Body>) {
+  const courseId = Number(body.courseId);
+  const start = typeof body.start === "string" ? body.start.trim() : "";
+  if (!Number.isInteger(courseId) || courseId <= 0 || !start) {
+    return noStoreJson({ error: "Invalid courseId or start." }, { status: 400 });
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  if (userError || !user) {
+    return noStoreJson({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  const { data: profile } = await supabase
+    .from("users")
+    .select("is_student")
+    .eq("id", user.id)
+    .single();
+  if (!profile?.is_student) {
+    return noStoreJson({ error: "Forbidden." }, { status: 403 });
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !serviceRoleKey) {
+    return noStoreJson({ error: "Server misconfigured." }, { status: 500 });
+  }
+  const admin = createSupabaseAdminClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false },
+  });
+
+  const result = await requestCourseBooking(admin, {
+    studentId: user.id,
+    courseId,
+    start,
+  });
+  return noStoreJson(result.payload, { status: result.httpStatus });
+}

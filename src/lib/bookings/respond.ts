@@ -59,7 +59,7 @@ export async function respondToBooking(
   const { data: booking, error: bookingError } = await admin
     .from("bookings")
     .select(
-      "id,tutor_id,student_id,lesson_id,status,requested_subject_id,requested_scheduled_date_time,requested_duration_minutes",
+      "id,tutor_id,student_id,lesson_id,course_id,status,requested_subject_id,requested_scheduled_date_time,requested_duration_minutes",
     )
     .eq("id", bookingId)
     .single();
@@ -116,16 +116,27 @@ export async function respondToBooking(
         };
       }
 
-      const { data: tutorProfile } = await admin
-        .from("tutor_profiles")
-        .select("hourly_rate")
-        .eq("id", tutorId)
-        .single();
-
-      const hourlyRate = Number(tutorProfile?.hourly_rate ?? 0);
       const duration = booking.requested_duration_minutes as number;
-      const computedPrice =
-        hourlyRate > 0 ? Math.round(((hourlyRate * duration) / 60) * 100) / 100 : 0;
+      let computedPrice = 0;
+      if (booking.course_id) {
+        // PRP-001: course requests are priced by the course (closes F023).
+        const { data: course } = await admin
+          .from("courses")
+          .select("price_per_session")
+          .eq("id", booking.course_id)
+          .single();
+        computedPrice = Number(course?.price_per_session ?? 0);
+      } else {
+        // Legacy requests without a course: tutor hourly rate, if any.
+        const { data: tutorProfile } = await admin
+          .from("tutor_profiles")
+          .select("hourly_rate")
+          .eq("id", tutorId)
+          .single();
+        const hourlyRate = Number(tutorProfile?.hourly_rate ?? 0);
+        computedPrice =
+          hourlyRate > 0 ? Math.round(((hourlyRate * duration) / 60) * 100) / 100 : 0;
+      }
 
       const conflict = await findScheduleConflict(admin, {
         tutorId,
@@ -152,6 +163,7 @@ export async function respondToBooking(
           tutor_id: tutorId,
           student_id: booking.student_id,
           subject_id: booking.requested_subject_id,
+          course_id: booking.course_id ?? null,
           scheduled_date_time: booking.requested_scheduled_date_time,
           duration_minutes: duration,
           price: computedPrice,
@@ -162,7 +174,7 @@ export async function respondToBooking(
 
       // 23505: lessons_tutor_start_live_key — the tutor already has a lesson
       // starting at that time.
-      if (lessonInsertError?.code === "23505") {
+      if (lessonInsertError?.code === "23505" || lessonInsertError?.code === "23P01") {
         return {
           httpStatus: 409,
           payload: {

@@ -14,7 +14,8 @@ function minutesOfDay(time: string): number {
  * weekly rule exists and is active (or the "extra" exception that created it
  * still exists), the day is not blocked and the class is in the future.
  * Lessons created for a custom request, or whose origin is gone, are
- * cancelled instead of republished.
+ * cancelled instead of republished. Course lessons (PRP-001) are always
+ * cancelled: their time is open again because availability is computed.
  */
 export async function releaseLesson(
   admin: SupabaseClient,
@@ -23,13 +24,13 @@ export async function releaseLesson(
 ): Promise<"available" | "cancelled"> {
   const { data: lesson } = await admin
     .from("lessons")
-    .select("id, tutor_id, scheduled_date_time, duration_minutes, availability_rule_id")
+    .select("id, tutor_id, course_id, scheduled_date_time, duration_minutes, availability_rule_id")
     .eq("id", lessonId)
     .single();
 
   let reopen = false;
 
-  if (lesson && !options.isCustomRequest) {
+  if (lesson && !options.isCustomRequest && lesson.course_id == null) {
     const start = String(lesson.scheduled_date_time).replace(" ", "T").slice(0, 19);
     const dateKey = start.slice(0, 10);
     const startMin = minutesOfDay(start.slice(11, 16));

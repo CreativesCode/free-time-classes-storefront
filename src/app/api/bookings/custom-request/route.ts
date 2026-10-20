@@ -5,6 +5,7 @@ import { insertNotification } from "@/lib/notifications";
 import { findScheduleConflict } from "@/lib/bookings/scheduleConflict";
 import { nowPlusMinutesAsLessonTimestamp } from "@/lib/datetime/lessonTime";
 import { MIN_LEAD_MINUTES } from "@/lib/bookings/leadTime";
+import { loadBookableCourse } from "@/lib/availability/loadOpenStartTimes";
 
 const noStoreJson = (body: unknown, init?: ResponseInit) =>
   NextResponse.json(body, {
@@ -22,6 +23,9 @@ const SCHEDULED_DATETIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/;
 
 type Body = {
   tutorId?: string;
+  // PRP-001: a request for another time is for a course; its subject,
+  // duration and price come from the course.
+  courseId?: number | string;
   subjectId?: number | string;
   scheduledDateTime?: string;
   durationMinutes?: number | string;
@@ -33,9 +37,13 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as Body;
 
     const tutorId = typeof body.tutorId === "string" ? body.tutorId.trim() : "";
-    const subjectId =
+    const courseId =
+      body.courseId === undefined || body.courseId === null || body.courseId === ""
+        ? null
+        : Number(body.courseId);
+    let subjectId =
       typeof body.subjectId === "number" ? body.subjectId : Number(body.subjectId);
-    const durationMinutes =
+    let durationMinutes =
       typeof body.durationMinutes === "number"
         ? body.durationMinutes
         : Number(body.durationMinutes);
@@ -46,10 +54,16 @@ export async function POST(request: NextRequest) {
     if (!/^[0-9a-f-]{36}$/i.test(tutorId)) {
       return noStoreJson({ error: "Invalid tutorId." }, { status: 400 });
     }
-    if (!Number.isInteger(subjectId) || subjectId <= 0) {
+    if (courseId !== null && (!Number.isInteger(courseId) || courseId <= 0)) {
+      return noStoreJson({ error: "Invalid courseId." }, { status: 400 });
+    }
+    if (courseId === null && (!Number.isInteger(subjectId) || subjectId <= 0)) {
       return noStoreJson({ error: "Invalid subjectId." }, { status: 400 });
     }
-    if (!ALLOWED_DURATIONS.includes(durationMinutes as (typeof ALLOWED_DURATIONS)[number])) {
+    if (
+      courseId === null &&
+      !ALLOWED_DURATIONS.includes(durationMinutes as (typeof ALLOWED_DURATIONS)[number])
+    ) {
       return noStoreJson({ error: "Invalid durationMinutes." }, { status: 400 });
     }
     if (!SCHEDULED_DATETIME_RE.test(scheduledDateTimeRaw)) {
@@ -127,6 +141,15 @@ export async function POST(request: NextRequest) {
       return noStoreJson({ error: "Tutor not found." }, { status: 404 });
     }
 
+    if (courseId !== null) {
+      const course = await loadBookableCourse(admin, courseId);
+      if (!course || course.tutor_id !== tutorId || !course.subject_id) {
+        return noStoreJson({ error: "Course not found." }, { status: 404 });
+      }
+      subjectId = course.subject_id;
+      durationMinutes = course.duration_minutes;
+    }
+
     const { data: subjectRow, error: subjectError } = await admin
       .from("subjects")
       .select("id,name")
@@ -144,7 +167,7 @@ export async function POST(request: NextRequest) {
       .eq("subject_id", subjectId)
       .maybeSingle();
 
-    if (!tutorSubjectRow) {
+    if (!tutorSubjectRow && courseId === null) {
       return noStoreJson(
         { error: "Tutor does not teach this subject." },
         { status: 400 }
@@ -198,6 +221,7 @@ export async function POST(request: NextRequest) {
         requested_subject_id: subjectId,
         requested_scheduled_date_time: scheduledDateTime,
         requested_duration_minutes: durationMinutes,
+        course_id: courseId,
         status: "pending",
         notes: notesRaw || null,
       })
