@@ -10,5 +10,14 @@ y guardan la hora de pared de Madrid sin offset (ej. `2026-04-22 09:00:00`). Pos
 **Como aplicar:** para cualquier comparacion con "ahora" usar los helpers de `src/lib/datetime/lessonTime.ts`
 (`BUSINESS_TIMEZONE`, `nowAsLessonTimestamp()`, `nowPlusMinutesAsLessonTimestamp()`,
 `startOfMonthAsLessonTimestamp`, `isLessonInPast`), que formatean con `Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Madrid' })`.
-Aplica a: `/api/lessons/available`, dashboards, "Mis clases", filtro "hoy" del tutor, expiracion de custom requests,
+Aplica a: `/api/availability/open-times`, dashboards, "Mis clases", filtro "hoy" del tutor, expiracion de custom requests,
 mensajes de WhatsApp (formatear horas en Madrid) y cualquier filtro nuevo por hora de clase.
+
+**Mostrar horas (decision 2026-10-20, F047/F051):** la BD sigue en Madrid, pero la UI muestra cada hora de clase
+en la zona del navegador del usuario. Usar `src/lib/datetime/viewerTime.ts`: `lessonTimestampToDate/Epoch`
+(Madrid wall-clock -> instante real, para formatear y para cuentas atras / "unirse"), `formatLessonTimestamp`,
+`dayKeyInZone` y el hook `useViewerTimeZone()` (devuelve Madrid en SSR/hidratacion y la zona del navegador despues,
+asi el HTML del servidor coincide). Nunca `new Date(scheduled_date_time)` a pelo: el navegador lo lee como hora local.
+Entradas: `datetime-local` del estudiante (otra hora) se convierte a Madrid con `dateAsLessonTimestamp(new Date(valor))`.
+La agenda del tutor (franjas/bloqueos y su FullCalendar) sigue en hora de Madrid con etiqueta: pasarla a la zona del
+tutor exige guardar su zona (las reglas semanales cambian con el horario de verano de cada pais) — pendiente.

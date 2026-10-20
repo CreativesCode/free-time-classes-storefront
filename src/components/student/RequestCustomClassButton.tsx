@@ -31,6 +31,8 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/UserContext";
 import { useLocale, useTranslations } from "@/i18n/translations";
 import { MIN_LEAD_MINUTES } from "@/lib/bookings/leadTime";
+import { dateAsLessonTimestamp } from "@/lib/datetime/lessonTime";
+import { timeZoneLabel, useViewerTimeZone } from "@/lib/datetime/viewerTime";
 
 const NOTES_MAX_LENGTH = 500;
 
@@ -74,6 +76,7 @@ export default function RequestCustomClassButton({
 }: Props) {
   const t = useTranslations("requestCustomClass");
   const locale = useLocale();
+  const timeZone = useViewerTimeZone();
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
 
@@ -98,20 +101,21 @@ export default function RequestCustomClassButton({
       toast.error(t("errorCourseRequired"));
       return;
     }
-    if (!scheduledLocal) {
+    // datetime-local is the viewer's local time; the API expects Madrid wall-clock.
+    const start = new Date(scheduledLocal);
+    if (!scheduledLocal || Number.isNaN(start.getTime())) {
       toast.error(t("errorDateTimeRequired"));
       return;
     }
     setSubmitting(true);
     try {
-      // datetime-local already gives us "YYYY-MM-DDTHH:mm" — server treats as Madrid wall-clock
       const response = await fetch("/api/bookings/custom-request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           tutorId,
           courseId: Number(courseId),
-          scheduledDateTime: scheduledLocal,
+          scheduledDateTime: dateAsLessonTimestamp(start),
           notes: notes.trim() || undefined,
         }),
       });
@@ -220,7 +224,7 @@ export default function RequestCustomClassButton({
                 disabled={submitting}
                 className={FT_FIELD}
               />
-              <p className="text-xs text-ft-ink-3">{t("whenHintMadrid")}</p>
+              <p className="text-xs text-ft-ink-3">{t("whenHintLocal", { zone: timeZoneLabel(locale, timeZone) })}</p>
             </div>
 
             <div className="space-y-2">

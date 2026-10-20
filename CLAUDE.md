@@ -78,7 +78,7 @@ src/middleware.ts          # next-intl + sesion Supabase + proteccion por rol (i
 
 ## Reglas criticas del proyecto
 
-- **Hora de negocio = Europe/Madrid.** `lessons.scheduled_date_time` es wall-clock de Madrid sin offset. Nunca compares con `new Date().toISOString()` ni hora local del servidor: usa `src/lib/datetime/lessonTime.ts`. Detalle: `.claude/memory/project/business-timezone-madrid.md`.
+- **Hora de negocio = Europe/Madrid.** `lessons.scheduled_date_time` es wall-clock de Madrid sin offset. Nunca compares con `new Date().toISOString()` ni hora local del servidor: usa `src/lib/datetime/lessonTime.ts`. Para MOSTRAR horas al usuario usa `src/lib/datetime/viewerTime.ts` (zona del navegador); nunca `new Date(scheduled_date_time)`. Detalle: `.claude/memory/project/business-timezone-madrid.md`.
 - **Radios FreeTime:** solo `rounded-ft-*`, `rounded-full` o `rounded-[Npx]`. NUNCA `rounded-md/lg/xl/2xl` (la config legacy los infla a 24–64px). Detalle: `.claude/memory/feedback/freetime-radius-scale.md`.
 - **i18n:** ningun string de UI hardcodeado; anade la clave en `messages/es.json` Y `messages/en.json`.
 - **Capacitor:** API en `src/app/api/` (nunca bajo `[locale]`), secretos solo en route handlers, cliente browser de Supabase en componentes `'use client'`, assets en `/public`. Nunca `output: 'standalone'` ni `output: 'export'`.

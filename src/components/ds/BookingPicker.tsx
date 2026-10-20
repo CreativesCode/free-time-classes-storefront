@@ -2,6 +2,13 @@
 
 import { useAuth } from "@/context/UserContext";
 import { useTranslations } from "@/i18n/translations";
+import {
+  dayKeyInZone,
+  formatLessonTimestamp,
+  lessonTimestampToDate,
+  timeZoneLabel,
+  useViewerTimeZone,
+} from "@/lib/datetime/viewerTime";
 import { cn } from "@/lib/utils";
 import {
   ArrowRight,
@@ -65,6 +72,8 @@ export function BookingPicker({
   const { user, isLoading: authLoading } = useAuth();
   const t = useTranslations("studentProfile.availabilities");
   const tCourse = useTranslations("courseDetail");
+  // Open times are Madrid wall-clock; days and hours are shown in the viewer's zone.
+  const timeZone = useViewerTimeZone();
 
   const [times, setTimes] = useState<string[]>([]);
   const [course, setCourse] = useState<OpenTimesResponse["course"] | null>(null);
@@ -102,21 +111,22 @@ export function BookingPicker({
   const timesByDay = useMemo(() => {
     const map = new Map<string, string[]>();
     for (const ts of times) {
-      const key = ts.slice(0, 10);
+      const key = dayKeyInZone(lessonTimestampToDate(ts), timeZone);
       const list = map.get(key);
       if (list) list.push(ts);
       else map.set(key, [ts]);
     }
     return map;
-  }, [times]);
+  }, [times, timeZone]);
 
   // Days from today (first open day's week) to the last open day.
   const days = useMemo(() => {
-    if (times.length === 0) return [] as string[];
-    const first = dayNumber(times[0].slice(0, 10));
-    const last = dayNumber(times[times.length - 1].slice(0, 10));
+    const keys = Array.from(timesByDay.keys());
+    if (keys.length === 0) return [] as string[];
+    const first = dayNumber(keys[0]);
+    const last = dayNumber(keys[keys.length - 1]);
     return Array.from({ length: last - first + 1 }, (_, i) => dayKey(first + i));
-  }, [times]);
+  }, [timesByDay]);
 
   const pageCount = Math.max(1, Math.ceil(days.length / DAYS_PER_PAGE));
   const pageDays = useMemo(
@@ -136,6 +146,9 @@ export function BookingPicker({
   }, [selectedStart, onSelectionChange]);
 
   const timesForSelectedDay = selectedDayKey ? timesByDay.get(selectedDayKey) ?? [] : [];
+  const formatHour = (ts: string) =>
+    formatLessonTimestamp(ts, locale, timeZone, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const selectedDay = selectedStart ? dayKeyInZone(lessonTimestampToDate(selectedStart), timeZone) : null;
 
   const loginHref = coursePath
     ? `/${locale}/login?next=${encodeURIComponent(`${coursePath}#course-booking`)}`
@@ -300,7 +313,7 @@ export function BookingPicker({
                       )}
                     >
                       <span className="text-[15px] font-semibold tracking-tight">
-                        {ts.slice(11, 16)}
+                        {formatHour(ts)}
                       </span>
                       {duration && (
                         <span
@@ -318,7 +331,9 @@ export function BookingPicker({
               </div>
             )}
 
-            <p className="m-0 text-[11px] text-ft-ink-3">{t("madridTimeNote")}</p>
+            <p className="m-0 text-[11px] text-ft-ink-3">{t("viewerTimeNote", {
+                zone: timeZoneLabel(locale, timeZone, lessonTimestampToDate(timesForSelectedDay[0] ?? times[0])),
+              })}</p>
 
             {selectedStart && (
               <div className="rounded-ft-lg border border-ft-line bg-ft-paper-deep p-4">
@@ -328,13 +343,13 @@ export function BookingPicker({
                       {t("dateTime")}
                     </div>
                     <div className="mt-0.5 text-[14px] font-semibold tracking-tight text-ft-ink">
-                      {formatDay(selectedStart.slice(0, 10), locale, {
+                      {formatDay(selectedDay ?? "", locale, {
                         weekday: "long",
                         day: "numeric",
                         month: "long",
                       })}
                       {" · "}
-                      {selectedStart.slice(11, 16)}
+                      {formatHour(selectedStart)}
                     </div>
                   </div>
                   <button
@@ -380,13 +395,13 @@ export function BookingPicker({
           <div className="mx-auto flex max-w-screen-2xl items-center gap-3 px-5 py-3.5 md:px-9">
             <div className="min-w-0 flex-1">
               <div className="truncate text-[12px] text-ft-ink-3">
-                {formatDay(selectedStart.slice(0, 10), locale, {
+                {formatDay(selectedDay ?? "", locale, {
                   weekday: "short",
                   day: "numeric",
                   month: "short",
                 })}
                 {" · "}
-                {selectedStart.slice(11, 16)}
+                {formatHour(selectedStart)}
                 {duration ? ` · ${duration} ${t("minutes")}` : ""}
               </div>
               {price && (

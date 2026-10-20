@@ -1,6 +1,7 @@
 export const BUSINESS_TIMEZONE = "Europe/Madrid";
 
-function dateAsLessonTimestamp(date: Date): string {
+/** Madrid wall-clock timestamp (`YYYY-MM-DDTHH:mm:ss`) of an instant. */
+export function dateAsLessonTimestamp(date: Date): string {
   const parts = new Intl.DateTimeFormat("sv-SE", {
     timeZone: BUSINESS_TIMEZONE,
     year: "numeric",

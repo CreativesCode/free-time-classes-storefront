@@ -27,6 +27,11 @@ import { useAuth } from "@/context/UserContext";
 import { useTranslations } from "@/i18n/translations";
 import { isLessonInPast } from "@/lib/datetime/lessonTime";
 import {
+  lessonTimestampToDate,
+  lessonTimestampToEpoch,
+  useViewerTimeZone,
+} from "@/lib/datetime/viewerTime";
+import {
   STUDENT_CANCEL_HOURS,
   canStudentCancelConfirmed,
 } from "@/lib/bookings/cancellationPolicy";
@@ -101,7 +106,7 @@ const LIVE_WINDOW_MIN = 30;
 
 function isStartingSoon(iso: string | null | undefined): boolean {
   if (!iso) return false;
-  const target = new Date(iso).getTime();
+  const target = lessonTimestampToEpoch(iso);
   const diffMin = (target - Date.now()) / 60000;
   return diffMin >= -LIVE_WINDOW_MIN && diffMin <= LIVE_WINDOW_MIN;
 }
@@ -110,6 +115,7 @@ export default function BookingsClient({ locale }: { locale: string }) {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const t = useTranslations("bookingsPage");
+  const timeZone = useViewerTimeZone();
 
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -315,15 +321,17 @@ export default function BookingsClient({ locale }: { locale: string }) {
   }
 
   function formatDateTime(iso: string): { date: string; time: string; countdown: string } {
-    const d = new Date(iso);
+    const d = lessonTimestampToDate(iso);
     const date = d.toLocaleDateString(locale, {
       weekday: "short",
       day: "numeric",
       month: "short",
+      timeZone,
     });
     const time = d.toLocaleTimeString(locale, {
       hour: "2-digit",
       minute: "2-digit",
+      timeZone,
     });
     const diffMin = Math.round((d.getTime() - Date.now()) / 60000);
     let countdown = "";

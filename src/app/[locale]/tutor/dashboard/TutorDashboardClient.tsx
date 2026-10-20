@@ -53,6 +53,11 @@ import {
   startOfMonthAsLessonTimestamp,
   startOfTodayAsLessonTimestamp,
 } from "@/lib/datetime/lessonTime";
+import {
+  formatLessonTimestamp,
+  lessonTimestampToEpoch,
+  useViewerTimeZone,
+} from "@/lib/datetime/viewerTime";
 
 type PendingBookingItem = {
   booking: Booking;
@@ -147,6 +152,7 @@ export default function TutorDashboardClient({
 }) {
   const t = useTranslations("tutorDashboardPage");
   const td = useTranslations("dashboard");
+  const timeZone = useViewerTimeZone();
   const locale = useLocale();
   const { user } = useAuth();
   const effectiveUser = initialData?.user ?? { id: user?.id ?? "", email: user?.email ?? null };
@@ -480,7 +486,7 @@ export default function TutorDashboardClient({
   };
 
   const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString(locale, {
+    return formatLessonTimestamp(dateString, locale, timeZone, {
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -693,7 +699,7 @@ export default function TutorDashboardClient({
                 const studentName = lesson.student?.user?.username || "—";
                 const isCurrent = idx === 0;
                 const endTime = new Date(
-                  new Date(lesson.scheduled_date_time).getTime() +
+                  lessonTimestampToEpoch(lesson.scheduled_date_time) +
                     lesson.duration_minutes * 60000
                 );
 
@@ -720,6 +726,7 @@ export default function TutorDashboardClient({
                         {endTime.toLocaleTimeString(locale, {
                           hour: "2-digit",
                           minute: "2-digit",
+                          timeZone,
                         })}
                       </span>
                       <h3 className="mt-2.5 text-lg font-bold text-slate-900">
@@ -880,7 +887,10 @@ export default function TutorDashboardClient({
                         const { booking } = item;
                         const display = getItemDisplay(item);
                         const scheduledLabel = display.scheduledDateTime
-                          ? new Date(display.scheduledDateTime).toLocaleString(locale)
+                          ? formatLessonTimestamp(display.scheduledDateTime, locale, timeZone, {
+                              dateStyle: "medium",
+                              timeStyle: "short",
+                            })
                           : "—";
                         const studentName = display.studentName || t("student");
                         const initials = studentName.slice(0, 2).toUpperCase();

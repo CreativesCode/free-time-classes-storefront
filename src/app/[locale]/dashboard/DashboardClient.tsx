@@ -21,6 +21,11 @@ import { SectionTitle } from "@/components/ds/SectionTitle";
 import { StudentSidebarNav } from "@/components/ds/StudentSidebarNav";
 import { useNotificationsContext } from "@/context/NotificationsContext";
 import { useTranslations, useLocale } from "@/i18n/translations";
+import {
+  formatLessonTimestamp,
+  lessonTimestampToEpoch,
+  useViewerTimeZone,
+} from "@/lib/datetime/viewerTime";
 import { getCourseCoverPublicUrl, getPublicUrl } from "@/lib/supabase/storage";
 import type { StudentProfile } from "@/types/student";
 import type { DashboardRecommendedCourse } from "./DashboardDeferredRecommended";
@@ -105,7 +110,7 @@ function getGreetingKey(): "greetingMorning" | "greetingAfternoon" | "greetingEv
 }
 
 function formatCountdown(scheduledIso: string, locale: string): string {
-  const target = new Date(scheduledIso).getTime();
+  const target = lessonTimestampToEpoch(scheduledIso);
   const now = Date.now();
   const diffMin = Math.max(0, Math.round((target - now) / 60000));
   if (diffMin < 60) return new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(diffMin, "minute");
@@ -123,6 +128,7 @@ export default function DashboardClient({
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("dashboard");
+  const timeZone = useViewerTimeZone();
   const { unreadCount } = useNotificationsContext();
   const [audioPlaying, setAudioPlaying] = useState(false);
 
@@ -171,14 +177,14 @@ export default function DashboardClient({
   }, [upcomingLessons, t]);
 
   const formatLessonDate = (iso: string) =>
-    new Date(iso).toLocaleDateString(locale, {
+    formatLessonTimestamp(iso, locale, timeZone, {
       weekday: "short",
       day: "numeric",
       month: "short",
     });
 
   const formatLessonTime = (iso: string) =>
-    new Date(iso).toLocaleTimeString(locale, {
+    formatLessonTimestamp(iso, locale, timeZone, {
       hour: "2-digit",
       minute: "2-digit",
     });

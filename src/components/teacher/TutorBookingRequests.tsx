@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useTranslations } from "@/i18n/translations";
+import { useLocale, useTranslations } from "@/i18n/translations";
+import { formatLessonTimestamp, useViewerTimeZone } from "@/lib/datetime/viewerTime";
 import { useAuth } from "@/context/UserContext";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,8 @@ export default function TutorBookingRequests({
   onRequestResponded?: () => void;
 }) {
   const t = useTranslations("teacherProfile.requests");
+  const locale = useLocale();
+  const timeZone = useViewerTimeZone();
   const { user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -171,7 +174,7 @@ export default function TutorBookingRequests({
                     <p className="text-ft-ink-3">{t("dateTime")}</p>
                     <p>
                       {item.scheduledDateTime
-                        ? new Date(item.scheduledDateTime).toLocaleString()
+                        ? formatLessonTimestamp(item.scheduledDateTime, locale, timeZone, { dateStyle: "medium", timeStyle: "short" })
                         : "—"}
                     </p>
                   </div>
@@ -303,7 +306,7 @@ export default function TutorBookingRequests({
                     {t("student")}: {confirmTarget.studentName ?? confirmTarget.studentId}
                     {" · "}
                     {confirmTarget.scheduledDateTime
-                      ? new Date(confirmTarget.scheduledDateTime).toLocaleString()
+                      ? formatLessonTimestamp(confirmTarget.scheduledDateTime, locale, timeZone, { dateStyle: "medium", timeStyle: "short" })
                       : "—"}
                   </p>
                 </div>
