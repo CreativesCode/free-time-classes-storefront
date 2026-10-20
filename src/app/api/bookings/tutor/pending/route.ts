@@ -6,8 +6,9 @@ import {
   nowPlusMinutesAsLessonTimestamp,
 } from "@/lib/datetime/lessonTime";
 
-const PRIVATE_READ_CACHE_CONTROL =
-  "private, max-age=30, stale-while-revalidate=120";
+// Booking/slot state changes on every request/response: never reuse a
+// browser-cached copy (it made confirmed requests reappear as pending).
+const PRIVATE_READ_CACHE_CONTROL = "private, no-store";
 
 const CUSTOM_REQUEST_EXPIRY_MINUTES = 15;
 

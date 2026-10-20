@@ -3,8 +3,9 @@ import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js
 import { createClient } from "@/lib/supabase/server";
 import { nowAsLessonTimestamp } from "@/lib/datetime/lessonTime";
 
-const PRIVATE_READ_CACHE_CONTROL =
-  "private, max-age=30, stale-while-revalidate=120";
+// Booking/slot state changes on every request/response: never reuse a
+// browser-cached copy (it made confirmed requests reappear as pending).
+const PRIVATE_READ_CACHE_CONTROL = "private, no-store";
 
 export async function GET(request: NextRequest) {
   try {
