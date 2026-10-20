@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { syncRuleSlots } from "@/lib/availability/syncRuleSlots";
+import { completeFinishedBookings } from "@/lib/bookings/completeFinished";
 import type {
   AvailabilityException,
   TutorAvailabilityRule,
 } from "@/types/availability";
 
-// Daily job (Vercel Cron, see vercel.json). Keeps the rolling 12-week slot
-// window filled for every active weekly rule. Idempotent: re-running only
-// inserts slots that are still missing.
+// Daily job (Vercel Cron, see vercel.json). Idempotent:
+// - keeps the rolling 12-week slot window filled for every active rule;
+// - marks confirmed bookings whose class already ended as completed.
 export const maxDuration = 60;
 
 const noStoreJson = (body: unknown, init?: ResponseInit) =>
@@ -83,12 +84,23 @@ export async function GET(request: NextRequest) {
     if (result.error) failures.push({ ruleId: rule.id, error: result.error });
   }
 
+  const completion = await completeFinishedBookings(admin);
+  if (completion.error) {
+    failures.push({ ruleId: "complete-bookings", error: completion.error });
+  }
+
   if (failures.length > 0) {
-    console.error("[cron/daily] slot sync failures:", failures);
+    console.error("[cron/daily] failures:", failures);
   }
 
   return noStoreJson(
-    { ok: failures.length === 0, rules: activeRules.length, slotsCreated, failures },
+    {
+      ok: failures.length === 0,
+      rules: activeRules.length,
+      slotsCreated,
+      bookingsCompleted: completion.bookingsCompleted,
+      failures,
+    },
     { status: failures.length === 0 ? 200 : 207 }
   );
 }
