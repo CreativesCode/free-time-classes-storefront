@@ -17,7 +17,7 @@ chars en `.0`, `.1`...). Las credenciales se leen en el script desde la tarea de
 **E2E con navegador real:** `playwright-core` de la cache de npx (`~/AppData/Local/npm-cache/_npx/*/node_modules/playwright-core`)
 con `executablePath` a un `chromium_headless_shell-*` ya instalado en `~/AppData/Local/ms-playwright`.
 
-**Lecturas de BD:** PostgREST con la service role solo para lecturas (`limit=0` para comprobar columnas). DDL y
-catalogo (`pg_get_constraintdef`, policies, grants) necesitan la Management API: el `SUPABASE_ACCESS_TOKEN`
-que inyecta el entorno de esta maquina es de OTRA cuenta (otros proyectos) y da 403 en `nqetxsifeulhfkwjdsbp`;
-para este proyecto se usa `SUPABASE_FTC_ACCESS_TOKEN` en `.env.local` (no tocar el otro token).
+**Lecturas de BD:** PostgREST con la service role solo para lecturas (`limit=0` para comprobar columnas). Para
+SQL de catalogo y DDL: `env -u SUPABASE_ACCESS_TOKEN supabase db query --linked --project-ref nqetxsifeulhfkwjdsbp "<sql>"`
+(o `-f archivo.sql`). Usa el `supabase login` del usuario (cuenta duena del proyecto); hay que quitar
+`SUPABASE_ACCESS_TOKEN` porque el entorno de la maquina inyecta uno de OTRA cuenta que tiene prioridad y da 403.
