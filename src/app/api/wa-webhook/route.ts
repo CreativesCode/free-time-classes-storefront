@@ -26,6 +26,8 @@ function adminClient() {
   });
 }
 
+const INBOUND_BODY_KEEP = 40;
+
 export async function POST(request: NextRequest) {
   // Read the RAW body — HMAC must be verified against it, not re-serialized JSON.
   const rawBody = await request.text();
@@ -104,7 +106,9 @@ export async function POST(request: NextRequest) {
 
   const { error: insertError } = await admin
     .from("wa_inbound_events")
-    .insert({ idempotency_key: idemKey, from_id: from, body });
+    // Keep only a short prefix: enough to debug SI/NO parsing without storing
+    // users' full messages (purged after 30 days by the daily cron).
+    .insert({ idempotency_key: idemKey, from_id: from, body: body.slice(0, INBOUND_BODY_KEEP) });
 
   if (insertError) {
     // 23505 = unique_violation → already processed this event.

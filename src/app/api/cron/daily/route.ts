@@ -21,6 +21,8 @@ const noStoreJson = (body: unknown, init?: ResponseInit) =>
     },
   });
 
+const INBOUND_RETENTION_DAYS = 30;
+
 export async function GET(request: NextRequest) {
   // Vercel Cron sends `Authorization: Bearer $CRON_SECRET`. Fail closed when
   // the secret is not configured.
@@ -87,6 +89,18 @@ export async function GET(request: NextRequest) {
   const completion = await completeFinishedBookings(admin);
   if (completion.error) {
     failures.push({ ruleId: "complete-bookings", error: completion.error });
+  }
+
+  // WhatsApp inbound events are only needed for idempotency and debugging.
+  const inboundCutoff = new Date(
+    Date.now() - INBOUND_RETENTION_DAYS * 24 * 60 * 60 * 1000
+  ).toISOString();
+  const { error: purgeError } = await admin
+    .from("wa_inbound_events")
+    .delete()
+    .lt("created_at", inboundCutoff);
+  if (purgeError) {
+    failures.push({ ruleId: "purge-wa-inbound", error: purgeError.message });
   }
 
   if (failures.length > 0) {
