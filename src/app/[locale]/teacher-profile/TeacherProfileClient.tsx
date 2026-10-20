@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import {
   BookOpen,
   CalendarDays,
   GraduationCap,
   Inbox,
+  Loader2,
   LogOut,
   MessageSquare,
   Sparkles,
@@ -15,7 +17,6 @@ import {
   User,
 } from "lucide-react";
 
-import AvailabilityCalendar from "@/components/teacher/AvailabilityCalendar";
 import RecurringAvailabilityManager from "@/components/teacher/RecurringAvailabilityManager";
 import EditProfileModal from "@/components/teacher/EditProfileModal";
 import TutorBookingRequests from "@/components/teacher/TutorBookingRequests";
@@ -32,6 +33,16 @@ import { cn, getAvatarColor } from "@/lib/utils";
 import type { CourseWithRelations } from "@/types/course";
 import type { Subject } from "@/types/subject";
 import type { TutorProfile } from "@/types/tutor";
+
+// FullCalendar is heavy: load it only when the availability tab opens (F100).
+const AvailabilityCalendar = dynamic(() => import("@/components/teacher/AvailabilityCalendar"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex min-h-[420px] items-center justify-center">
+      <Loader2 className="h-6 w-6 animate-spin text-ft-ink-3" />
+    </div>
+  ),
+});
 
 export type TeacherProfilePageUser = {
   id: string;
