@@ -111,19 +111,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const { error: cancelError } = await admin
+    // Guarded on the status read above so a concurrent tutor response wins cleanly.
+    const { data: cancelledRows, error: cancelError } = await admin
       .from("bookings")
       .update({
         status: "cancelled",
         updated_at: new Date().toISOString(),
       })
-      .eq("id", bookingId);
+      .eq("id", bookingId)
+      .eq("status", booking.status)
+      .select("id");
 
     if (cancelError) {
       return noStoreJson(
         { error: cancelError.message || "Failed to cancel booking." },
         { status: 400 }
       );
+    }
+    if (!cancelledRows?.length) {
+      return noStoreJson({ error: "This booking cannot be cancelled." }, { status: 409 });
     }
 
     if (booking.lesson_id) {

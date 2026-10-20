@@ -26,6 +26,11 @@ export interface RespondResult {
   payload: Record<string, unknown>;
 }
 
+const ALREADY_HANDLED: RespondResult = {
+  httpStatus: 409,
+  payload: { error: "Only pending bookings can be updated." },
+};
+
 /**
  * Core confirm/reject logic for a booking, shared by the tutor API route
  * (auth via session) and the WhatsApp webhook (auth via @lid match).
@@ -66,12 +71,7 @@ export async function respondToBooking(
     return { httpStatus: 403, payload: { error: "Forbidden." } };
   }
 
-  if (booking.status !== "pending") {
-    return {
-      httpStatus: 409,
-      payload: { error: "Only pending bookings can be updated." },
-    };
-  }
+  if (booking.status !== "pending") return ALREADY_HANDLED;
 
   const isCustomRequest = booking.lesson_id == null;
 
@@ -96,7 +96,8 @@ export async function respondToBooking(
         await admin
           .from("bookings")
           .update({ status: "rejected", updated_at: new Date().toISOString() })
-          .eq("id", bookingId);
+          .eq("id", bookingId)
+          .eq("status", "pending");
         return {
           httpStatus: 410,
           payload: { error: "This request has expired.", code: "request_expired" },
@@ -175,20 +176,28 @@ export async function respondToBooking(
       lessonIdForFlow = createdLesson.id;
     }
 
-    const { error: updateError } = await admin
+    // Guarded on status so two concurrent responses cannot both win.
+    const { data: confirmedRows, error: updateError } = await admin
       .from("bookings")
       .update({
         status: "confirmed",
         ...(isCustomRequest && lessonIdForFlow ? { lesson_id: lessonIdForFlow } : {}),
         updated_at: new Date().toISOString(),
       })
-      .eq("id", bookingId);
+      .eq("id", bookingId)
+      .eq("status", "pending")
+      .select("id");
 
-    if (updateError) {
-      return {
-        httpStatus: 400,
-        payload: { error: updateError.message || "Failed to confirm booking." },
-      };
+    if (updateError || !confirmedRows?.length) {
+      if (isCustomRequest && lessonIdForFlow) {
+        await admin.from("lessons").delete().eq("id", lessonIdForFlow);
+      }
+      return updateError
+        ? {
+            httpStatus: 400,
+            payload: { error: updateError.message || "Failed to confirm booking." },
+          }
+        : ALREADY_HANDLED;
     }
 
     const manualMeetLink = typeof args.meetLink === "string" ? args.meetLink.trim() : "";
@@ -295,10 +304,12 @@ export async function respondToBooking(
   }
 
   // action === "reject"
-  const { error: rejectError } = await admin
+  const { data: rejectedRows, error: rejectError } = await admin
     .from("bookings")
     .update({ status: "rejected", updated_at: new Date().toISOString() })
-    .eq("id", bookingId);
+    .eq("id", bookingId)
+    .eq("status", "pending")
+    .select("id");
 
   if (rejectError) {
     return {
@@ -306,6 +317,7 @@ export async function respondToBooking(
       payload: { error: rejectError.message || "Failed to reject booking." },
     };
   }
+  if (!rejectedRows?.length) return ALREADY_HANDLED;
 
   if (booking.lesson_id) {
     const { data: lessonToReject } = await admin
