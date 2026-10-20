@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/UserContext";
+import { createClient } from "@/lib/supabase/client";
 import {
   getFavoriteMessagingContacts,
   getConversationMessages,
@@ -244,6 +245,64 @@ export default function InternalMessagingPanel({
     };
   }, [selectedConversationId, user?.id]);
 
+  // Realtime: new messages in any of my conversations (RLS-filtered), plus a
+  // refetch when the tab regains focus (covers dropped sockets / sleep).
+  const selectedConversationIdRef = useRef(selectedConversationId);
+  selectedConversationIdRef.current = selectedConversationId;
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const userId = user.id;
+    const supabase = createClient();
+
+    const refreshConversations = async () => {
+      try {
+        setConversations(await getUserConversations(userId));
+      } catch (e) {
+        console.error("Error refreshing conversations:", e);
+      }
+    };
+
+    const channel = supabase
+      .channel(`messages:${userId}:${Date.now()}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages" },
+        (payload) => {
+          const incoming = payload.new as DirectMessage;
+          if (incoming.conversation_id === selectedConversationIdRef.current) {
+            setMessages((prev) =>
+              prev.some((m) => m.id === incoming.id) ? prev : [...prev, incoming]
+            );
+            if (incoming.sender_id !== userId) {
+              void markConversationAsRead(incoming.conversation_id, userId).catch(() => {});
+            }
+          }
+          void refreshConversations();
+        }
+      )
+      .subscribe();
+
+    const onVisible = async () => {
+      if (document.visibilityState !== "visible") return;
+      await refreshConversations();
+      const current = selectedConversationIdRef.current;
+      if (current) {
+        try {
+          setMessages(await getConversationMessages(current));
+        } catch (e) {
+          console.error("Error refreshing messages:", e);
+        }
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      void supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
   const startConversation = async (contactId: string) => {
     if (!user?.id) return;
     try {
@@ -266,7 +325,9 @@ export default function InternalMessagingPanel({
     try {
       setSending(true);
       const created = await sendMessage(selectedConversationId, user.id, messageText);
-      setMessages((prev) => [...prev, created]);
+      setMessages((prev) =>
+        prev.some((m) => m.id === created.id) ? prev : [...prev, created]
+      );
       setMessageText("");
       setConversations((prev) =>
         prev.map((c) =>
