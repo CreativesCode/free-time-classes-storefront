@@ -27,3 +27,5 @@ probar flujos que escriban datos.
 
 **Otras envs del proyecto:** `GOOGLE_CLIENT_ID/SECRET/REDIRECT_URI` (Calendar/Meet), `OPENWA_*` (WhatsApp),
 `CAPACITOR_SERVER_URL`, `CAPACITOR_ANDROID_CLEARTEXT`, `ENABLE_DEV_ROUTES` (solo local: `true` habilita `/api/dev/*` en `next dev`).
+
+**Vercel:** el MCP de Vercel de esta maquina esta autenticado en OTRO equipo (no el de este proyecto): no usarlo aqui. Logs y crons se revisan desde el dashboard del usuario; `CRON_SECRET` no esta en `.env.local`, asi que el cron no se puede lanzar en local.
