@@ -30,7 +30,7 @@ export async function getTutorProfile(id: string): Promise<TutorProfile | null> 
  */
 export type TutorDisplayRow = {
   tutorId: string;
-  user: Pick<User, "id" | "username" | "email" | "profile_picture">;
+  user: Pick<User, "id" | "username" | "profile_picture">;
 };
 
 /**
@@ -51,7 +51,6 @@ export async function getTutorDisplayRowsByIds(
       user:users!tutor_profiles_id_fkey (
         id,
         username,
-        email,
         profile_picture
       )
     `
@@ -73,7 +72,6 @@ export async function getTutorDisplayRowsByIds(
       map[tid] = {
         id: u.id,
         username: u.username,
-        email: u.email,
         profile_picture: u.profile_picture ?? null,
       };
     }
@@ -89,7 +87,7 @@ export async function getTutorProfileWithUser(
     .select(
       `
       *,
-      user:users!tutor_profiles_id_fkey (*)
+      user:users!tutor_profiles_id_fkey (id, username, profile_picture, country, is_student, is_tutor)
     `
     )
     .eq("id", id)

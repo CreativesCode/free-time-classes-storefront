@@ -25,11 +25,7 @@ export async function POST(_request: NextRequest) {
 
     const [{ data: userRow, error: userRowError }, { data: student }, { data: tutor }] =
       await Promise.all([
-        supabase
-          .from("users")
-          .select("*")
-          .eq("id", user.id)
-          .single(),
+        supabase.rpc("get_my_profile").maybeSingle(),
         supabase
           .from("student_profiles")
           .select("*")

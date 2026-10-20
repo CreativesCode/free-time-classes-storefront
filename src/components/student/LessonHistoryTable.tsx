@@ -432,9 +432,6 @@ export default function LessonHistoryTable(props: {
                             <div className="font-medium text-gray-900">
                               {tutor?.username ?? "—"}
                             </div>
-                            <div className="text-xs text-gray-500 truncate">
-                              {tutor?.email ?? ""}
-                            </div>
                           </div>
                         </div>
                       </td>

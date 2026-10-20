@@ -143,7 +143,7 @@ export default async function TutorDashboardPage({
     const { data: pendingLessons } = await supabase
       .from("lessons")
       .select(
-        "id, tutor_id, student_id, subject_id, price, scheduled_date_time, duration_minutes, status, meet_link, google_event_id, created_at, updated_at, subject:subjects(id, name, description, icon), student:student_profiles!lessons_student_id_fkey(id, user:users!student_profiles_id_fkey(id, username, email))"
+        "id, tutor_id, student_id, subject_id, price, scheduled_date_time, duration_minutes, status, meet_link, google_event_id, created_at, updated_at, subject:subjects(id, name, description, icon), student:student_profiles!lessons_student_id_fkey(id, user:users!student_profiles_id_fkey(id, username))"
       )
       .in("id", lessonIds);
 

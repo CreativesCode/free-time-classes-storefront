@@ -51,13 +51,20 @@ export default async function StudentProfilePage({
     redirect(`/${locale}/login`);
   }
 
+  // Own private columns are only exposed through get_my_profile().
   const { data: userRow, error: userRowError } = await supabase
-    .from("users")
-    .select(
-      "id, username, email, phone, country, profile_picture, is_student, created_at, updated_at"
-    )
-    .eq("id", authUser.id)
-    .single();
+    .rpc("get_my_profile")
+    .maybeSingle<{
+      id: string;
+      username: string;
+      email: string;
+      phone: string | null;
+      country: string | null;
+      profile_picture: string | null;
+      is_student: boolean;
+      created_at: string;
+      updated_at: string;
+    }>();
 
   if (userRowError || !userRow) {
     redirect(`/${locale}/login`);

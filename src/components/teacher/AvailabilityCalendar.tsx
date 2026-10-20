@@ -25,9 +25,7 @@ import { DateSelectArg, DatesSetArg, EventClickArg } from "@fullcalendar/core";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import timeGridPlugin from "@fullcalendar/timegrid";
-import { Mail } from "lucide-react";
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 const FullCalendar = dynamic(() => import("@fullcalendar/react"), {
@@ -360,12 +358,6 @@ export default function AvailabilityCalendar({
                   <h3 className="font-semibold text-ft-ink">
                     {t("tutor")} {selectedLesson.tutor.user.username}
                   </h3>
-                  <p className="text-sm text-ft-ink-3 flex items-center gap-2">
-                    <Mail className="w-4 h-4" />
-                    <Link href={`mailto:${selectedLesson.tutor.user.email}`}>
-                      {selectedLesson.tutor.user.email}
-                    </Link>
-                  </p>
                 </div>
               )}
               {selectedLesson.subject && (
@@ -433,7 +425,7 @@ export default function AvailabilityCalendar({
                   <p className="text-sm text-ft-ink-2">{t(selectedLesson.status)}</p>
                 </div>
               </div>
-              {user?.email === selectedLesson.tutor?.user?.email && (
+              {user?.id === selectedLesson.tutor?.user?.id && (
                 <div className="mt-2 flex justify-end gap-2 border-t border-ft-line pt-3">
                   <Button
                     variant="outline"

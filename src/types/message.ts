@@ -1,7 +1,6 @@
 export interface MessageContact {
   id: string;
   username: string;
-  email: string;
   profile_picture?: string | null;
 }
 

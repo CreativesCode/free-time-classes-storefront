@@ -137,9 +137,6 @@ export default function FavoriteTutorsList(props: {
                         <div className="font-semibold text-sm truncate">
                           {tutor.user.username ?? "—"}
                         </div>
-                        <div className="text-xs text-gray-500 truncate">
-                          {tutor.user.email ?? ""}
-                        </div>
                       </div>
 
                       <Button

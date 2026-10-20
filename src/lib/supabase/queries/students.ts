@@ -37,7 +37,7 @@ export async function getStudentProfileWithUser(
     .select(
       `
       *,
-      user:users!student_profiles_id_fkey (*)
+      user:users!student_profiles_id_fkey (id, username, profile_picture, country, is_student, is_tutor)
     `
     )
     .eq("id", id)

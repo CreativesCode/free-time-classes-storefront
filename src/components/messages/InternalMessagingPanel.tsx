@@ -90,7 +90,6 @@ export default function InternalMessagingPanel({
             byId.set(item.tutorId, {
               id: item.tutorId,
               username: item.tutorName || item.tutorId,
-              email: "",
               profile_picture: null,
             });
           }
@@ -112,7 +111,6 @@ export default function InternalMessagingPanel({
             byId.set(item.studentId, {
               id: item.studentId,
               username: item.studentName || item.studentId,
-              email: "",
               profile_picture: null,
             });
           }
@@ -369,9 +367,6 @@ export default function InternalMessagingPanel({
                         <div className="min-w-0">
                           <p className="truncate text-[13px] font-semibold text-ft-ink">
                             {contact.username}
-                          </p>
-                          <p className="truncate text-[11px] text-ft-ink-3">
-                            {contact.email}
                           </p>
                         </div>
                         <Button

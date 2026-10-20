@@ -12,7 +12,7 @@ async function getUsersByIds(ids: string[]): Promise<MessageContact[]> {
 
   const { data: users, error } = await supabase
     .from("users")
-    .select("id, username, email, profile_picture")
+    .select("id, username, profile_picture")
     .in("id", ids)
     .order("username", { ascending: true });
 
@@ -60,14 +60,15 @@ export async function searchMessagingUsers(
   currentUserId: string,
   term: string
 ): Promise<MessageContact[]> {
-  const query = term.trim();
+  // Neutralise LIKE wildcards in user input.
+  const query = term.trim().replace(/[%_*\\]/g, " ").trim();
   if (query.length < 2) return [];
 
   const { data, error } = await supabase
     .from("users")
-    .select("id, username, email, profile_picture")
+    .select("id, username, profile_picture")
     .neq("id", currentUserId)
-    .or(`username.ilike.%${query}%,email.ilike.%${query}%`)
+    .ilike("username", `%${query}%`)
     .order("username", { ascending: true })
     .limit(10);
 
@@ -111,7 +112,6 @@ export async function getUserConversations(userId: string): Promise<Conversation
     other_user: {
       id: row.other_user.id,
       username: row.other_user.username,
-      email: row.other_user.email,
       profile_picture: row.other_user.profile_picture ?? null,
     },
     last_message_content: row.last_message_content,

@@ -77,7 +77,6 @@ export async function getLessonsWithRelations(
         user:users!tutor_profiles_id_fkey (
           id,
           username,
-          email,
           profile_picture
         )
       ),
@@ -85,8 +84,7 @@ export async function getLessonsWithRelations(
         id,
         user:users!student_profiles_id_fkey (
           id,
-          username,
-          email
+          username
         )
       )
     `
@@ -169,7 +167,6 @@ export async function getLessonWithRelations(
         user:users!tutor_profiles_id_fkey (
           id,
           username,
-          email,
           profile_picture
         )
       ),
@@ -177,8 +174,7 @@ export async function getLessonWithRelations(
         id,
         user:users!student_profiles_id_fkey (
           id,
-          username,
-          email
+          username
         )
       )
     `

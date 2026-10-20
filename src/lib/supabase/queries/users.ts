@@ -24,17 +24,15 @@ export async function getCurrentUser(
     return null;
   }
 
-  const { data, error } = await supabase
-    .from("users")
-    .select("*")
-    .eq("id", userId)
-    .single();
+  // Private columns (email, phone...) are not readable through the table;
+  // the session user's full row comes from a SECURITY DEFINER RPC.
+  const { data, error } = await supabase.rpc("get_my_profile").maybeSingle();
 
   if (error) {
     throw error;
   }
 
-  return data as User;
+  return (data as User | null) ?? null;
 }
 
 /**
@@ -43,7 +41,7 @@ export async function getCurrentUser(
 export async function getUser(id: string): Promise<User | null> {
   const { data, error } = await supabase
     .from("users")
-    .select("*")
+    .select("id, username, profile_picture, country, is_student, is_tutor")
     .eq("id", id)
     .single();
 
@@ -65,18 +63,21 @@ export async function updateUser(
   id: string,
   updates: Partial<User>
 ): Promise<User> {
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from("users")
     .update({ ...updates, updated_at: new Date().toISOString() })
-    .eq("id", id)
-    .select()
-    .single();
+    .eq("id", id);
 
   if (error) {
     throw error;
   }
 
-  return data as User;
+  // The updated row can only be read back through get_my_profile().
+  const updated = await getCurrentUser(id);
+  if (!updated) {
+    throw new Error("Updated user not found.");
+  }
+  return updated;
 }
 
 /**

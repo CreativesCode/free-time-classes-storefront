@@ -56,7 +56,6 @@ export async function GET(request: NextRequest) {
         user:users!tutor_profiles_id_fkey (
           id,
           username,
-          email,
           profile_picture
         )
       ),
@@ -64,8 +63,7 @@ export async function GET(request: NextRequest) {
         id,
         user:users!student_profiles_id_fkey (
           id,
-          username,
-          email
+          username
         )
       )
     `

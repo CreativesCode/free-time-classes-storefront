@@ -474,9 +474,6 @@ export default function AvailabilityBrowser(props: AvailabilityBrowserProps) {
                   <h3 className="font-semibold text-lg">
                     {selectedLesson.tutor?.user?.username}
                   </h3>
-                  <p className="text-sm text-gray-600">
-                    {selectedLesson.tutor?.user?.email}
-                  </p>
                 </div>
               </div>
 

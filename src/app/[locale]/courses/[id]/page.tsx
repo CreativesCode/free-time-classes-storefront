@@ -159,7 +159,7 @@ export default async function CourseDetailPage({
           .select(
             `
               *,
-              user:users!tutor_profiles_id_fkey (*)
+              user:users!tutor_profiles_id_fkey (id, username, profile_picture, country, is_student, is_tutor)
             `
           )
           .eq("id", course.tutor_id)

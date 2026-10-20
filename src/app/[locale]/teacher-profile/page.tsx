@@ -61,11 +61,18 @@ export default async function TeacherProfilePage({
     redirect(`/${locale}/login`);
   }
 
+  // Own private columns are only exposed through get_my_profile().
   const { data: userRow, error: userRowError } = await supabase
-    .from("users")
-    .select("id, username, email, phone, country, profile_picture, is_tutor")
-    .eq("id", authUser.id)
-    .single();
+    .rpc("get_my_profile")
+    .maybeSingle<{
+      id: string;
+      username: string;
+      email: string;
+      phone: string | null;
+      country: string | null;
+      profile_picture: string | null;
+      is_tutor: boolean;
+    }>();
 
   if (userRowError || !userRow) {
     redirect(`/${locale}/login`);
@@ -111,7 +118,6 @@ export default async function TeacherProfilePage({
           user:users!tutor_profiles_id_fkey (
             id,
             username,
-            email,
             profile_picture
           )
         ),
