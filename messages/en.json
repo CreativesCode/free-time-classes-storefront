@@ -65,6 +65,13 @@
     "student": "Student",
     "tutor": "Tutor",
     "both": "Student and tutor",
+    "passwordHint": "At least {min} characters.",
+    "errors": {
+      "weakPassword": "The password is too weak: use at least {min} characters.",
+      "alreadyRegistered": "There is already an account with this email. Log in or reset your password.",
+      "rateLimited": "Too many attempts. Wait a few minutes and try again.",
+      "signupDisabled": "Sign-up is temporarily disabled."
+    },
     "registrationFailed": "Registration failed. Please try again.",
     "resendFailed": "We couldn't resend the email. Please try again.",
     "loading": "Registering...",

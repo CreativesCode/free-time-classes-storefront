@@ -9,8 +9,8 @@ import { toast } from "sonner";
 import { BrandLogo } from "@/components/ds/BrandLogo";
 import { useAuth } from "@/context/UserContext";
 import { createClient } from "@/lib/supabase/client";
+import { MIN_PASSWORD_LENGTH } from "@/lib/auth/password";
 
-const MIN_PASSWORD_LENGTH = 8;
 
 const LABEL =
   "text-[11px] font-semibold uppercase tracking-[0.06em] text-ft-ink-3";

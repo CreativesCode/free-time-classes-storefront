@@ -17,8 +17,19 @@ import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useState } from "react";
 
 import { BrandLogo } from "@/components/ds/BrandLogo";
+import { MIN_PASSWORD_LENGTH } from "@/lib/auth/password";
 
 type AccountType = "student" | "tutor" | "both";
+
+const SIGNUP_ERROR_KEYS: Record<string, string> = {
+  weak_password: "errors.weakPassword",
+  user_already_exists: "errors.alreadyRegistered",
+  email_exists: "errors.alreadyRegistered",
+  email_address_invalid: "invalidEmail",
+  over_email_send_rate_limit: "errors.rateLimited",
+  over_request_rate_limit: "errors.rateLimited",
+  signup_disabled: "errors.signupDisabled",
+};
 
 const LABEL =
   "text-[11px] font-semibold uppercase tracking-[0.06em] text-ft-ink-3";
@@ -78,6 +89,10 @@ export default function RegisterClient({ locale }: { locale: string }) {
       setEmailError(t("invalidEmail"));
       return;
     }
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setRegisterError(t("errors.weakPassword", { min: MIN_PASSWORD_LENGTH }));
+      return;
+    }
 
     try {
       const emailRedirectTo =
@@ -100,9 +115,15 @@ export default function RegisterClient({ locale }: { locale: string }) {
         router.push(`/${locale}/dashboard`);
       }
     } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : t("registrationFailed");
-      setRegisterError(message || t("registrationFailed"));
+      // Supabase AuthError codes → translated copy (never the raw English message).
+      const code =
+        error && typeof error === "object" && "code" in error
+          ? String((error as { code?: unknown }).code)
+          : "";
+      const key = SIGNUP_ERROR_KEYS[code];
+      setRegisterError(
+        key ? t(key, { min: MIN_PASSWORD_LENGTH }) : t("registrationFailed")
+      );
     }
   };
 
@@ -291,6 +312,8 @@ export default function RegisterClient({ locale }: { locale: string }) {
                   value={password}
                   onChange={handlePasswordChange}
                   required
+                  minLength={MIN_PASSWORD_LENGTH}
+                  aria-describedby="password-hint"
                   className={cn(INPUT, "pr-12")}
                 />
                 <button
@@ -310,6 +333,9 @@ export default function RegisterClient({ locale }: { locale: string }) {
                   )}
                 </button>
               </div>
+              <p id="password-hint" className="mt-1.5 text-xs text-ft-ink-3">
+                {t("passwordHint", { min: MIN_PASSWORD_LENGTH })}
+              </p>
             </div>
           </div>
 

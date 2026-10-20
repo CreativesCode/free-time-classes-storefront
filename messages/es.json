@@ -65,6 +65,13 @@
     "student": "Estudiante",
     "tutor": "Profesor",
     "both": "Estudiante y profesor",
+    "passwordHint": "Mínimo {min} caracteres.",
+    "errors": {
+      "weakPassword": "La contraseña es demasiado débil: usa al menos {min} caracteres.",
+      "alreadyRegistered": "Ya hay una cuenta con este correo. Inicia sesión o recupera tu contraseña.",
+      "rateLimited": "Demasiados intentos. Espera unos minutos y vuelve a probar.",
+      "signupDisabled": "El registro está desactivado temporalmente."
+    },
     "registrationFailed": "Registro fallido. Por favor, inténtalo de nuevo.",
     "resendFailed": "No pudimos reenviar el correo. Inténtalo de nuevo.",
     "loading": "Registrando...",
