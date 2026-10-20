@@ -162,7 +162,7 @@ export default function AvailabilityCalendar({
   );
 
   const loadCalendarEvents = useCallback(
-    async (start: Date, end: Date) => {
+    async (start: Date, end: Date, signal?: AbortSignal) => {
       try {
         setCalendarLoading(true);
         const params = new URLSearchParams({
@@ -170,7 +170,8 @@ export default function AvailabilityCalendar({
           end: end.toISOString(),
         });
         const response = await fetch(
-          `/api/bookings/tutor/calendar?${params}`
+          `/api/bookings/tutor/calendar?${params}`,
+          { signal }
         );
         const result = (await response.json()) as {
           error?: string;
@@ -232,26 +233,29 @@ export default function AvailabilityCalendar({
           );
         }
 
+        if (signal?.aborted) return;
         setEvents([...backgroundEvents, ...lessonEvents]);
       } catch (error) {
+        if (signal?.aborted) return;
         console.error("Error loading calendar events:", error);
         setEvents([]);
       } finally {
-        setCalendarLoading(false);
+        if (!signal?.aborted) setCalendarLoading(false);
       }
     },
     [user?.id]
   );
 
   const handleDatesSet = (arg: DatesSetArg) => {
-    if (!user?.id) return;
     setCurrentRange({ start: arg.start, end: arg.end });
-    void loadCalendarEvents(arg.start, arg.end);
   };
 
+  // Single fetch per visible range / refresh; a newer range aborts the old one (F046).
   useEffect(() => {
-    if (refreshKey === undefined || !currentRange || !user?.id) return;
-    void loadCalendarEvents(currentRange.start, currentRange.end);
+    if (!currentRange || !user?.id) return;
+    const controller = new AbortController();
+    void loadCalendarEvents(currentRange.start, currentRange.end, controller.signal);
+    return () => controller.abort();
   }, [refreshKey, currentRange, user?.id, loadCalendarEvents]);
 
   // Load selected lesson when selectedLessonId changes
