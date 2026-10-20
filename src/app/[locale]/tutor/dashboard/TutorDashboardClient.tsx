@@ -33,7 +33,7 @@ import type { LessonWithRelations } from "@/types/lesson";
 import {
   Calendar,
   Clock,
-  DollarSign,
+  Euro,
   Users,
   Star,
   TrendingUp,
@@ -471,8 +471,8 @@ export default function TutorDashboardClient({
     },
     {
       label: td("monthlyEarnings"),
-      value: `$${stats.earningsThisMonth.toFixed(0)}`,
-      icon: DollarSign,
+      value: `${stats.earningsThisMonth.toFixed(0)}€`,
+      icon: Euro,
       color: "bg-emerald-100 text-emerald-600",
       accent: "border-emerald-200",
     },
@@ -899,7 +899,7 @@ export default function TutorDashboardClient({
                                 <p className="font-medium">
                                   {display.isCustomRequest
                                     ? t("priceFromHourlyRate")
-                                    : `$${display.price ?? "—"}`}
+                                    : display.price != null ? `${display.price}€` : "—"}
                                 </p>
                               </div>
                             </div>

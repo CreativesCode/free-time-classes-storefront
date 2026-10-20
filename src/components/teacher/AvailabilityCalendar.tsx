@@ -127,7 +127,7 @@ export default function AvailabilityCalendar({
 
             return {
               id: String(item.lessonId),
-              title: `${item.subjectName || ""} · $${item.price}`,
+              title: `${item.subjectName || ""} · ${item.price}€`,
               start: new Date(item.scheduledDateTime!),
               end: new Date(
                 new Date(item.scheduledDateTime!).getTime() +
@@ -416,7 +416,7 @@ export default function AvailabilityCalendar({
                   <p className="text-sm font-medium text-ft-ink">
                     {t("price")}
                   </p>
-                  <p className="text-sm text-ft-ink-2">${selectedLesson.price}</p>
+                  <p className="text-sm text-ft-ink-2">{selectedLesson.price}€</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-ft-ink">

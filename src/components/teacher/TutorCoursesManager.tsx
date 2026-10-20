@@ -564,7 +564,7 @@ export default function TutorCoursesManager({
                               </h3>
                               <p className="text-sm text-ft-ink-3">
                                 {subjectNameById.get(course.subject_id ?? -1) ?? "—"} ·{" "}
-                                {course.duration_minutes ?? 60} min · ${course.price_per_session} ·{" "}
+                                {course.duration_minutes ?? 60} min · {course.price_per_session}€ ·{" "}
                                 {getLevelLabel(course.level)}
                               </p>
                               <div className="mt-1 flex items-center gap-1 text-sm text-ft-ink-2">
@@ -639,7 +639,7 @@ export default function TutorCoursesManager({
                     Preview
                   </span>
                   <span className="text-lg font-bold text-ft-ink">
-                    ${createForm.price || "0"}
+                    {createForm.price || "0"}€
                   </span>
                 </div>
                 <h4 className="line-clamp-2 text-base font-bold text-ft-ink">

@@ -186,7 +186,7 @@ export default function TutorBookingRequests({
                     <p>
                       {item.isCustomRequest
                         ? t("priceFromHourlyRate")
-                        : `$${item.price ?? "—"}`}
+                        : item.price != null ? `${item.price}€` : "—"}
                     </p>
                   </div>
                 </div>

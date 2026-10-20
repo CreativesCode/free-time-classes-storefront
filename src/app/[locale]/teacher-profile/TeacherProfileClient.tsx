@@ -299,7 +299,7 @@ export default function TeacherProfileClient({
                       label={t("hourlyRate")}
                       value={
                         tutorProfile?.hourly_rate
-                          ? `${tutorProfile.hourly_rate} USD`
+                          ? `${tutorProfile.hourly_rate}€`
                           : t("notProvided")
                       }
                     />

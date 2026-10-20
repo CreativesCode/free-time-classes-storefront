@@ -518,7 +518,7 @@ export default function RecurringAvailabilityManager({
                     {" · "}
                     {subjectName(r.subject_id)}
                     {" · "}
-                    {r.duration_minutes} {t("minutes")} · ${Number(r.price)}
+                    {r.duration_minutes} {t("minutes")} · {Number(r.price)}€
                   </span>
                   <Button
                     type="button"
