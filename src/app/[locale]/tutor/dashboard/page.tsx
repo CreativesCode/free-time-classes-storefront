@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
 import { fetchTutorReviewStatsMap } from "@/lib/supabase/tutor-review-stats";
+import { fetchStudentNames } from "@/lib/supabase/student-names";
 import TutorDashboardClient from "./TutorDashboardClient";
 import type { Booking } from "@/types/booking";
 import type { LessonWithRelations } from "@/types/lesson";
@@ -20,11 +21,11 @@ type PendingBookingItem = {
   booking: Booking;
   lesson: LessonWithRelations | null;
   customSubjectName?: string | null;
+  studentName?: string | null;
 };
 
 interface DashboardStats {
   classesThisMonth: number;
-  pendingRequests: number;
   avgRating: number | null;
   earningsThisMonth: number;
 }
@@ -103,7 +104,7 @@ export default async function TutorDashboardPage({
       supabase
         .from("lessons")
         .select(
-          "id, scheduled_date_time, duration_minutes, price, status, meet_link, subject:subjects(name), student:student_profiles!lessons_student_id_fkey(id, user:users!student_profiles_id_fkey(username))"
+          "id, student_id, scheduled_date_time, duration_minutes, price, status, meet_link, subject:subjects(name)"
         )
         .eq("tutor_id", user.id)
         .in("status", ["confirmed", "scheduled"])
@@ -143,7 +144,7 @@ export default async function TutorDashboardPage({
     const { data: pendingLessons } = await supabase
       .from("lessons")
       .select(
-        "id, tutor_id, student_id, subject_id, price, scheduled_date_time, duration_minutes, status, meet_link, google_event_id, created_at, updated_at, subject:subjects(id, name, description, icon), student:student_profiles!lessons_student_id_fkey(id, user:users!student_profiles_id_fkey(id, username))"
+        "id, tutor_id, student_id, subject_id, price, scheduled_date_time, duration_minutes, status, meet_link, google_event_id, created_at, updated_at, subject:subjects(id, name, description, icon)"
       )
       .in("id", lessonIds);
 
@@ -166,10 +167,19 @@ export default async function TutorDashboardPage({
     );
   }
 
+  const rawTodayLessons = (todayLessonsRes.data ?? []) as unknown as Array<
+    TodayLesson & { student_id: string | null }
+  >;
+  const studentNameById = await fetchStudentNames(supabase, [
+    ...allPending.map((b) => b.student_id),
+    ...rawTodayLessons.map((l) => l.student_id),
+  ]);
+
   const pendingItems: PendingBookingItem[] = [
     ...customBookings.map((booking) => ({
       booking,
       lesson: null,
+      studentName: studentNameById.get(booking.student_id) ?? null,
       customSubjectName:
         typeof booking.requested_subject_id === "number"
           ? subjectNameById.get(booking.requested_subject_id) ?? null
@@ -177,6 +187,7 @@ export default async function TutorDashboardPage({
     })),
     ...slotBookings.map((booking) => ({
       booking,
+      studentName: studentNameById.get(booking.student_id) ?? null,
       lesson:
         typeof booking.lesson_id === "number"
           ? lessonById.get(booking.lesson_id) ?? null
@@ -193,13 +204,17 @@ export default async function TutorDashboardPage({
   const fromReviews = reviewStatsMap?.get(user.id);
   const stats: DashboardStats = {
     classesThisMonth,
-    pendingRequests: pendingItems.length,
     avgRating:
       fromReviews?.rating ?? tutorProfileRes.data?.rating ?? null,
     earningsThisMonth,
   };
 
-  const todayLessons = (todayLessonsRes.data ?? []) as unknown as TodayLesson[];
+  const todayLessons: TodayLesson[] = rawTodayLessons.map(({ student_id, ...lesson }) => ({
+    ...lesson,
+    student: student_id
+      ? { id: student_id, user: { username: studentNameById.get(student_id) ?? "" } }
+      : null,
+  }));
 
   return (
     <TutorDashboardClient

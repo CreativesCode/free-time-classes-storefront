@@ -24,7 +24,7 @@ import { createClient } from "@/lib/supabase/client";
 import { fetchTutorReviewStatsMap } from "@/lib/supabase/tutor-review-stats";
 import { getAvatarColor } from "@/lib/utils";
 import { getBookingsByTutor } from "@/lib/supabase/queries/bookings";
-import { getLessonWithRelations } from "@/lib/supabase/queries/lessons";
+import { fetchStudentNames } from "@/lib/supabase/student-names";
 import type {
   Booking,
   BookingRejectionReason,
@@ -47,13 +47,19 @@ import {
   Copy,
   Sparkles,
 } from "lucide-react";
-import { nowPlusMinutesAsLessonTimestamp } from "@/lib/datetime/lessonTime";
+import {
+  endOfTodayAsLessonTimestamp,
+  nowPlusMinutesAsLessonTimestamp,
+  startOfMonthAsLessonTimestamp,
+  startOfTodayAsLessonTimestamp,
+} from "@/lib/datetime/lessonTime";
 
 type PendingBookingItem = {
   booking: Booking;
   lesson: LessonWithRelations | null;
   // For custom requests we don't have a lesson; carry the snapshot from the booking.
   customSubjectName?: string | null;
+  studentName?: string | null;
 };
 
 const CUSTOM_REQUEST_EXPIRY_MINUTES = 15;
@@ -78,7 +84,7 @@ function getItemDisplay(item: PendingBookingItem): {
       scheduledDateTime: item.booking.requested_scheduled_date_time ?? null,
       durationMinutes: item.booking.requested_duration_minutes ?? null,
       price: null,
-      studentName: null,
+      studentName: item.studentName ?? null,
       isCustomRequest: true,
       notes: item.booking.notes ?? null,
     };
@@ -88,7 +94,7 @@ function getItemDisplay(item: PendingBookingItem): {
     scheduledDateTime: item.lesson?.scheduled_date_time ?? null,
     durationMinutes: item.lesson?.duration_minutes ?? null,
     price: item.lesson?.price ?? null,
-    studentName: item.lesson?.student?.user?.username ?? null,
+    studentName: item.studentName ?? null,
     isCustomRequest: false,
     notes: item.booking.notes ?? null,
   };
@@ -107,7 +113,6 @@ interface TodayLesson {
 
 interface DashboardStats {
   classesThisMonth: number;
-  pendingRequests: number;
   avgRating: number | null;
   earningsThisMonth: number;
 }
@@ -168,7 +173,6 @@ export default function TutorDashboardClient({
   const [stats, setStats] = useState<DashboardStats>(
     initialData?.stats ?? {
       classesThisMonth: 0,
-      pendingRequests: 0,
       avgRating: null,
       earningsThisMonth: 0,
     }
@@ -210,32 +214,52 @@ export default function TutorDashboardClient({
       ];
 
       const supabase = createClient();
-      const subjectsRes = customSubjectIds.length
-        ? await supabase
+      const lessonIds = pendingBookings
+        .map((b) => b.lesson_id)
+        .filter((id): id is number => typeof id === "number");
+      const [subjectsRes, lessonsRes, studentNameById] = await Promise.all([
+        customSubjectIds.length
+          ? supabase
             .from("subjects")
             .select("id,name")
             .in("id", customSubjectIds)
-        : { data: [] as { id: number; name: string }[] };
+          : Promise.resolve({ data: [] as { id: number; name: string }[] }),
+        lessonIds.length
+          ? supabase
+              .from("lessons")
+              .select(
+                "id, tutor_id, student_id, subject_id, price, scheduled_date_time, duration_minutes, status, meet_link, google_event_id, created_at, updated_at, subject:subjects(id, name, description, icon)"
+              )
+              .in("id", lessonIds)
+          : Promise.resolve({ data: [] }),
+        fetchStudentNames(
+          supabase,
+          pendingBookings.map((b) => b.student_id)
+        ),
+      ]);
+      const lessonById = new Map(
+        ((lessonsRes.data ?? []) as unknown as LessonWithRelations[]).map((l) => [l.id, l])
+      );
       const subjectNameById = new Map(
         (subjectsRes.data ?? []).map((s) => [s.id, s.name])
       );
 
-      const items = await Promise.all(
-        pendingBookings.map(async (booking) => {
+      const items = pendingBookings.map((booking) => {
+          const studentName = studentNameById.get(booking.student_id) ?? null;
           if (typeof booking.lesson_id === "number") {
-            const lesson = await getLessonWithRelations(booking.lesson_id);
-            return { booking, lesson } satisfies PendingBookingItem;
+            const lesson = lessonById.get(booking.lesson_id) ?? null;
+            return { booking, lesson, studentName } satisfies PendingBookingItem;
           }
           return {
             booking,
             lesson: null,
+            studentName,
             customSubjectName:
               typeof booking.requested_subject_id === "number"
                 ? subjectNameById.get(booking.requested_subject_id) ?? null
                 : null,
           } satisfies PendingBookingItem;
-        })
-      );
+        });
 
       setPendingItems(items);
     } catch (e) {
@@ -252,10 +276,9 @@ export default function TutorDashboardClient({
     setStatsLoading(true);
     try {
       const supabase = createClient();
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const startOfMonth = startOfMonthAsLessonTimestamp();
 
-      const [lessonsRes, profileRes, pendingRes, reviewStatsMap] = await Promise.all([
+      const [lessonsRes, profileRes, reviewStatsMap] = await Promise.all([
         supabase
           .from("lessons")
           .select("price, duration_minutes")
@@ -267,11 +290,6 @@ export default function TutorDashboardClient({
           .select("rating")
           .eq("id", effectiveUser.id)
           .single(),
-        supabase
-          .from("bookings")
-          .select("id", { count: "exact", head: true })
-          .eq("tutor_id", effectiveUser.id)
-          .eq("status", "pending"),
         fetchTutorReviewStatsMap(supabase, [effectiveUser.id]),
       ]);
 
@@ -281,7 +299,6 @@ export default function TutorDashboardClient({
 
       setStats({
         classesThisMonth: monthLessons.length,
-        pendingRequests: pendingRes.count ?? 0,
         avgRating:
           fromReviews?.rating ?? profileRes.data?.rating ?? null,
         earningsThisMonth: totalEarnings,
@@ -299,23 +316,33 @@ export default function TutorDashboardClient({
     setTodayLoading(true);
     try {
       const supabase = createClient();
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
-      const todayEnd = new Date();
-      todayEnd.setHours(23, 59, 59, 999);
 
       const { data } = await supabase
         .from("lessons")
         .select(
-          "id, scheduled_date_time, duration_minutes, price, status, meet_link, subject:subjects(name), student:student_profiles!lessons_student_id_fkey(id, user:users!student_profiles_id_fkey(username))"
+          "id, student_id, scheduled_date_time, duration_minutes, price, status, meet_link, subject:subjects(name)"
         )
         .eq("tutor_id", effectiveUser.id)
         .in("status", ["confirmed", "scheduled"])
-        .gte("scheduled_date_time", todayStart.toISOString())
-        .lte("scheduled_date_time", todayEnd.toISOString())
+        .gte("scheduled_date_time", startOfTodayAsLessonTimestamp())
+        .lte("scheduled_date_time", endOfTodayAsLessonTimestamp())
         .order("scheduled_date_time", { ascending: true });
 
-      setTodayLessons((data as unknown as TodayLesson[]) ?? []);
+      const rows = (data ?? []) as unknown as Array<
+        TodayLesson & { student_id: string | null }
+      >;
+      const names = await fetchStudentNames(
+        supabase,
+        rows.map((l) => l.student_id)
+      );
+      setTodayLessons(
+        rows.map(({ student_id, ...lesson }) => ({
+          ...lesson,
+          student: student_id
+            ? { id: student_id, user: { username: names.get(student_id) ?? "" } }
+            : null,
+        }))
+      );
     } catch (e) {
       console.error("Error loading today lessons:", e);
     } finally {
@@ -456,7 +483,7 @@ export default function TutorDashboardClient({
     },
     {
       label: td("pendingRequests"),
-      value: stats.pendingRequests,
+      value: pendingItems.length,
       icon: Clock,
       color: "bg-amber-100 text-amber-600",
       accent: "border-amber-200",
@@ -574,7 +601,7 @@ export default function TutorDashboardClient({
               {pendingItems.map((item) => {
                 const { booking } = item;
                 const display = getItemDisplay(item);
-                const studentName = display.studentName ?? booking.student_id;
+                const studentName = display.studentName || t("student");
                 const initials = studentName.slice(0, 2).toUpperCase();
                 const timeLabel = display.scheduledDateTime
                   ? formatTime(display.scheduledDateTime)
@@ -650,7 +677,7 @@ export default function TutorDashboardClient({
           ) : (
             <div className="relative ml-3 space-y-6 border-l-2 border-ft-line-soft pl-7">
               {todayLessons.map((lesson, idx) => {
-                const studentName = lesson.student?.user?.username ?? "—";
+                const studentName = lesson.student?.user?.username || "—";
                 const isCurrent = idx === 0;
                 const endTime = new Date(
                   new Date(lesson.scheduled_date_time).getTime() +
@@ -842,7 +869,7 @@ export default function TutorDashboardClient({
                         const scheduledLabel = display.scheduledDateTime
                           ? new Date(display.scheduledDateTime).toLocaleString(locale)
                           : "—";
-                        const studentName = display.studentName ?? booking.student_id;
+                        const studentName = display.studentName || t("student");
                         const initials = studentName.slice(0, 2).toUpperCase();
 
                         return (
@@ -985,7 +1012,7 @@ export default function TutorDashboardClient({
                 ) : (
                   <div className="relative space-y-3 pl-4 before:absolute before:bottom-2 before:left-0 before:top-2 before:w-[2px] before:bg-ft-surface-2">
                     {todayLessons.map((lesson, idx) => {
-                      const studentName = lesson.student?.user?.username ?? "—";
+                      const studentName = lesson.student?.user?.username || "—";
                       const isCurrent = idx === 0;
                       return (
                         <div

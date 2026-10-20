@@ -178,18 +178,33 @@ export default function BookingsClient({ locale }: { locale: string }) {
               id, scheduled_date_time, duration_minutes, price, status, meet_link,
               subject:subjects(name)
             ),
-            requested_subject:subjects!bookings_requested_subject_id_fkey(name),
-            student:student_profiles!bookings_student_id_fkey(
-              id,
-              user:users!student_profiles_id_fkey(id, username, profile_picture)
-            )
+            requested_subject:subjects!bookings_requested_subject_id_fkey(name)
           `
           )
           .eq("tutor_id", user.id)
           .order("created_at", { ascending: false });
 
         if (fetchError) throw fetchError;
-        setBookings((data as Booking[]) ?? []);
+        const rows = (data as Booking[]) ?? [];
+
+        // student_profiles is private to its owner; the public users row of
+        // a tutor's own students is readable (migration 039).
+        const studentIds = [...new Set(rows.map((b) => b.student_id))];
+        const { data: students } = studentIds.length
+          ? await supabase
+              .from("users")
+              .select("id, username, profile_picture")
+              .in("id", studentIds)
+          : { data: [] as PersonUser[] };
+        const byId = new Map(
+          ((students ?? []) as PersonUser[]).map((u) => [u.id, u])
+        );
+        setBookings(
+          rows.map((b) => ({
+            ...b,
+            student: { id: b.student_id, user: byId.get(b.student_id) ?? null },
+          }))
+        );
       }
     } catch {
       setError(t("loadError"));
