@@ -15,7 +15,6 @@ import {
   Clock,
   GraduationCap,
   Star,
-  Users,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -92,7 +91,6 @@ export default function CourseDetailClient({
   description,
   level,
   duration_minutes,
-  max_students,
   is_active,
   rating,
   total_reviews,
@@ -197,10 +195,6 @@ export default function CourseDetailClient({
                 <Clock width={12} height={12} />
                 {duration_minutes} {t("minutes")}
               </span>
-              <span className="inline-flex items-center gap-1">
-                <Users width={12} height={12} />
-                {t("maxStudents", { count: max_students })}
-              </span>
             </div>
           </div>
 
@@ -245,16 +239,12 @@ export default function CourseDetailClient({
           )}
 
           {/* Stats grid */}
-          <div className="grid grid-cols-3 gap-2.5">
+          {/* Group classes do not exist yet: max students stays hidden. */}
+          <div className="grid grid-cols-2 gap-2.5">
             <StatCard
               icon={<Clock width={16} height={16} />}
               value={String(duration_minutes)}
               label={t("minutes")}
-            />
-            <StatCard
-              icon={<Users width={16} height={16} />}
-              value={String(max_students)}
-              label={t("maxStudentsLabel")}
             />
             <StatCard
               icon={<Calendar width={16} height={16} />}
@@ -409,12 +399,6 @@ export default function CourseDetailClient({
                   <span className="text-ft-ink-3">{t("duration")}</span>
                   <span className="font-semibold text-ft-ink">
                     {duration_minutes} {t("minutes")}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-ft-ink-3">{t("maxStudentsLabel")}</span>
-                  <span className="font-semibold text-ft-ink">
-                    {max_students}
                   </span>
                 </div>
                 {level && (
