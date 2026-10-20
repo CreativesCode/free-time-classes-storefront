@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     const { data: lesson, error: lessonError } = await supabaseAdmin
       .from("lessons")
-      .select("id,tutor_id,status,student_id,scheduled_date_time,duration_minutes")
+      .select("id,tutor_id,status,student_id,scheduled_date_time,duration_minutes,subject:subjects(name)")
       .eq("id", lessonId)
       .single();
 
@@ -159,6 +159,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Notify the tutor about the new booking request
+    const subjectRel = lesson.subject as { name?: string } | { name?: string }[] | null;
+    const subjectName = (Array.isArray(subjectRel) ? subjectRel[0] : subjectRel)?.name ?? null;
     const { data: studentUser } = await supabaseAdmin
       .from("users")
       .select("username")
@@ -169,8 +171,15 @@ export async function POST(request: NextRequest) {
       userId: updatedLesson.tutor_id,
       type: "booking_request",
       title: "Nueva solicitud de clase",
-      body: `${studentUser?.username ?? "Un estudiante"} ha solicitado una clase contigo.`,
-      data: { booking_id: booking.id, lesson_id: updatedLesson.id, student_id: user.id },
+      body: `${studentUser?.username ?? "Un estudiante"} ha solicitado una clase${
+        subjectName ? ` de ${subjectName}` : ""
+      }${lesson.duration_minutes ? ` (${lesson.duration_minutes} min)` : ""} contigo.`,
+      data: {
+        booking_id: booking.id,
+        lesson_id: updatedLesson.id,
+        student_id: user.id,
+        scheduled_date_time: lesson.scheduled_date_time,
+      },
     });
 
     return noStoreJson({ bookingId: booking.id }, { status: 200 });
