@@ -27,7 +27,12 @@ export default function LoginClient({ locale }: { locale: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const safeNext = useMemo(
-    () => getSafeRedirectNext(locale, searchParams.get("next")),
+    // The middleware sends `?redirect=`; links and the auth callback use `?next=`.
+    () =>
+      getSafeRedirectNext(
+        locale,
+        searchParams.get("next") ?? searchParams.get("redirect")
+      ),
     [locale, searchParams]
   );
   const t = useTranslations("login");
@@ -39,7 +44,7 @@ export default function LoginClient({ locale }: { locale: string }) {
     if (!shouldRedirectAfterLogin) return;
     if (!user) return;
 
-    if (user.is_student && safeNext) {
+    if (safeNext) {
       router.push(safeNext);
       return;
     }
