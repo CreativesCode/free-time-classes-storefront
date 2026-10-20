@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
-import { nowAsLessonTimestamp } from "@/lib/datetime/lessonTime";
+import { nowPlusMinutesAsLessonTimestamp } from "@/lib/datetime/lessonTime";
+import { MIN_LEAD_MINUTES } from "@/lib/bookings/leadTime";
 
 // Booking/slot state changes on every request/response: never reuse a
 // browser-cached copy (it made confirmed requests reappear as pending).
 const PRIVATE_READ_CACHE_CONTROL = "private, no-store";
+
+// Upper bound on returned slots (the picker shows the next weeks only).
+const MAX_SLOTS = 300;
 
 export async function GET(request: NextRequest) {
   try {
@@ -45,7 +49,13 @@ export async function GET(request: NextRequest) {
 
     let query = admin.from("lessons").select(
       `
-      *,
+      id,
+      tutor_id,
+      subject_id,
+      scheduled_date_time,
+      duration_minutes,
+      price,
+      status,
       subject:subjects (
         id,
         name,
@@ -59,20 +69,13 @@ export async function GET(request: NextRequest) {
           username,
           profile_picture
         )
-      ),
-      student:student_profiles!lessons_student_id_fkey (
-        id,
-        user:users!student_profiles_id_fkey (
-          id,
-          username
-        )
       )
     `
     );
 
     query = query
       .eq("status", "available")
-      .gte("scheduled_date_time", nowAsLessonTimestamp());
+      .gte("scheduled_date_time", nowPlusMinutesAsLessonTimestamp(MIN_LEAD_MINUTES));
 
     if (Number.isInteger(subjectId) && subjectId && subjectId > 0) {
       query = query.eq("subject_id", subjectId);
@@ -82,9 +85,9 @@ export async function GET(request: NextRequest) {
       query = query.eq("tutor_id", tutorId);
     }
 
-    const { data, error } = await query.order("scheduled_date_time", {
-      ascending: true,
-    });
+    const { data, error } = await query
+      .order("scheduled_date_time", { ascending: true })
+      .limit(MAX_SLOTS);
 
     if (error) {
       return NextResponse.json(
