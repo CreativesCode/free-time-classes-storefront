@@ -126,6 +126,18 @@ export async function respondToBooking(
         .select("id")
         .single();
 
+      // 23505: lessons_tutor_start_live_key — the tutor already has a lesson
+      // starting at that time.
+      if (lessonInsertError?.code === "23505") {
+        return {
+          httpStatus: 409,
+          payload: {
+            error: "You already have a class at that time.",
+            code: "slot_conflict",
+          },
+        };
+      }
+
       if (lessonInsertError || !createdLesson) {
         console.error(
           "[respondToBooking] custom request lesson insert failed:",
