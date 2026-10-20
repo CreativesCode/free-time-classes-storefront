@@ -31,7 +31,7 @@ interface StudentProfileEditProps {
   isOpen: boolean;
   onClose: () => void;
   studentProfile: StudentProfile | null;
-  onUpdated: () => void;
+  onUpdated: (profile: StudentProfile) => void;
 }
 
 const LANGUAGE_LEVEL_OPTIONS: Array<{
@@ -125,8 +125,9 @@ export default function StudentProfileEdit({
     prefersTextChat: false,
   });
 
+  // Seed the form each time the dialog opens, from the latest saved values.
   useEffect(() => {
-    if (!user) return;
+    if (!user || !isOpen) return;
 
     setFormData({
       username: user.username || "",
@@ -141,7 +142,7 @@ export default function StudentProfileEdit({
       prefersVideoCalls: !!studentProfile?.prefers_video_calls,
       prefersTextChat: !!studentProfile?.prefers_text_chat,
     });
-  }, [user, studentProfile]);
+  }, [user, studentProfile, isOpen]);
 
   const avatarPreviewUrl = useMemo(() => {
     if (avatarFile) return URL.createObjectURL(avatarFile);
@@ -205,7 +206,7 @@ export default function StudentProfileEdit({
         profile_picture: profilePicture,
       });
 
-      await updateStudentProfile(user.id, {
+      const updatedProfile = await updateStudentProfile(user.id, {
         bio: formData.bio ? formData.bio : null,
         learning_goals: formData.learningGoals ? formData.learningGoals : null,
         language_level: formData.languageLevel ? formData.languageLevel : null,
@@ -218,7 +219,7 @@ export default function StudentProfileEdit({
       await refreshUser();
       toast.success(t("profileUpdated"));
       setAvatarFile(null);
-      onUpdated();
+      onUpdated(updatedProfile);
       onClose();
     } catch (error) {
       console.error("Error updating student profile:", error);

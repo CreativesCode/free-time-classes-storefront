@@ -291,10 +291,9 @@ export default function StudentProfilePageClient({
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         studentProfile={studentProfile}
-        onUpdated={() => {
-          // refresh local copy from latest server data
+        onUpdated={(updated) => {
+          setStudentProfile(updated);
           router.refresh();
-          setStudentProfile((prev) => prev);
         }}
       />
         </div>
