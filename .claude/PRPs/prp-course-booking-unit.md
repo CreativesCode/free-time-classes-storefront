@@ -1,6 +1,6 @@
 # PRP-001: Curso como unidad de reserva (modelo italki) + publicar curso simplificado
 
-> **Estado**: APROBADO (2026-10-20)
+> **Estado**: COMPLETADO (2026-10-20) — migraciones 041 y 042 aplicadas, desplegado y verificado (E2E local + smoke en prod)
 > **Fecha**: 2026-10-20
 > **Proyecto**: Free Time Classes
 > **Hallazgos**: FRE0013 F021 (alta), F022 (alta). Toca tambien F001, F012, F023, F050, F061, F062, F068 (ver Gotchas)
@@ -192,6 +192,10 @@ alter table public.lessons add constraint lessons_tutor_no_overlap
 ---
 
 ## Aprendizajes (Self-Annealing)
+
+- `AddAvailabilityModal` NO era codigo muerto (lo abre el calendario del tutor): se reescribio para crear franjas extra.
+- La generacion de huecos iba antes del completado en el cron: si fallaba, el completado nunca se ejecutaba. Retirada.
+- Desplegar por fases rompe el selector antiguo: las fases 2-6 se subieron juntas y la migracion restrictiva (042) despues.
 
 > Crece con cada error encontrado durante la implementacion.
 

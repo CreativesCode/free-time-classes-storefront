@@ -21,15 +21,18 @@ segundos; el profesor publica perfil, tarifa y horario y gestiona solicitudes de
 por WhatsApp. Las clases son online (enlace de videollamada / Google Meet).
 
 **Flujo principal (Happy Path):**
-1. El profesor se registra, completa su perfil (bio, tarifa/hora, idiomas, materias, CV) y define su horario semanal recurrente + excepciones.
-2. El sistema genera slots concretos (`lessons`, ~12 semanas) a partir de ese horario.
-3. El estudiante explora profesores/cursos, elige un slot disponible y envia la solicitud (booking `pending`).
+1. El profesor se registra, completa su perfil (bio, idiomas, materias, CV), publica cursos (materia, precio > 0,
+   duracion 30/45/60/90/120) y define su agenda: franjas semanales + excepciones (bloqueos y franjas extra).
+2. Las horas libres de cada curso se calculan al pedirlas (PRP-001): franjas − bloqueos − clases ya comprometidas,
+   cada 30 min, donde quepa la duracion del curso, desde 30 min a 8 semanas vista.
+3. El estudiante explora cursos, elige una hora libre y envia la solicitud: se crea la clase con el precio y la
+   duracion del curso (`course_id` en clase y reserva) y el booking `pending`.
 4. El profesor recibe notificacion (in-app + WhatsApp) y acepta o rechaza (web o respondiendo "SI"/"NO" por WhatsApp). Al aceptar puede anadir el enlace de videollamada.
 5. El estudiante recibe la confirmacion con el enlace y entra a la clase desde "Mis clases" / dashboard.
 6. Tras la clase, el estudiante deja una resena (1-5 + comentario); el rating del profesor se recalcula solo.
 
-**Flujo alternativo — clase fuera de disponibilidad (custom request):** el estudiante pide un dia/hora/duracion
-concretos aunque no haya slot publicado. El precio sale de la tarifa/hora del profesor. Si al confirmar faltan
+**Flujo alternativo — clase fuera de disponibilidad (custom request):** el estudiante elige uno de los cursos del
+profesor y pide un dia/hora fuera de su agenda. Precio y duracion salen del curso. Si al confirmar faltan
 menos de 15 min para el inicio, la solicitud se rechaza automaticamente por expirada.
 
 ## 3. Usuario Objetivo
@@ -60,8 +63,8 @@ Uso principal en movil (BottomNav, app nativa via Capacitor) y desktop para prof
 **Storage (tablas Supabase principales):**
 - `users`, `student_profiles`, `tutor_profiles`: identidad y perfiles por rol
 - `subjects`, `tutor_subjects`, `courses`: catalogo
-- `tutor_availability`, `availability_exceptions`, `lessons`: agenda y slots
-- `bookings`: solicitudes (por slot o custom request) y su estado
+- `tutor_availability`, `availability_exceptions`: agenda (solo horas); `lessons`: clases reservadas (`course_id`)
+- `bookings`: solicitudes (por curso u otra hora) y su estado
 - `reviews`: resenas con respuesta del profesor
 - `conversations`, `conversation_participants`, `messages`: mensajeria interna
 - `notifications`: notificaciones in-app
