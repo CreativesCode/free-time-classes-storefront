@@ -35,9 +35,12 @@ slots + completado (WP4/WP5), Cancelar/Rechazar via API (WP5), crash del catalog
 
 **Como se ataca (desde 2026-10-20):** un commit por hallazgo, marcado en el checklist de su WP con el hash; las
 migraciones de WP1 son 028-038 (una por hallazgo, probadas en seco y con roles simulados antes de aplicar, con OK
-del usuario). Bloqueados por decision de producto: F021/F022 (#1) y F036 (#8). Hallazgo nuevo anadido: G-new-1
+del usuario). F021/F022 (curso como unidad de reserva) van con PRP propio; F036 sigue bloqueado por la decision de resenas. Hallazgo nuevo anadido: G-new-1
 en FRE0012. El estado vivo esta en el borrador/comentarios de FRE0007, no aqui.
 
 **Decisiones tomadas (2026-10-19):** el repo se queda publico (cuentas gratuitas para publicar); datos QA de la
 auditoria borrados; keepalive de Supabase reactivado (moverlo a Vercel Cron va en FRE0017).
-Las 16 decisiones de producto pendientes estan listadas en FRE0007: preguntar, no inventar.
+**Decisiones tomadas (2026-10-20):** curso = unidad de reserva al estilo italki (agenda general del tutor, el curso fija
+precio y duracion, `course_id` en clase y reserva); cancelacion 24 h; horas convertidas a la zona del usuario (BD sigue
+en Madrid); EUR para todo. Recogidas tambien en BUSINESS_LOGIC.md §5.
+Las decisiones de producto que siguen pendientes estan listadas en FRE0007: preguntar, no inventar.
