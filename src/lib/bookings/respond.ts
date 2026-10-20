@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createMeetEvent, hasGoogleConnection } from "@/lib/google-calendar";
 import { insertNotification } from "@/lib/notifications";
+import { releaseLesson } from "@/lib/bookings/releaseLesson";
 import { nowPlusMinutesAsLessonTimestamp } from "@/lib/datetime/lessonTime";
 import type { BookingRejectionReason } from "@/types/booking";
 
@@ -302,16 +303,9 @@ export async function respondToBooking(
       }
     }
 
-    await admin
-      .from("lessons")
-      .update({
-        student_id: null,
-        status: "available",
-        meet_link: null,
-        google_event_id: null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", booking.lesson_id);
+    await releaseLesson(admin, booking.lesson_id, {
+      isCustomRequest: booking.requested_scheduled_date_time != null,
+    });
   }
 
   const reason = REJECTION_REASONS.find((r) => r === args.reason?.trim());

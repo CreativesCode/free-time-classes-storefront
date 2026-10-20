@@ -3,6 +3,7 @@ import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js
 import { createClient } from "@/lib/supabase/server";
 import { deleteMeetEvent } from "@/lib/google-calendar";
 import { insertNotification } from "@/lib/notifications";
+import { releaseLesson } from "@/lib/bookings/releaseLesson";
 
 const noStoreJson = (body: unknown, init?: ResponseInit) =>
   NextResponse.json(body, {
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     const { data: booking, error: bookingError } = await admin
       .from("bookings")
-      .select("id,student_id,tutor_id,lesson_id,status")
+      .select("id,student_id,tutor_id,lesson_id,status,requested_scheduled_date_time")
       .eq("id", bookingId)
       .single();
 
@@ -159,16 +160,9 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      await admin
-        .from("lessons")
-        .update({
-          student_id: null,
-          status: "available",
-          meet_link: null,
-          google_event_id: null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", booking.lesson_id);
+      await releaseLesson(admin, booking.lesson_id, {
+        isCustomRequest: booking.requested_scheduled_date_time != null,
+      });
     }
 
     // Notify tutor about cancellation
