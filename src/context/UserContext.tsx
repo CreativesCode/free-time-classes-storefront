@@ -35,6 +35,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   // Id of the profile already in state, read inside the auth listener.
   const loadedUserIdRef = useRef<string | null>(null);
+  // User whose profile the initial session load fetched, and whether that load
+  // is still running: SIGNED_IN fires while supabase-js restores the session,
+  // before getSession() resolves, and must not trigger a second fetch (F077).
+  const initialUserIdRef = useRef<string | null>(null);
+  const initializingRef = useRef(true);
   useEffect(() => {
     loadedUserIdRef.current = user?.id ?? null;
   }, [user]);
@@ -51,6 +56,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         } = await supabase.auth.getSession();
 
         if (session?.user) {
+          initialUserIdRef.current = session.user.id;
           const userData = await getCurrentUser(session.user.id);
           setUser(userData);
         } else {
@@ -60,6 +66,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setError(err as Error);
         setUser(null);
       } finally {
+        initializingRef.current = false;
         setIsLoading(false);
       }
     }
@@ -89,12 +96,20 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       if (event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") return;
       // SIGNED_IN also fires on load and right after login(), which already
       // loaded this same profile: skip the duplicate users fetch.
-      if (event === "SIGNED_IN" && session?.user.id === loadedUserIdRef.current) return;
+      if (
+        event === "SIGNED_IN" &&
+        (initializingRef.current ||
+          session?.user.id === loadedUserIdRef.current ||
+          session?.user.id === initialUserIdRef.current)
+      ) {
+        return;
+      }
 
       if (session?.user) {
         const userId = session.user.id;
         setTimeout(() => void syncUser(userId), 0);
       } else {
+        initialUserIdRef.current = null;
         setUser(null);
         setIsLoading(false);
       }
