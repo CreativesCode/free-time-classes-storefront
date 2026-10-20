@@ -100,7 +100,11 @@ export default async function middleware(req: NextRequest) {
     pathnameWithoutLocale === route || pathnameWithoutLocale.startsWith(`${route}/`)
   );
 
-  const needsSupabaseAuth = isProtectedRoute || isAuthPage;
+  // The home page is static (ISR); signed-in users are sent to their
+  // dashboard here instead of reading cookies in the page (G-prod-5).
+  const isHome = pathnameWithoutLocale === "/";
+
+  const needsSupabaseAuth = isProtectedRoute || isAuthPage || isHome;
 
   // Public routes: only internationalization (no Supabase session work on the Edge).
   // Trade-off: auth cookie refresh runs on the next protected or auth-page hit (acceptable for most SPAs).
@@ -196,7 +200,7 @@ export default async function middleware(req: NextRequest) {
   }
 
   // Redirect to dashboard if accessing auth pages with active session
-  if (session && isAuthPage) {
+  if (session && (isAuthPage || isHome)) {
     return NextResponse.redirect(new URL(`/${locale}/dashboard`, req.url));
   }
 

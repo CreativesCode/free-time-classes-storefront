@@ -2,13 +2,11 @@ import HomeContent from "@/components/HomeContentFreetime";
 import { resolveCourseTutorUser } from "@/lib/supabase/course-tutor";
 import { fetchHomeFeaturedTeachers } from "@/lib/supabase/server-queries/home-featured-teachers";
 import { buildPageMetadata } from "@/lib/seo/page-metadata";
-import { createClient } from "@/lib/supabase/server";
 import { createCatalogServerClient } from "@/lib/supabase/server-public";
 import type { HomeCourseCard, HomeFeaturedTeacher } from "@/types/home";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, unstable_setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 import { unstable_cache } from "next/cache";
-import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 export const revalidate = 3600;
@@ -109,14 +107,8 @@ export default async function Home({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const supabase = await createClient();
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser();
-
-  if (authUser) {
-    redirect(`/${locale}/dashboard`);
-  }
+  unstable_setRequestLocale(locale);
+  // Signed-in users are redirected to /dashboard by the middleware.
 
   return (
     <Suspense fallback={<HomeFallback />}>
