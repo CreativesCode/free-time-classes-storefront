@@ -1428,6 +1428,8 @@
     "meetLinkCopied": "Enlace copiado al portapapeles",
     "addMeetLink": "Añadir enlace",
     "editMeetLink": "Editar enlace",
+    "meetLinkInvalid": "La URL de la videollamada debe empezar por https://",
+    "meetAutoCreateFailed": "No se pudo crear el Meet automáticamente. Añade el enlace a mano desde la clase.",
     "meetLinkUpdated": "Enlace de videollamada actualizado",
     "meetLinkUpdateError": "No se pudo actualizar el enlace",
     "meetLinkSaving": "Guardando...",

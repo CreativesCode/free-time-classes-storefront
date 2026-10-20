@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createMeetEvent, hasGoogleConnection } from "@/lib/google-calendar";
 import { insertNotification } from "@/lib/notifications";
 import { releaseLesson } from "@/lib/bookings/releaseLesson";
+import { isValidMeetLink } from "@/lib/bookings/meetLink";
 import { findScheduleConflict } from "@/lib/bookings/scheduleConflict";
 import { nowPlusMinutesAsLessonTimestamp } from "@/lib/datetime/lessonTime";
 import type { BookingRejectionReason } from "@/types/booking";
@@ -88,6 +89,17 @@ export async function respondToBooking(
   }
 
   if (action === "confirm") {
+    const requestedMeetLink = typeof args.meetLink === "string" ? args.meetLink.trim() : "";
+    if (requestedMeetLink && !isValidMeetLink(requestedMeetLink)) {
+      return {
+        httpStatus: 400,
+        payload: {
+          error: "The video call link must be an https:// URL.",
+          code: "invalid_meet_link",
+        },
+      };
+    }
+
     let lessonIdForFlow: number | null = booking.lesson_id ?? null;
 
     if (isCustomRequest) {
@@ -200,12 +212,16 @@ export async function respondToBooking(
         : ALREADY_HANDLED;
     }
 
-    const manualMeetLink = typeof args.meetLink === "string" ? args.meetLink.trim() : "";
+    const manualMeetLink = requestedMeetLink;
     let finalMeetLink = manualMeetLink;
     let googleEventId: string | null = null;
+    // Reported back so the tutor UI can warn when the automatic Meet failed.
+    let meetStatus: "manual" | "created" | "failed" | "not_connected" | "none" =
+      manualMeetLink ? "manual" : "none";
 
     if (!manualMeetLink && lessonIdForFlow) {
       const googleConnected = await hasGoogleConnection(tutorId);
+      meetStatus = googleConnected ? "failed" : "not_connected";
       if (googleConnected) {
         const { data: lessonData } = await admin
           .from("lessons")
@@ -243,6 +259,7 @@ export async function respondToBooking(
             if (result) {
               finalMeetLink = result.meetLink;
               googleEventId = result.eventId;
+              meetStatus = "created";
             }
           } catch (meetErr) {
             console.error("[respondToBooking] Google Meet auto-create failed:", meetErr);
@@ -299,7 +316,12 @@ export async function respondToBooking(
 
     return {
       httpStatus: 200,
-      payload: { ok: true, meetLink: finalMeetLink || null, lessonId: lessonIdForFlow },
+      payload: {
+        ok: true,
+        meetLink: finalMeetLink || null,
+        lessonId: lessonIdForFlow,
+        meetStatus,
+      },
     };
   }
 

@@ -179,7 +179,11 @@ async function getValidAccessToken(userId: string) {
       return refreshed.access_token;
     } catch (err) {
       console.error("[google-calendar] Failed to refresh token:", err);
-      await deleteGoogleTokens(userId);
+      // Only a revoked/expired grant invalidates the connection; transient
+      // errors (network, 5xx) must not disconnect the tutor.
+      if (String(err).includes("invalid_grant")) {
+        await deleteGoogleTokens(userId);
+      }
       return null;
     }
   }

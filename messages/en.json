@@ -1428,6 +1428,8 @@
     "meetLinkCopied": "Link copied to clipboard",
     "addMeetLink": "Add link",
     "editMeetLink": "Edit link",
+    "meetLinkInvalid": "The video call link must start with https://",
+    "meetAutoCreateFailed": "The Meet could not be created automatically. Add the link manually from the class.",
     "meetLinkUpdated": "Video call link updated",
     "meetLinkUpdateError": "Could not update the link",
     "meetLinkSaving": "Saving...",

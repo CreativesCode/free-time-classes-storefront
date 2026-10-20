@@ -390,11 +390,20 @@ export default function TutorDashboardClient({
           ...(videoLink ? { meetLink: videoLink } : {}),
         }),
       });
-      const result = (await response.json()) as { error?: string };
+      const result = (await response.json()) as {
+        error?: string;
+        code?: string;
+        meetStatus?: string;
+      };
+      if (result.code === "invalid_meet_link") {
+        toast.error(td("meetLinkInvalid"));
+        return;
+      }
       if (!response.ok) throw new Error(result.error || t("confirmError"));
 
       setConfirmMeetLink("");
       toast.success(t("confirmSuccess"));
+      if (result.meetStatus === "failed") toast.warning(td("meetAutoCreateFailed"));
       await loadPending();
     } catch (e) {
       console.error("Error confirming booking:", e);
@@ -412,7 +421,11 @@ export default function TutorDashboardClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ meetLink: editingMeetLinkValue }),
       });
-      const result = (await response.json()) as { error?: string };
+      const result = (await response.json()) as { error?: string; code?: string };
+      if (result.code === "invalid_meet_link") {
+        toast.error(td("meetLinkInvalid"));
+        return;
+      }
       if (!response.ok) throw new Error(result.error || td("meetLinkUpdateError"));
 
       setTodayLessons((prev) =>

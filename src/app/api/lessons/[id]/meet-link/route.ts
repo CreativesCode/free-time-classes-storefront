@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import { insertNotification } from "@/lib/notifications";
+import { isValidMeetLink } from "@/lib/bookings/meetLink";
 
 const noStoreJson = (body: unknown, init?: ResponseInit) =>
   NextResponse.json(body, {
@@ -24,6 +26,12 @@ export async function PATCH(
 
     const body = (await request.json()) as { meetLink?: string };
     const meetLink = typeof body.meetLink === "string" ? body.meetLink.trim() : "";
+    if (meetLink && !isValidMeetLink(meetLink)) {
+      return noStoreJson(
+        { error: "The video call link must be an https:// URL.", code: "invalid_meet_link" },
+        { status: 400 }
+      );
+    }
 
     const supabase = await createClient();
     const {
@@ -50,7 +58,7 @@ export async function PATCH(
 
     const { data: lesson, error: lessonError } = await admin
       .from("lessons")
-      .select("id, tutor_id, status")
+      .select("id, tutor_id, student_id, status, meet_link, scheduled_date_time")
       .eq("id", lessonId)
       .single();
 
@@ -60,6 +68,13 @@ export async function PATCH(
 
     if (lesson.tutor_id !== user.id) {
       return noStoreJson({ error: "Forbidden." }, { status: 403 });
+    }
+
+    if (lesson.status !== "scheduled" || !lesson.student_id) {
+      return noStoreJson(
+        { error: "Only booked upcoming classes can have a video call link." },
+        { status: 409 }
+      );
     }
 
     const { error: updateError } = await admin
@@ -75,6 +90,25 @@ export async function PATCH(
         { error: updateError.message || "Failed to update meet link." },
         { status: 400 }
       );
+    }
+
+    // Tell the student when the link is added or changed after confirmation.
+    if (meetLink && meetLink !== lesson.meet_link) {
+      try {
+        await insertNotification(admin, {
+          userId: lesson.student_id,
+          type: "booking_confirmed",
+          title: "Enlace de la videollamada",
+          body: "Tu tutor ha añadido el enlace de la videollamada de tu clase:",
+          data: {
+            lesson_id: lessonId,
+            meet_link: meetLink,
+            scheduled_date_time: lesson.scheduled_date_time,
+          },
+        });
+      } catch (notifyErr) {
+        console.error("[lessons/meet-link] notify failed:", notifyErr);
+      }
     }
 
     return noStoreJson({ ok: true }, { status: 200 });
