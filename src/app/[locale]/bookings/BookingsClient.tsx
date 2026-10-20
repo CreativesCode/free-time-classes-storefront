@@ -578,12 +578,16 @@ export default function BookingsClient({ locale }: { locale: string }) {
           if (!open && cancellingId === null) setCancelTarget(null);
         }}
       >
-        <DialogContent className="sm:max-w-[420px]">
+        {/* Portaled outside FreetimeShell: re-apply the FreeTime theme tokens. */}
+        <DialogContent
+          data-theme="freetime"
+          className="rounded-ft-lg border-ft-line bg-ft-paper text-ft-ink sm:max-w-[420px] sm:rounded-ft-lg"
+        >
           <DialogHeader>
             <DialogTitle>
               {t(isTutorView ? "rejectConfirmTitle" : "cancelConfirmTitle")}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-ft-ink-2">
               {t(isTutorView ? "rejectConfirmBody" : "cancelConfirmBody")}
             </DialogDescription>
           </DialogHeader>
