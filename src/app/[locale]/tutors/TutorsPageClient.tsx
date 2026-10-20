@@ -626,7 +626,6 @@ function FeaturedTutorCard({
             fill
             className="object-cover"
             sizes="(min-width: 768px) 100vw, 100vw"
-            unoptimized
             priority
           />
         ) : (

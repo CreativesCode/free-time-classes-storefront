@@ -112,7 +112,6 @@ export default function TeacherProfileClient({
                       width={96}
                       height={96}
                       className="h-full w-full object-cover"
-                      unoptimized
                     />
                   ) : (
                     <div

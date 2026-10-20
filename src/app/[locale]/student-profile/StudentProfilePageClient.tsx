@@ -171,7 +171,6 @@ export default function StudentProfilePageClient({
                 width={84}
                 height={84}
                 className="h-full w-full object-cover"
-                unoptimized
               />
             ) : (
               <div className="grid h-full w-full place-items-center bg-gradient-to-br from-ft-accent to-ft-accent-deep text-3xl font-semibold text-ft-paper">

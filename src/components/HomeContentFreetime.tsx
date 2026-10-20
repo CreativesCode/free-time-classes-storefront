@@ -115,7 +115,6 @@ export default function HomeContentFreetime({
                       height={32}
                       className="h-8 w-8 rounded-full border-2 border-ft-paper object-cover"
                       style={{ marginLeft: i ? -10 : 0 }}
-                      unoptimized
                     />
                   ))}
                 </div>
@@ -154,7 +153,6 @@ export default function HomeContentFreetime({
                   fill
                   className="object-cover"
                   sizes="(min-width: 1024px) 25vw, 40vw"
-                  unoptimized
                 />
                 <div className="absolute bottom-3.5 left-3.5 right-3.5 text-white">
                   <div className="text-[13px] font-semibold leading-tight">
@@ -175,7 +173,6 @@ export default function HomeContentFreetime({
                   fill
                   className="object-cover"
                   sizes="(min-width: 1024px) 22vw, 36vw"
-                  unoptimized
                 />
               </div>
               {/* "En vivo" floating card */}
@@ -254,7 +251,6 @@ export default function HomeContentFreetime({
                       fill
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
                       sizes="(min-width: 768px) 22vw, 45vw"
-                      unoptimized
                     />
                     <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/75 via-black/40 to-transparent" />
                     <div className="absolute inset-x-4 bottom-3.5 text-white">
@@ -307,7 +303,6 @@ export default function HomeContentFreetime({
                         width={80}
                         height={80}
                         className="h-full w-full object-cover"
-                        unoptimized
                       />
                     ) : null}
                   </div>

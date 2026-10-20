@@ -132,7 +132,6 @@ export default function CourseDetailClient({
             sizes="(min-width: 768px) 100vw, 100vw"
             className="object-cover"
             priority
-            unoptimized
           />
         ) : (
           <div

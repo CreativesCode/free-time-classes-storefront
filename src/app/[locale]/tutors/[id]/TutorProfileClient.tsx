@@ -107,7 +107,6 @@ export default function TutorProfileClient({
             sizes="(min-width: 768px) 100vw, 100vw"
             className="object-cover"
             priority
-            unoptimized
           />
         ) : (
           <div
@@ -338,7 +337,6 @@ export default function TutorProfileClient({
                         width={80}
                         height={80}
                         className="h-full w-full object-cover"
-                        unoptimized
                       />
                     ) : (
                       <div className="grid h-full w-full place-items-center">

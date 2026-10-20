@@ -524,7 +524,6 @@ export default function DashboardClient({
                     fill
                     className="object-cover"
                     sizes="(min-width: 1024px) 22vw, 200px"
-                    unoptimized
                   />
                 ) : (
                   <div className="grid h-full w-full place-items-center bg-ft-surface-2 text-3xl font-semibold text-ft-ink-2">
@@ -595,7 +594,6 @@ export default function DashboardClient({
                     width={88}
                     height={88}
                     className="h-full w-full object-cover"
-                    unoptimized
                   />
                 ) : null}
               </div>

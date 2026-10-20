@@ -34,7 +34,6 @@ export function Avatar({
           "h-full w-full rounded-full bg-ft-surface-2 object-cover",
           ring && "border-2 border-ft-paper"
         )}
-        unoptimized
       />
       {online && (
         <span

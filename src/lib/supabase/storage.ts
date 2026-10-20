@@ -1,3 +1,4 @@
+import { downscaleImage } from "@/lib/images/downscale";
 import { createClient } from "./client";
 
 const supabase = createClient();
@@ -10,8 +11,9 @@ const supabase = createClient();
  */
 export async function uploadAvatar(
   userId: string,
-  file: File
+  originalFile: File
 ): Promise<string> {
+  const file = await downscaleImage(originalFile, 512);
   const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
   const preferredPath = `${userId}.${fileExt}`;
   const fallbackPath = `${userId}/${Date.now()}.${fileExt}`;
@@ -144,8 +146,9 @@ export function getCourseCoverPublicUrl(
  */
 export async function uploadCourseCover(
   courseId: number | string,
-  file: File
+  originalFile: File
 ): Promise<string> {
+  const file = await downscaleImage(originalFile, 1600);
   const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
   const filePath = `${courseId}/${Date.now()}.${fileExt}`;
 
