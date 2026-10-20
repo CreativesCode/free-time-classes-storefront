@@ -15,7 +15,7 @@ import { SelectMenu } from "@/components/ui/select-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { COUNTRIES } from "@/lib/constants/countries";
-import { getPublicUrl, uploadAvatar } from "@/lib/supabase/storage";
+import { getPublicUrl, removeUnusedUpload, uploadAvatar } from "@/lib/supabase/storage";
 import { updateStudentProfile } from "@/lib/supabase/queries/students";
 import { updateUser } from "@/lib/supabase/queries/users";
 import { useAuth } from "@/context/UserContext";
@@ -194,10 +194,13 @@ export default function StudentProfileEdit({
     if (!user?.id) return;
 
     setIsSaving(true);
+    let uploadedPicture: string | null = null;
     try {
-      let profilePicture = user.profile_picture || null;
+      const previousPicture = user.profile_picture || null;
+      let profilePicture = previousPicture;
       if (avatarFile) {
         profilePicture = await uploadAvatar(user.id, avatarFile);
+        uploadedPicture = profilePicture;
       }
 
       await updateUser(user.id, {
@@ -206,6 +209,8 @@ export default function StudentProfileEdit({
         country: formData.country ? formData.country : null,
         profile_picture: profilePicture,
       });
+      if (uploadedPicture) void removeUnusedUpload("avatars", previousPicture, uploadedPicture);
+      uploadedPicture = null;
 
       const updatedProfile = await updateStudentProfile(user.id, {
         bio: formData.bio ? formData.bio : null,
@@ -223,6 +228,8 @@ export default function StudentProfileEdit({
       onUpdated(updatedProfile);
       onClose();
     } catch (error) {
+      // The new picture was never saved on the profile: drop the upload.
+      if (uploadedPicture) void removeUnusedUpload("avatars", uploadedPicture);
       console.error("Error updating student profile:", error);
       toast.error(
         error instanceof Error ? error.message : t("updateError")

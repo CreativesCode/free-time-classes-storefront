@@ -33,6 +33,21 @@ export async function uploadAvatar(
 }
 
 /**
+ * Best-effort removal of an upload that is no longer referenced (G-prof-3):
+ * the image a new one replaced, or a new one whose save failed. A failure
+ * only leaves an orphan file, so it never breaks the save.
+ */
+export async function removeUnusedUpload(
+  bucket: "avatars" | "course_covers",
+  path: string | null | undefined,
+  keepPath?: string | null
+): Promise<void> {
+  if (!path || path === keepPath || /^https?:\/\//.test(path)) return;
+  const { error } = await supabase.storage.from(bucket).remove([path]);
+  if (error) console.warn(`[storage] could not remove ${bucket}/${path}:`, error.message);
+}
+
+/**
  * Upload subject icon to Supabase Storage
  * @param subjectId - Subject ID
  * @param file - File to upload

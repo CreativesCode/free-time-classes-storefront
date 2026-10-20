@@ -28,7 +28,7 @@ import { COUNTRIES } from "@/lib/constants/countries";
 import { updateTutorProfile } from "@/lib/supabase/queries/tutors";
 import { updateUser } from "@/lib/supabase/queries/users";
 import type { TutorProfile } from "@/types/tutor";
-import { getPublicUrl, uploadAvatar } from "@/lib/supabase/storage";
+import { getPublicUrl, removeUnusedUpload, uploadAvatar } from "@/lib/supabase/storage";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -106,16 +106,21 @@ export default function EditProfileModal({
     if (formData.phone) formDataToUpdate.phone = formData.phone;
     if (formData.country) formDataToUpdate.country = formData.country;
 
+    let uploadedPicture: string | null = null;
     try {
-      let profilePicture = user.profile_picture || null;
+      const previousPicture = user.profile_picture || null;
+      let profilePicture = previousPicture;
       if (avatarFile) {
         profilePicture = await uploadAvatar(user.id, avatarFile);
+        uploadedPicture = profilePicture;
       }
 
       await updateUser(user.id, {
         ...formDataToUpdate,
         profile_picture: profilePicture,
       });
+      if (uploadedPicture) void removeUnusedUpload("avatars", previousPicture, uploadedPicture);
+      uploadedPicture = null;
       const bioValue = formData.bio.trim() || null;
       const yearsValue = formData.yearsOfExperience ? parseInt(formData.yearsOfExperience, 10) : null;
       const tutorUpdates: Partial<TutorProfile> = {
@@ -130,6 +135,8 @@ export default function EditProfileModal({
       setAvatarFile(null);
       onClose();
     } catch (err) {
+      // The new picture was never saved on the profile: drop the upload.
+      if (uploadedPicture) void removeUnusedUpload("avatars", uploadedPicture);
       console.error("Error updating profile:", err);
       toast.error(t("updateError"));
     } finally {

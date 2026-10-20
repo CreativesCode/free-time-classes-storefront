@@ -101,6 +101,16 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
 
     const { error } = await ctx.admin.from("courses").delete().eq("id", courseId);
     if (error) return noStoreJson({ error: "Could not delete the course." }, { status: 400 });
+
+    // Its cover images are stored under `${courseId}/` (G-prof-3); best effort.
+    const folder = String(courseId);
+    const { data: covers } = await ctx.admin.storage.from("course_covers").list(folder);
+    if (covers?.length) {
+      const { error: removeError } = await ctx.admin.storage
+        .from("course_covers")
+        .remove(covers.map((file) => `${folder}/${file.name}`));
+      if (removeError) console.warn("[courses DELETE] covers not removed:", removeError.message);
+    }
     revalidateCatalog();
     return noStoreJson({ ok: true, archived: false }, { status: 200 });
   } catch (err) {

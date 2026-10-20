@@ -40,6 +40,7 @@ import {
 import { getSubjects } from "@/lib/supabase/queries/subjects";
 import {
   getCourseCoverPublicUrl,
+  removeUnusedUpload,
   uploadCourseCover,
 } from "@/lib/supabase/storage";
 import type { CourseWithRelations } from "@/types/course";
@@ -419,11 +420,16 @@ export default function TutorCoursesManager({
           30000,
           t("timeoutError")
         );
-        await withTimeout(
-          updateCourse(created.id, { cover_image: path }),
-          30000,
-          t("timeoutError")
-        );
+        try {
+          await withTimeout(
+            updateCourse(created.id, { cover_image: path }),
+            30000,
+            t("timeoutError")
+          );
+        } catch (err) {
+          void removeUnusedUpload("course_covers", path);
+          throw err;
+        }
       }
       await refreshCourses();
       setCreateOpen(false);
@@ -455,6 +461,8 @@ export default function TutorCoursesManager({
     }
 
     setIsSaving(true);
+    const previousCover = courses.find((c) => c.id === editCourseId)?.cover_image ?? null;
+    let uploadedCover: string | null = null;
     try {
       const baseUpdates = courseFormToCourseUpdatePayload(editForm);
       let updates = { ...baseUpdates };
@@ -466,15 +474,22 @@ export default function TutorCoursesManager({
           30000,
           t("timeoutError")
         );
+        uploadedCover = path;
         updates = { ...updates, cover_image: path };
       }
       await withTimeout(updateCourse(editCourseId, updates), 30000, t("timeoutError"));
+      // The replaced (or removed) cover is no longer referenced (G-prof-3).
+      if (editRemoveCover || uploadedCover) {
+        void removeUnusedUpload("course_covers", previousCover, uploadedCover);
+      }
+      uploadedCover = null;
       await refreshCourses();
       setEditOpen(false);
       setEditCourseId(null);
       resetEditForm();
       resetEditCoverState();
     } catch (err) {
+      if (uploadedCover) void removeUnusedUpload("course_covers", uploadedCover);
       console.error("Error updating course:", err);
       setError(err instanceof Error ? err.message : t("updateError"));
     } finally {
