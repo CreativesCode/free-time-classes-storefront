@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { insertNotification } from "@/lib/notifications";
+import { findScheduleConflict } from "@/lib/bookings/scheduleConflict";
 
 const noStoreJson = (body: unknown, init?: ResponseInit) =>
   NextResponse.json(body, {
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     const { data: lesson, error: lessonError } = await supabaseAdmin
       .from("lessons")
-      .select("id,tutor_id,status,student_id")
+      .select("id,tutor_id,status,student_id,scheduled_date_time,duration_minutes")
       .eq("id", lessonId)
       .single();
 
@@ -72,6 +73,26 @@ export async function POST(request: NextRequest) {
     if (lesson.status !== "available" || lesson.student_id) {
       return noStoreJson(
         { error: "This slot is no longer available." },
+        { status: 409 }
+      );
+    }
+
+    const conflict = await findScheduleConflict(supabaseAdmin, {
+      tutorId: lesson.tutor_id,
+      studentId: user.id,
+      start: String(lesson.scheduled_date_time),
+      durationMinutes: lesson.duration_minutes ?? 0,
+      excludeLessonId: lesson.id,
+    });
+    if (conflict) {
+      return noStoreJson(
+        {
+          error:
+            conflict === "tutor_busy"
+              ? "The tutor already has a class at that time."
+              : "You already have a class at that time.",
+          code: conflict,
+        },
         { status: 409 }
       );
     }

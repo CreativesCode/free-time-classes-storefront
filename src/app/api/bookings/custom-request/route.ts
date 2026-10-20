@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { insertNotification } from "@/lib/notifications";
+import { findScheduleConflict } from "@/lib/bookings/scheduleConflict";
 import { nowPlusMinutesAsLessonTimestamp } from "@/lib/datetime/lessonTime";
 
 const noStoreJson = (body: unknown, init?: ResponseInit) =>
@@ -147,6 +148,25 @@ export async function POST(request: NextRequest) {
       return noStoreJson(
         { error: "Tutor does not teach this subject." },
         { status: 400 }
+      );
+    }
+
+    const conflict = await findScheduleConflict(admin, {
+      tutorId,
+      studentId: user.id,
+      start: scheduledDateTime,
+      durationMinutes,
+    });
+    if (conflict) {
+      return noStoreJson(
+        {
+          error:
+            conflict === "tutor_busy"
+              ? "The tutor already has a class at that time."
+              : "You already have a class at that time.",
+          code: conflict,
+        },
+        { status: 409 }
       );
     }
 

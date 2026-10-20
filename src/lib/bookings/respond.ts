@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createMeetEvent, hasGoogleConnection } from "@/lib/google-calendar";
 import { insertNotification } from "@/lib/notifications";
 import { releaseLesson } from "@/lib/bookings/releaseLesson";
+import { findScheduleConflict } from "@/lib/bookings/scheduleConflict";
 import { nowPlusMinutesAsLessonTimestamp } from "@/lib/datetime/lessonTime";
 import type { BookingRejectionReason } from "@/types/booking";
 
@@ -112,6 +113,25 @@ export async function respondToBooking(
       const duration = booking.requested_duration_minutes as number;
       const computedPrice =
         hourlyRate > 0 ? Math.round(((hourlyRate * duration) / 60) * 100) / 100 : 0;
+
+      const conflict = await findScheduleConflict(admin, {
+        tutorId,
+        studentId: booking.student_id,
+        start: String(booking.requested_scheduled_date_time),
+        durationMinutes: duration,
+      });
+      if (conflict) {
+        return {
+          httpStatus: 409,
+          payload: {
+            error:
+              conflict === "tutor_busy"
+                ? "You already have a class at that time."
+                : "The student already has a class at that time.",
+            code: conflict,
+          },
+        };
+      }
 
       const { data: createdLesson, error: lessonInsertError } = await admin
         .from("lessons")
