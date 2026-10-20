@@ -702,6 +702,18 @@
       "expDescriptionPlaceholder": "Describe brevemente tus responsabilidades y logros..."
     },
     "coursesManager": {
+      "close": "Cerrar",
+      "createAnother": "Crear otro",
+      "courseArchived": "El curso tenía clases, así que se ha archivado: ya no se ve ni se reserva, pero su historial se conserva.",
+      "courseDeleted": "Curso eliminado.",
+      "deleteConfirmTitle": "¿Eliminar este curso?",
+      "deleteConfirmBody": "«{title}» dejará de verse en el catálogo. Si ya tiene clases, se archivará en vez de borrarse.",
+      "previewTitlePlaceholder": "Título de tu curso...",
+      "publishedTitle": "Curso publicado",
+      "publishedBody": "Tu curso ya se puede reservar en tus franjas de disponibilidad.",
+      "publishedNoAgenda": "Tu curso ya está en el catálogo, pero aún no se puede reservar.",
+      "publishedAgendaHint": "Añade tu disponibilidad semanal en la pestaña Disponibilidad: los estudiantes reservarán tus cursos dentro de esas franjas.",
+      "validationPriceRange": "El precio debe ser mayor que 0 y como máximo {max} €.",
       "heroEyebrow": "Diseño curricular",
       "heroTitle": "Diseña tu próximo curso",
       "heroDescription": "Configura los detalles de tu clase y publica una experiencia premium para tus estudiantes.",

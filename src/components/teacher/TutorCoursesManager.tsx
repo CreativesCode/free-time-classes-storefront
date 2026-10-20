@@ -51,11 +51,13 @@ import {
   ImageIcon,
   Sparkles,
   Star,
-  Users,
 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { requestCatalogRevalidation } from "@/lib/catalog/revalidate";
+import { COURSE_DURATIONS, COURSE_MAX_PRICE } from "@/lib/courses/validateCourse";
+import { createClient } from "@/lib/supabase/client";
+import ConfirmActionDialog from "@/components/common/ConfirmActionDialog";
+import { toast } from "sonner";
 import { UPLOADABLE_IMAGE_ACCEPT, isUploadableImage } from "@/lib/images/downscale";
 
 const MAX_COURSE_COVER_BYTES = 5 * 1024 * 1024;
@@ -78,7 +80,6 @@ type CourseFormState = {
   subject_id: string;
   price: string;
   duration_minutes: string;
-  max_students: string;
   level: CourseLevel;
   is_active: boolean;
 };
@@ -98,7 +99,8 @@ function courseFormToCourseInsertPayload(
     subject_id: form.subject_id ? Number.parseInt(form.subject_id, 10) : null,
     price_per_session: Number.parseFloat(form.price),
     duration_minutes: Number.parseInt(form.duration_minutes, 10),
-    max_students: Number.parseInt(form.max_students, 10),
+    // Group classes do not exist yet: always one student.
+    max_students: 1,
     level: toCourseLevelOrNull(form.level),
     is_active: form.is_active,
   };
@@ -113,7 +115,6 @@ function courseFormToCourseUpdatePayload(
     subject_id: form.subject_id ? Number.parseInt(form.subject_id, 10) : null,
     price_per_session: Number.parseFloat(form.price),
     duration_minutes: Number.parseInt(form.duration_minutes, 10),
-    max_students: Number.parseInt(form.max_students, 10),
     level: toCourseLevelOrNull(form.level),
     is_active: form.is_active,
   };
@@ -123,12 +124,49 @@ const emptyCourseForm: CourseFormState = {
   title: "",
   description: "",
   subject_id: "",
-  price: "0",
+  price: "",
   duration_minutes: "60",
-  max_students: "1",
   level: "",
   is_active: true,
 };
+
+function DurationChips({
+  id,
+  value,
+  onChange,
+  disabled,
+}: {
+  id: string;
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div id={id} role="radiogroup" className="flex flex-wrap gap-2">
+      {COURSE_DURATIONS.map((minutes) => {
+        const selected = value === String(minutes);
+        return (
+          <button
+            key={minutes}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            disabled={disabled}
+            onClick={() => onChange(String(minutes))}
+            className={cn(
+              "rounded-full border px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-60",
+              selected
+                ? "border-ft-ink bg-ft-ink text-ft-paper"
+                : "border-ft-line bg-ft-paper text-ft-ink-2 hover:bg-ft-surface-1"
+            )}
+          >
+            {minutes} min
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 async function withTimeout<T>(
   promise: Promise<T>,
@@ -163,6 +201,8 @@ export default function TutorCoursesManager({
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [publishedSuccessOpen, setPublishedSuccessOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<CourseWithRelations | null>(null);
+  const [hasAgenda, setHasAgenda] = useState<boolean | null>(null);
   const [editCourseId, setEditCourseId] = useState<number | null>(null);
 
   const [createForm, setCreateForm] = useState<CourseFormState>(emptyCourseForm);
@@ -329,7 +369,6 @@ export default function TutorCoursesManager({
       subject_id: course.subject_id ? String(course.subject_id) : "",
       price: String(course.price_per_session ?? 0),
       duration_minutes: String(course.duration_minutes ?? 60),
-      max_students: String(course.max_students ?? 1),
       level: course.level ?? "",
       is_active: !!course.is_active,
     });
@@ -350,15 +389,12 @@ export default function TutorCoursesManager({
     if (!form.title.trim()) return t("validationTitleRequired");
     if (!form.description.trim()) return t("validationDescriptionRequired");
     if (!form.subject_id) return t("validationSubjectRequired");
-    if (!Number.isFinite(Number.parseFloat(form.price)))
-      return t("validationPriceInvalid");
-    if (!Number.isFinite(Number.parseInt(form.duration_minutes, 10)))
+    const price = Number.parseFloat(form.price);
+    if (!Number.isFinite(price) || price <= 0 || price > COURSE_MAX_PRICE)
+      return t("validationPriceRange", { max: COURSE_MAX_PRICE });
+    const duration = Number.parseInt(form.duration_minutes, 10);
+    if (!COURSE_DURATIONS.includes(duration as (typeof COURSE_DURATIONS)[number]))
       return t("validationDurationInvalid");
-    if (Number.parseInt(form.duration_minutes, 10) < 30) {
-      return t("validationDurationMinInvalid");
-    }
-    if (!Number.isFinite(Number.parseInt(form.max_students, 10)))
-      return t("validationMaxStudentsInvalid");
     return null;
   };
 
@@ -389,11 +425,16 @@ export default function TutorCoursesManager({
           t("timeoutError")
         );
       }
-      void requestCatalogRevalidation();
       await refreshCourses();
       setCreateOpen(false);
       resetCreateForm();
       clearCreateCover();
+      const { count } = await createClient()
+        .from("tutor_availability")
+        .select("id", { count: "exact", head: true })
+        .eq("tutor_id", tutorId)
+        .eq("is_active", true);
+      setHasAgenda((count ?? 0) > 0);
       setPublishedSuccessOpen(true);
     } catch (err) {
       console.error("Error creating course:", err);
@@ -428,7 +469,6 @@ export default function TutorCoursesManager({
         updates = { ...updates, cover_image: path };
       }
       await withTimeout(updateCourse(editCourseId, updates), 30000, t("timeoutError"));
-      void requestCatalogRevalidation();
       await refreshCourses();
       setEditOpen(false);
       setEditCourseId(null);
@@ -446,8 +486,9 @@ export default function TutorCoursesManager({
     setError(null);
     setIsSaving(true);
     try {
-      await withTimeout(deleteCourse(courseId), 30000, t("timeoutError"));
-      void requestCatalogRevalidation();
+      const { archived } = await withTimeout(deleteCourse(courseId), 30000, t("timeoutError"));
+      toast.success(archived ? t("courseArchived") : t("courseDeleted"));
+      setDeleteTarget(null);
       await refreshCourses();
     } catch (err) {
       console.error("Error deleting course:", err);
@@ -602,7 +643,7 @@ export default function TutorCoursesManager({
                                 type="button"
                                 variant="destructive"
                                 disabled={isSaving}
-                                onClick={() => void handleDelete(course.id)}
+                                onClick={() => setDeleteTarget(course)}
                                 className="rounded-ft-md shadow-none"
                               >
                                 {t("delete")}
@@ -644,7 +685,7 @@ export default function TutorCoursesManager({
                   </span>
                 </div>
                 <h4 className="line-clamp-2 text-base font-bold text-ft-ink">
-                  {createForm.title.trim() || "Titulo de tu curso..."}
+                  {createForm.title.trim() || t("previewTitlePlaceholder")}
                 </h4>
                 <div className="space-y-2 text-xs text-ft-ink-3">
                   <div className="flex items-center gap-2">
@@ -654,10 +695,6 @@ export default function TutorCoursesManager({
                   <div className="flex items-center gap-2">
                     <BookOpen className="h-3.5 w-3.5 text-ft-accent-deep" />
                     <span>{createForm.level ? getLevelLabel(createForm.level) : t("level.none")}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Users className="h-3.5 w-3.5 text-ft-accent-deep" />
-                    <span>{createForm.max_students || "1"} estudiantes</span>
                   </div>
                 </div>
               </div>
@@ -817,14 +854,15 @@ export default function TutorCoursesManager({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="course-price" className={FT_LABEL}>{t("fieldPrice")}</Label>
                   <Input
                     id="course-price"
                     type="number"
                     step="0.01"
-                    min="0"
+                    min="1"
+                    max={COURSE_MAX_PRICE}
                     value={createForm.price}
                     onChange={(e) =>
                       setCreateForm((p) => ({ ...p, price: e.target.value }))
@@ -837,41 +875,13 @@ export default function TutorCoursesManager({
 
                 <div className="space-y-2">
                   <Label htmlFor="course-duration" className={FT_LABEL}>{t("fieldDurationMinutes")}</Label>
-                  <Input
+                  <DurationChips
                     id="course-duration"
-                    type="number"
-                    step="1"
-                    min="30"
                     value={createForm.duration_minutes}
-                    onChange={(e) =>
-                      setCreateForm((p) => ({
-                        ...p,
-                        duration_minutes: e.target.value,
-                      }))
+                    onChange={(duration_minutes) =>
+                      setCreateForm((p) => ({ ...p, duration_minutes }))
                     }
                     disabled={isSaving}
-                    required
-                    className={FT_FIELD}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="course-max" className={FT_LABEL}>{t("fieldMaxStudents")}</Label>
-                  <Input
-                    id="course-max"
-                    type="number"
-                    step="1"
-                    min="1"
-                    value={createForm.max_students}
-                    onChange={(e) =>
-                      setCreateForm((p) => ({
-                        ...p,
-                        max_students: e.target.value,
-                      }))
-                    }
-                    disabled={isSaving}
-                    required
-                    className={FT_FIELD}
                   />
                 </div>
               </div>
@@ -1071,14 +1081,15 @@ export default function TutorCoursesManager({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-course-price" className={FT_LABEL}>{t("fieldPrice")}</Label>
                   <Input
                     id="edit-course-price"
                     type="number"
                     step="0.01"
-                    min="0"
+                    min="1"
+                    max={COURSE_MAX_PRICE}
                     value={editForm.price}
                     onChange={(e) =>
                       setEditForm((p) => ({ ...p, price: e.target.value }))
@@ -1093,41 +1104,13 @@ export default function TutorCoursesManager({
                   <Label htmlFor="edit-course-duration" className={FT_LABEL}>
                     {t("fieldDurationMinutes")}
                   </Label>
-                  <Input
+                  <DurationChips
                     id="edit-course-duration"
-                    type="number"
-                    step="1"
-                    min="30"
                     value={editForm.duration_minutes}
-                    onChange={(e) =>
-                      setEditForm((p) => ({
-                        ...p,
-                        duration_minutes: e.target.value,
-                      }))
+                    onChange={(duration_minutes) =>
+                      setEditForm((p) => ({ ...p, duration_minutes }))
                     }
                     disabled={isSaving}
-                    required
-                    className={FT_FIELD}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="edit-course-max" className={FT_LABEL}>{t("fieldMaxStudents")}</Label>
-                  <Input
-                    id="edit-course-max"
-                    type="number"
-                    step="1"
-                    min="1"
-                    value={editForm.max_students}
-                    onChange={(e) =>
-                      setEditForm((p) => ({
-                        ...p,
-                        max_students: e.target.value,
-                      }))
-                    }
-                    disabled={isSaving}
-                    required
-                    className={FT_FIELD}
                   />
                 </div>
               </div>
@@ -1176,6 +1159,20 @@ export default function TutorCoursesManager({
         </DialogContent>
       </Dialog>
 
+      <ConfirmActionDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open && !isSaving) setDeleteTarget(null);
+        }}
+        title={t("deleteConfirmTitle")}
+        description={t("deleteConfirmBody", { title: deleteTarget?.title ?? "" })}
+        cancelLabel={t("cancel")}
+        confirmLabel={t("delete")}
+        variant="destructive"
+        loading={isSaving}
+        onConfirm={() => deleteTarget && void handleDelete(deleteTarget.id)}
+      />
+
       <Dialog open={publishedSuccessOpen} onOpenChange={setPublishedSuccessOpen}>
         <DialogContent
           data-theme="freetime"
@@ -1185,15 +1182,17 @@ export default function TutorCoursesManager({
             <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full bg-ft-paper/20">
               <CheckCircle2 className="h-8 w-8" />
             </div>
-            <h3 className="text-2xl font-extrabold tracking-tight">Curso publicado</h3>
+            <h3 className="text-2xl font-extrabold tracking-tight">{t("publishedTitle")}</h3>
             <p className="mt-2 text-sm text-ft-paper/80">
-              Tu curso ya esta disponible para tus estudiantes.
+              {hasAgenda === false ? t("publishedNoAgenda") : t("publishedBody")}
             </p>
           </div>
           <div className="space-y-4 p-6">
-            <div className="rounded-ft bg-ft-surface-1 p-4 text-sm text-ft-ink-2">
-              Comparte el curso y sigue creando nuevas experiencias de aprendizaje.
-            </div>
+            {hasAgenda === false && (
+              <div className="rounded-ft border border-ft-line bg-ft-surface-1 p-4 text-sm text-ft-ink-2">
+                {t("publishedAgendaHint")}
+              </div>
+            )}
             <DialogFooter className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
               <Button
                 type="button"
@@ -1201,7 +1200,7 @@ export default function TutorCoursesManager({
                 onClick={() => setPublishedSuccessOpen(false)}
                 className={cn(FT_BTN_OUTLINE, "w-full sm:w-auto")}
               >
-                Cerrar
+                {t("close")}
               </Button>
               <Button
                 type="button"
@@ -1211,7 +1210,7 @@ export default function TutorCoursesManager({
                 }}
                 className={cn(FT_BTN_PRIMARY, "w-full sm:w-auto")}
               >
-                Crear otro
+                {t("createAnother")}
               </Button>
             </DialogFooter>
           </div>

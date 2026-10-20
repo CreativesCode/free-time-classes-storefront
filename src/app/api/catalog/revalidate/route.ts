@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidateCatalog } from "@/lib/catalog/revalidateServer";
 import { createClient } from "@/lib/supabase/server";
 
 const noStoreJson = (body: unknown, init?: ResponseInit) =>
@@ -10,15 +10,6 @@ const noStoreJson = (body: unknown, init?: ResponseInit) =>
       "Cache-Control": "no-store",
     },
   });
-
-// Tags used by the unstable_cache wrappers of the catalog pages.
-const CATALOG_TAGS = ["courses", "tutors", "subjects", "home"];
-
-// ISR detail pages fetch without tags, so they are revalidated by path.
-const CATALOG_DETAIL_PATHS = [
-  "/[locale]/courses/[id]",
-  "/[locale]/tutors/[id]",
-];
 
 /**
  * Invalidates the cached public catalog after a tutor changes courses,
@@ -47,8 +38,7 @@ export async function POST() {
       return noStoreJson({ error: "Forbidden." }, { status: 403 });
     }
 
-    for (const tag of CATALOG_TAGS) revalidateTag(tag);
-    for (const path of CATALOG_DETAIL_PATHS) revalidatePath(path, "page");
+    revalidateCatalog();
 
     return noStoreJson({ ok: true }, { status: 200 });
   } catch (err) {

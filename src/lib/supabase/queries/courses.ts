@@ -292,23 +292,27 @@ export async function getCourseWithRelations(
   } as CourseWithRelations;
 }
 
+async function courseApi<T>(path: string, init: RequestInit): Promise<T> {
+  const res = await fetch(path, {
+    ...init,
+    headers: { "Content-Type": "application/json", ...(init.headers ?? {}) },
+  });
+  const json = (await res.json().catch(() => ({}))) as T & { error?: string };
+  if (!res.ok) throw new Error(json.error || "Course request failed.");
+  return json;
+}
+
 /**
- * Create a new course
+ * Create a new course (through /api/courses: validated server-side and the
+ * catalog cache is refreshed there).
  */
 export async function createCourse(
   courseData: Omit<Course, "id" | "created_at" | "updated_at">
 ): Promise<Course> {
-  const { data, error } = await browserClient
-    .from("courses")
-    .insert(courseData)
-    .select()
-    .single();
-
-  if (error) {
-    throw error;
-  }
-
-  return data as Course;
+  return courseApi<Course>("/api/courses", {
+    method: "POST",
+    body: JSON.stringify(courseData),
+  });
 }
 
 /**
@@ -318,29 +322,19 @@ export async function updateCourse(
   id: number | string,
   updates: Partial<Omit<Course, "id" | "created_at">>
 ): Promise<Course> {
-  const { data, error } = await browserClient
-    .from("courses")
-    .update({ ...updates, updated_at: new Date().toISOString() })
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) {
-    throw error;
-  }
-
-  return data as Course;
+  return courseApi<Course>(`/api/courses/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(updates),
+  });
 }
 
 /**
- * Delete course
+ * Delete course. Courses with classes or bookings are archived instead.
  */
-export async function deleteCourse(id: number | string): Promise<void> {
-  const { error } = await browserClient.from("courses").delete().eq("id", id);
-
-  if (error) {
-    throw error;
-  }
+export async function deleteCourse(
+  id: number | string
+): Promise<{ archived: boolean }> {
+  return courseApi<{ archived: boolean }>(`/api/courses/${id}`, { method: "DELETE" });
 }
 
 /**

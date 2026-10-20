@@ -702,6 +702,18 @@
       "expDescriptionPlaceholder": "Briefly describe your responsibilities and achievements..."
     },
     "coursesManager": {
+      "close": "Close",
+      "createAnother": "Create another",
+      "courseArchived": "The course had classes, so it was archived: it is no longer shown or bookable, but its history is kept.",
+      "courseDeleted": "Course deleted.",
+      "deleteConfirmTitle": "Delete this course?",
+      "deleteConfirmBody": "“{title}” will disappear from the catalog. If it already has classes it will be archived instead of deleted.",
+      "previewTitlePlaceholder": "Your course title...",
+      "publishedTitle": "Course published",
+      "publishedBody": "Your course can now be booked within your availability windows.",
+      "publishedNoAgenda": "Your course is in the catalog but cannot be booked yet.",
+      "publishedAgendaHint": "Add your weekly availability in the Availability tab: students will book your courses inside those windows.",
+      "validationPriceRange": "The price must be above 0 and at most €{max}.",
       "heroEyebrow": "Curriculum builder",
       "heroTitle": "Design your next course",
       "heroDescription": "Configure your class details and publish a premium experience for your students.",
