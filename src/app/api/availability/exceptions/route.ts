@@ -87,12 +87,28 @@ async function deleteAvailableLessonsInRange(
   const booked = new Set(
     (bookings ?? []).map((b: { lesson_id: number }) => b.lesson_id)
   );
-  const toDelete = lessonIds.filter((id) => !booked.has(id));
-  if (toDelete.length === 0) return {};
+  const toWithdraw = lessonIds.filter((id) => !booked.has(id));
+  return withdrawAvailableLessons(admin, toWithdraw);
+}
 
-  const { error: delErr } = await admin.from("lessons").delete().in("id", toDelete);
-  if (delErr) {
-    return { error: delErr.message || "Could not remove slots." };
+/**
+ * Takes free slots off sale. They are marked cancelled instead of deleted:
+ * old cancelled/rejected bookings may still reference them (FK), and the
+ * history stays intact.
+ */
+async function withdrawAvailableLessons(
+  admin: SupabaseClient,
+  lessonIds: number[]
+): Promise<{ error?: string }> {
+  if (lessonIds.length === 0) return {};
+  const { error } = await admin
+    .from("lessons")
+    .update({ status: "cancelled", updated_at: new Date().toISOString() })
+    .in("id", lessonIds)
+    .eq("status", "available");
+  if (error) {
+    console.error("[availability/exceptions] could not withdraw slots:", error);
+    return { error: "Could not remove slots." };
   }
   return {};
 }
@@ -182,6 +198,7 @@ export async function POST(request: NextRequest) {
           dayEnd
         );
         if (clearResult.error) {
+          await admin.from("availability_exceptions").delete().eq("id", inserted.id);
           return noStoreJson({ error: clearResult.error }, { status: 400 });
         }
       } else if (st && et) {
@@ -194,6 +211,7 @@ export async function POST(request: NextRequest) {
           .lt("scheduled_date_time", dayEnd);
 
         if (lessonsError) {
+          await admin.from("availability_exceptions").delete().eq("id", inserted.id);
           return noStoreJson(
             { error: "Could not load lessons to clear." },
             { status: 400 }
@@ -245,6 +263,7 @@ export async function POST(request: NextRequest) {
             .in("status", ["pending", "confirmed"]);
 
           if (bookingsError) {
+            await admin.from("availability_exceptions").delete().eq("id", inserted.id);
             return noStoreJson(
               { error: "Could not verify bookings." },
               { status: 400 }
@@ -254,18 +273,13 @@ export async function POST(request: NextRequest) {
           const booked = new Set(
             (bookings || []).map((b) => b.lesson_id as number)
           );
-          const toDelete = lessonIds.filter((id) => !booked.has(id));
-          if (toDelete.length > 0) {
-            const { error: delErr } = await admin
-              .from("lessons")
-              .delete()
-              .in("id", toDelete);
-            if (delErr) {
-              return noStoreJson(
-                { error: delErr.message || "Could not remove slots." },
-                { status: 400 }
-              );
-            }
+          const withdrawResult = await withdrawAvailableLessons(
+            admin,
+            lessonIds.filter((id) => !booked.has(id))
+          );
+          if (withdrawResult.error) {
+            await admin.from("availability_exceptions").delete().eq("id", inserted.id);
+            return noStoreJson({ error: withdrawResult.error }, { status: 400 });
           }
         }
       }

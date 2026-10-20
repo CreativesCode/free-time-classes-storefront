@@ -95,16 +95,20 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       const booked = new Set(
         (bookings || []).map((b) => b.lesson_id as number)
       );
-      const toDelete = lessonIds.filter((id) => !booked.has(id));
+      const toWithdraw = lessonIds.filter((id) => !booked.has(id));
 
-      if (toDelete.length > 0) {
-        const { error: delErr } = await admin
+      // Mark free slots cancelled instead of deleting them: old bookings may
+      // still reference them (FK) and deleting would cascade to reviews.
+      if (toWithdraw.length > 0) {
+        const { error: withdrawErr } = await admin
           .from("lessons")
-          .delete()
-          .in("id", toDelete);
-        if (delErr) {
+          .update({ status: "cancelled", updated_at: new Date().toISOString() })
+          .in("id", toWithdraw)
+          .eq("status", "available");
+        if (withdrawErr) {
+          console.error("[availability/rules DELETE] could not withdraw slots:", withdrawErr);
           return noStoreJson(
-            { error: delErr.message || "Could not remove slots." },
+            { error: "Could not remove slots." },
             { status: 400 }
           );
         }
